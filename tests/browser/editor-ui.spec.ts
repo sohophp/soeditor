@@ -38,6 +38,7 @@ test('renders the configurable default toolbar, groups, status, and theme', asyn
         'table',
         '|',
         'source',
+        'preview',
         'format',
     ]);
     await expect(page.locator('.soeditor-ui__status')).toHaveText(

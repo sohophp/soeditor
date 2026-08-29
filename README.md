@@ -8,7 +8,8 @@ editing engine, transaction history/clipboard boundaries, and Phase 5
 command-driven rich-text feature plugins. Phase 6 adds exact CodeMirror-powered
 HTML source editing and parser diagnostics. Phase 7 adds extensible HTML
 problems and explicit Prettier formatting. Phase 8 adds a configurable,
-framework-agnostic editor UI foundation.
+framework-agnostic editor UI foundation. Phase 9 adds an isolated configurable
+preview environment.
 
 ```ts
 import { Editor } from '@soeditor/core';
@@ -33,6 +34,8 @@ const editor = await Editor.create({
   explicit, guarded HTML formatting.
 - `@soeditor/ui` — configurable command toolbar, menus, dialogs, balloons,
   notifications, shortcuts, status, and theme variables.
+- `@soeditor/preview` — command-driven sandboxed iframe preview with templates,
+  context, CSS, and a fixed execution policy.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
 

@@ -2,6 +2,11 @@ import { Editor, Plugin } from '@soeditor/core';
 import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
 import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import {
+    createPreviewEngine,
+    PreviewPlugin,
+    previewServiceToken,
+} from '@soeditor/preview';
+import {
     BlockquotePlugin,
     BoldPlugin,
     CodeBlockPlugin,
@@ -92,6 +97,7 @@ const stateOutput = document.querySelector<HTMLElement>('#state');
 const sourceOutput = document.querySelector<HTMLElement>('#source');
 const editingHost = document.querySelector<HTMLElement>('#editor');
 const sourceEditingHost = document.querySelector<HTMLElement>('#source-editor');
+const previewHost = document.querySelector<HTMLElement>('#preview');
 const uiHost = document.querySelector<HTMLElement>('#editor-ui');
 
 if (
@@ -99,6 +105,7 @@ if (
     sourceOutput === null ||
     editingHost === null ||
     sourceEditingHost === null ||
+    previewHost === null ||
     uiHost === null
 ) {
     throw new Error('Playground output or editing host was not found.');
@@ -126,6 +133,7 @@ const editor = await Editor.create({
         SourceEditingPlugin,
         DiagnosticsPlugin,
         HtmlFormattingPlugin,
+        PreviewPlugin,
     ],
     readonly: new URLSearchParams(window.location.search).has('readonly'),
 });
@@ -136,6 +144,21 @@ const visualEngine = createVisualEditingEngine({
 const sourceEngine = createSourceEditingEngine({
     editor,
     element: sourceEditingHost,
+});
+const previewEngine = createPreviewEngine({
+    configuration: {
+        baseUrl: 'https://example.test/content/',
+        context: { section: 'Article' },
+        styles: [
+            'body { font-family: system-ui, sans-serif; margin: 2rem; } article { max-width: 48rem; margin: auto; }',
+        ],
+        stylesheets: ['data:text/css,product-card%7Bdisplay%3Ablock%7D'],
+        template:
+            '<!doctype html><html><head><title>SoEditor Preview</title></head><body><article data-section="{{ section }}">{{ content }}</article></body></html>',
+        title: 'SoEditor content preview',
+    },
+    editor,
+    element: previewHost,
 });
 const toolbarParameter = new URLSearchParams(window.location.search).get(
     'toolbar',
@@ -153,9 +176,12 @@ const ui = createEditorUi({
 });
 (window as Window & { __soeditor?: unknown }).__soeditor = Object.freeze({
     createEditorUi,
+    createPreviewEngine,
     createSourceEditingEngine,
     createVisualEditingEngine,
     editor,
+    previewEngine,
+    previewServiceToken,
     sourceEngine,
     ui,
     visualEngine,

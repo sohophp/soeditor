@@ -10,6 +10,7 @@ import { BoldPlugin } from '@soeditor/rich-text';
 import { SourceEditingPlugin } from '@soeditor/source';
 import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import { UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
+import { PreviewPlugin } from '@soeditor/preview';
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';
@@ -37,6 +38,7 @@ const editor = await Editor.create({
         DiagnosticsPlugin,
         HtmlFormattingPlugin,
         UiPlugin,
+        PreviewPlugin,
     ],
 });
 
@@ -65,6 +67,10 @@ if (editor.services.tryGet(uiRegistryServiceToken) === undefined) {
 
 if (!import.meta.resolve('@soeditor/ui/styles.css').endsWith('/styles.css')) {
     throw new Error('Packed UI stylesheet export could not be resolved.');
+}
+
+if (!editor.commands.has('editor.preview')) {
+    throw new Error('Packed preview plugin did not register its command.');
 }
 
 editor.setData('<p>Changed</p>');

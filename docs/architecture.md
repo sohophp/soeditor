@@ -317,6 +317,35 @@ The package publishes scoped CSS separately as `@soeditor/ui/styles.css`.
 Light, dark, and automatic color-scheme foundations use `--soeditor-*` custom
 properties and remain overridable by the host application.
 
+## Phase 9 preview environment
+
+Phase 9 adds browser-facing `@soeditor/preview`. `PreviewPlugin` registers mode,
+close, and refresh commands; an attached preview engine registers the narrow
+per-editor refresh service. Entering Preview is a Core mode transaction and
+closing returns to the Visual or Source mode that opened it.
+
+The engine owns one iframe in an otherwise empty caller host. Canonical changes
+regenerate `srcdoc` without writing preview normalization back to editor state.
+When Preview is inactive, changes only mark the frame stale so hidden previews
+do not reload network resources; entering Preview performs the pending refresh.
+Fragments use an application template with one raw `{{ content }}` marker and
+escaped string context markers. Complete HTML documents render as their own
+document. Application inline CSS, stylesheet URLs, an HTTP(S) base URL, and an
+accessible frame title are immutable validated configuration.
+
+Preview uses an empty iframe `sandbox` token set and `no-referrer`. Before
+serialization, preview-only DOM processing removes source/template CSP, meta
+refresh, and base elements; inserts only the configured base; and prepends a
+fixed CSP. Scripts, connections, frames, objects, forms, and navigation are
+blocked while passive style, image, font, and media resources may load. Scripts
+and event attributes can remain preserved in canonical/source preview markup
+without executing or receiving the editor origin.
+
+Preview engine attachment rejects non-empty hosts and duplicate per-editor
+services before data loss. Manual or editor-owned destruction removes only its
+iframe, unregisters the service, restores mode/host visibility, and makes
+retained service references terminal.
+
 ## 1. 项目定位
 
 SoEditor 是一个面向开发者、CMS 和内容系统的现代可扩展内容编辑器。

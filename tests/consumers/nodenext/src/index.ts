@@ -36,6 +36,13 @@ import {
     type KeyboardShortcutDefinition,
     type ToolbarConfiguration,
 } from '@soeditor/ui';
+import {
+    createPreviewEngine,
+    PreviewPlugin,
+    previewServiceToken,
+    type PreviewConfiguration,
+    type PreviewEngineOptions,
+} from '@soeditor/preview';
 // @ts-expect-error Editing-model internals are not a package subpath API.
 import type { EditingModel } from '@soeditor/engine/model';
 
@@ -74,6 +81,7 @@ const editor = await Editor.create({
         DiagnosticsPlugin,
         HtmlFormattingPlugin,
         UiPlugin,
+        PreviewPlugin,
     ],
 });
 
@@ -140,6 +148,15 @@ const shortcut: KeyboardShortcutDefinition = {
 editor.services.get(uiRegistryServiceToken).registerShortcut(shortcut);
 void toolbar;
 void theme;
+const previewFactory: typeof createPreviewEngine = createPreviewEngine;
+const previewConfiguration: PreviewConfiguration = {
+    template: '<main>{{ content }}</main>',
+};
+const previewOptions = undefined as PreviewEngineOptions | undefined;
+void previewFactory;
+void previewConfiguration;
+void previewOptions;
+void previewServiceToken;
 const rejectInternalModel = (value: EditingModel): void => {
     void value;
 };

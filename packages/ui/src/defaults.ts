@@ -24,6 +24,7 @@ export const defaultToolbarConfiguration = Object.freeze([
     'table',
     '|',
     'source',
+    'preview',
     'format',
 ] as const);
 
@@ -80,6 +81,31 @@ const sourceButton: ToolbarItemFactory = ({ document, editor, ui }) => {
                 ? 'Switch to visual editing'
                 : 'Switch to HTML source editing';
             button.setAttribute('aria-pressed', String(sourceMode));
+            updateCommandAvailability(button, editor, command());
+        },
+        destroy: () => button.removeEventListener('click', click),
+    };
+};
+
+const previewButton: ToolbarItemFactory = ({ document, editor, ui }) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'soeditor-ui__button';
+    const command = (): 'editor.preview' | 'editor.preview.close' =>
+        editor.state.mode === 'preview'
+            ? 'editor.preview.close'
+            : 'editor.preview';
+    const click = (): void => {
+        execute(editor, ui, command(), []);
+    };
+    button.addEventListener('click', click);
+    return {
+        element: button,
+        update: () => {
+            const previewMode = editor.state.mode === 'preview';
+            button.textContent = previewMode ? 'Edit' : 'Preview';
+            button.title = previewMode ? 'Close preview' : 'Preview content';
+            button.setAttribute('aria-pressed', String(previewMode));
             updateCommandAvailability(button, editor, command());
         },
         destroy: () => button.removeEventListener('click', click),
@@ -211,6 +237,7 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
         ['image', imageButton],
         ['table', tableButton],
         ['source', sourceButton],
+        ['preview', previewButton],
         ['format', commandButton('Format HTML', 'document.format')],
     ]);
 

@@ -22,6 +22,9 @@ export default defineConfig({
                     import.meta.url,
                 ),
             ),
+            '@soeditor/preview': fileURLToPath(
+                new URL('../../packages/preview/src/index.ts', import.meta.url),
+            ),
             '@soeditor/source': fileURLToPath(
                 new URL('../../packages/source/src/index.ts', import.meta.url),
             ),

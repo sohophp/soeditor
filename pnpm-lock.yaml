@@ -53,6 +53,9 @@ importers:
       '@soeditor/html-tools':
         specifier: workspace:*
         version: link:../../packages/html-tools
+      '@soeditor/preview':
+        specifier: workspace:*
+        version: link:../../packages/preview
       '@soeditor/rich-text':
         specifier: workspace:*
         version: link:../../packages/rich-text
@@ -96,6 +99,12 @@ importers:
       '@soeditor/html':
         specifier: workspace:*
         version: link:../html
+
+  packages/preview:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
 
   packages/rich-text:
     devDependencies:
