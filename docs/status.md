@@ -24,7 +24,12 @@ complete. A private development `@soeditor/comments` package now provides
 host-owned immutable threads, deterministic operation mapping, safe unlinking,
 non-canonical decorations, command-driven review UI, and explicit permission
 and persistence boundaries. Its full gate passes with 112 Chromium scenarios,
-Critical 0, and High 0. Phase 28 — Revision History and Review Modes — is active.
+Critical 0, and High 0. Phase 28 — Revision History and Review Modes — is
+complete. The private `@soeditor/revisions` package provides host-owned
+draft/saved snapshots, bounded semantic comparison, non-canonical historical
+viewing, explicit transaction restore, permission-checked review policy, and
+deterministic comment behavior. All 117 Chromium scenarios pass with Critical
+0 and High 0. Phase 29 — SoEditor 0.8 Review Workflow Release — is active.
 
 All 17 development package manifests are aligned at the `0.7.0` release
 candidate. The published stable reference remains `0.5.1` until an explicitly
@@ -59,14 +64,14 @@ deliberate and documented under SemVer principles.
   commit `f2e5478`; a clean public-registry consumer installed the scoped
   umbrella, completed a Vite production build, validated all package metadata,
   and passed the jsDelivr/Chromium lifecycle smoke test.
-- current global bundle guard: 1.29 MB raw / 415 kB gzip; measured 1,286.59 kB
-  raw / 413.91 kB gzip after the generic visual-decoration boundary. The full
-  Playground chunk is guarded at 1.04 MB and measures 1,002.23 kB; the private
-  comments example is loaded as a separate 16.22 kB chunk.
+- current global bundle guard: 1.29 MB raw / 415 kB gzip; measured 1,287.60 kB
+  raw / 414.08 kB gzip. Standalone CSS is 8.01 kB. The full Playground chunk
+  is guarded at 1.04 MB and measures 834.38 kB after comments/revisions and
+  their shared review infrastructure were split into dynamic chunks.
 - current minimal Vite consumer: approximately 27.9 kB raw / 8.74 kB gzip.
 - the Phase 21 narrow Core/SDK/minimal-preset packed consumer is approximately
   28.0 kB raw and proves unused Source, Markdown, Preview, split DOM, and CSS
-  families are absent; all 112 Chromium scenarios pass.
+  families are absent; all 117 Chromium scenarios pass.
 - the Phase 22 frozen candidate aligns all 17 packages at 0.6.0, passes strict
   typecheck, unit/consumer/distribution/release/Chromium/build/license/security
   gates, completes a 17-package npm dry run, and confirms read-only that every
@@ -79,14 +84,31 @@ deliberate and documented under SemVer principles.
   distribution/release tests, all 109 Chromium scenarios, build, MIT license
   verification, high-severity dependency audit, 17-package npm publication dry
   run, and a read-only check that all 17 `0.7.0` versions are unpublished.
-- Phase 27 adds seven focused unit tests and three Chromium workflows covering
+- Phase 27 adds eight focused unit tests and three Chromium workflows covering
   mapped text and whole-block comments, source/history unlinking, safe text
   rendering, clipboard isolation, readonly permissions, keyboard navigation,
   storage failure/race behavior, accessibility, and cleanup. The comments
   package remains private until the Phase 29 0.8 release gate.
+- Phase 28 adds ten focused revision unit tests and five Chromium workflows for
+  immutable provider/storage validation, HTML/Markdown comparison bounds,
+  stale-load races, permissions, draft/saved viewing, restore metadata,
+  comments, dynamic Visual/Source/Markdown policy, accessibility, security,
+  and terminal cleanup. Distribution audits cover 19 package directories while
+  the frozen public 0.7 release audit remains exactly 17 packages.
 - final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
+
+- Revision comparison is a bounded structural/positional summary, not track
+  changes. It does not match moved subtrees or branches and stops after 2,000
+  reported changes. Historical UI is escaped source, not a rendered
+  side-by-side WYSIWYG view.
+- Revision lists are capped at 200 and snapshots at 5,000,000 characters.
+  Storage, authorization, audit, retention, pagination beyond that bounded
+  window, real-time concurrency, and merge conflicts remain host concerns.
+- Restoring a snapshot is intentionally an ambiguous full-document transaction,
+  so linked comments become unlinked. Coordinated revision-specific comment
+  snapshots and fuzzy position recovery are not inferred.
 
 - Comment ranges currently cover text or an entire structured block. Cell-local
   and nested-widget comments are deferred. Source replacement and snapshot

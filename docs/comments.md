@@ -57,3 +57,7 @@ thread, and 10,000 characters per message.
 Readonly content does not automatically forbid review actions. The supplied
 permission provider decides whether a reviewer can create, reply, resolve,
 reopen, or delete; content mutation remains independently readonly.
+
+When Phase 28 review modes are enabled, pass `reviewPolicy` from the revisions
+service. `comments-only` continues to consult the permission provider, while
+`readonly` disables every comment action before host permissions are called.

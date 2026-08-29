@@ -1,4 +1,8 @@
-import { createServiceToken, Plugin } from '@soeditor/core';
+import {
+    createServiceToken,
+    EditorDestroyedError,
+    Plugin,
+} from '@soeditor/core';
 
 import type { EditingPoint } from './model.js';
 
@@ -30,11 +34,14 @@ export class VisualDecorationsPlugin extends Plugin {
     static readonly id = 'visual-decorations';
     readonly #listeners = new Set<() => void>();
     readonly #owners = new Map<string, readonly VisualDecoration[]>();
+    #destroyed = false;
     #service: VisualDecorationsService | undefined;
 
     override init(): void {
-        const readSnapshot = (): readonly VisualDecoration[] =>
-            flattenDecorations(this.#owners);
+        const readSnapshot = (): readonly VisualDecoration[] => {
+            this.#assertAlive();
+            return flattenDecorations(this.#owners);
+        };
         const service: VisualDecorationsService = Object.freeze({
             get snapshot() {
                 return readSnapshot();
@@ -45,6 +52,7 @@ export class VisualDecorationsPlugin extends Plugin {
                 decorations: readonly VisualDecoration[],
             ) => this.#replace(owner, decorations),
             subscribe: (listener: () => void) => {
+                this.#assertAlive();
                 if (typeof listener !== 'function') {
                     throw new TypeError(
                         'A visual-decoration listener must be a function.',
@@ -59,19 +67,25 @@ export class VisualDecorationsPlugin extends Plugin {
     }
 
     override destroy(): void {
+        this.#destroyed = true;
         this.#listeners.clear();
         this.#owners.clear();
-        if (
-            this.#service !== undefined &&
-            this.editor.services.tryGet(visualDecorationsServiceToken) ===
-                this.#service
-        ) {
-            this.editor.services.unregister(visualDecorationsServiceToken);
+        try {
+            if (
+                this.#service !== undefined &&
+                this.editor.services.tryGet(visualDecorationsServiceToken) ===
+                    this.#service
+            ) {
+                this.editor.services.unregister(visualDecorationsServiceToken);
+            }
+        } catch (error: unknown) {
+            if (!(error instanceof EditorDestroyedError)) throw error;
         }
         this.#service = undefined;
     }
 
     #replace(owner: string, decorations: readonly VisualDecoration[]): void {
+        this.#assertAlive();
         validateIdentity(owner, 'owner');
         if (!Array.isArray(decorations)) {
             throw new TypeError('Visual decorations must be an array.');
@@ -125,6 +139,14 @@ export class VisualDecorationsPlugin extends Plugin {
             throw new AggregateError(
                 errors,
                 'Visual-decoration listeners failed.',
+            );
+        }
+    }
+
+    #assertAlive(): void {
+        if (this.#destroyed) {
+            throw new Error(
+                'The visual decorations service has been destroyed.',
             );
         }
     }

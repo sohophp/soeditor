@@ -97,6 +97,7 @@ export class ProjectionCoordinatorPlugin extends Plugin {
     readonly #visible = new Set<ProjectionId>();
     #destroyed = false;
     #disposeModeChange: (() => void) | undefined;
+    #disposeStateChange: (() => void) | undefined;
     #primary: EditableProjectionId = 'visual';
     #synchronizingMode = false;
 
@@ -155,12 +156,20 @@ export class ProjectionCoordinatorPlugin extends Plugin {
             'mode:change',
             ({ current }) => this.#handleModeChange(current),
         );
+        this.#disposeStateChange = this.editor.events.on(
+            'state:change',
+            ({ current, previous }) => {
+                if (current.readonly !== previous.readonly) this.#notify();
+            },
+        );
     }
 
     override destroy(): void {
         this.#destroyed = true;
         this.#disposeModeChange?.();
         this.#disposeModeChange = undefined;
+        this.#disposeStateChange?.();
+        this.#disposeStateChange = undefined;
         this.#adapters.clear();
         this.#listeners.clear();
         this.#visible.clear();

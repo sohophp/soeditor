@@ -41,6 +41,7 @@ import {
     minimalPreset,
 } from '@soeditor/presets';
 import { createPreviewEngine, previewServiceToken } from '@soeditor/preview';
+import type { RevisionSnapshot } from '@soeditor/revisions';
 import {
     ProjectionCoordinatorPlugin,
     projectionCoordinatorServiceToken,
@@ -334,6 +335,64 @@ const developerDocument = parameters.get('preset') !== 'classic';
 const diagnosticsMode =
     parameters.get('diagnostics') === 'manual' ? 'manual' : 'debounced';
 const htmlPreset = developerDocument ? developerPreset : classicPreset;
+const editorReference: { current?: Editor } = {};
+let revisionId = 2;
+const revisionSnapshots: RevisionSnapshot[] = [
+    Object.freeze({
+        author: Object.freeze({ id: 'editor-1', name: 'CMS Editor' }),
+        createdAt: 1,
+        format: markdownDocument ? 'markdown' : 'html',
+        id: 'revision-1',
+        kind: 'saved',
+        label: 'Published version',
+        source: markdownDocument
+            ? '# Published version\n\nArchived Markdown'
+            : '<p>Published version</p><product-card data-id="123"></product-card><!--CMS:block--><script>window.__revisionExecuted=true</script>',
+    }),
+];
+const revisionsModule = parameters.has('revisions')
+    ? await import('@soeditor/revisions')
+    : undefined;
+const RevisionsPlugin = revisionsModule?.createRevisionsPlugin({
+    author: () => ({ id: 'playground-editor', name: 'Playground Editor' }),
+    initialPolicy:
+        parameters.get('policy') === 'comments-only'
+            ? 'comments-only'
+            : parameters.get('policy') === 'readonly' ||
+                parameters.has('readonly')
+              ? 'readonly'
+              : 'edit',
+    permissions: { can: () => true },
+    provider: {
+        list: async () => revisionSnapshots,
+        load: async (id) => {
+            const revision = revisionSnapshots.find((item) => item.id === id);
+            if (revision === undefined) {
+                throw new Error(`Playground revision "${id}" was not found.`);
+            }
+            return revision;
+        },
+    },
+    storage: {
+        list: async () => revisionSnapshots,
+        load: async (id) => {
+            const revision = revisionSnapshots.find((item) => item.id === id);
+            if (revision === undefined) {
+                throw new Error(`Playground revision "${id}" was not found.`);
+            }
+            return revision;
+        },
+        save: async (input) => {
+            const revision = Object.freeze({
+                ...input,
+                createdAt: Date.now(),
+                id: `revision-${String(++revisionId)}`,
+            });
+            revisionSnapshots.push(revision);
+            return revision;
+        },
+    },
+});
 let commentThreads: readonly CommentThread[] = Object.freeze([]);
 let commentId = 0;
 const commentsModule = parameters.has('comments')
@@ -346,6 +405,12 @@ const CommentsPlugin = commentsModule?.createCommentsPlugin({
     }),
     createId: () => `playground-comment-${String(++commentId)}`,
     permissions: { can: () => true },
+    reviewPolicy: () =>
+        revisionsModule === undefined || editorReference.current === undefined
+            ? 'edit'
+            : editorReference.current.services.get(
+                  revisionsModule.revisionsServiceToken,
+              ).snapshot.policy,
     storage: {
         load: async () => commentThreads,
         save: async (threads) => {
@@ -363,6 +428,7 @@ const htmlPresetPlugins =
         : htmlPreset.plugins;
 const htmlPlugins = [
     DemoPlugin,
+    ...(RevisionsPlugin === undefined ? [] : [RevisionsPlugin]),
     ...(CommentsPlugin === undefined ? [] : [CommentsPlugin]),
     ...(cmsExample ? [ProductCardSchemaPlugin] : []),
     ...(!developerDocument && persistentProjections
@@ -386,6 +452,7 @@ const editor = await Editor.create(
               format: 'markdown',
               plugins: [
                   DemoPlugin,
+                  ...(RevisionsPlugin === undefined ? [] : [RevisionsPlugin]),
                   ...(persistentProjections
                       ? [ProjectionCoordinatorPlugin]
                       : []),
@@ -436,6 +503,7 @@ const editor = await Editor.create(
                   : {}),
           },
 );
+editorReference.current = editor;
 if (!markdownDocument && developerDocument) {
     editor.services.get(diagnosticsServiceToken).register({
         id: 'playground.cms-markers',
@@ -540,7 +608,18 @@ const ui = createEditorUi({
     editor,
     element: uiHost,
     ...(markdownDocument
-        ? { toolbar: ['undo', 'redo', '|', 'markdown', 'preview'] }
+        ? {
+              toolbar: [
+                  'undo',
+                  'redo',
+                  '|',
+                  'markdown',
+                  'preview',
+                  ...(parameters.has('revisions')
+                      ? ['|' as const, 'revisions']
+                      : []),
+              ],
+          }
         : toolbarParameter === 'compact'
           ? { toolbar: ['undo', '|', 'uppercase'] }
           : toolbarParameter === 'failing'
@@ -548,9 +627,20 @@ const ui = createEditorUi({
             : toolbarParameter === 'missing'
               ? { toolbar: ['missing'] }
               : {
-                    toolbar: parameters.has('comments')
-                        ? [...htmlPreset.toolbar, '|', 'comments']
-                        : htmlPreset.toolbar,
+                    toolbar:
+                        parameters.has('comments') ||
+                        parameters.has('revisions')
+                            ? [
+                                  ...htmlPreset.toolbar,
+                                  '|',
+                                  ...(parameters.has('comments')
+                                      ? ['comments']
+                                      : []),
+                                  ...(parameters.has('revisions')
+                                      ? ['revisions']
+                                      : []),
+                              ]
+                            : htmlPreset.toolbar,
                 }),
 });
 const developerToolsEngine =
@@ -584,6 +674,7 @@ const developerToolsEngine =
     previewServiceToken,
     projectionCoordinatorServiceToken,
     readEditingOperations,
+    revisionsServiceToken: revisionsModule?.revisionsServiceToken,
     sourceEngine,
     splitView,
     splitViewServiceToken,

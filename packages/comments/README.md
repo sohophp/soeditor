@@ -12,3 +12,7 @@ Comments are limited to 500 threads and 100 messages per thread. Message bodies
 are rendered as plain text. Current ranges can cover paragraph text or one
 whole structured block; nested table-cell and widget-editable positions are
 not supported.
+
+An optional `reviewPolicy` callback distinguishes host-authorized
+`comments-only` access from a fully `readonly` review. Content readonly state
+alone does not grant or revoke comment permission.

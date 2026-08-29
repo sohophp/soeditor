@@ -83,6 +83,9 @@ importers:
       '@soeditor/projections':
         specifier: workspace:*
         version: link:../../packages/projections
+      '@soeditor/revisions':
+        specifier: workspace:*
+        version: link:../../packages/revisions
       '@soeditor/rich-text':
         specifier: workspace:*
         version: link:../../packages/rich-text
@@ -304,6 +307,18 @@ importers:
       '@soeditor/core':
         specifier: workspace:*
         version: link:../core
+
+  packages/revisions:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/html':
+        specifier: workspace:*
+        version: link:../html
+      '@soeditor/ui':
+        specifier: workspace:*
+        version: link:../ui
 
   packages/rich-text:
     devDependencies:

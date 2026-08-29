@@ -60,6 +60,7 @@ describe('CommentsController', () => {
         expect(save).toHaveBeenCalledTimes(4);
         expect(stored[0]?.state).toBe('deleted');
         await editor.destroy();
+        expect(() => comments.next()).toThrow('destroyed');
     });
 
     it('unlinks safely on source/history-shaped changes without operations', async () => {
@@ -149,6 +150,36 @@ describe('CommentsController', () => {
         expect(comments.snapshot[0]?.messages).toHaveLength(3);
         await Promise.all([first, second]);
         expect(writes).toEqual(['First', 'Second']);
+        await editor.destroy();
+    });
+
+    it('allows comments-only review and blocks every action in readonly review', async () => {
+        let policy: 'comments-only' | 'readonly' = 'comments-only';
+        const editor = await Editor.create({
+            data: '<p>Test</p>',
+            readonly: true,
+            plugins: [
+                createCommentsPlugin({
+                    author: () => ({ id: 'reviewer', name: 'Reviewer' }),
+                    createId: () => 'message-2',
+                    permissions: { can: () => true },
+                    reviewPolicy: () => policy,
+                    storage: {
+                        load: async () => [initial],
+                        save: async () => undefined,
+                    },
+                }),
+            ],
+        });
+        const comments = editor.services.get(commentsServiceToken);
+
+        expect(comments.can('reply', 'thread-1')).toBe(true);
+        policy = 'readonly';
+        expect(comments.can('reply', 'thread-1')).toBe(false);
+        expect(comments.can('delete', 'thread-1')).toBe(false);
+        await expect(comments.reply('thread-1', 'Blocked')).rejects.toThrow(
+            'not permitted',
+        );
         await editor.destroy();
     });
 });

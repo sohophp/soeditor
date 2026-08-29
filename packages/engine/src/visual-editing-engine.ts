@@ -109,6 +109,7 @@ export class VisualEditingEngine implements EditingEngine {
     readonly #disposeDocumentChange: () => void;
     readonly #disposeEditorDestroy: () => void;
     readonly #disposeModeChange: () => void;
+    readonly #disposeStateChange: () => void;
     readonly #mutationObserver: MutationObserver;
     readonly #previousAttributes: ReadonlyMap<string, string | null>;
     readonly #previousHidden: boolean;
@@ -282,6 +283,17 @@ export class VisualEditingEngine implements EditingEngine {
         this.#disposeModeChange = this.editor.events.on('mode:change', () =>
             this.#updateEditableState(),
         );
+        this.#disposeStateChange = this.editor.events.on(
+            'state:change',
+            ({ current, previous }) => {
+                if (
+                    current.readonly !== previous.readonly &&
+                    this.#projectionActivity === undefined
+                ) {
+                    this.#updateEditableState();
+                }
+            },
+        );
         const coordinator = this.editor.services.tryGet(
             projectionCoordinatorServiceToken,
         );
@@ -372,6 +384,7 @@ export class VisualEditingEngine implements EditingEngine {
         this.#disposeDocumentChange();
         this.#disposeEditorDestroy();
         this.#disposeModeChange();
+        this.#disposeStateChange();
         try {
             if (
                 this.editor.services.tryGet(visualEditingServiceToken) ===

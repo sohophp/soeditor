@@ -49,6 +49,8 @@ export interface CommentsPluginOptions {
     readonly createId: () => string;
     readonly now?: () => number;
     readonly permissions: CommentPermissionProvider;
+    /** Optional review policy supplied by a host or revisions service. */
+    readonly reviewPolicy?: () => 'comments-only' | 'edit' | 'readonly';
     readonly storage: CommentStorageAdapter;
 }
 
@@ -89,9 +91,18 @@ export class CommentsController {
     }
 
     get service(): CommentsService {
-        const activeThreadId = (): string | undefined => this.#activeThreadId;
-        const lastError = (): unknown => this.#lastError;
-        const snapshot = (): readonly CommentThread[] => this.#threads;
+        const activeThreadId = (): string | undefined => {
+            this.#assertAlive();
+            return this.#activeThreadId;
+        };
+        const lastError = (): unknown => {
+            this.#assertAlive();
+            return this.#lastError;
+        };
+        const snapshot = (): readonly CommentThread[] => {
+            this.#assertAlive();
+            return this.#threads;
+        };
         return Object.freeze({
             get activeThreadId() {
                 return activeThreadId();
@@ -114,7 +125,10 @@ export class CommentsController {
                 this.reply(threadId, body),
             resolve: (threadId: string) => this.resolve(threadId),
             subscribe: (listener: () => void) => this.subscribe(listener),
-            waitForIdle: () => this.#queue,
+            waitForIdle: () => {
+                this.#assertAlive();
+                return this.#queue;
+            },
         });
     }
 
@@ -153,6 +167,16 @@ export class CommentsController {
 
     can(action: CommentAction, threadId?: string): boolean {
         this.#assertAlive();
+        const reviewPolicy = this.#options.reviewPolicy?.();
+        if (
+            reviewPolicy !== undefined &&
+            reviewPolicy !== 'edit' &&
+            reviewPolicy !== 'comments-only' &&
+            reviewPolicy !== 'readonly'
+        ) {
+            throw new TypeError('The host returned an invalid review policy.');
+        }
+        if (reviewPolicy === 'readonly') return false;
         const thread =
             threadId === undefined ? undefined : this.#findThread(threadId);
         if (action !== 'create' && thread === undefined) return false;
@@ -323,6 +347,7 @@ export class CommentsController {
     }
 
     navigate(direction: -1 | 1): boolean {
+        this.#assertAlive();
         const threads = this.#threads.filter(
             ({ state }) => state !== 'deleted',
         );
@@ -474,6 +499,8 @@ function validateOptions(options: CommentsPluginOptions): void {
         typeof options.storage?.load !== 'function' ||
         typeof options.storage.save !== 'function' ||
         typeof options.permissions?.can !== 'function' ||
+        (options.reviewPolicy !== undefined &&
+            typeof options.reviewPolicy !== 'function') ||
         (options.now !== undefined && typeof options.now !== 'function')
     ) {
         throw new TypeError(

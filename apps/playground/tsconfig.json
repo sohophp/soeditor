@@ -21,6 +21,7 @@
                 "../../packages/projections/src/index.ts"
             ],
             "@soeditor/presets": ["../../packages/presets/src/index.ts"],
+            "@soeditor/revisions": ["../../packages/revisions/src/index.ts"],
             "@soeditor/source": ["../../packages/source/src/index.ts"],
             "@soeditor/ui": ["../../packages/ui/src/index.ts"]
         }

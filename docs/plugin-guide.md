@@ -211,6 +211,12 @@ points with `mapEditingPoint()`. The reader returns `undefined` for exact Source
 replacement and history replay transactions; those boundaries must be handled
 as ambiguous source changes rather than guessed tree edits.
 
+Host workflow plugins may change the general content-editing policy through
+`editor.setReadonly()`. Visual, Source, Markdown, and projection coordination
+observe that transition. Feature-specific permissions remain owned by the
+feature: for example, comments accept a host `reviewPolicy` callback to
+distinguish comments-only access from a fully readonly review.
+
 ## Compatibility rules
 
 - Import package roots only; internal subpaths are unsupported.

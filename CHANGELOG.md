@@ -9,6 +9,10 @@
 - Added unit and Chromium coverage for text and structured-block comments,
   source/history behavior, clipboard isolation, readonly review permissions,
   accessibility, adapter failures, serialized writes, and teardown.
+- Added private host-owned revision history with bounded HTML/Markdown
+  comparison, explicit transaction restore, dynamic edit/comments-only/
+  readonly policy across editing projections, and deterministic comment
+  behavior across viewing and restoration.
 
 ## 0.7.0 — Structured Extensions candidate
 

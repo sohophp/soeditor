@@ -283,6 +283,46 @@ mark[data-soeditor-decoration-status='resolved'] {
     gap: 0.4rem;
 }
 
+.soeditor-revisions {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.soeditor-revisions fieldset,
+.soeditor-revisions__save,
+.soeditor-revisions__list,
+.soeditor-revisions__content {
+    border: 1px solid var(--soeditor-border);
+    border-radius: 0.35rem;
+    display: grid;
+    gap: 0.45rem;
+    margin: 0;
+    padding: 0.65rem;
+}
+
+.soeditor-revisions fieldset {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.soeditor-revisions fieldset legend {
+    grid-column: 1 / -1;
+}
+
+.soeditor-revisions button[aria-pressed='true'],
+.soeditor-revisions button[aria-current='true'] {
+    outline: 2px solid var(--soeditor-accent);
+    outline-offset: 1px;
+}
+
+.soeditor-revisions pre {
+    background: var(--soeditor-bg);
+    border-radius: 0.25rem;
+    max-height: 16rem;
+    overflow: auto;
+    padding: 0.5rem;
+    white-space: pre-wrap;
+}
+
 .soeditor-comments textarea {
     background: var(--soeditor-bg);
     border: 1px solid var(--soeditor-border);

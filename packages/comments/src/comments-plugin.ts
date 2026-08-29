@@ -1,4 +1,9 @@
-import { Plugin, type Editor, type PluginConstructor } from '@soeditor/core';
+import {
+    EditorDestroyedError,
+    Plugin,
+    type Editor,
+    type PluginConstructor,
+} from '@soeditor/core';
 import {
     VisualDecorationsPlugin,
     visualEditingServiceToken,
@@ -62,14 +67,22 @@ export function createCommentsPlugin(
             for (const dispose of this.#disposers.splice(0).reverse()) {
                 dispose();
             }
-            if (
-                this.#service !== undefined &&
-                this.editor.services.tryGet(commentsServiceToken) ===
-                    this.#service
-            ) {
-                this.editor.services.unregister(commentsServiceToken);
+            try {
+                this.#controller?.destroy();
+            } catch (error: unknown) {
+                if (!(error instanceof EditorDestroyedError)) throw error;
             }
-            this.#controller?.destroy();
+            try {
+                if (
+                    this.#service !== undefined &&
+                    this.editor.services.tryGet(commentsServiceToken) ===
+                        this.#service
+                ) {
+                    this.editor.services.unregister(commentsServiceToken);
+                }
+            } catch (error: unknown) {
+                if (!(error instanceof EditorDestroyedError)) throw error;
+            }
             this.#controller = undefined;
             this.#service = undefined;
         }

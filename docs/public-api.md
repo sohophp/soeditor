@@ -25,6 +25,12 @@ The `@soeditor/comments` package remains private development surface until the
 0.8 review-workflow release gate; its documented contracts may still change
 during Phases 27–29.
 
+Phase 28 adds the general application-level `Editor.setReadonly()` transition;
+attached editor surfaces must honor it dynamically. The revision provider,
+comparison, review-policy, command, and UI contracts in `@soeditor/revisions`
+remain private development surface until Phase 29. They are intentionally not
+added to the frozen 0.7 SDK or umbrella package.
+
 ## Structured extension boundary
 
 A third-party structured widget can register a DOM-free conversion and a node

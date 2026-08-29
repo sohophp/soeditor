@@ -80,6 +80,7 @@ export class SourceEditingEngine implements SourceEngine {
     readonly #disposeDocumentChange: () => void;
     readonly #disposeEditorDestroy: () => void;
     readonly #disposeModeChange: () => void;
+    readonly #disposeStateChange: () => void;
     readonly #editable = new Compartment();
     readonly #previousHidden: boolean;
     readonly #service: SourceEditingService;
@@ -169,6 +170,17 @@ export class SourceEditingEngine implements SourceEngine {
         this.#disposeModeChange = this.editor.events.on('mode:change', () =>
             this.#updateMode(),
         );
+        this.#disposeStateChange = this.editor.events.on(
+            'state:change',
+            ({ current, previous }) => {
+                if (
+                    current.readonly !== previous.readonly &&
+                    this.#projectionActivity === undefined
+                ) {
+                    this.#updateMode();
+                }
+            },
+        );
         this.#disposeEditorDestroy = this.editor.events.on(
             'editor:destroy',
             () => this.destroy(),
@@ -241,6 +253,7 @@ export class SourceEditingEngine implements SourceEngine {
         const errors: unknown[] = [];
         this.#disposeDocumentChange();
         this.#disposeModeChange();
+        this.#disposeStateChange();
         this.#disposeEditorDestroy();
         this.element.removeEventListener('keydown', this.#handleKeyDown, true);
         this.element.removeEventListener('focusin', this.#handleFocusIn);

@@ -111,6 +111,25 @@ describe('Editor', () => {
         expect(editor.state.dirty).toBe(true);
     });
 
+    it('changes readonly policy without changing the document revision', async () => {
+        const editor = await Editor.create({ data: 'before' });
+        const changes: boolean[] = [];
+        editor.events.on('state:change', ({ current }) => {
+            changes.push(current.readonly);
+        });
+
+        editor.setReadonly(true);
+        editor.setReadonly(true);
+        editor.setReadonly(false);
+
+        expect(editor.state.document.revision).toBe(0);
+        expect(editor.state.dirty).toBe(false);
+        expect(changes).toEqual([true, false]);
+        expect(() => editor.setReadonly('yes' as unknown as boolean)).toThrow(
+            TypeError,
+        );
+    });
+
     it('emits ready and destroy events through plugin-visible setup', async () => {
         const events: string[] = [];
 
@@ -153,6 +172,7 @@ describe('Editor', () => {
         );
         expect(() => editor.createTransaction()).toThrow(EditorDestroyedError);
         expect(() => editor.markClean()).toThrow(EditorDestroyedError);
+        expect(() => editor.setReadonly(true)).toThrow(EditorDestroyedError);
         expect(editor.getData()).toBe('');
         expect(() => editor.commands.get('demo')).toThrow(EditorDestroyedError);
         expect(() =>

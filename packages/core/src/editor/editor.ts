@@ -244,6 +244,25 @@ export class Editor {
         });
     }
 
+    /** Administratively changes the editing policy without changing content. */
+    setReadonly(readonly: boolean): void {
+        this.#assertAlive();
+        if (typeof readonly !== 'boolean') {
+            throw new TypeError('Editor readonly state must be a boolean.');
+        }
+        if (this.#state.readonly === readonly) return;
+
+        const previous = this.#state;
+        const current = createEditorState({ ...previous, readonly });
+        this.#state = current;
+        this.#stateVersion += 1;
+        emitInternally(
+            this.#eventBus,
+            'state:change',
+            Object.freeze({ previous, current }),
+        );
+    }
+
     /** Marks the current state as saved without changing document revision. */
     markClean(): void {
         this.#assertAlive();

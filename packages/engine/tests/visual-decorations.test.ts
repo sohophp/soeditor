@@ -37,6 +37,10 @@ describe('VisualDecorationsPlugin', () => {
         expect(service.snapshot).toEqual([]);
         expect(listener).toHaveBeenCalledOnce();
         await editor.destroy();
+        expect(() => service.replace('comments', [decoration])).toThrow(
+            'destroyed',
+        );
+        expect(() => service.snapshot).toThrow('destroyed');
     });
 
     it('rejects malformed, duplicate, empty, and unbounded ranges atomically', async () => {

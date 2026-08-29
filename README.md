@@ -2,7 +2,7 @@
 
 Developer-first extensible content editor.
 
-**Status: 0.7 Structured Extensions candidate with Phase 27 review-workflow development complete.** SoEditor is suitable for
+**Status: 0.7 Structured Extensions candidate with Phase 28 review workflows complete.** SoEditor is suitable for
 evaluation and integration development, but is not yet a stable 1.0 release.
 The public registry reference remains 0.5.1 until authorized publication. The repository
 contains the framework-agnostic Core, HTML document layer, controlled visual
@@ -28,7 +28,8 @@ layouts, and a curated SDK/preset/distribution surface. Phases 23–26 add
 structured extension contracts, command-backed node views, bounded tables and
 media, and a packed third-party widget release gate. Phase 27 adds host-owned,
 operation-mapped comments and non-canonical visual decorations; Phase 28 is
-active.
+complete with host-owned revision history, semantic comparison, restore, and
+review policies. Phase 29 release hardening is active.
 
 ```ts
 import { SoEditor, minimalPreset } from '@soeditor/editor';
@@ -71,6 +72,8 @@ const editor = await SoEditor.create({
   contracts for third-party plugin authors, including structured widgets.
 - `@soeditor/projections` — DOM-free persistent projection activity and writer
   coordination.
+- `@soeditor/revisions` — host-owned revisions, bounded comparison, explicit
+  restore, and review policies (private until Phase 29 hardening).
 - `@soeditor/layout` — application-attached accessible two-pane projection
   layouts.
 - `@soeditor/presets` — immutable plugin and toolbar definitions for common
@@ -86,6 +89,7 @@ Start with [Getting started](docs/getting-started.md). See
 [CMS/SoFinder integration](docs/cms-integration.md), the
 [Plugin Guide](docs/plugin-guide.md), [Release procedure](docs/releasing.md),
 the [comments guide](docs/comments.md),
+the [revisions guide](docs/revisions.md),
 [public API policy](docs/public-api.md), and
 [development status](docs/status.md).
 

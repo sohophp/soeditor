@@ -22,6 +22,7 @@
         "@soeditor/preview": "workspace:*",
         "@soeditor/projections": "workspace:*",
         "@soeditor/presets": "workspace:*",
+        "@soeditor/revisions": "workspace:*",
         "@soeditor/rich-text": "workspace:*",
         "@soeditor/source": "workspace:*",
         "@soeditor/ui": "workspace:*"

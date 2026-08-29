@@ -368,6 +368,35 @@ replay unlink rather than guessing. Full-snapshot host writes are serialized,
 while optimistic state keeps decoration mapping synchronous with document
 changes. Adapter failures remain visible through the comments service.
 
+## Phase 28 host-owned revisions and review policy
+
+Durable revisions remain application records rather than Core undo entries or
+alternate live documents:
+
+```text
+host provider/storage → immutable draft/saved snapshot
+                              ↓
+current source → bounded semantic comparison → escaped review panel
+                              ↓ explicit restore only
+                    Core replace-document transaction
+                              ↓
+             Source/Visual/Markdown synchronization
+```
+
+`@soeditor/revisions` keeps loaded history outside canonical state. HTML
+comparison removes parser source locations and compares the SoEditor-owned
+tree; Markdown comparison is exact and line-oriented. Restore is format-safe,
+marks the initiating revision in transaction metadata, and intentionally
+causes mapped comments to unlink because a snapshot replacement has no precise
+editing operations.
+
+`Editor.setReadonly()` is the only Core addition. It is a general immutable
+policy-state transition, not revision logic. Projection coordination and direct
+Visual, Source, and Markdown engines observe runtime readonly changes. The
+revision service maps `edit`, `comments-only`, and `readonly` onto that content
+policy, while an optional comments callback distinguishes whether review
+actions remain available.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing
