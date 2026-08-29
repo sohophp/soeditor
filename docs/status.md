@@ -2,10 +2,11 @@
 
 ## Current development
 
-The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 20. Visual, HTML Source, Markdown, and Preview can remain synchronized under
+The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 21. Visual, HTML Source, Markdown, and Preview can remain synchronized under
 one write authority and appear in accessible Visual | Source, Source | Preview,
-or Markdown | Preview layouts. Phase 21 — 0.6 SDK, Presets, Documentation, and
-Distribution — is active.
+or Markdown | Preview layouts. The Developer preset now selects bounded
+accessibility/SEO diagnostics and projection/split infrastructure without
+owning engines or DOM. Phase 22 — SoEditor 0.6 Release Hardening — is active.
 
 The published stable reference remains `0.5.1`; development package manifests
 stay at that version until the coordinated 0.6 release-hardening phase.
@@ -42,6 +43,9 @@ deliberate and documented under SemVer principles.
 - current global bundle guard: 1.25 MB raw / 410 kB gzip; measured approximately
   1.198 MB raw / 390 kB gzip.
 - current minimal Vite consumer: approximately 27.9 kB raw / 8.74 kB gzip.
+- the Phase 21 narrow Core/SDK/minimal-preset packed consumer is approximately
+  28.0 kB raw and proves unused Source, Markdown, Preview, split DOM, and CSS
+  families are absent; all 95 Chromium scenarios pass.
 
 ## Accepted Medium limitations
 
@@ -70,6 +74,5 @@ deliberate and documented under SemVer principles.
 ## Lower-priority notes
 
 Semantic HTML preservation is not byte-for-byte preservation. Framework
-wrappers, SSR DOM emulation, collaboration, advanced widgets/tables, and
-accessibility/SEO diagnostic providers are post-0.5 work and are not implied by
-this preview.
+wrappers, SSR DOM emulation, collaboration, and advanced widgets/tables remain
+post-0.6 candidates and are not implied by this preview.

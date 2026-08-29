@@ -3,11 +3,16 @@ import {
     DiagnosticsPlugin as SdkDiagnosticsPlugin,
     Plugin,
     ProjectionCoordinatorPlugin as SdkProjectionCoordinatorPlugin,
+    SplitViewPlugin as SdkSplitViewPlugin,
     UiPlugin as SdkUiPlugin,
     diagnosticsServiceToken as sdkDiagnosticsServiceToken,
+    splitViewServiceToken as sdkSplitViewServiceToken,
     uiRegistryServiceToken as sdkUiRegistryServiceToken,
     type DiagnosticProvider as SdkDiagnosticProvider,
+    type DiagnosticsWorkflowConfig,
     type ProjectionAdapter as SdkProjectionAdapter,
+    type SplitViewAdapter as SdkSplitViewAdapter,
+    type SplitViewPair as SdkSplitViewPair,
     type StatusItemFactory,
 } from '@soeditor/plugin-sdk';
 import {
@@ -191,10 +196,18 @@ await umbrellaEditor.destroy();
 const accessibilityConfig: AccessibilityDiagnosticsConfig = {
     rules: { 'a11y.iframe-title': 'error' },
 };
+const diagnosticsWorkflow: DiagnosticsWorkflowConfig = {
+    validation: { delay: 250, mode: 'debounced' },
+};
 const qualityEditor = await Editor.create({
     data: '<!doctype html><html><head></head><body><button></button></body></html>',
     plugins: [AccessibilityDiagnosticsPlugin, SeoDiagnosticsPlugin],
-    config: { htmlTools: { accessibility: accessibilityConfig } },
+    config: {
+        htmlTools: {
+            accessibility: accessibilityConfig,
+            diagnostics: diagnosticsWorkflow,
+        },
+    },
 });
 const qualityProblems = await qualityEditor.services
     .get(diagnosticsServiceToken)
@@ -228,6 +241,28 @@ if (
     throw new Error('Packed projection contracts were not coordinated.');
 }
 await projectionEditor.destroy();
+
+const sdkLayoutEditor = await Editor.create({
+    plugins: [SdkSplitViewPlugin],
+});
+const sdkProjections = sdkLayoutEditor.services.get(
+    projectionCoordinatorServiceToken,
+);
+sdkProjections.attach({ id: 'visual', update: () => undefined });
+sdkProjections.attach({ id: 'source', update: () => undefined });
+const sdkLayoutUpdates: string[] = [];
+const sdkLayoutAdapter: SdkSplitViewAdapter = {
+    focus: () => undefined,
+    supports: () => true,
+    update: (snapshot) => sdkLayoutUpdates.push(snapshot.pair ?? 'closed'),
+};
+sdkLayoutEditor.services.get(sdkSplitViewServiceToken).attach(sdkLayoutAdapter);
+const sdkLayoutPair: SdkSplitViewPair = 'visual-source';
+sdkLayoutEditor.execute('layout.split.open', sdkLayoutPair);
+if (sdkLayoutUpdates.at(-1) !== sdkLayoutPair) {
+    throw new Error('Packed SDK split-view adapter was not updated.');
+}
+await sdkLayoutEditor.destroy();
 
 const layoutEditor = await Editor.create({ plugins: [SplitViewPlugin] });
 const layoutPair: SplitViewPair = 'visual-source';

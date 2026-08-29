@@ -1,4 +1,5 @@
 import { execFileSync } from 'node:child_process';
+import { Buffer } from 'node:buffer';
 import {
     cp,
     mkdir,
@@ -26,10 +27,15 @@ const releaseLicenseText = await readFile(
 );
 const fixtureSource = join(repositoryRoot, 'tests/consumers/nodenext');
 const viteFixtureSource = join(repositoryRoot, 'tests/consumers/vite');
+const narrowViteFixtureSource = join(
+    repositoryRoot,
+    'tests/consumers/vite-narrow',
+);
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'soeditor-nodenext-'));
 const packDirectory = join(temporaryRoot, 'package');
 const fixtureDirectory = join(temporaryRoot, 'consumer');
 const viteFixtureDirectory = join(temporaryRoot, 'vite-consumer');
+const narrowViteFixtureDirectory = join(temporaryRoot, 'vite-narrow-consumer');
 
 function run(command, args, cwd) {
     execFileSync(command, args, {
@@ -470,6 +476,67 @@ try {
         );
     }
     stdout.write('Vite packed-package production build passed.\n');
+
+    await cp(narrowViteFixtureSource, narrowViteFixtureDirectory, {
+        recursive: true,
+    });
+    const narrowPackagePath = join(narrowViteFixtureDirectory, 'package.json');
+    const narrowPackageData = JSON.parse(
+        await readFile(narrowPackagePath, 'utf8'),
+    );
+    narrowPackageData.dependencies = { ...packageData.dependencies };
+    await writeFile(
+        narrowPackagePath,
+        `${JSON.stringify(narrowPackageData, null, 4)}\n`,
+    );
+    await writeOverrides(
+        narrowViteFixtureDirectory,
+        narrowPackageData.dependencies,
+    );
+    run('pnpm', ['install'], narrowViteFixtureDirectory);
+    run('pnpm', ['build'], narrowViteFixtureDirectory);
+    const narrowAssetsRoot = join(narrowViteFixtureDirectory, 'dist/assets');
+    const narrowAssets = await readdir(narrowAssetsRoot);
+    const narrowJavaScript = narrowAssets.filter((name) =>
+        name.endsWith('.js'),
+    );
+    if (narrowJavaScript.length === 0) {
+        throw new Error('Narrow Vite consumer did not emit JavaScript.');
+    }
+    const narrowSources = await Promise.all(
+        narrowJavaScript.map((name) =>
+            readFile(join(narrowAssetsRoot, name), 'utf8'),
+        ),
+    );
+    const narrowSize = narrowSources.reduce(
+        (total, source) => total + Buffer.byteLength(source),
+        0,
+    );
+    if (narrowSize > 75_000) {
+        throw new Error(
+            `Narrow Vite consumer exceeds its 75 kB guard (${String(narrowSize)} bytes).`,
+        );
+    }
+    for (const excludedMarker of [
+        'HTML source scroll area',
+        'Markdown scroll area',
+        'Editor split view',
+        'SoEditor content preview',
+    ]) {
+        if (narrowSources.some((source) => source.includes(excludedMarker))) {
+            throw new Error(
+                `Narrow Vite consumer retained unused feature marker "${excludedMarker}".`,
+            );
+        }
+    }
+    if (narrowAssets.some((name) => name.endsWith('.css'))) {
+        throw new Error(
+            'Narrow Vite consumer emitted CSS without an explicit style import.',
+        );
+    }
+    stdout.write(
+        `Narrow Vite tree-shaking audit passed (${String(narrowSize)} bytes).\n`,
+    );
 } finally {
     await rm(temporaryRoot, { force: true, recursive: true });
 }

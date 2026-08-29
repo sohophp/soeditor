@@ -39,7 +39,7 @@ and stabilization work.
 The current authorized roadmap phase is:
 
 ```text
-Phase 21 — 0.6 SDK, Presets, Documentation, and Distribution (active)
+Phase 22 — SoEditor 0.6 Release Hardening (active)
 ```
 
 The repository owner authorized the SoEditor 0.6 through 1.0 development goal

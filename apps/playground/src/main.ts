@@ -10,9 +10,8 @@ import {
     type FileManager,
 } from '@soeditor/file-manager';
 import {
-    AccessibilityDiagnosticsPlugin,
     diagnosticsServiceToken,
-    SeoDiagnosticsPlugin,
+    type DiagnosticRuleSetting,
 } from '@soeditor/html-tools';
 import {
     createSplitViewLayout,
@@ -20,6 +19,7 @@ import {
     splitViewServiceToken,
     type SplitViewPair,
 } from '@soeditor/layout';
+import '@soeditor/layout/styles.css';
 import {
     createMarkdownEditingEngine,
     createMarkdownPreviewRenderer,
@@ -169,17 +169,28 @@ const splitPair = readSplitPair(parameters.get('split'));
 const persistentProjections =
     parameters.get('projections') === 'persistent' || splitPair !== undefined;
 const cmsExample = parameters.get('example') === 'cms';
+const qualityExample = parameters.has('quality');
 const developerDocument = parameters.get('preset') !== 'classic';
+const diagnosticsMode =
+    parameters.get('diagnostics') === 'manual' ? 'manual' : 'debounced';
 const htmlPreset = developerDocument ? developerPreset : classicPreset;
+const htmlPresetPlugins =
+    developerDocument && !persistentProjections
+        ? htmlPreset.plugins.filter(
+              (plugin) =>
+                  plugin !== ProjectionCoordinatorPlugin &&
+                  plugin !== SplitViewPlugin,
+          )
+        : htmlPreset.plugins;
 const htmlPlugins = [
     DemoPlugin,
-    ...(persistentProjections ? [ProjectionCoordinatorPlugin] : []),
-    ...(splitPair === undefined ? [] : [SplitViewPlugin]),
-    ...htmlPreset.plugins,
-    ...(developerDocument
-        ? [AccessibilityDiagnosticsPlugin, SeoDiagnosticsPlugin]
+    ...(!developerDocument && persistentProjections
+        ? [ProjectionCoordinatorPlugin]
         : []),
+    ...(!developerDocument && splitPair !== undefined ? [SplitViewPlugin] : []),
+    ...htmlPresetPlugins,
 ];
+document.body.dataset.diagnostics = diagnosticsMode;
 document.body.dataset.demo = markdownDocument
     ? 'markdown'
     : cmsExample
@@ -205,7 +216,9 @@ const editor = await Editor.create(
         : {
               data: cmsExample
                   ? '<!--CMS:block:42--><h1>CMS article</h1><p>Edit me safely.</p><product-card data-id="123"></product-card><!--CMS:end:42-->'
-                  : '<p>Hello <strong>SoEditor</strong></p><product-card data-id="123"></product-card><!--CMS:block-->',
+                  : qualityExample
+                    ? '<!doctype html><html><head></head><body><button></button><h3>Skipped heading</h3></body></html>'
+                    : '<p>Hello <strong>SoEditor</strong></p><product-card data-id="123"></product-card><!--CMS:block-->',
               plugins: htmlPlugins,
               readonly: parameters.has('readonly'),
               ...(developerDocument
@@ -214,10 +227,28 @@ const editor = await Editor.create(
                             htmlTools: {
                                 diagnostics: {
                                     validation: {
-                                        mode: 'debounced' as const,
-                                        delay: 250,
+                                        ...(diagnosticsMode === 'manual'
+                                            ? { mode: 'manual' as const }
+                                            : {
+                                                  mode: 'debounced' as const,
+                                                  delay: 250,
+                                              }),
                                     },
                                 },
+                                ...(parameters.has('a11y')
+                                    ? {
+                                          accessibility: {
+                                              rules: {
+                                                  'a11y.interactive-name':
+                                                      readRuleSetting(
+                                                          parameters.get(
+                                                              'a11y',
+                                                          ),
+                                                      ),
+                                              },
+                                          },
+                                      }
+                                    : {}),
                             },
                         },
                     }
@@ -402,6 +433,9 @@ bind('clean', () => editor.markClean());
 bind('uppercase', () => {
     editor.execute('demo.uppercase');
 });
+bind('validate', () => {
+    if (!markdownDocument) void editor.execute('document.validate');
+});
 bind('unsafe', () => {
     editor.setData(
         '<p>Safe text</p><img src="invalid:" onerror="window.__soeditorExecuted = true"><script>window.__soeditorExecuted = true</script>',
@@ -431,4 +465,17 @@ function readSplitPair(value: string | null): SplitViewPair | undefined {
         return value;
     }
     throw new TypeError(`Unknown Playground split pair "${value}".`);
+}
+
+function readRuleSetting(value: string | null): DiagnosticRuleSetting {
+    if (value === 'off') return false;
+    if (
+        value === 'error' ||
+        value === 'warning' ||
+        value === 'info' ||
+        value === 'hint'
+    ) {
+        return value;
+    }
+    throw new TypeError(`Unknown Playground diagnostic setting "${value}".`);
 }

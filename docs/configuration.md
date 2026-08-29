@@ -44,6 +44,35 @@ Duplicate plugin IDs are rejected. Applications remain responsible for
 registering concrete capabilities such as a `FileManager` and for attaching
 surface hosts.
 
+The Developer preset includes the bounded accessibility/SEO providers and the
+projection/split services. It still does not construct engines, discover DOM
+hosts, attach a split layout, or select Preview security policy.
+
+## Diagnostics
+
+Validation is manual unless a per-editor debounced policy is configured:
+
+```ts
+config: {
+    htmlTools: {
+        diagnostics: { validation: { mode: 'debounced', delay: 250 } },
+        accessibility: {
+            rules: {
+                'a11y.interactive-name': 'error',
+                'a11y.heading-order': false,
+            },
+        },
+        seo: { rules: { 'seo.meta-description': 'hint' } },
+    },
+}
+```
+
+Use `editor.execute('document.validate')` for manual validation. Supported rule
+settings are `false`, `error`, `warning`, `info`, and `hint`; malformed or
+unknown settings fail initialization. Diagnostics inspect canonical source and
+cannot prove WCAG conformance, search ranking, CSS/layout behavior, or dynamic
+script output.
+
 ## Surface options
 
 Surface configuration is deliberately separate from Core:
@@ -54,9 +83,17 @@ Surface configuration is deliberately separate from Core:
 - UI: `{ editor, element, toolbar?, theme? }`.
 - Preview: `{ editor, element, renderer?, configuration? }`.
 - Developer tools: `{ editor, ui, visualElement }`.
+- Split layout: `{ editor, element, hosts, initialPair, orientation?, ratio?,
+responsiveBreakpoint? }`.
 
 Only one service-owning surface of each kind may attach to an editor. Duplicate
 attachment fails before taking over an existing host.
+
+Split layout pairs are `visual-source`, `source-preview`, and
+`markdown-preview`. Projection engines remain application-owned. Destroy the
+layout before destroying those engines so hosts are restored to their original
+DOM positions. Invalid HTML stays Source-owned and locks Visual at its last
+valid model; Preview and every non-primary editing projection are readonly.
 
 ## Commands and events
 

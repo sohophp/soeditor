@@ -27,7 +27,9 @@ import {
 } from '@soeditor/dev-tools';
 import {
     Plugin as SdkPlugin,
+    SplitViewPlugin as SdkSplitViewPlugin,
     UiPlugin as SdkUiPlugin,
+    splitViewServiceToken as sdkSplitViewServiceToken,
     uiRegistryServiceToken as sdkUiRegistryServiceToken,
 } from '@soeditor/plugin-sdk';
 import {
@@ -88,6 +90,25 @@ if (projectionService.snapshot.primary !== 'visual') {
     throw new Error('Packed projection coordinator returned invalid state.');
 }
 await projectionEditor.destroy();
+const sdkLayoutEditor = await Editor.create({ plugins: [SdkSplitViewPlugin] });
+const sdkLayoutProjections = sdkLayoutEditor.services.get(
+    projectionCoordinatorServiceToken,
+);
+sdkLayoutProjections.attach({ id: 'visual', update: () => undefined });
+sdkLayoutProjections.attach({ id: 'source', update: () => undefined });
+let sdkLayoutPair;
+sdkLayoutEditor.services.get(sdkSplitViewServiceToken).attach({
+    focus: () => undefined,
+    supports: () => true,
+    update: (snapshot) => {
+        sdkLayoutPair = snapshot.pair;
+    },
+});
+sdkLayoutEditor.execute('layout.split.open', 'visual-source');
+if (sdkLayoutPair !== 'visual-source') {
+    throw new Error('Packed SDK split-view runtime contract failed.');
+}
+await sdkLayoutEditor.destroy();
 const layoutEditor = await Editor.create({ plugins: [SplitViewPlugin] });
 if (
     !layoutEditor.commands.has('layout.split.open') ||

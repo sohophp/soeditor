@@ -4,8 +4,8 @@ SoEditor plugins are per-editor classes with explicit lifecycle hooks. Import
 authoring contracts from `@soeditor/plugin-sdk`; import feature plugins from
 their owning package only when declaring a concrete dependency.
 
-The 0.5 SDK is a curated facade, not a second runtime. Plugin packages should
-declare compatible `@soeditor/*` 0.5 peer dependencies and test against packed
+The SDK is a curated facade, not a second runtime. Plugin packages should
+declare compatible aligned `@soeditor/*` peer dependencies and test against packed
 public package roots under strict NodeNext resolution.
 
 ```ts
@@ -62,6 +62,10 @@ palette actions invoke those same commands.
 - Register toolbar factories, status factories, and host-scoped shortcuts via
   `uiRegistryServiceToken`.
 - Register HTML diagnostic providers via `diagnosticsServiceToken`.
+- Observe or adapt projection activity via
+  `projectionCoordinatorServiceToken` and `ProjectionAdapter`.
+- Implement an alternate split host adapter through `splitViewServiceToken`
+  and `SplitViewAdapter`.
 - Supply a replaceable asset picker via `fileManagerServiceToken`.
 
 Register UI factories during plugin initialization, before calling
@@ -71,6 +75,13 @@ and reattach it when intentionally changing the contribution set at runtime.
 Toolbar factories may construct menus using ordinary accessible DOM. A separate
 declarative menu/formatter manifest is intentionally absent until multiple
 features demonstrate a stable common contract.
+
+The SDK intentionally exposes generic provider, workflow, service, adapter,
+snapshot, pair, orientation, and attachment contracts. Import built-in
+accessibility/SEO plugins and rule codes from `@soeditor/html-tools`; import the
+browser DOM split factory and its errors from `@soeditor/layout`. Registry
+implementations, layout DOM internals, and third-party parser/editor types are
+not extension APIs.
 
 ## Compatibility rules
 

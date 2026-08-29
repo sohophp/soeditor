@@ -34,6 +34,12 @@ export default defineConfig({
                     import.meta.url,
                 ),
             ),
+            '@soeditor/layout/styles.css': fileURLToPath(
+                new URL(
+                    '../../packages/layout/src/styles.css',
+                    import.meta.url,
+                ),
+            ),
             '@soeditor/layout': fileURLToPath(
                 new URL('../../packages/layout/src/index.ts', import.meta.url),
             ),

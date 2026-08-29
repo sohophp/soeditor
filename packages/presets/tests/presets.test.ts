@@ -30,6 +30,14 @@ describe('editor presets', () => {
         expect(developerPreset.plugins.map((plugin) => plugin.id)).toContain(
             'developer-tools',
         );
+        expect(developerPreset.plugins.map((plugin) => plugin.id)).toEqual(
+            expect.arrayContaining([
+                'html-accessibility-diagnostics',
+                'html-seo-diagnostics',
+                'projection-coordinator',
+                'split-view',
+            ]),
+        );
     });
 
     it('creates independent editors from minimal and Markdown presets', async () => {
@@ -53,6 +61,10 @@ describe('editor presets', () => {
         for (const preset of [minimalPreset, classicPreset, developerPreset]) {
             const editor = await Editor.create({ plugins: preset.plugins });
             expect(editor.state.document.format).toBe('html');
+            if (preset === developerPreset) {
+                expect(editor.commands.has('layout.split.open')).toBe(true);
+                expect(editor.commands.has('document.validate')).toBe(true);
+            }
             await editor.destroy();
         }
     });

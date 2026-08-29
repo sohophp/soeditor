@@ -1,6 +1,6 @@
 # Getting started
 
-SoEditor 0.5 is an ESM-first Developer Preview. It separates the canonical
+SoEditor is an ESM-first Developer Preview. It separates the canonical
 document (`Editor`) from browser surfaces so a CMS can mount exactly the UI it
 needs.
 
@@ -63,11 +63,15 @@ clean up. Explicit surface teardown keeps application ownership obvious.
 
 - `minimalPreset`: paragraphs, bold/italic, history, and basic UI.
 - `classicPreset`: common rich text, Source, diagnostics/formatting, and Preview.
-- `developerPreset`: Classic plus Problems, Inspector, Outline, command palette,
-  Find/Replace, and FileManager browsing.
+- `developerPreset`: Classic plus quality diagnostics, projection/split
+  infrastructure, Problems, Inspector, Outline, command palette, Find/Replace,
+  and FileManager browsing.
 - `markdownPreset`: canonical Markdown editing and isolated preview.
 
 Presets supply format/plugins/toolbar only. Source, visual, Markdown, Preview,
 and UI hosts remain explicit. Continue with the
 [configuration guide](configuration.md) or run the Playground links for each
 release configuration.
+
+For the 0.6 workflow and upgrade boundaries, read the
+[0.5-to-0.6 migration guide](migration-0.5-to-0.6.md).

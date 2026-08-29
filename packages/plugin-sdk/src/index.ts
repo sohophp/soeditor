@@ -29,9 +29,20 @@ export type {
     DiagnosticsService,
     DiagnosticsSnapshot,
     DiagnosticsStatus,
+    DiagnosticsValidationPolicy,
+    DiagnosticsWorkflowConfig,
     Problem,
     ProblemSeverity,
 } from '@soeditor/html-tools';
+export { SplitViewPlugin, splitViewServiceToken } from '@soeditor/layout';
+export type {
+    SplitOrientation,
+    SplitViewAdapter,
+    SplitViewAttachment,
+    SplitViewPair,
+    SplitViewService,
+    SplitViewSnapshot,
+} from '@soeditor/layout';
 export {
     ProjectionCoordinatorPlugin,
     projectionCoordinatorServiceToken,

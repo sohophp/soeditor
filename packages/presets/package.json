@@ -63,8 +63,10 @@
         "@soeditor/engine": "workspace:*",
         "@soeditor/file-manager": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
+        "@soeditor/layout": "workspace:*",
         "@soeditor/markdown": "workspace:*",
         "@soeditor/preview": "workspace:*",
+        "@soeditor/projections": "workspace:*",
         "@soeditor/rich-text": "workspace:*",
         "@soeditor/source": "workspace:*",
         "@soeditor/ui": "workspace:*"
@@ -75,8 +77,10 @@
         "@soeditor/engine": "workspace:*",
         "@soeditor/file-manager": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
+        "@soeditor/layout": "workspace:*",
         "@soeditor/markdown": "workspace:*",
         "@soeditor/preview": "workspace:*",
+        "@soeditor/projections": "workspace:*",
         "@soeditor/rich-text": "workspace:*",
         "@soeditor/source": "workspace:*",
         "@soeditor/ui": "workspace:*"

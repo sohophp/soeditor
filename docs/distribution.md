@@ -1,6 +1,6 @@
 # Distribution and integration
 
-SoEditor 0.5 Developer Preview is ESM-first. The `@soeditor/editor` package is
+SoEditor Developer Preview is ESM-first. The `@soeditor/editor` package is
 the straightforward application entry; the other scoped packages remain
 available for smaller or more tightly controlled integrations.
 
@@ -76,8 +76,16 @@ import '@soeditor/editor/styles.css';
 ```
 
 The repository release gate installs packed tarballs into clean NodeNext,
-native Node ESM, and Vite fixtures. The minimal Vite fixture also has a 100 kB
-uncompressed JavaScript guard to detect major tree-shaking regressions.
+native Node ESM, and Vite fixtures. A narrow Core/SDK/minimal-preset fixture
+also rejects accidental Source, Markdown, Preview, layout DOM, or CSS families
+and currently builds to about 28 kB uncompressed JavaScript.
+
+Direct users of `@soeditor/layout` import its stylesheet explicitly:
+
+```ts
+import { createSplitViewLayout } from '@soeditor/layout';
+import '@soeditor/layout/styles.css';
+```
 
 ## Direct browser/CDN build
 
@@ -105,3 +113,8 @@ mutable global plugin registry, does not discover remote plugins, and does not
 automatically create editors. ESM and the scoped public package roots remain
 the authoritative APIs. The self-contained global contains optional features,
 so size-sensitive applications should use ESM.
+
+The example remains pinned to the published 0.5.1 reference. Phase 22 will
+align every scoped package and update the exact CDN version together; consumers
+must not mix release lines. See the
+[migration guide](migration-0.5-to-0.6.md).

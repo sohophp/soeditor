@@ -2,7 +2,7 @@
 
 ## Current implementation status
 
-Phases 1–18 are implemented. Runtime document formats are `html | markdown`
+Phases 1–21 are implemented. Runtime document formats are `html | markdown`
 and projections are `visual | source | markdown | preview`. HTML and Markdown
 remain canonical source formats for separate editor instances; projection
 changes never perform an implicit format conversion. Later sections that
@@ -212,6 +212,26 @@ Preview security configuration. DOM anchors and attribute/style snapshots let
 layout teardown return hosts to their exact parents and positions without
 destroying the engines. Arbitrary docking, persistence, and multi-writer
 editing remain deferred.
+
+## Phase 21 curated SDK, presets, and distribution
+
+Phase 21 keeps owning package roots authoritative while extending
+`@soeditor/plugin-sdk` only with generic diagnostics workflow,
+projection-coordinator, and split-adapter contracts needed by third-party
+plugins. Built-in quality implementations remain in `@soeditor/html-tools` and
+the DOM split factory remains in `@soeditor/layout`; private registries,
+dependency AST types, timers, and layout DOM machinery are not re-exported.
+
+`developerPreset` is immutable data that now selects the quality providers and
+projection/split plugins. It does not create engines, attach hosts, choose a
+Preview renderer/security configuration, or supply a FileManager. Applications
+therefore retain lifecycle, DOM, security, and writer-authority ownership.
+
+Layout CSS is an explicit package entry rather than an import side effect of
+the SDK facade. The umbrella stylesheet composes UI and layout styles, while a
+narrow Core/SDK/minimal-preset production consumer proves that unused Source,
+Markdown, Preview, layout DOM, and CSS families remain removable. Packed
+NodeNext, native ESM, and Vite consumers exercise only public export maps.
 
 ## Phase 3 minimal visual editing engine
 

@@ -38,3 +38,6 @@ Applications must attach the corresponding projection engines before opening a
 pair. Layout actions are available through the shared command registry, including
 `layout.split.open`, `layout.split.resize`, `layout.split.collapse`, and
 `layout.split.focus`.
+
+When importing this package directly, load `@soeditor/layout/styles.css`.
+The `@soeditor/editor/styles.css` umbrella stylesheet already includes it.

@@ -2,9 +2,14 @@ import { defineConfig } from 'vite';
 
 export default defineConfig({
     build: {
+        copyPublicDir: false,
+        cssCodeSplit: true,
         lib: {
             cssFileName: 'styles',
-            entry: 'src/index.ts',
+            entry: {
+                index: 'src/index.ts',
+                styles: 'src/styles.css',
+            },
             fileName: 'index',
             formats: ['es'],
         },

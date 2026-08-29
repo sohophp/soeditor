@@ -223,6 +223,9 @@ importers:
       '@soeditor/html-tools':
         specifier: workspace:*
         version: link:../html-tools
+      '@soeditor/layout':
+        specifier: workspace:*
+        version: link:../layout
       '@soeditor/projections':
         specifier: workspace:*
         version: link:../projections
@@ -247,12 +250,18 @@ importers:
       '@soeditor/html-tools':
         specifier: workspace:*
         version: link:../html-tools
+      '@soeditor/layout':
+        specifier: workspace:*
+        version: link:../layout
       '@soeditor/markdown':
         specifier: workspace:*
         version: link:../markdown
       '@soeditor/preview':
         specifier: workspace:*
         version: link:../preview
+      '@soeditor/projections':
+        specifier: workspace:*
+        version: link:../projections
       '@soeditor/rich-text':
         specifier: workspace:*
         version: link:../rich-text
