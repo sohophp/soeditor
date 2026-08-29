@@ -287,6 +287,36 @@ only when formatting is requested, and its types do not cross the public
 boundary. The SoEditor API exposes only a small validated formatting option
 subset.
 
+## Phase 8 editor UI system
+
+Phase 8 adds browser-facing `@soeditor/ui` while Core remains DOM- and
+framework-independent. `UiPlugin` owns a per-editor registry of named toolbar
+factories and keyboard shortcuts. Duplicate contribution IDs and shortcut
+chords fail explicitly, registrations have idempotent disposers, and retained
+registries become terminal with editor destruction.
+
+`createEditorUi` attaches one controlled UI instance to a caller-owned host. An
+ordered string configuration resolves registered toolbar items and `|` group
+separators. Included items cover current undo/redo, block style, inline
+formatting, links, images, tables, source mode, and HTML formatting. Buttons,
+menus, dialogs, and host-scoped shortcuts invoke the same Core commands as
+external integrations.
+
+The UI remembers the last DOM selection inside an editing surface and restores
+it before a toolbar or dialog command. This permits native controls to receive
+focus without making visual commands bypass the controlled engine. Visual
+feature commands are unavailable outside Visual mode.
+
+One attached instance owns its toolbar, native modal dialogs, anchored balloon
+layer, accessible notifications, mode/dirty status region, listeners, and theme
+attribute. Destruction removes only UI-owned DOM and is automatic on Core editor
+destruction. Overlay string content uses `textContent`; callers may alternatively
+supply DOM nodes or safe construction callbacks.
+
+The package publishes scoped CSS separately as `@soeditor/ui/styles.css`.
+Light, dark, and automatic color-scheme foundations use `--soeditor-*` custom
+properties and remain overridable by the host application.
+
 ## 1. 项目定位
 
 SoEditor 是一个面向开发者、CMS 和内容系统的现代可扩展内容编辑器。

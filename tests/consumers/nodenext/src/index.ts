@@ -29,6 +29,13 @@ import {
     sourceEditingServiceToken,
     type SourceEditingEngineOptions,
 } from '@soeditor/source';
+import {
+    UiPlugin,
+    uiRegistryServiceToken,
+    type EditorUiTheme,
+    type KeyboardShortcutDefinition,
+    type ToolbarConfiguration,
+} from '@soeditor/ui';
 // @ts-expect-error Editing-model internals are not a package subpath API.
 import type { EditingModel } from '@soeditor/engine/model';
 
@@ -66,6 +73,7 @@ const editor = await Editor.create({
         SourceEditingPlugin,
         DiagnosticsPlugin,
         HtmlFormattingPlugin,
+        UiPlugin,
     ],
 });
 
@@ -122,6 +130,16 @@ void diagnosticProvider;
 void formattingOptions;
 void problems;
 void diagnosticsServiceToken;
+const toolbar: ToolbarConfiguration = ['undo', '|', 'source'];
+const theme: EditorUiTheme = 'auto';
+const shortcut: KeyboardShortcutDefinition = {
+    id: 'consumer.shortcut',
+    chord: 'Alt+K',
+    command: 'consumer.replace',
+};
+editor.services.get(uiRegistryServiceToken).registerShortcut(shortcut);
+void toolbar;
+void theme;
 const rejectInternalModel = (value: EditingModel): void => {
     void value;
 };

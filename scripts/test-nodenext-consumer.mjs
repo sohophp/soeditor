@@ -56,6 +56,17 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/ui',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/source',
             'pack',
             '--pack-destination',
@@ -119,8 +130,9 @@ try {
     const htmlToolsArchive = archives.find((name) =>
         name.startsWith('soeditor-html-tools-'),
     );
+    const uiArchive = archives.find((name) => name.startsWith('soeditor-ui-'));
 
-    if (archives.length !== 6 || coreArchive === undefined) {
+    if (archives.length !== 7 || coreArchive === undefined) {
         throw new Error('Expected one packed @soeditor/core archive.');
     }
 
@@ -142,6 +154,10 @@ try {
 
     if (htmlToolsArchive === undefined) {
         throw new Error('Expected one packed @soeditor/html-tools archive.');
+    }
+
+    if (uiArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/ui archive.');
     }
 
     const packagePath = join(fixtureDirectory, 'package.json');
@@ -169,6 +185,10 @@ try {
     packageData.dependencies['@soeditor/html-tools'] = `file:${join(
         packDirectory,
         htmlToolsArchive,
+    )}`;
+    packageData.dependencies['@soeditor/ui'] = `file:${join(
+        packDirectory,
+        uiArchive,
     )}`;
     await writeFile(packagePath, `${JSON.stringify(packageData, null, 4)}\n`);
 

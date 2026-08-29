@@ -10,7 +10,8 @@
         "@soeditor/html": "0.0.0",
         "@soeditor/html-tools": "0.0.0",
         "@soeditor/rich-text": "0.0.0",
-        "@soeditor/source": "0.0.0"
+        "@soeditor/source": "0.0.0",
+        "@soeditor/ui": "0.0.0"
     },
     "devDependencies": {
         "typescript": "5.9.2"

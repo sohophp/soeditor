@@ -21,9 +21,15 @@ import {
     createSourceEditingEngine,
     SourceEditingPlugin,
 } from '@soeditor/source';
+import { createEditorUi, UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
+import '@soeditor/ui/styles.css';
 
 class DemoPlugin extends Plugin {
     static readonly id = 'demo';
+    static readonly requires = [UiPlugin];
+    #disposeFailingToolbarItem: (() => void) | undefined;
+    #disposeToolbarItem: (() => void) | undefined;
+    #disposeShortcut: (() => void) | undefined;
 
     override init(): void {
         this.editor.commands.register({
@@ -39,6 +45,46 @@ class DemoPlugin extends Plugin {
                 );
             },
         });
+        const registry = this.editor.services.get(uiRegistryServiceToken);
+        this.#disposeToolbarItem = registry.registerToolbarItem(
+            'uppercase',
+            ({ document, editor }) => {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.textContent = 'Uppercase';
+                button.addEventListener('click', () =>
+                    editor.execute('demo.uppercase'),
+                );
+                return { element: button };
+            },
+        );
+        this.#disposeFailingToolbarItem = registry.registerToolbarItem(
+            'failing-update',
+            ({ document }) => {
+                const element = document.createElement('button');
+                element.textContent = 'Failing update';
+                return {
+                    element,
+                    update: () => {
+                        throw new Error('Example toolbar update failed.');
+                    },
+                };
+            },
+        );
+        this.#disposeShortcut = registry.registerShortcut({
+            id: 'demo.uppercase',
+            chord: 'Alt+U',
+            command: 'demo.uppercase',
+        });
+    }
+
+    override destroy(): void {
+        this.#disposeFailingToolbarItem?.();
+        this.#disposeShortcut?.();
+        this.#disposeToolbarItem?.();
+        this.#disposeFailingToolbarItem = undefined;
+        this.#disposeShortcut = undefined;
+        this.#disposeToolbarItem = undefined;
     }
 }
 
@@ -46,12 +92,14 @@ const stateOutput = document.querySelector<HTMLElement>('#state');
 const sourceOutput = document.querySelector<HTMLElement>('#source');
 const editingHost = document.querySelector<HTMLElement>('#editor');
 const sourceEditingHost = document.querySelector<HTMLElement>('#source-editor');
+const uiHost = document.querySelector<HTMLElement>('#editor-ui');
 
 if (
     stateOutput === null ||
     sourceOutput === null ||
     editingHost === null ||
-    sourceEditingHost === null
+    sourceEditingHost === null ||
+    uiHost === null
 ) {
     throw new Error('Playground output or editing host was not found.');
 }
@@ -89,11 +137,27 @@ const sourceEngine = createSourceEditingEngine({
     editor,
     element: sourceEditingHost,
 });
+const toolbarParameter = new URLSearchParams(window.location.search).get(
+    'toolbar',
+);
+const ui = createEditorUi({
+    editor,
+    element: uiHost,
+    ...(toolbarParameter === 'compact'
+        ? { toolbar: ['undo', '|', 'uppercase'] }
+        : toolbarParameter === 'failing'
+          ? { toolbar: ['failing-update'] }
+          : toolbarParameter === 'missing'
+            ? { toolbar: ['missing'] }
+            : {}),
+});
 (window as Window & { __soeditor?: unknown }).__soeditor = Object.freeze({
+    createEditorUi,
     createSourceEditingEngine,
     createVisualEditingEngine,
     editor,
     sourceEngine,
+    ui,
     visualEngine,
 });
 

@@ -14,6 +14,7 @@
         "@soeditor/html": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
         "@soeditor/rich-text": "workspace:*",
-        "@soeditor/source": "workspace:*"
+        "@soeditor/source": "workspace:*",
+        "@soeditor/ui": "workspace:*"
     }
 }

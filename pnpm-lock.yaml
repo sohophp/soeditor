@@ -59,6 +59,9 @@ importers:
       '@soeditor/source':
         specifier: workspace:*
         version: link:../../packages/source
+      '@soeditor/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
 
   packages/core:
     devDependencies:
@@ -133,6 +136,12 @@ importers:
       '@soeditor/html':
         specifier: workspace:*
         version: link:../html
+
+  packages/ui:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
 
 packages:
 

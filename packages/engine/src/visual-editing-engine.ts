@@ -432,6 +432,7 @@ export class VisualEditingEngine implements EditingEngine {
     #canEdit(): boolean {
         return (
             !this.#destroyed &&
+            this.editor.state.mode === 'visual' &&
             !this.editor.state.readonly &&
             !this.#lockedDocument &&
             this.#projection.readSelection() !== undefined
@@ -443,6 +444,7 @@ export class VisualEditingEngine implements EditingEngine {
         const selection = this.#projection.readSelection();
         if (
             selection === undefined ||
+            this.editor.state.mode !== 'visual' ||
             this.editor.state.readonly ||
             this.#lockedDocument
         ) {

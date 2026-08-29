@@ -6,9 +6,9 @@ Developer-first extensible content editor.
 contains the framework-agnostic Core, HTML document layer, controlled visual
 editing engine, transaction history/clipboard boundaries, and Phase 5
 command-driven rich-text feature plugins. Phase 6 adds exact CodeMirror-powered
-HTML source editing and parser diagnostics. The configurable product UI is not
-built yet. Phase 7 adds extensible HTML problems and explicit Prettier
-formatting.
+HTML source editing and parser diagnostics. Phase 7 adds extensible HTML
+problems and explicit Prettier formatting. Phase 8 adds a configurable,
+framework-agnostic editor UI foundation.
 
 ```ts
 import { Editor } from '@soeditor/core';
@@ -31,8 +31,10 @@ const editor = await Editor.create({
   synchronization, and parser diagnostic projection.
 - `@soeditor/html-tools` — UI-independent diagnostic providers/problems and
   explicit, guarded HTML formatting.
-- `@soeditor/playground` — a development harness for Core and the minimal visual
-  engine.
+- `@soeditor/ui` — configurable command toolbar, menus, dialogs, balloons,
+  notifications, shortcuts, status, and theme variables.
+- `@soeditor/playground` — an integrated browser development and verification
+  harness.
 
 ## Development
 

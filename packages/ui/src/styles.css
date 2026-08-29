@@ -1,0 +1,211 @@
+.soeditor-ui {
+    --soeditor-bg: #ffffff;
+    --soeditor-panel-bg: #f6f8fa;
+    --soeditor-text: #1f2328;
+    --soeditor-muted: #59636e;
+    --soeditor-border: #d0d7de;
+    --soeditor-accent: #0969da;
+    --soeditor-danger: #cf222e;
+    --soeditor-radius: 0.375rem;
+    color: var(--soeditor-text);
+    color-scheme: light;
+    position: relative;
+}
+
+.soeditor-ui[data-soeditor-theme='dark'] {
+    --soeditor-bg: #0d1117;
+    --soeditor-panel-bg: #161b22;
+    --soeditor-text: #e6edf3;
+    --soeditor-muted: #8d96a0;
+    --soeditor-border: #30363d;
+    --soeditor-accent: #58a6ff;
+    --soeditor-danger: #ff7b72;
+    color-scheme: dark;
+}
+
+@media (prefers-color-scheme: dark) {
+    .soeditor-ui[data-soeditor-theme='auto'] {
+        --soeditor-bg: #0d1117;
+        --soeditor-panel-bg: #161b22;
+        --soeditor-text: #e6edf3;
+        --soeditor-muted: #8d96a0;
+        --soeditor-border: #30363d;
+        --soeditor-accent: #58a6ff;
+        --soeditor-danger: #ff7b72;
+        color-scheme: dark;
+    }
+}
+
+.soeditor-ui__chrome {
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    margin-block-end: 0.75rem;
+}
+
+.soeditor-ui__toolbar {
+    align-items: center;
+    background: var(--soeditor-panel-bg);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    padding: 0.5rem;
+}
+
+.soeditor-ui__button,
+.soeditor-ui__menu-item,
+.soeditor-ui__dialog-action {
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    color: var(--soeditor-text);
+    cursor: pointer;
+    font: inherit;
+    padding: 0.35rem 0.55rem;
+}
+
+.soeditor-ui__button:hover:not(:disabled),
+.soeditor-ui__menu-item:hover:not(:disabled),
+.soeditor-ui__dialog-action:hover:not(:disabled),
+.soeditor-ui__button.is-active {
+    border-color: var(--soeditor-accent);
+    color: var(--soeditor-accent);
+}
+
+.soeditor-ui__button:disabled,
+.soeditor-ui__menu-item:disabled,
+.soeditor-ui__dialog-action:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
+
+.soeditor-ui__separator {
+    align-self: stretch;
+    border-inline-start: 1px solid var(--soeditor-border);
+    margin: 0.15rem 0.25rem;
+}
+
+.soeditor-ui__menu {
+    position: relative;
+}
+
+.soeditor-ui__menu > summary {
+    list-style: none;
+}
+
+.soeditor-ui__menu > summary::-webkit-details-marker {
+    display: none;
+}
+
+.soeditor-ui__menu-items {
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 20%);
+    display: grid;
+    gap: 0.25rem;
+    inset-block-start: calc(100% + 0.25rem);
+    inset-inline-start: 0;
+    min-width: 9rem;
+    padding: 0.35rem;
+    position: absolute;
+    z-index: 20;
+}
+
+.soeditor-ui__menu-item {
+    text-align: start;
+}
+
+.soeditor-ui__status {
+    border-block-start: 1px solid var(--soeditor-border);
+    color: var(--soeditor-muted);
+    font-size: 0.8125rem;
+    padding: 0.35rem 0.55rem;
+}
+
+.soeditor-ui__notifications {
+    inset-block-start: 0.5rem;
+    inset-inline-end: 0.5rem;
+    position: fixed;
+    z-index: 1001;
+}
+
+.soeditor-ui__notification {
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-inline-start: 0.25rem solid var(--soeditor-accent);
+    border-radius: var(--soeditor-radius);
+    box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 20%);
+    margin-block-end: 0.5rem;
+    max-width: 24rem;
+    padding: 0.65rem 0.8rem;
+}
+
+.soeditor-ui__notification[data-severity='error'] {
+    border-inline-start-color: var(--soeditor-danger);
+}
+
+.soeditor-ui__dialog {
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    color: var(--soeditor-text);
+    min-width: min(24rem, calc(100vw - 2rem));
+    padding: 0;
+}
+
+.soeditor-ui__dialog::backdrop {
+    background: rgb(0 0 0 / 45%);
+}
+
+.soeditor-ui__dialog-title,
+.soeditor-ui__dialog-body,
+.soeditor-ui__dialog-actions {
+    margin: 0;
+    padding: 0.75rem 1rem;
+}
+
+.soeditor-ui__dialog-title {
+    border-block-end: 1px solid var(--soeditor-border);
+    font-size: 1rem;
+}
+
+.soeditor-ui__dialog-actions {
+    border-block-start: 1px solid var(--soeditor-border);
+    display: flex;
+    gap: 0.5rem;
+    justify-content: flex-end;
+}
+
+.soeditor-ui__dialog-action.is-primary {
+    background: var(--soeditor-accent);
+    border-color: var(--soeditor-accent);
+    color: #ffffff;
+}
+
+.soeditor-ui__field {
+    display: grid;
+    gap: 0.25rem;
+    margin-block-end: 0.75rem;
+}
+
+.soeditor-ui__field input {
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    color: var(--soeditor-text);
+    font: inherit;
+    padding: 0.45rem;
+}
+
+.soeditor-ui__balloon {
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    box-shadow: 0 0.5rem 1.5rem rgb(0 0 0 / 20%);
+    color: var(--soeditor-text);
+    max-width: min(24rem, calc(100vw - 2rem));
+    padding: 0.65rem;
+    position: fixed;
+    z-index: 1000;
+}

@@ -5,7 +5,8 @@
         "paths": {
             "@soeditor/core": ["../../packages/core/src/index.ts"],
             "@soeditor/engine": ["../../packages/engine/src/index.ts"],
-            "@soeditor/html": ["../../packages/html/src/index.ts"]
+            "@soeditor/html": ["../../packages/html/src/index.ts"],
+            "@soeditor/ui": ["../../packages/ui/src/index.ts"]
         }
     },
     "include": ["src", "vite.config.ts"]

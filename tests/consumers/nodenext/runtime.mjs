@@ -9,6 +9,7 @@ import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
 import { BoldPlugin } from '@soeditor/rich-text';
 import { SourceEditingPlugin } from '@soeditor/source';
 import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
+import { UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';
@@ -35,6 +36,7 @@ const editor = await Editor.create({
         SourceEditingPlugin,
         DiagnosticsPlugin,
         HtmlFormattingPlugin,
+        UiPlugin,
     ],
 });
 
@@ -55,6 +57,14 @@ if (
     !editor.commands.has('document.format')
 ) {
     throw new Error('Packed HTML tools did not register their commands.');
+}
+
+if (editor.services.tryGet(uiRegistryServiceToken) === undefined) {
+    throw new Error('Packed UI plugin did not register its service.');
+}
+
+if (!import.meta.resolve('@soeditor/ui/styles.css').endsWith('/styles.css')) {
+    throw new Error('Packed UI stylesheet export could not be resolved.');
 }
 
 editor.setData('<p>Changed</p>');

@@ -1,0 +1,30 @@
+{
+    "name": "@soeditor/ui",
+    "version": "0.0.0",
+    "description": "Framework-agnostic configurable DOM UI for SoEditor.",
+    "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./styles.css": "./dist/styles.css"
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "test": "vitest run",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "peerDependencies": {
+        "@soeditor/core": "workspace:*"
+    },
+    "devDependencies": {
+        "@soeditor/core": "workspace:*"
+    }
+}

@@ -25,6 +25,12 @@ export default defineConfig({
             '@soeditor/source': fileURLToPath(
                 new URL('../../packages/source/src/index.ts', import.meta.url),
             ),
+            '@soeditor/ui/styles.css': fileURLToPath(
+                new URL('../../packages/ui/src/styles.css', import.meta.url),
+            ),
+            '@soeditor/ui': fileURLToPath(
+                new URL('../../packages/ui/src/index.ts', import.meta.url),
+            ),
         },
     },
 });
