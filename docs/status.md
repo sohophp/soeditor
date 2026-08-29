@@ -49,11 +49,14 @@ deliberate and documented under SemVer principles.
 - Public npm publication has not yet been performed. Repository/package
   metadata, green CI, dry-run, protected manual workflow/environment, and
   private vulnerability reporting are prepared. The repository owner selected
-  MIT and confirmed npm name control. The first protected publication stopped
-  before its first package because the configured token did not bypass npm's
-  non-interactive 2FA requirement; all 15 versions remain unpublished. Replace
-  the environment credential with a granular read/write token that has Bypass
-  2FA enabled, then rerun the protected workflow.
+  MIT and confirmed npm name availability. The first protected publication
+  stopped before its first package because the configured token did not bypass
+  npm's non-interactive 2FA requirement. After that was corrected, the second
+  attempt stopped before its first package with `Scope not found` for
+  `@soeditor/core`. All 15 versions remain unpublished. Create or grant the
+  publishing identity access to the npm `soeditor` organization, recreate the
+  granular read/write token with Bypass 2FA and that scope access, then rerun
+  the protected workflow.
 
 ## Lower-priority notes
 

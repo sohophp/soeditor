@@ -10,14 +10,19 @@ use an npm identity.
    `LICENSE.txt`. Add the same approved npm `license` expression to the root
    manifest and all 15 public package manifests. Confirm it with
    `pnpm release:check-license`.
-2. Confirm the publishing npm identity controls both the unscoped `soeditor`
-   name and the `@soeditor` organization scope.
+2. Confirm the publishing npm identity controls the unscoped `soeditor` name.
+   Create the npm organization named `soeditor` on the public-package plan,
+   which creates the `@soeditor` scope, and confirm the publishing identity is
+   an owner or member allowed to publish packages in it. Name availability
+   alone does not create an npm scope.
 3. Create the protected GitHub `npm` environment and require reviewer approval.
 4. Configure an environment-scoped `NPM_TOKEN` using a granular npm token with
    read/write package access and **Bypass 2FA** enabled. The bypass setting is
    required for this non-interactive initial publication and is disabled by
    default when a token is created. Restrict the token to the required package
-   names/scopes where npm's token controls allow it.
+   names/scopes where npm's token controls allow it. If the token predates the
+   organization, recreate it after joining the organization so its package and
+   organization access includes `@soeditor`.
 5. Enable GitHub private vulnerability reporting for the repository.
 
 No package should be published until all five conditions are true. As a
