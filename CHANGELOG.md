@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+- Added a private framework-neutral workspace controller with explicit ordered
+  attachment factories, reverse teardown, controlled/uncontrolled value
+  policies, observable lifecycle snapshots, and opt-in bounded recovery from
+  the last known canonical source.
+- Added focused unit and Chromium coverage plus an executable Workspace demo;
+  React/Vue adapters and public 0.9 exports remain deferred.
+
 ## 0.8.0 — Review Workflow candidate
 
 - Added bounded, non-canonical visual decorations and the public

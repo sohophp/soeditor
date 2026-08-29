@@ -37,6 +37,11 @@ undeclared subpaths remain internal. Review exports are bounded client views,
 not authoritative regulatory exports; data ownership and backend deletion
 remain host responsibilities.
 
+Phase 30's `@soeditor/workspace` package remains private while lifecycle,
+controlled-value, and recovery contracts are validated. It is intentionally
+absent from the 0.8 SDK and umbrella exports; public classification is deferred
+to the Phase 33 0.9 release gate.
+
 ## Structured extension boundary
 
 A third-party structured widget can register a DOM-free conversion and a node

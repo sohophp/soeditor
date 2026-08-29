@@ -32,9 +32,13 @@ deterministic comment behavior. All 117 Chromium scenarios pass with Critical
 0 and High 0. Phase 29 — SoEditor 0.8 Review Workflow Release — is complete. It
 promoted both review packages to public SDK/umbrella surfaces, added
 permission-checked versioned export and permanent erasure contracts, and
-aligned the local
-`0.8.0` release candidate. All release gates pass with Critical 0 and High 0.
-Phase 30 — Framework-neutral Workspace and Recovery — is active.
+aligned the local `0.8.0` release candidate. All release gates pass with
+Critical 0 and High 0. Phase 30 — Framework-neutral Workspace and Recovery —
+is complete. Its private Core-only application controller provides explicit
+attachment lifecycle, controlled/uncontrolled policies, latest-owner-value
+handling during recovery, bounded restart behavior, documentation, and an
+executable demo. All 120 Chromium scenarios pass with Critical 0 and High 0.
+Phase 31 — React and Vue Adapters — is active.
 
 All 19 public package manifests are aligned at the `0.8.0` release candidate.
 The published stable reference remains `0.5.1` until an explicitly authorized
@@ -113,6 +117,14 @@ deliberate and documented under SemVer principles.
   final adversarial review also fixed stale refresh resurrection after revision
   erasure.
 - final adversarial review: Critical 0, High 0.
+- Phase 30 adds 10 focused Workspace unit tests and three Chromium workflows
+  covering ordered/reverse lifecycle, partial startup failure, controlled
+  feedback and recovery races, unsaved canonical source recovery, crash-rate
+  terminal state, asynchronous destruction, accessibility, and DOM cleanup.
+  Strict typecheck, all unit tests, all 120 Chromium scenarios, build,
+  distribution/release audits, MIT verification, zero high-severity known
+  vulnerabilities, 19-package npm dry run, and unpublished registry preflight
+  pass. Final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
 

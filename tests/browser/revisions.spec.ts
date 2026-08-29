@@ -228,12 +228,14 @@ test('cleans revision UI and makes a retained service terminal', async ({
 });
 
 async function selectText(page: Page, from: number, to: number): Promise<void> {
-    await page.locator(editorHost).evaluate(
-        (host, range) => {
-            const text = host.querySelector('p')?.firstChild;
+    const paragraph = page.locator(`${editorHost} p`).first();
+    await expect(paragraph).not.toBeEmpty();
+    await paragraph.evaluate(
+        (element, range) => {
+            const text = element.firstChild;
             if (!(text instanceof Text))
                 throw new Error('No paragraph text node.');
-            (host as HTMLElement).focus();
+            (element.parentElement as HTMLElement | null)?.focus();
             document
                 .getSelection()
                 ?.setBaseAndExtent(text, range.from, text, range.to);

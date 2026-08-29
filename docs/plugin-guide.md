@@ -223,6 +223,12 @@ tokens, and adapter types from the 0.8 SDK. Storage remains host-owned. Treat
 and implement backend authorization and retention as described in
 `review-data-governance.md`.
 
+The private Phase 30 workspace layer is application infrastructure rather than
+a plugin registry. Applications may attach plugin-provided surfaces and
+services through explicit factories; each factory must return a complete
+`destroy()` handle. Plugin packages must not discover a workspace globally or
+depend on workspace controller internals.
+
 ## Compatibility rules
 
 - Import package roots only; internal subpaths are unsupported.

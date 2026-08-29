@@ -23,7 +23,8 @@
             "@soeditor/presets": ["../../packages/presets/src/index.ts"],
             "@soeditor/revisions": ["../../packages/revisions/src/index.ts"],
             "@soeditor/source": ["../../packages/source/src/index.ts"],
-            "@soeditor/ui": ["../../packages/ui/src/index.ts"]
+            "@soeditor/ui": ["../../packages/ui/src/index.ts"],
+            "@soeditor/workspace": ["../../packages/workspace/src/index.ts"]
         }
     },
     "include": ["src", "vite.config.ts"]

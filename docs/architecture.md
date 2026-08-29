@@ -412,6 +412,30 @@ host confirmation. Both packages require explicit permission for export and
 erasure. These client boundaries do not claim ownership of backend retention,
 backups, replicas, legal holds, identity, audit, or concurrency.
 
+## Phase 30 explicit workspace lifecycle and bounded recovery
+
+`@soeditor/workspace` is a private application layer over Core while its
+contracts are validated for 0.9. A host supplies an Editor creator and an
+ordered list of uniquely identified attachment factories. Factories receive
+the Editor, an abort signal, and the recovery number; completed attachments
+are destroyed in reverse order before the Editor. Partial startup follows the
+same cleanup rule. DOM hosts, surfaces, layouts, services, and security policy
+remain explicit host choices rather than document queries or global state.
+
+Controlled workspaces apply owner values through a private transaction marker
+so external updates do not feed back into `onChange`. Editor-originated changes
+capture canonical source synchronously and notify the owner in a microtask,
+avoiding reentrant transaction dispatch. Uncontrolled workspaces accept only
+an initial value. A controlled update arriving during recovery is retained and
+applied before the replacement instance becomes ready.
+
+Recovery is opt-in and application-reported. It preserves the last observed
+canonical source, tears down the failed mount, and recreates the complete
+workspace through the same factories. A bounded sliding restart window and
+observable `recovering`/`failed` states prevent infinite crash loops. This is
+in-process lifecycle recovery, not durable storage, cross-tab recovery, or
+automatic global error interception.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing

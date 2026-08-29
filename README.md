@@ -30,7 +30,9 @@ media, and a packed third-party widget release gate. Phase 27 adds host-owned,
 operation-mapped comments and non-canonical visual decorations; Phase 28 adds
 host-owned revision history, semantic comparison, restore, and review policies.
 Phase 29 makes those packages public with explicit export/erasure governance
-and a 19-package release gate.
+and a 19-package release gate. Phase 30 adds a private, framework-neutral
+workspace controller for explicit application mounting, reverse teardown,
+controlled/uncontrolled values, and bounded in-process recovery.
 
 ```ts
 import { SoEditor, minimalPreset } from '@soeditor/editor';
@@ -81,6 +83,8 @@ const editor = await SoEditor.create({
   editor configurations.
 - `@soeditor/editor` — convenience ESM and direct-browser distribution over the public
   package roots.
+- `@soeditor/workspace` — private Phase 30 application lifecycle and bounded
+  recovery controller; public exposure is deferred to the 0.9 release gate.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
 
@@ -92,6 +96,7 @@ Start with [Getting started](docs/getting-started.md). See
 the [comments guide](docs/comments.md),
 the [revisions guide](docs/revisions.md),
 [review data governance](docs/review-data-governance.md),
+[workspace lifecycle and recovery](docs/workspace.md),
 [public API policy](docs/public-api.md), and
 [development status](docs/status.md).
 

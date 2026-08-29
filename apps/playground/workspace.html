@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>SoEditor workspace lifecycle demo</title>
+    </head>
+    <body>
+        <main>
+            <h1>Workspace lifecycle demo</h1>
+            <div id="toolbar"></div>
+            <div id="editing" aria-label="Workspace visual editor"></div>
+            <output
+                id="source"
+                aria-label="Workspace canonical source"
+            ></output>
+            <p id="status" role="status" aria-live="polite"></p>
+        </main>
+        <script type="module" src="/src/workspace-demo.ts"></script>
+    </body>
+</html>

@@ -95,6 +95,9 @@ importers:
       '@soeditor/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      '@soeditor/workspace':
+        specifier: workspace:*
+        version: link:../../packages/workspace
 
   packages/adapter-sofinder:
     devDependencies:
@@ -440,6 +443,12 @@ importers:
         version: link:../projections
 
   packages/ui:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+
+  packages/workspace:
     devDependencies:
       '@soeditor/core':
         specifier: workspace:*

@@ -25,6 +25,7 @@
         "@soeditor/revisions": "workspace:*",
         "@soeditor/rich-text": "workspace:*",
         "@soeditor/source": "workspace:*",
-        "@soeditor/ui": "workspace:*"
+        "@soeditor/ui": "workspace:*",
+        "@soeditor/workspace": "workspace:*"
     }
 }

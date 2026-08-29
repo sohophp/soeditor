@@ -1223,7 +1223,7 @@ repository-owner-controlled operations.
 ## Status
 
 APPROVED from the repository owner's 2026-08-29 authorization to complete
-SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 29 is active.
+SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 31 is active.
 
 The sequence is justified in
 `docs/research/editor-landscape-2026.md`. Each release must pass its own
@@ -1469,7 +1469,7 @@ Harden the mapped-annotation and asynchronous review platform as 0.8.
 
 ## Status
 
-ACTIVE.
+COMPLETE.
 
 ## Goal
 
@@ -1485,13 +1485,26 @@ without hiding application ownership or adding a framework to editor packages.
   canonical source, crash-rate limits, and observable terminal failure;
 - no global registries, DOM discovery, or silent unsaved-data loss.
 
+## Delivered
+
+- a private Core-only `@soeditor/workspace` controller with explicit ordered
+  attachment factories, partial-startup cleanup, reverse teardown, and abort
+  signals;
+- controlled and uncontrolled value policies, external feedback suppression,
+  microtask owner notification, and latest-owner-value handling during
+  recovery;
+- opt-in source-preserving recovery with a bounded sliding crash window and
+  observable ready/recovering/failed/destroyed snapshots;
+- 10 focused unit tests, three Chromium workflows, axe coverage, an executable
+  demo, synchronized documentation, and Critical 0 / High 0 review.
+
 ---
 
 # Phase 31 — React and Vue Adapters
 
 ## Status
 
-PENDING.
+ACTIVE.
 
 ## Goal
 

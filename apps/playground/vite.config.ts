@@ -3,6 +3,14 @@ import { fileURLToPath, URL } from 'node:url';
 
 export default defineConfig({
     build: {
+        rollupOptions: {
+            input: {
+                main: fileURLToPath(new URL('index.html', import.meta.url)),
+                workspace: fileURLToPath(
+                    new URL('workspace.html', import.meta.url),
+                ),
+            },
+        },
         sourcemap: true,
     },
     resolve: {
@@ -69,6 +77,12 @@ export default defineConfig({
             ),
             '@soeditor/ui': fileURLToPath(
                 new URL('../../packages/ui/src/index.ts', import.meta.url),
+            ),
+            '@soeditor/workspace': fileURLToPath(
+                new URL(
+                    '../../packages/workspace/src/index.ts',
+                    import.meta.url,
+                ),
             ),
         },
     },
