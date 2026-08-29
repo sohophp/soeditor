@@ -8,6 +8,11 @@ import {
     normalizePreviewConfiguration,
     type PreviewConfiguration,
 } from './configuration.js';
+import {
+    htmlPreviewContentRenderer,
+    UnsupportedPreviewDocumentFormatError,
+    type PreviewContentRenderer,
+} from './content-renderer.js';
 import { previewServiceToken, type PreviewService } from './preview-service.js';
 import { renderPreviewDocument } from './renderer.js';
 
@@ -16,6 +21,7 @@ export interface PreviewEngineOptions {
     readonly configuration?: PreviewConfiguration;
     readonly editor: Editor;
     readonly element: HTMLElement;
+    readonly renderer?: PreviewContentRenderer;
 }
 
 /** Minimal lifecycle of an attached preview environment. */
@@ -48,6 +54,7 @@ class DomPreviewEngine implements PreviewEngine {
     readonly #element: HTMLElement;
     readonly #iframe: HTMLIFrameElement;
     readonly #previousHidden: boolean;
+    readonly #renderer: PreviewContentRenderer;
     readonly #service: PreviewService;
     readonly #view: Window;
     #destroyed = false;
@@ -67,19 +74,29 @@ class DomPreviewEngine implements PreviewEngine {
             throw new ServiceAlreadyRegisteredError(previewServiceToken.id);
         }
         this.#view = view;
+        this.#renderer = options.renderer ?? htmlPreviewContentRenderer;
         this.#configuration = normalizePreviewConfiguration(
             options.configuration,
         );
+        const initialSrcdoc =
+            options.editor.state.mode === 'preview'
+                ? this.#renderCurrentSource()
+                : undefined;
         this.#previousHidden = options.element.hidden;
         const iframe = options.element.ownerDocument.createElement('iframe');
         iframe.className = 'soeditor-preview__frame';
         iframe.title = this.#configuration.title;
         iframe.referrerPolicy = 'no-referrer';
         iframe.setAttribute('sandbox', '');
+        if (initialSrcdoc !== undefined) {
+            iframe.srcdoc = initialSrcdoc;
+            this.#stale = false;
+        }
         this.#iframe = iframe;
         options.element.append(iframe);
 
         const service = Object.freeze<PreviewService>({
+            canRender: () => this.#canRender(),
             refresh: () => this.#refresh(),
         });
         this.#service = service;
@@ -122,7 +139,12 @@ class DomPreviewEngine implements PreviewEngine {
         try {
             if (this.#editor.state.mode === 'preview') {
                 this.#editor.update(
-                    (transaction) => transaction.setMode('visual'),
+                    (transaction) =>
+                        transaction.setMode(
+                            this.#editor.state.document.format === 'markdown'
+                                ? 'markdown'
+                                : 'visual',
+                        ),
                     { origin: 'system' },
                 );
             }
@@ -140,12 +162,22 @@ class DomPreviewEngine implements PreviewEngine {
 
     #refresh(): void {
         this.#assertAlive();
-        this.#iframe.srcdoc = renderPreviewDocument(
-            this.#editor.getData(),
-            this.#configuration,
-            this.#view,
-        );
+        this.#iframe.srcdoc = this.#renderCurrentSource();
         this.#stale = false;
+    }
+
+    #renderCurrentSource(): string {
+        const format = this.#editor.state.document.format;
+        if (!this.#renderer.supports(format)) {
+            throw new UnsupportedPreviewDocumentFormatError(format);
+        }
+        const content = this.#renderer.render(this.#editor.getData(), format);
+        if (typeof content !== 'string') {
+            throw new TypeError(
+                'A preview content renderer must return a string.',
+            );
+        }
+        return renderPreviewDocument(content, this.#configuration, this.#view);
     }
 
     #updateMode(): void {
@@ -161,6 +193,11 @@ class DomPreviewEngine implements PreviewEngine {
         if (this.#editor.state.mode === 'preview') {
             this.#refresh();
         }
+    }
+
+    #canRender(): boolean {
+        this.#assertAlive();
+        return this.#renderer.supports(this.#editor.state.document.format);
     }
 
     #assertAlive(): void {

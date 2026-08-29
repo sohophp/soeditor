@@ -1,13 +1,13 @@
 import type { EditorDocument } from './document.js';
 
 /** The active projection requested from the editor. */
-export type EditorMode = 'visual' | 'source' | 'preview';
+export type EditorMode = 'visual' | 'source' | 'markdown' | 'preview';
 
-/** An immutable snapshot of all Phase 1 editor state. */
+/** An immutable snapshot of editor state. */
 export interface EditorState {
     /** Canonical immutable document snapshot. */
     readonly document: EditorDocument;
-    /** Requested editor projection; Phase 1 implements no editing surface. */
+    /** Requested editor projection. */
     readonly mode: EditorMode;
     /** Editing-policy state for future user-facing editing operations. */
     readonly readonly: boolean;

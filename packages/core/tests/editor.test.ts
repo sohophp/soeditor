@@ -39,10 +39,23 @@ describe('Editor', () => {
         expect(editor.getData()).toBe('');
     });
 
-    it('reserves but does not instantiate markdown documents', async () => {
-        await expect(Editor.create({ format: 'markdown' })).rejects.toThrow(
-            UnsupportedDocumentFormatError,
-        );
+    it('creates canonical markdown documents in markdown mode', async () => {
+        const editor = await Editor.create({
+            data: '# Markdown',
+            format: 'markdown',
+        });
+
+        expect(editor.state.document.format).toBe('markdown');
+        expect(editor.state.mode).toBe('markdown');
+        expect(editor.getData()).toBe('# Markdown');
+    });
+
+    it('rejects unknown document formats at runtime', async () => {
+        await expect(
+            Editor.create({
+                format: 'unknown' as unknown as 'html',
+            }),
+        ).rejects.toThrow(UnsupportedDocumentFormatError);
     });
 
     it('keeps registries independent between instances', async () => {

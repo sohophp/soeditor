@@ -13,6 +13,7 @@
         "@soeditor/engine": "workspace:*",
         "@soeditor/html": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
+        "@soeditor/markdown": "workspace:*",
         "@soeditor/preview": "workspace:*",
         "@soeditor/rich-text": "workspace:*",
         "@soeditor/source": "workspace:*",

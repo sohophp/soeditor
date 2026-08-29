@@ -11,6 +11,11 @@ import { SourceEditingPlugin } from '@soeditor/source';
 import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import { UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
 import { PreviewPlugin } from '@soeditor/preview';
+import {
+    createMarkdownPreviewRenderer,
+    markdownToHtml,
+    MarkdownPlugin,
+} from '@soeditor/markdown';
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';
@@ -72,6 +77,20 @@ if (!import.meta.resolve('@soeditor/ui/styles.css').endsWith('/styles.css')) {
 if (!editor.commands.has('editor.preview')) {
     throw new Error('Packed preview plugin did not register its command.');
 }
+
+const markdownEditor = await Editor.create({
+    data: '# Runtime',
+    format: 'markdown',
+    plugins: [MarkdownPlugin],
+});
+if (
+    markdownEditor.state.mode !== 'markdown' ||
+    !markdownToHtml(markdownEditor.getData()).includes('<h1>Runtime</h1>') ||
+    !createMarkdownPreviewRenderer().supports('markdown')
+) {
+    throw new Error('Packed Markdown package failed its Node ESM smoke test.');
+}
+await markdownEditor.destroy();
 
 editor.setData('<p>Changed</p>');
 editor.execute('editor.undo');

@@ -2,6 +2,7 @@ export {
     createVisualEditingEngine,
     VisualEditingEngine,
     VisualEditingEngineDestroyedError,
+    UnsupportedVisualDocumentFormatError,
 } from './visual-editing-engine.js';
 export { HistoryPlugin } from './history.js';
 export { groupHistoryTransaction } from './history-metadata.js';

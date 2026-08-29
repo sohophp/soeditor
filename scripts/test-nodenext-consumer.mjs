@@ -78,6 +78,17 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/markdown',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/source',
             'pack',
             '--pack-destination',
@@ -145,8 +156,11 @@ try {
     const previewArchive = archives.find((name) =>
         name.startsWith('soeditor-preview-'),
     );
+    const markdownArchive = archives.find((name) =>
+        name.startsWith('soeditor-markdown-'),
+    );
 
-    if (archives.length !== 8 || coreArchive === undefined) {
+    if (archives.length !== 9 || coreArchive === undefined) {
         throw new Error('Expected one packed @soeditor/core archive.');
     }
 
@@ -176,6 +190,10 @@ try {
 
     if (previewArchive === undefined) {
         throw new Error('Expected one packed @soeditor/preview archive.');
+    }
+
+    if (markdownArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/markdown archive.');
     }
 
     const packagePath = join(fixtureDirectory, 'package.json');
@@ -211,6 +229,10 @@ try {
     packageData.dependencies['@soeditor/preview'] = `file:${join(
         packDirectory,
         previewArchive,
+    )}`;
+    packageData.dependencies['@soeditor/markdown'] = `file:${join(
+        packDirectory,
+        markdownArchive,
     )}`;
     await writeFile(packagePath, `${JSON.stringify(packageData, null, 4)}\n`);
 

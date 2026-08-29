@@ -2,6 +2,7 @@ export {
     createSourceEditingEngine,
     SourceEditingEngine,
     SourceEditingEngineDestroyedError,
+    UnsupportedSourceDocumentFormatError,
 } from './source-editing-engine.js';
 export type {
     SourceEditingEngineOptions,

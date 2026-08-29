@@ -15,7 +15,9 @@ export class SourceEditingPlugin extends Plugin {
     ): void {
         this.editor.commands.register({
             id,
-            canExecute: ({ editor }) => editor.state.mode !== mode,
+            canExecute: ({ editor }) =>
+                editor.state.document.format === 'html' &&
+                editor.state.mode !== mode,
             execute: ({ editor }, ...args) => {
                 if (args.length !== 0) {
                     throw new TypeError(

@@ -4,17 +4,7 @@ import {
     type Editor,
 } from '@soeditor/core';
 import { groupHistoryTransaction } from '@soeditor/engine';
-import {
-    parseHtmlDocument,
-    parseHtmlFragment,
-    type HtmlParseDiagnostic,
-} from '@soeditor/html';
-import { html } from '@codemirror/lang-html';
-import {
-    lintGutter,
-    linter,
-    type Diagnostic as CodeMirrorDiagnostic,
-} from '@codemirror/lint';
+import { markdown } from '@codemirror/lang-markdown';
 import {
     Compartment,
     EditorState,
@@ -24,40 +14,42 @@ import { EditorView } from '@codemirror/view';
 import { basicSetup } from 'codemirror';
 
 import {
-    sourceEditingServiceToken,
-    type SourceEditingService,
-} from './source-editing-service.js';
+    markdownEditingServiceToken,
+    type MarkdownEditingService,
+} from './markdown-service.js';
 
-/** Options for attaching a source surface to one editor and host. */
-export interface SourceEditingEngineOptions {
+/** Options for attaching canonical Markdown editing to one host. */
+export interface MarkdownEditingEngineOptions {
+    readonly ariaLabel?: string;
     readonly editor: Editor;
     readonly element: HTMLElement;
-    readonly ariaLabel?: string;
 }
 
-/** Minimal lifecycle shared by source editing engine implementations. */
-export interface SourceEngine {
+/** Minimal lifecycle of an attached Markdown editing surface. */
+export interface MarkdownEditingEngineHandle {
     destroy(): void;
 }
 
-/** Thrown when an independently destroyed source engine is used. */
-export class SourceEditingEngineDestroyedError extends Error {
+/** Reports use of an independently destroyed Markdown engine. */
+export class MarkdownEditingEngineDestroyedError extends Error {
     constructor() {
-        super('The source editing engine has been destroyed.');
-        this.name = 'SourceEditingEngineDestroyedError';
+        super('The Markdown editing engine has been destroyed.');
+        this.name = 'MarkdownEditingEngineDestroyedError';
     }
 }
 
-/** Reports attachment of the HTML source engine to another document format. */
-export class UnsupportedSourceDocumentFormatError extends Error {
+/** Reports attachment to a document whose canonical format is not Markdown. */
+export class UnsupportedMarkdownDocumentFormatError extends Error {
     constructor(format: string) {
-        super(`The HTML source engine does not support "${format}" documents.`);
-        this.name = 'UnsupportedSourceDocumentFormatError';
+        super(
+            `The Markdown editing engine does not support "${format}" documents.`,
+        );
+        this.name = 'UnsupportedMarkdownDocumentFormatError';
     }
 }
 
-/** CodeMirror-backed exact-source editing surface for one editor instance. */
-export class SourceEditingEngine implements SourceEngine {
+/** CodeMirror-backed exact Markdown source surface for one editor. */
+export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
     readonly editor: Editor;
     readonly element: HTMLElement;
     readonly #disposeDocumentChange: () => void;
@@ -65,54 +57,43 @@ export class SourceEditingEngine implements SourceEngine {
     readonly #disposeModeChange: () => void;
     readonly #editable = new Compartment();
     readonly #previousHidden: boolean;
-    readonly #service: SourceEditingService;
+    readonly #service: MarkdownEditingService;
     readonly #view: EditorView;
     #destroyed = false;
-    #diagnostics: readonly HtmlParseDiagnostic[];
     #synchronizing = false;
 
-    constructor(options: SourceEditingEngineOptions) {
+    constructor(options: MarkdownEditingEngineOptions) {
         this.editor = options.editor;
         this.element = options.element;
-        if (this.editor.state.document.format !== 'html') {
-            throw new UnsupportedSourceDocumentFormatError(
+        if (this.editor.state.document.format !== 'markdown') {
+            throw new UnsupportedMarkdownDocumentFormatError(
                 this.editor.state.document.format,
             );
         }
         if (this.element.ownerDocument.defaultView === null) {
             throw new Error(
-                'The source editing host is not attached to a window.',
+                'The Markdown editing host is not attached to a window.',
             );
         }
-        if (this.editor.services.has(sourceEditingServiceToken)) {
+        if (this.editor.services.has(markdownEditingServiceToken)) {
             throw new ServiceAlreadyRegisteredError(
-                sourceEditingServiceToken.id,
+                markdownEditingServiceToken.id,
             );
         }
 
         this.#previousHidden = this.element.hidden;
-        const source = this.editor.getData();
-        this.#diagnostics = readDiagnostics(source);
         const readonly = this.#isReadonly();
         this.#view = new EditorView({
-            doc: source,
+            doc: this.editor.getData(),
             extensions: [
                 basicSetup,
-                html({ autoCloseTags: false }),
-                lintGutter(),
-                linter(
-                    (view) =>
-                        toCodeMirrorDiagnostics(view.state.doc.toString()),
-                    {
-                        delay: 0,
-                    },
-                ),
+                markdown(),
                 this.#editable.of([
                     EditorState.readOnly.of(readonly),
                     EditorView.editable.of(!readonly),
                 ]),
                 EditorView.contentAttributes.of({
-                    'aria-label': options.ariaLabel ?? 'HTML source editor',
+                    'aria-label': options.ariaLabel ?? 'Markdown editor',
                 }),
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged && !this.#synchronizing) {
@@ -122,13 +103,11 @@ export class SourceEditingEngine implements SourceEngine {
             ],
             parent: this.element,
         });
-
-        const service: SourceEditingService = {
-            focus: () => this.focus(),
-            getDiagnostics: () => this.diagnostics,
-        };
-        this.#service = Object.freeze(service);
-        this.editor.services.register(sourceEditingServiceToken, this.#service);
+        this.#service = Object.freeze({ focus: () => this.focus() });
+        this.editor.services.register(
+            markdownEditingServiceToken,
+            this.#service,
+        );
         this.element.addEventListener('keydown', this.#handleKeyDown, true);
         this.#updateMode();
         this.#disposeDocumentChange = this.editor.events.on(
@@ -144,11 +123,6 @@ export class SourceEditingEngine implements SourceEngine {
         );
     }
 
-    get diagnostics(): readonly HtmlParseDiagnostic[] {
-        this.#assertAlive();
-        return this.#diagnostics;
-    }
-
     focus(): void {
         this.#assertAlive();
         this.#view.focus();
@@ -158,7 +132,6 @@ export class SourceEditingEngine implements SourceEngine {
         if (this.#destroyed) {
             return;
         }
-
         this.#destroyed = true;
         this.#disposeDocumentChange();
         this.#disposeModeChange();
@@ -166,10 +139,10 @@ export class SourceEditingEngine implements SourceEngine {
         this.element.removeEventListener('keydown', this.#handleKeyDown, true);
         try {
             if (
-                this.editor.services.tryGet(sourceEditingServiceToken) ===
+                this.editor.services.tryGet(markdownEditingServiceToken) ===
                 this.#service
             ) {
-                this.editor.services.unregister(sourceEditingServiceToken);
+                this.editor.services.unregister(markdownEditingServiceToken);
             }
         } catch (error: unknown) {
             if (!(error instanceof EditorDestroyedError)) {
@@ -182,17 +155,16 @@ export class SourceEditingEngine implements SourceEngine {
     }
 
     #handleSourceChange(source: string): void {
-        this.#diagnostics = readDiagnostics(source);
         this.editor.update(
             (transaction) => {
                 transaction.replaceDocument(source);
-                groupHistoryTransaction(transaction, 'source-editing');
+                groupHistoryTransaction(transaction, 'markdown-editing');
             },
             { origin: 'source' },
         );
     }
 
-    #executeCoreHistory(command: 'editor.undo' | 'editor.redo'): boolean {
+    #executeCoreHistory(command: 'editor.redo' | 'editor.undo'): boolean {
         if (
             !this.editor.commands.has(command) ||
             !this.editor.commands.canExecute(command)
@@ -223,12 +195,10 @@ export class SourceEditingEngine implements SourceEngine {
     };
 
     #synchronizeSource(source: string): void {
-        this.#diagnostics = readDiagnostics(source);
         const current = this.#view.state.doc.toString();
         if (current === source) {
             return;
         }
-
         this.#synchronizing = true;
         try {
             this.#view.dispatch({
@@ -242,7 +212,7 @@ export class SourceEditingEngine implements SourceEngine {
 
     #updateMode(): void {
         const readonly = this.#isReadonly();
-        this.element.hidden = this.editor.state.mode !== 'source';
+        this.element.hidden = this.editor.state.mode !== 'markdown';
         this.#view.dispatch({
             effects: this.#editable.reconfigure([
                 EditorState.readOnly.of(readonly),
@@ -253,51 +223,20 @@ export class SourceEditingEngine implements SourceEngine {
 
     #isReadonly(): boolean {
         return (
-            this.editor.state.readonly || this.editor.state.mode !== 'source'
+            this.editor.state.readonly || this.editor.state.mode !== 'markdown'
         );
     }
 
     #assertAlive(): void {
         if (this.#destroyed) {
-            throw new SourceEditingEngineDestroyedError();
+            throw new MarkdownEditingEngineDestroyedError();
         }
     }
 }
 
-/** Attaches a CodeMirror source surface to an editor. */
-export function createSourceEditingEngine(
-    options: SourceEditingEngineOptions,
-): SourceEditingEngine {
-    return new SourceEditingEngine(options);
-}
-
-function readDiagnostics(source: string): readonly HtmlParseDiagnostic[] {
-    const diagnostics = isCompleteDocument(source)
-        ? parseHtmlDocument(source).diagnostics
-        : parseHtmlFragment(source).diagnostics;
-    return Object.freeze([...diagnostics]);
-}
-
-function toCodeMirrorDiagnostics(
-    source: string,
-): readonly CodeMirrorDiagnostic[] {
-    return readDiagnostics(source).map((diagnostic) => {
-        const from = clamp(diagnostic.source?.start.offset ?? 0, source.length);
-        const to = clamp(diagnostic.source?.end.offset ?? from, source.length);
-        return {
-            from,
-            message: `${diagnostic.code}: ${diagnostic.message}`,
-            severity: diagnostic.severity,
-            source: '@soeditor/html',
-            to: Math.max(from, to),
-        };
-    });
-}
-
-function clamp(value: number, length: number): number {
-    return Math.max(0, Math.min(value, length));
-}
-
-function isCompleteDocument(source: string): boolean {
-    return /<!doctype\s|<\/?(?:html|head|body)(?:\s|>)/iu.test(source);
+/** Attaches a CodeMirror Markdown surface to an editor. */
+export function createMarkdownEditingEngine(
+    options: MarkdownEditingEngineOptions,
+): MarkdownEditingEngine {
+    return new MarkdownEditingEngine(options);
 }

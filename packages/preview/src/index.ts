@@ -4,6 +4,11 @@ export {
     isCompleteHtmlDocument,
     normalizePreviewConfiguration,
 } from './configuration.js';
+export {
+    htmlPreviewContentRenderer,
+    UnsupportedPreviewDocumentFormatError,
+} from './content-renderer.js';
+export type { PreviewContentRenderer } from './content-renderer.js';
 export type {
     NormalizedPreviewConfiguration,
     PreviewConfiguration,

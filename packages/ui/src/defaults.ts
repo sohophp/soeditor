@@ -237,6 +237,7 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
         ['image', imageButton],
         ['table', tableButton],
         ['source', sourceButton],
+        ['markdown', commandButton('Markdown', 'editor.markdown')],
         ['preview', previewButton],
         ['format', commandButton('Format HTML', 'document.format')],
     ]);

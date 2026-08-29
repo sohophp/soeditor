@@ -50,13 +50,13 @@ import {
 
 /** Options used to construct an independent editor instance. */
 export interface EditorCreateOptions {
-    /** Initial canonical HTML source. */
+    /** Initial canonical source in the selected document format. */
     readonly data?: string;
-    /** Document format. Phase 1 accepts only `html` at runtime. */
+    /** Canonical document format. */
     readonly format?: DocumentFormat;
     /** Editing-policy state exposed to future user-facing editing surfaces. */
     readonly readonly?: boolean;
-    /** Initial requested mode; no editing surface is implemented in Phase 1. */
+    /** Initial requested document projection. */
     readonly mode?: EditorMode;
     /** Root plugins whose transitive requirements should be loaded. */
     readonly plugins?: readonly PluginConstructor[];
@@ -95,13 +95,14 @@ export class Editor {
     private constructor(options: EditorCreateOptions) {
         const format = options.format ?? 'html';
 
-        if (format !== 'html') {
+        if (format !== 'html' && format !== 'markdown') {
             throw new UnsupportedDocumentFormatError(format);
         }
 
         this.#state = createEditorState({
             document: createEditorDocument(options.data ?? '', format),
-            mode: options.mode ?? 'visual',
+            mode:
+                options.mode ?? (format === 'markdown' ? 'markdown' : 'visual'),
             readonly: options.readonly ?? false,
             dirty: false,
         });

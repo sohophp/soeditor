@@ -2,6 +2,12 @@ import { Editor, Plugin } from '@soeditor/core';
 import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
 import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import {
+    createMarkdownEditingEngine,
+    createMarkdownPreviewRenderer,
+    MarkdownPlugin,
+    markdownEditingServiceToken,
+} from '@soeditor/markdown';
+import {
     createPreviewEngine,
     PreviewPlugin,
     previewServiceToken,
@@ -97,6 +103,8 @@ const stateOutput = document.querySelector<HTMLElement>('#state');
 const sourceOutput = document.querySelector<HTMLElement>('#source');
 const editingHost = document.querySelector<HTMLElement>('#editor');
 const sourceEditingHost = document.querySelector<HTMLElement>('#source-editor');
+const markdownEditingHost =
+    document.querySelector<HTMLElement>('#markdown-editor');
 const previewHost = document.querySelector<HTMLElement>('#preview');
 const uiHost = document.querySelector<HTMLElement>('#editor-ui');
 
@@ -105,46 +113,68 @@ if (
     sourceOutput === null ||
     editingHost === null ||
     sourceEditingHost === null ||
+    markdownEditingHost === null ||
     previewHost === null ||
     uiHost === null
 ) {
     throw new Error('Playground output or editing host was not found.');
 }
 
-const editor = await Editor.create({
-    data: '<p>Hello <strong>SoEditor</strong></p><product-card data-id="123"></product-card><!--CMS:block-->',
-    plugins: [
-        DemoPlugin,
-        HistoryPlugin,
-        ParagraphPlugin,
-        HeadingPlugin,
-        BoldPlugin,
-        ItalicPlugin,
-        UnderlinePlugin,
-        StrikePlugin,
-        LinkPlugin,
-        OrderedListPlugin,
-        UnorderedListPlugin,
-        BlockquotePlugin,
-        InlineCodePlugin,
-        CodeBlockPlugin,
-        ImagePlugin,
-        TablePlugin,
-        SourceEditingPlugin,
-        DiagnosticsPlugin,
-        HtmlFormattingPlugin,
-        PreviewPlugin,
-    ],
-    readonly: new URLSearchParams(window.location.search).has('readonly'),
-});
-const visualEngine = createVisualEditingEngine({
-    editor,
-    element: editingHost,
-});
-const sourceEngine = createSourceEditingEngine({
-    editor,
-    element: sourceEditingHost,
-});
+const parameters = new URLSearchParams(window.location.search);
+const markdownDocument = parameters.get('format') === 'markdown';
+const htmlPlugins = [
+    DemoPlugin,
+    HistoryPlugin,
+    ParagraphPlugin,
+    HeadingPlugin,
+    BoldPlugin,
+    ItalicPlugin,
+    UnderlinePlugin,
+    StrikePlugin,
+    LinkPlugin,
+    OrderedListPlugin,
+    UnorderedListPlugin,
+    BlockquotePlugin,
+    InlineCodePlugin,
+    CodeBlockPlugin,
+    ImagePlugin,
+    TablePlugin,
+    SourceEditingPlugin,
+    DiagnosticsPlugin,
+    HtmlFormattingPlugin,
+    PreviewPlugin,
+];
+const editor = await Editor.create(
+    markdownDocument
+        ? {
+              data: '# SoEditor Markdown\n\n- canonical source\n- isolated preview\n\n<product-card data-id="123"></product-card>',
+              format: 'markdown',
+              plugins: [
+                  DemoPlugin,
+                  HistoryPlugin,
+                  MarkdownPlugin,
+                  PreviewPlugin,
+              ],
+              readonly: parameters.has('readonly'),
+          }
+        : {
+              data: '<p>Hello <strong>SoEditor</strong></p><product-card data-id="123"></product-card><!--CMS:block-->',
+              plugins: htmlPlugins,
+              readonly: parameters.has('readonly'),
+          },
+);
+const visualEngine = markdownDocument
+    ? undefined
+    : createVisualEditingEngine({ editor, element: editingHost });
+const sourceEngine = markdownDocument
+    ? undefined
+    : createSourceEditingEngine({ editor, element: sourceEditingHost });
+const markdownEngine = markdownDocument
+    ? createMarkdownEditingEngine({ editor, element: markdownEditingHost })
+    : undefined;
+editingHost.hidden = markdownDocument;
+sourceEditingHost.hidden = markdownDocument;
+markdownEditingHost.hidden = !markdownDocument;
 const previewEngine = createPreviewEngine({
     configuration: {
         baseUrl: 'https://example.test/content/',
@@ -159,27 +189,32 @@ const previewEngine = createPreviewEngine({
     },
     editor,
     element: previewHost,
+    renderer: createMarkdownPreviewRenderer(),
 });
-const toolbarParameter = new URLSearchParams(window.location.search).get(
-    'toolbar',
-);
+const toolbarParameter = parameters.get('toolbar');
 const ui = createEditorUi({
     editor,
     element: uiHost,
-    ...(toolbarParameter === 'compact'
-        ? { toolbar: ['undo', '|', 'uppercase'] }
-        : toolbarParameter === 'failing'
-          ? { toolbar: ['failing-update'] }
-          : toolbarParameter === 'missing'
-            ? { toolbar: ['missing'] }
-            : {}),
+    ...(markdownDocument
+        ? { toolbar: ['undo', 'redo', '|', 'markdown', 'preview'] }
+        : toolbarParameter === 'compact'
+          ? { toolbar: ['undo', '|', 'uppercase'] }
+          : toolbarParameter === 'failing'
+            ? { toolbar: ['failing-update'] }
+            : toolbarParameter === 'missing'
+              ? { toolbar: ['missing'] }
+              : {}),
 });
 (window as Window & { __soeditor?: unknown }).__soeditor = Object.freeze({
+    Editor,
     createEditorUi,
+    createMarkdownEditingEngine,
     createPreviewEngine,
     createSourceEditingEngine,
     createVisualEditingEngine,
     editor,
+    markdownEditingServiceToken,
+    markdownEngine,
     previewEngine,
     previewServiceToken,
     sourceEngine,
@@ -227,7 +262,7 @@ bind('document', () => {
 bind('inline-opaque', () => {
     editor.setData('<p>A<product-card data-id="1"></product-card>B</p>');
 });
-bind('destroy-engine', () => visualEngine.destroy());
+bind('destroy-engine', () => visualEngine?.destroy());
 bind('destroy-editor', () => {
     void editor.destroy();
 });

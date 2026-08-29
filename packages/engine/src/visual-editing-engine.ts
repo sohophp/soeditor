@@ -64,6 +64,16 @@ export class VisualEditingEngineDestroyedError extends Error {
     }
 }
 
+/** Reports attachment of the HTML visual engine to another document format. */
+export class UnsupportedVisualDocumentFormatError extends Error {
+    constructor(format: string) {
+        super(
+            `The visual editing engine does not support "${format}" documents.`,
+        );
+        this.name = 'UnsupportedVisualDocumentFormatError';
+    }
+}
+
 export class VisualEditingEngine implements EditingEngine {
     readonly editor: Editor;
     readonly element: HTMLElement;
@@ -91,6 +101,11 @@ export class VisualEditingEngine implements EditingEngine {
     constructor(options: VisualEditingEngineOptions) {
         this.editor = options.editor;
         this.element = options.element;
+        if (this.editor.state.document.format !== 'html') {
+            throw new UnsupportedVisualDocumentFormatError(
+                this.editor.state.document.format,
+            );
+        }
         const view = this.element.ownerDocument.defaultView;
         if (view === null) {
             throw new Error(

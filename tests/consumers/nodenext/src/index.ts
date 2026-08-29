@@ -37,6 +37,15 @@ import {
     type ToolbarConfiguration,
 } from '@soeditor/ui';
 import {
+    createMarkdownEditingEngine,
+    createMarkdownPreviewRenderer,
+    htmlToMarkdown,
+    markdownToHtml,
+    MarkdownPlugin,
+    type MarkdownEditingEngineOptions,
+    type MarkdownRenderOptions,
+} from '@soeditor/markdown';
+import {
     createPreviewEngine,
     PreviewPlugin,
     previewServiceToken,
@@ -157,6 +166,19 @@ void previewFactory;
 void previewConfiguration;
 void previewOptions;
 void previewServiceToken;
+const markdownFactory: typeof createMarkdownEditingEngine =
+    createMarkdownEditingEngine;
+const markdownOptions = undefined as MarkdownEditingEngineOptions | undefined;
+const markdownRenderOptions: MarkdownRenderOptions = { rawHtml: 'preserve' };
+const markdownRenderer = createMarkdownPreviewRenderer(markdownRenderOptions);
+const markdownHtml: string = markdownToHtml('# Consumer');
+const convertedMarkdown: string = htmlToMarkdown('<h1>Consumer</h1>').source;
+void markdownFactory;
+void markdownOptions;
+void markdownRenderer;
+void markdownHtml;
+void convertedMarkdown;
+void MarkdownPlugin;
 const rejectInternalModel = (value: EditingModel): void => {
     void value;
 };

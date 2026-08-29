@@ -29,4 +29,15 @@ describe('SourceEditingPlugin', () => {
         );
         expect(editor.state.mode).toBe('visual');
     });
+
+    it('does not offer HTML projection commands for Markdown documents', async () => {
+        const editor = await Editor.create({
+            format: 'markdown',
+            plugins: [SourceEditingPlugin],
+        });
+
+        expect(editor.commands.canExecute('editor.source')).toBe(false);
+        expect(editor.commands.canExecute('editor.visual')).toBe(false);
+        expect(editor.state.mode).toBe('markdown');
+    });
 });

@@ -15,8 +15,8 @@
         "lint": "eslint . && prettier --check .",
         "test": "pnpm test:unit && pnpm test:consumer && pnpm test:browser",
         "test:browser": "playwright test",
-        "test:consumer": "pnpm --filter @soeditor/core --filter @soeditor/html --filter @soeditor/engine --filter @soeditor/rich-text --filter @soeditor/source --filter @soeditor/html-tools --filter @soeditor/ui --filter @soeditor/preview build && node scripts/test-nodenext-consumer.mjs",
-        "test:unit": "pnpm --filter @soeditor/core --filter @soeditor/html --filter @soeditor/engine --filter @soeditor/rich-text --filter @soeditor/source --filter @soeditor/html-tools --filter @soeditor/ui --filter @soeditor/preview test",
+        "test:consumer": "pnpm --filter @soeditor/core --filter @soeditor/html --filter @soeditor/engine --filter @soeditor/rich-text --filter @soeditor/source --filter @soeditor/html-tools --filter @soeditor/ui --filter @soeditor/preview --filter @soeditor/markdown build && node scripts/test-nodenext-consumer.mjs",
+        "test:unit": "pnpm --filter @soeditor/core --filter @soeditor/html --filter @soeditor/engine --filter @soeditor/rich-text --filter @soeditor/source --filter @soeditor/html-tools --filter @soeditor/ui --filter @soeditor/preview --filter @soeditor/markdown test",
         "test:coverage": "pnpm --filter @soeditor/core test:coverage",
         "typecheck": "pnpm -r --if-present run typecheck"
     },

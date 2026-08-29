@@ -9,7 +9,8 @@ command-driven rich-text feature plugins. Phase 6 adds exact CodeMirror-powered
 HTML source editing and parser diagnostics. Phase 7 adds extensible HTML
 problems and explicit Prettier formatting. Phase 8 adds a configurable,
 framework-agnostic editor UI foundation. Phase 9 adds an isolated configurable
-preview environment.
+preview environment. Phase 10 adds canonical Markdown source editing, isolated
+Markdown preview, raw HTML passthrough, and an explicitly lossy HTML bridge.
 
 ```ts
 import { Editor } from '@soeditor/core';
@@ -35,7 +36,9 @@ const editor = await Editor.create({
 - `@soeditor/ui` — configurable command toolbar, menus, dialogs, balloons,
   notifications, shortcuts, status, and theme variables.
 - `@soeditor/preview` — command-driven sandboxed iframe preview with templates,
-  context, CSS, and a fixed execution policy.
+  context, CSS, a format renderer boundary, and a fixed execution policy.
+- `@soeditor/markdown` — exact CodeMirror Markdown editing, CommonMark
+  rendering, Preview integration, and explicit HTML conversion losses.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
 

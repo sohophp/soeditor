@@ -1,17 +1,13 @@
 # SoEditor Architecture 0.1
 
-## Phase 1 implementation status
+## Current implementation status
 
-Phase 1 implements only `@soeditor/core`, the `@soeditor/engine` package shell,
-and a minimal core playground. The remainder of this document describes the
-accepted long-term direction and later milestones; it is not implemented by
-Phase 1.
-
-The current `EditorMode` runtime state is `visual | source | preview`, while
-`DocumentFormat` reserves `html | markdown` and only HTML can currently be
-instantiated. There is no selection, history, UI, visual editing engine, source
-editor, Markdown processing, diagnostics, formatting, preview renderer, or file
-manager in this phase.
+Phases 1–10 are implemented. Runtime document formats are `html | markdown`
+and projections are `visual | source | markdown | preview`. HTML and Markdown
+remain canonical source formats for separate editor instances; projection
+changes never perform an implicit format conversion. Later sections that
+describe post-Phase-10 capabilities remain product direction rather than an
+implementation claim.
 
 ### Phase 1.1 stabilization policies
 
@@ -345,6 +341,30 @@ Preview engine attachment rejects non-empty hosts and duplicate per-editor
 services before data loss. Manual or editor-owned destruction removes only its
 iframe, unregisters the service, restores mode/host visibility, and makes
 retained service references terminal.
+
+## Phase 10 Markdown workflow
+
+Phase 10 adds browser-facing `@soeditor/markdown` without introducing Markdown
+dependencies into Core. A Markdown editor stores exact canonical Markdown and
+defaults to Markdown mode. Its CodeMirror 6 surface synchronizes through Core
+transactions, groups source history for the shared undo/redo commands, enforces
+readonly state, and exposes only a typed focus capability. HTML Visual and
+Source engines reject Markdown documents before touching their hosts; the
+Markdown engine applies the reciprocal format guard.
+
+Pinned micromark compiles CommonMark for projection. Raw HTML passthrough is
+enabled by default and dangerous URL protocols are disabled, but rendered HTML
+is explicitly not sanitized. A format-aware Preview renderer feeds that result
+into the existing empty-sandbox iframe and fixed CSP, which remains the
+execution boundary. Preview itself depends only on a small SoEditor-owned
+content-renderer interface and has no Markdown parser dependency.
+
+Intentional HTML-to-Markdown conversion uses pinned Turndown and returns both
+Markdown and immutable loss notices. Custom, namespaced, and template elements
+remain raw HTML where practical. Document chrome, comments, attributes, and
+unsupported structures may be discarded or normalized, so no HTML/Markdown
+round-trip guarantee exists. GFM, MDX, frontmatter interpretation, Markdown
+diagnostics, and visual Markdown editing remain deferred.
 
 ## 1. 项目定位
 
