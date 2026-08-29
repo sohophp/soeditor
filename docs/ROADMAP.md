@@ -2,9 +2,9 @@
 
 ## Status
 
-Complete through Phase 23. The verified 0.6.0 candidate is awaiting
+Complete through Phase 24. The verified 0.6.0 candidate is awaiting
 owner-authorized publication. The evidence-derived 0.7–1.0 roadmap is approved
-and Phase 24 is active.
+and Phase 25 is active.
 
 This roadmap begins from the current repository state.
 
@@ -1223,7 +1223,7 @@ repository-owner-controlled operations.
 ## Status
 
 APPROVED from the repository owner's 2026-08-29 authorization to complete
-SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 24 is active.
+SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 25 is active.
 
 The sequence is justified in
 `docs/research/editor-landscape-2026.md`. Each release must pass its own
@@ -1291,7 +1291,7 @@ for structured HTML while preserving unknown and unsupported source.
 
 ## Status
 
-ACTIVE.
+COMPLETE.
 
 ## Goal
 
@@ -1327,7 +1327,7 @@ nested editables without giving the editing DOM authority over canonical data.
 
 ## Status
 
-PENDING.
+ACTIVE.
 
 ## Goal
 

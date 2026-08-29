@@ -107,8 +107,10 @@ function registerVisualService(editor: Editor, inserted: string[]): void {
         isLinkActive: () => false,
         isListActive: () => false,
         isMarkActive: () => false,
+        isStructuredBlockSelected: () => false,
         setBlock: () => undefined,
         setLink: () => undefined,
+        setStructuredBlockAttributes: () => undefined,
         toggleList: () => undefined,
         toggleMark: () => undefined,
     });

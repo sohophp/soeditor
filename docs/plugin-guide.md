@@ -88,10 +88,10 @@ not extension APIs.
 
 ## Structured HTML blocks
 
-The Phase 23 contribution boundary recognizes custom block elements without
-making their source executable or exposing visual-engine internals. Node-view
-DOM is intentionally deferred; a recognized block is inert until that later
-runtime is attached.
+The structured contribution boundary recognizes custom block elements without
+making their source executable or exposing visual-engine internals. Phase 24
+optionally attaches a host-scoped node view to a registered type; without that
+factory the recognized block remains inert.
 
 ```ts
 import type { HtmlElement } from '@soeditor/html';
@@ -100,6 +100,7 @@ import {
     StructuredEditingPlugin,
     structuredEditingRegistryToken,
     type StructuredBlockConversion,
+    type StructuredNodeViewFactory,
 } from '@soeditor/plugin-sdk';
 
 const productCard: StructuredBlockConversion = {
@@ -121,19 +122,41 @@ const productCard: StructuredBlockConversion = {
     }),
 };
 
+const productCardView: StructuredNodeViewFactory = ({
+    actions,
+    document,
+    node,
+}) => {
+    const element = document.createElement('article');
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.textContent = 'Select product';
+    const select = () => actions.select();
+    button.addEventListener('click', select);
+    element.append(`Product attributes: ${node.attributes.length}`, button);
+    return {
+        element,
+        destroy: () => button.removeEventListener('click', select),
+    };
+};
+
 export class ProductCardPlugin extends Plugin {
     static readonly id = 'example.product-card-plugin';
     static readonly requires = [StructuredEditingPlugin];
-    #dispose: (() => void) | undefined;
+    #dispose: (() => void)[] = [];
 
     override init(): void {
-        this.#dispose = this.editor.services
-            .get(structuredEditingRegistryToken)
-            .registerBlock(productCard);
+        const registry = this.editor.services.get(
+            structuredEditingRegistryToken,
+        );
+        this.#dispose.push(registry.registerBlock(productCard));
+        this.#dispose.push(
+            registry.registerNodeView(productCard.type, productCardView),
+        );
     }
 
     override destroy(): void {
-        this.#dispose?.();
+        for (const dispose of this.#dispose.reverse()) dispose();
     }
 }
 ```
@@ -145,6 +168,13 @@ conversion that claims a built-in editable paragraph/list shape. Unknown nodes
 that match no contribution continue to be preserved as opaque content.
 Disposers remain safe during editor teardown; after sealing they do not mutate
 the schema that a later reattachment would consume.
+
+The engine owns the outer focus, selection, drag/drop, clipboard, readonly, and
+teardown boundary. A node view may update its own presentation, but canonical
+changes must execute a command that uses a public editing service. Do not place
+raw preserved children into the live DOM, retain the mutable editor model, or
+use node-view DOM mutations as data storage. Nested editable and inline node
+views are not part of the current public contract.
 
 Plugins that maintain position-based auxiliary data may inspect Visual-origin
 transactions with `readEditingOperations(transaction)` and map their own

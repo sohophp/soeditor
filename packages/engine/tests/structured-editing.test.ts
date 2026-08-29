@@ -12,6 +12,14 @@ import {
     type EditingStructuredBlock,
 } from '../src/model.js';
 import {
+    deleteSelection,
+    isStructuredBlockSelected,
+    mapEditingPoint,
+    moveStructuredBlock,
+    setStructuredBlockAttributes,
+    UnsupportedEditingSelectionError,
+} from '../src/operations.js';
+import {
     sealStructuredEditingRegistry,
     StructuredEditingContributionAlreadyRegisteredError,
     StructuredEditingContributionConflictError,
@@ -19,6 +27,7 @@ import {
     StructuredEditingRegistrySealedError,
     structuredEditingRegistryToken,
     type StructuredBlockConversion,
+    type StructuredNodeViewFactory,
 } from '../src/structured-editing.js';
 
 const productCardConversion: StructuredBlockConversion = {
@@ -86,6 +95,92 @@ describe('structured editing contributions', () => {
         expect(
             serializeHtmlFragment(serializeEditingModel(pasted, schema)),
         ).toBe(source);
+
+        const selection = {
+            anchor: { block: 0, offset: 0 },
+            focus: { block: 0, offset: 1 },
+        } as const;
+        expect(isStructuredBlockSelected(model, selection)).toBe(true);
+        const updated = setStructuredBlockAttributes(
+            model,
+            selection,
+            'example.product-card',
+            [{ name: 'product-id', value: '456' }],
+        );
+        expect(
+            serializeHtmlFragment(serializeEditingModel(updated.model, schema)),
+        ).toBe(
+            '<product-card product-id="456"><template><p>Fallback</p></template></product-card>',
+        );
+        expect(updated.operations).toEqual([
+            {
+                block: 0,
+                kind: 'set-structured-attributes',
+                type: 'example.product-card',
+            },
+        ]);
+        expect(deleteSelection(model, selection).model.blocks[0]).toMatchObject(
+            { kind: 'paragraph' },
+        );
+
+        const surrounded = createEditingModel(
+            parseHtmlFragment(
+                '<p>Before</p><product-card product-id="123"></product-card><p>After</p>',
+            ).document,
+            schema,
+        );
+        const moved = moveStructuredBlock(
+            surrounded,
+            {
+                anchor: { block: 1, offset: 0 },
+                focus: { block: 1, offset: 1 },
+            },
+            0,
+            'before',
+        );
+        expect(
+            serializeHtmlFragment(serializeEditingModel(moved.model, schema)),
+        ).toBe(
+            '<product-card product-id="123"></product-card><p>Before</p><p>After</p>',
+        );
+        expect(moved.operations).toEqual([
+            { fromBlock: 1, kind: 'move-block', toBlock: 0 },
+        ]);
+        expect(
+            mapEditingPoint({ block: 0, offset: 2 }, moved.operations),
+        ).toEqual({ block: 1, offset: 2 });
+        await editor.destroy();
+    });
+
+    it('registers exactly one node view for an existing type and seals it with the schema', async () => {
+        const editor = await Editor.create({
+            plugins: [StructuredEditingPlugin],
+        });
+        const registry = editor.services.get(structuredEditingRegistryToken);
+        registry.registerBlock(productCardConversion);
+        const factory: StructuredNodeViewFactory = () => {
+            throw new Error('not mounted by this registry test');
+        };
+        const dispose = registry.registerNodeView(
+            'example.product-card',
+            factory,
+        );
+
+        expect(() =>
+            registry.registerNodeView('example.product-card', factory),
+        ).toThrow(StructuredEditingContributionAlreadyRegisteredError);
+        expect(() => registry.registerNodeView('missing', factory)).toThrow(
+            'requires a registered block conversion',
+        );
+        const schema = sealStructuredEditingRegistry(registry);
+        expect(schema.nodeViews).toEqual([['example.product-card', factory]]);
+        expect(() => dispose()).not.toThrow();
+        expect(sealStructuredEditingRegistry(registry).nodeViews).toHaveLength(
+            1,
+        );
+        expect(() =>
+            registry.registerNodeView('example.product-card', factory),
+        ).toThrow(StructuredEditingRegistrySealedError);
         await editor.destroy();
     });
 
@@ -152,6 +247,23 @@ describe('structured editing contributions', () => {
             'opaque-block',
         ]);
         expect(model.blocks[0]).toMatchObject({ behavior: 'readonly' });
+        expect(() =>
+            setStructuredBlockAttributes(
+                model,
+                {
+                    anchor: { block: 0, offset: 0 },
+                    focus: { block: 0, offset: 1 },
+                },
+                'example.readonly-card',
+                [],
+            ),
+        ).toThrow(UnsupportedEditingSelectionError);
+        expect(() =>
+            deleteSelection(model, {
+                anchor: { block: 0, offset: 0 },
+                focus: { block: 0, offset: 1 },
+            }),
+        ).toThrow(UnsupportedEditingSelectionError);
         await editor.destroy();
     });
 

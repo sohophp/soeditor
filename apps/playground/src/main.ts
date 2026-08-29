@@ -9,8 +9,10 @@ import {
     readEditingOperations,
     StructuredEditingPlugin,
     structuredEditingRegistryToken,
+    visualEditingServiceToken,
+    type StructuredNodeViewState,
 } from '@soeditor/engine';
-import type { HtmlElement } from '@soeditor/html';
+import type { HtmlAttribute, HtmlElement } from '@soeditor/html';
 import {
     fileManagerServiceToken,
     type FileManager,
@@ -149,12 +151,14 @@ class DemoPlugin extends Plugin {
 class ProductCardSchemaPlugin extends Plugin {
     static readonly id = 'playground-product-card-schema';
     static readonly requires = [StructuredEditingPlugin];
-    #dispose: (() => void) | undefined;
+    #dispose: (() => void)[] = [];
 
     override init(): void {
-        this.#dispose = this.editor.services
-            .get(structuredEditingRegistryToken)
-            .registerBlock({
+        const registry = this.editor.services.get(
+            structuredEditingRegistryToken,
+        );
+        this.#dispose.push(
+            registry.registerBlock({
                 behavior: 'atomic',
                 fromHtml: (node) => ({
                     attributes: node.attributes,
@@ -173,13 +177,126 @@ class ProductCardSchemaPlugin extends Plugin {
                         type: 'element',
                     }),
                 type: 'playground.product-card',
-            });
+            }),
+        );
+        this.#dispose.push(
+            registry.registerNodeView(
+                'playground.product-card',
+                createProductCardNodeView,
+            ),
+        );
+        this.editor.commands.register({
+            id: 'productCard.setAttributes',
+            label: 'Update product card',
+            canExecute: ({ editor }) => {
+                const service = editor.services.tryGet(
+                    visualEditingServiceToken,
+                );
+                return (
+                    service?.canEdit() === true &&
+                    service.isStructuredBlockSelected('playground.product-card')
+                );
+            },
+            execute: ({ editor }, candidate) => {
+                if (!isHtmlAttributes(candidate)) {
+                    throw new TypeError(
+                        'Command "productCard.setAttributes" requires HTML attributes.',
+                    );
+                }
+                editor.services
+                    .get(visualEditingServiceToken)
+                    .setStructuredBlockAttributes(
+                        'playground.product-card',
+                        candidate,
+                    );
+            },
+        });
     }
 
     override destroy(): void {
-        this.#dispose?.();
-        this.#dispose = undefined;
+        for (const dispose of this.#dispose.reverse()) {
+            dispose();
+        }
+        this.#dispose = [];
     }
+}
+
+function createProductCardNodeView(context: {
+    readonly actions: {
+        execute(commandId: string, ...args: readonly unknown[]): unknown;
+        select(): void;
+    };
+    readonly document: Document;
+    readonly node: StructuredNodeViewState['node'];
+    readonly readonly: boolean;
+    readonly selected: boolean;
+}) {
+    const card = context.document.createElement('article');
+    card.className = 'demo-product-card';
+    const heading = context.document.createElement('strong');
+    const status = context.document.createElement('span');
+    const button = context.document.createElement('button');
+    button.type = 'button';
+    button.textContent = '切换推荐状态';
+    card.append(heading, status, button);
+    let state: StructuredNodeViewState = context;
+    const render = (next: StructuredNodeViewState): void => {
+        state = next;
+        const productId = attributeValue(next.node.attributes, 'data-id');
+        const featured =
+            attributeValue(next.node.attributes, 'data-featured') === 'true';
+        heading.textContent = `Product #${productId ?? '未设置'}`;
+        status.textContent = featured ? '推荐商品' : '普通商品';
+        button.disabled = next.readonly;
+        card.dataset.selected = String(next.selected);
+    };
+    const handleClick = (): void => {
+        context.actions.select();
+        const attributes = state.node.attributes.filter(
+            ({ name }) => name !== 'data-featured',
+        );
+        const featured =
+            attributeValue(state.node.attributes, 'data-featured') === 'true';
+        context.actions.execute(
+            'productCard.setAttributes',
+            Object.freeze([
+                ...attributes,
+                Object.freeze({
+                    name: 'data-featured',
+                    value: featured ? 'false' : 'true',
+                }),
+            ]),
+        );
+    };
+    button.addEventListener('click', handleClick);
+    render(context);
+    return {
+        destroy: () => button.removeEventListener('click', handleClick),
+        element: card,
+        update: render,
+    };
+}
+
+function attributeValue(
+    attributes: readonly HtmlAttribute[],
+    name: string,
+): string | undefined {
+    return attributes.find((attribute) => attribute.name === name)?.value;
+}
+
+function isHtmlAttributes(value: unknown): value is readonly HtmlAttribute[] {
+    return (
+        Array.isArray(value) &&
+        value.every(
+            (attribute: unknown) =>
+                typeof attribute === 'object' &&
+                attribute !== null &&
+                'name' in attribute &&
+                typeof attribute.name === 'string' &&
+                'value' in attribute &&
+                typeof attribute.value === 'string',
+        )
+    );
 }
 
 const stateOutput = document.querySelector<HTMLElement>('#state');

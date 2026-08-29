@@ -127,7 +127,7 @@ const globalGzip = gzipSync(globalSource).length;
 const cssRaw = (await stat(cssPath)).size;
 const esmRaw = (await stat(esmPath)).size;
 
-assertBudget('CDN global raw', globalRaw, 1_250_000);
+assertBudget('CDN global raw', globalRaw, 1_260_000);
 assertBudget('CDN global gzip', globalGzip, 410_000);
 assertBudget('standalone CSS', cssRaw, 10_000);
 assertBudget('umbrella ESM facade', esmRaw, 2_000);
@@ -157,7 +157,7 @@ if (largestPlaygroundChunk === undefined) {
 assertBudget(
     'largest Playground chunk',
     largestPlaygroundChunk.size,
-    1_000_000,
+    1_010_000,
 );
 
 stdout.write(

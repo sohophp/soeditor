@@ -52,6 +52,16 @@ export type EditingOperation =
           readonly kind: 'format-blocks' | 'format-inline';
           readonly from: EditingPoint;
           readonly to: EditingPoint;
+      }
+    | {
+          readonly kind: 'set-structured-attributes';
+          readonly block: number;
+          readonly type: string;
+      }
+    | {
+          readonly kind: 'move-block';
+          readonly fromBlock: number;
+          readonly toBlock: number;
       };
 
 export type EditingPointAffinity = 'backward' | 'forward';
@@ -337,6 +347,16 @@ export function deleteSelection(
         return unchanged(model, selection);
     }
 
+    const structured = wholeStructuredBlock(model, ordered);
+    if (structured !== undefined) {
+        if (structured.behavior !== 'atomic') {
+            throw new UnsupportedEditingSelectionError(
+                'Readonly structured content cannot be deleted.',
+            );
+        }
+        return deleteStructuredBlock(model, ordered);
+    }
+
     const startParagraph = getParagraph(model, ordered.start);
     const endParagraph = getParagraph(model, ordered.end);
     assertEditableRange(
@@ -430,6 +450,11 @@ export function extractSelection(
     const ordered = orderSelection(selection);
     if (comparePoints(ordered.start, ordered.end) === 0) {
         return freezeModel({ blocks: [] });
+    }
+
+    const structured = wholeStructuredBlock(model, ordered);
+    if (structured !== undefined) {
+        return freezeModel({ blocks: [structured] });
     }
 
     const blocks = [] as EditingParagraph[];
@@ -703,6 +728,94 @@ export function setLink(
     );
 }
 
+export function setStructuredBlockAttributes(
+    model: EditingModel,
+    selection: EditingSelection,
+    type: string,
+    attributes: readonly HtmlAttribute[],
+): EditingResult {
+    const range = orderSelection(selection);
+    const block = wholeStructuredBlock(model, range);
+    if (
+        block === undefined ||
+        block.type !== type ||
+        block.behavior !== 'atomic'
+    ) {
+        throw new UnsupportedEditingSelectionError(
+            `An editable atomic structured block of type "${type}" must be selected.`,
+        );
+    }
+    const blocks = [...model.blocks];
+    blocks[range.start.block] = { ...block, attributes };
+    return result({ blocks }, selection, [
+        {
+            block: range.start.block,
+            kind: 'set-structured-attributes',
+            type,
+        },
+    ]);
+}
+
+export function isStructuredBlockSelected(
+    model: EditingModel,
+    selection: EditingSelection,
+    type?: string,
+): boolean {
+    const block = wholeStructuredBlock(model, orderSelection(selection));
+    return block !== undefined && (type === undefined || block.type === type);
+}
+
+export function moveStructuredBlock(
+    model: EditingModel,
+    selection: EditingSelection,
+    targetBlock: number,
+    placement: 'before' | 'after',
+): EditingResult {
+    const range = orderSelection(selection);
+    const block = wholeStructuredBlock(model, range);
+    if (block === undefined || block.behavior !== 'atomic') {
+        throw new UnsupportedEditingSelectionError(
+            'An atomic structured block must be selected for movement.',
+        );
+    }
+    if (
+        !Number.isInteger(targetBlock) ||
+        targetBlock < 0 ||
+        targetBlock >= model.blocks.length
+    ) {
+        throw new RangeError(`Drop target block ${targetBlock} is invalid.`);
+    }
+    if (placement !== 'before' && placement !== 'after') {
+        throw new TypeError('Drop placement must be "before" or "after".');
+    }
+
+    const sourceBlock = range.start.block;
+    let insertion = targetBlock + (placement === 'after' ? 1 : 0);
+    if (sourceBlock < insertion) {
+        insertion -= 1;
+    }
+    if (insertion === sourceBlock) {
+        return unchanged(model, selection);
+    }
+    const blocks = [...model.blocks];
+    blocks.splice(sourceBlock, 1);
+    blocks.splice(insertion, 0, block);
+    return result(
+        { blocks },
+        {
+            anchor: { block: insertion, offset: 0 },
+            focus: { block: insertion, offset: 1 },
+        },
+        [
+            {
+                fromBlock: sourceBlock,
+                kind: 'move-block',
+                toBlock: insertion,
+            },
+        ],
+    );
+}
+
 export function isTextMarkActive(
     model: EditingModel,
     selection: EditingSelection,
@@ -873,7 +986,70 @@ function getParagraph(
 }
 
 function validatePoint(model: EditingModel, point: EditingPoint): void {
+    const block = model.blocks[point.block];
+    if (block?.kind === 'structured-block') {
+        if (
+            !Number.isInteger(point.offset) ||
+            point.offset < 0 ||
+            point.offset > 1
+        ) {
+            throw new RangeError(
+                `Editing offset ${point.offset} is outside a structured block.`,
+            );
+        }
+        return;
+    }
     getParagraph(model, point);
+}
+
+function wholeStructuredBlock(
+    model: EditingModel,
+    range: { readonly start: EditingPoint; readonly end: EditingPoint },
+): Extract<EditingBlock, { readonly kind: 'structured-block' }> | undefined {
+    if (
+        range.start.block !== range.end.block ||
+        range.start.offset !== 0 ||
+        range.end.offset !== 1
+    ) {
+        return undefined;
+    }
+    const block = model.blocks[range.start.block];
+    return block?.kind === 'structured-block' ? block : undefined;
+}
+
+function deleteStructuredBlock(
+    model: EditingModel,
+    range: { readonly start: EditingPoint; readonly end: EditingPoint },
+): EditingResult {
+    const blocks = [...model.blocks];
+    blocks.splice(range.start.block, 1);
+    let point: EditingPoint;
+    const following = blocks[range.start.block];
+    const previous = blocks[range.start.block - 1];
+    if (following?.kind === 'paragraph') {
+        point = { block: range.start.block, offset: 0 };
+    } else if (previous?.kind === 'paragraph') {
+        point = {
+            block: range.start.block - 1,
+            offset: paragraphLength(previous),
+        };
+    } else {
+        blocks.splice(range.start.block, 0, {
+            attributes: [],
+            inlines: [],
+            kind: 'paragraph',
+            tagName: 'p',
+        });
+        point = { block: range.start.block, offset: 0 };
+    }
+    return result({ blocks }, collapsed(point), [
+        {
+            from: range.start,
+            insertedEnd: point,
+            kind: 'replace-range',
+            to: range.end,
+        },
+    ]);
 }
 
 function assertPoint(paragraph: EditingParagraph, point: EditingPoint): void {
@@ -1059,6 +1235,14 @@ function isEditingOperation(value: unknown): value is EditingOperation {
             return isEditingPoint(operation.point);
         case 'join-blocks':
             return isIndex(operation.block) && isIndex(operation.leftLength);
+        case 'set-structured-attributes':
+            return (
+                isIndex(operation.block) &&
+                typeof operation.type === 'string' &&
+                operation.type.length > 0
+            );
+        case 'move-block':
+            return isIndex(operation.fromBlock) && isIndex(operation.toBlock);
         case 'replace-range':
             return (
                 isEditingPoint(operation.from) &&
@@ -1185,6 +1369,35 @@ function mapPointThroughOperation(
         }
         case 'format-blocks':
         case 'format-inline':
+        case 'set-structured-attributes':
+            return point;
+        case 'move-block':
+            if (point.block === operation.fromBlock) {
+                return Object.freeze({
+                    block: operation.toBlock,
+                    offset: point.offset,
+                });
+            }
+            if (
+                operation.fromBlock < operation.toBlock &&
+                point.block > operation.fromBlock &&
+                point.block <= operation.toBlock
+            ) {
+                return Object.freeze({
+                    block: point.block - 1,
+                    offset: point.offset,
+                });
+            }
+            if (
+                operation.toBlock < operation.fromBlock &&
+                point.block >= operation.toBlock &&
+                point.block < operation.fromBlock
+            ) {
+                return Object.freeze({
+                    block: point.block + 1,
+                    offset: point.offset,
+                });
+            }
             return point;
     }
 }

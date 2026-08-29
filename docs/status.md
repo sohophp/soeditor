@@ -9,13 +9,13 @@ accessibility/SEO diagnostics and projection/split infrastructure without
 owning engines or DOM. The local `0.6.0` release candidate is complete and
 awaiting an explicitly authorized publication.
 
-The evidence-derived 0.7–1.0 roadmap is now approved. Phase 23 — Extensible
-Structured Editing Foundation — is complete. It provides an editor-owned
-structured-block conversion registry, atomic/readonly custom blocks, opaque
-fallback, validated transaction operation metadata, and immutable position
-mapping. Public and SDK packed consumers plus 96 Chromium scenarios pass; the
-final Phase 23 adversarial review found Critical 0 and High 0. Phase 24 — Node
-Views and Widget Runtime — is active.
+The evidence-derived 0.7–1.0 roadmap is now approved. Phase 24 — Node Views and
+Widget Runtime — is complete. It adds public host-scoped node-view factories,
+engine-owned inert boundaries, atomic keyboard/clipboard/delete/drop behavior,
+command-backed attribute editing, readonly state, lifecycle cleanup, and an
+accessible product-card reference widget. Public and SDK packed consumers plus
+100 Chromium scenarios pass; the final Phase 24 adversarial review found
+Critical 0 and High 0. Phase 25 — Production Tables and Media — is active.
 
 All 17 development package manifests are aligned at the `0.6.0` release
 candidate. The published stable reference remains `0.5.1` until an explicitly
@@ -50,8 +50,9 @@ deliberate and documented under SemVer principles.
   commit `f2e5478`; a clean public-registry consumer installed the scoped
   umbrella, completed a Vite production build, validated all package metadata,
   and passed the jsDelivr/Chromium lifecycle smoke test.
-- current global bundle guard: 1.25 MB raw / 410 kB gzip; measured approximately
-  1.198 MB raw / 390 kB gzip.
+- current global bundle guard: 1.26 MB raw / 410 kB gzip; measured 1,254.55 kB
+  raw / 404.98 kB gzip after the Phase 24 public node-view runtime. The full
+  Playground chunk remains guarded at 1.01 MB and measures 1,005.87 kB.
 - current minimal Vite consumer: approximately 27.9 kB raw / 8.74 kB gzip.
 - the Phase 21 narrow Core/SDK/minimal-preset packed consumer is approximately
   28.0 kB raw and proves unused Source, Markdown, Preview, split DOM, and CSS
@@ -69,9 +70,9 @@ deliberate and documented under SemVer principles.
   ESM/narrow preset imports are recommended for production-size evaluation.
 - Visual editing intentionally supports a bounded schema. Unknown HTML is
   preserved as opaque content; complete documents remain Source-oriented.
-  Phase 23 structured contributions are block-only and inert. Interactive
-  node views, atomic selection/deletion, drag/drop, and nested editables belong
-  to Phase 24.
+  Phase 24 structured contributions and node views remain block-only. Inline
+  node views and nested editables remain deferred until their selection,
+  clipboard, and ownership rules can be demonstrated deterministically.
 - HTML ↔ Markdown conversion is explicitly lossy. Canonical Markdown itself is
   exact in Markdown mode.
 - FileManager selects one existing asset. Upload, rename, delete,

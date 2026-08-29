@@ -1,4 +1,5 @@
 import { createServiceToken } from '@soeditor/core';
+import type { HtmlAttribute } from '@soeditor/html';
 
 /** Inline semantic marks supported by the controlled visual service. */
 export type VisualTextMark = 'strong' | 'em' | 'u' | 's' | 'code';
@@ -26,6 +27,11 @@ export interface VisualEditingService {
     setLink(attributes: VisualLinkAttributes | undefined): void;
     isLinkActive(): boolean;
     insertHtml(html: string): void;
+    isStructuredBlockSelected(type?: string): boolean;
+    setStructuredBlockAttributes(
+        type: string,
+        attributes: readonly HtmlAttribute[],
+    ): void;
 }
 
 /** Per-editor token used by command plugins to discover visual capabilities. */

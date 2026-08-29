@@ -36,6 +36,11 @@ export type {
     StructuredBlockBehavior,
     StructuredBlockConversion,
     StructuredEditingRegistry,
+    StructuredNodeViewActions,
+    StructuredNodeViewContext,
+    StructuredNodeViewFactory,
+    StructuredNodeViewInstance,
+    StructuredNodeViewState,
 } from '@soeditor/engine';
 export {
     DiagnosticsPlugin,

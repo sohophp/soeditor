@@ -19,6 +19,7 @@ import {
     type SplitViewPair as SdkSplitViewPair,
     type StatusItemFactory,
     type StructuredBlockConversion,
+    type StructuredNodeViewFactory,
 } from '@soeditor/plugin-sdk';
 import {
     classicPreset,
@@ -134,6 +135,7 @@ class ConsumerPlugin extends Plugin {
     #disposeDiagnostic: (() => void) | undefined;
     #disposeStatus: (() => void) | undefined;
     #disposeStructuredBlock: (() => void) | undefined;
+    #disposeStructuredNodeView: (() => void) | undefined;
 
     override init(): void {
         this.editor.commands.register({
@@ -192,12 +194,22 @@ class ConsumerPlugin extends Plugin {
             }),
             type: 'consumer.product-card',
         };
-        this.#disposeStructuredBlock = this.editor.services
-            .get(structuredEditingRegistryToken)
-            .registerBlock(conversion);
+        const structuredRegistry = this.editor.services.get(
+            structuredEditingRegistryToken,
+        );
+        this.#disposeStructuredBlock =
+            structuredRegistry.registerBlock(conversion);
+        const nodeView: StructuredNodeViewFactory = () => {
+            throw new Error('The NodeNext type smoke test does not mount DOM.');
+        };
+        this.#disposeStructuredNodeView = structuredRegistry.registerNodeView(
+            conversion.type,
+            nodeView,
+        );
     }
 
     override destroy(): void {
+        this.#disposeStructuredNodeView?.();
         this.#disposeStructuredBlock?.();
         this.#disposeDiagnostic?.();
         this.#disposeStatus?.();
@@ -337,6 +349,11 @@ const editingOperations: readonly EditingOperation[] = [
         insertedLength: 1,
         kind: 'replace-text',
         to: 0,
+    },
+    {
+        fromBlock: 1,
+        kind: 'move-block',
+        toBlock: 0,
     },
 ];
 const mappedVisualPoint = mapEditingPoint(

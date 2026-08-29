@@ -53,6 +53,38 @@
                 padding: 0.15rem 0.35rem;
             }
 
+            [data-soeditor-structured-block] {
+                border: 2px solid transparent;
+                border-radius: 0.5rem;
+                margin: 0.75rem 0;
+                outline: none;
+            }
+
+            [data-soeditor-structured-block][aria-selected='true'] {
+                border-color: #0969da;
+            }
+
+            .demo-product-card {
+                align-items: center;
+                background: #f6f8fa;
+                border: 1px solid #d0d7de;
+                border-radius: 0.4rem;
+                display: grid;
+                gap: 0.4rem 1rem;
+                grid-template-columns: 1fr auto;
+                padding: 0.8rem;
+            }
+
+            .demo-product-card span {
+                color: #57606a;
+                grid-column: 1;
+            }
+
+            .demo-product-card button {
+                grid-column: 2;
+                grid-row: 1 / span 2;
+            }
+
             pre {
                 overflow-wrap: anywhere;
                 white-space: pre-wrap;

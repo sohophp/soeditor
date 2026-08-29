@@ -42,6 +42,11 @@ export type {
     StructuredBlockBehavior,
     StructuredBlockConversion,
     StructuredEditingRegistry,
+    StructuredNodeViewActions,
+    StructuredNodeViewContext,
+    StructuredNodeViewFactory,
+    StructuredNodeViewInstance,
+    StructuredNodeViewState,
 } from './structured-editing.js';
 export { visualEditingServiceToken } from './visual-editing-service.js';
 export type {

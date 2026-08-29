@@ -35,7 +35,45 @@ export interface StructuredEditingRegistry {
      * contribution and becomes a safe no-op after a Visual schema is sealed.
      */
     registerBlock(conversion: StructuredBlockConversion): () => void;
+    /** Registers one DOM view factory for an existing structured node type. */
+    registerNodeView(
+        type: string,
+        factory: StructuredNodeViewFactory,
+    ): () => void;
 }
+
+/** Immutable state supplied when a structured node view is mounted or updated. */
+export interface StructuredNodeViewState {
+    readonly node: EditingStructuredBlock;
+    readonly readonly: boolean;
+    readonly selected: boolean;
+}
+
+/** Narrow engine actions available to one structured node view. */
+export interface StructuredNodeViewActions {
+    /** Selects the whole structured block in the controlled visual model. */
+    select(): void;
+    /** Executes a registered editor command without exposing the Editor object. */
+    execute(commandId: string, ...args: readonly unknown[]): unknown;
+}
+
+/** Mount context supplied to a host-scoped node-view factory. */
+export interface StructuredNodeViewContext extends StructuredNodeViewState {
+    readonly actions: StructuredNodeViewActions;
+    readonly document: Document;
+}
+
+/** DOM instance returned by a structured node-view factory. */
+export interface StructuredNodeViewInstance {
+    readonly element: HTMLElement;
+    update?(state: StructuredNodeViewState): void;
+    destroy?(): void;
+}
+
+/** Framework-neutral factory for one structured node-view instance. */
+export type StructuredNodeViewFactory = (
+    context: StructuredNodeViewContext,
+) => StructuredNodeViewInstance;
 
 /** Typed identity of the per-editor structured-editing contribution registry. */
 export const structuredEditingRegistryToken =
@@ -45,7 +83,7 @@ export const structuredEditingRegistryToken =
 
 /** Reports a duplicate contribution ID or structured node type. */
 export class StructuredEditingContributionAlreadyRegisteredError extends Error {
-    constructor(kind: 'ID' | 'node type', value: string) {
+    constructor(kind: 'ID' | 'node type' | 'node view', value: string) {
         super(
             `Structured editing contribution ${kind} "${value}" is already registered.`,
         );
@@ -76,11 +114,16 @@ export class StructuredEditingRegistrySealedError extends Error {
 /** @internal Immutable schema consumed by one attached visual engine. */
 export interface StructuredEditingSchema {
     readonly conversions: readonly StructuredBlockConversion[];
+    readonly nodeViews: readonly (readonly [
+        string,
+        StructuredNodeViewFactory,
+    ])[];
 }
 
 interface RegistryRecord {
     readonly byId: Map<string, StructuredBlockConversion>;
     readonly byType: Map<string, StructuredBlockConversion>;
+    readonly nodeViews: Map<string, StructuredNodeViewFactory>;
     destroyed: boolean;
     sealed: boolean;
 }
@@ -88,6 +131,7 @@ interface RegistryRecord {
 const records = new WeakMap<StructuredEditingRegistry, RegistryRecord>();
 const emptySchema: StructuredEditingSchema = Object.freeze({
     conversions: Object.freeze([]),
+    nodeViews: Object.freeze([]),
 });
 
 /** Installs the per-editor registry required by structured feature plugins. */
@@ -100,10 +144,13 @@ export class StructuredEditingPlugin extends Plugin {
             byId: new Map(),
             byType: new Map(),
             destroyed: false,
+            nodeViews: new Map(),
             sealed: false,
         };
         const registry = Object.freeze<StructuredEditingRegistry>({
             registerBlock: (conversion) => registerBlock(record, conversion),
+            registerNodeView: (type, factory) =>
+                registerNodeView(record, type, factory),
         });
         records.set(registry, record);
         this.#registry = registry;
@@ -117,6 +164,7 @@ export class StructuredEditingPlugin extends Plugin {
             record.destroyed = true;
             record.byId.clear();
             record.byType.clear();
+            record.nodeViews.clear();
             try {
                 if (
                     this.editor.services.tryGet(
@@ -159,6 +207,11 @@ export function snapshotStructuredEditingRegistry(
     assertRegistryAlive(record);
     return Object.freeze({
         conversions: Object.freeze([...record.byId.values()]),
+        nodeViews: Object.freeze(
+            [...record.nodeViews.entries()].map(([type, factory]) =>
+                Object.freeze([type, factory] as const),
+            ),
+        ),
     });
 }
 
@@ -187,6 +240,14 @@ export function getStructuredBlockConversion(
     type: string,
 ): StructuredBlockConversion | undefined {
     return schema.conversions.find((conversion) => conversion.type === type);
+}
+
+/** @internal Resolves a registered node-view factory by structured node type. */
+export function getStructuredNodeViewFactory(
+    schema: StructuredEditingSchema,
+    type: string,
+): StructuredNodeViewFactory | undefined {
+    return schema.nodeViews.find(([candidate]) => candidate === type)?.[1];
 }
 
 function registerBlock(
@@ -224,6 +285,45 @@ function registerBlock(
         if (record.byId.get(conversion.id) === conversion) {
             record.byId.delete(conversion.id);
             record.byType.delete(conversion.type);
+        }
+        active = false;
+    };
+}
+
+function registerNodeView(
+    record: RegistryRecord,
+    type: string,
+    factory: StructuredNodeViewFactory,
+): () => void {
+    assertRegistryAlive(record);
+    if (record.sealed) {
+        throw new StructuredEditingRegistrySealedError();
+    }
+    assertIdentifier('structured node type', type);
+    if (!record.byType.has(type)) {
+        throw new TypeError(
+            `Structured node view "${type}" requires a registered block conversion.`,
+        );
+    }
+    if (typeof factory !== 'function') {
+        throw new TypeError(
+            `Structured node view "${type}" requires a factory.`,
+        );
+    }
+    if (record.nodeViews.has(type)) {
+        throw new StructuredEditingContributionAlreadyRegisteredError(
+            'node view',
+            type,
+        );
+    }
+    record.nodeViews.set(type, factory);
+    let active = true;
+    return () => {
+        if (!active) {
+            return;
+        }
+        if (!record.sealed && record.nodeViews.get(type) === factory) {
+            record.nodeViews.delete(type);
         }
         active = false;
     };

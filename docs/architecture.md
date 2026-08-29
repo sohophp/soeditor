@@ -256,8 +256,7 @@ is block-only and passes SoEditor HTML values—not DOM or engine internals—to
 callbacks.
 
 Editable paragraphs, plugin-recognized structured blocks, and unmatched opaque
-content remain distinct model states. Structured blocks are inert in Phase 23;
-public node views and nested editables belong to Phase 24. Load, paste,
+content remain distinct model states. Load, paste,
 insertion, external replacement, history replay, and serialization use the same
 sealed schema snapshot. Current editing results also expose immutable granular
 operation descriptions and deterministic point mapping. Visual document
@@ -265,6 +264,34 @@ transactions carry validated operation metadata readable through
 `readEditingOperations()`; exact Source replacements and history replay remain
 observable as source-level replacements. Core transactions and bounded
 source-snapshot history remain authoritative.
+
+## Phase 24 node views and widget runtime
+
+Phase 24 adds a separate `registerNodeView(type, factory)` contribution for an
+already registered structured block type. Conversion remains DOM-free. A view
+factory receives the host document, an immutable node snapshot, readonly and
+selection state, plus only `select()` and command `execute()` actions.
+
+```text
+canonical HTML ⇄ structured model
+                       ↓ immutable snapshot
+engine-owned inert boundary → plugin node-view DOM
+                       ↓ command/service action
+                 Core transaction + history
+```
+
+The engine owns the focusable `contenteditable=false` boundary and treats DOM
+mutations inside that boundary as view-local, never as canonical edits. Exact
+block selection uses offsets `0..1`. Attribute changes and same-editor moves
+emit `set-structured-attributes` and `move-block` operations; deletion,
+clipboard replacement, external semantic HTML drop, history, and readonly all
+reuse the controlled model/transaction path. Unknown and unsafe source remains
+opaque and never invokes a factory.
+
+Node views are recreated on whole-surface render and destroyed on rerender or
+teardown. Nested editables, inline node views, framework runtimes, and
+cross-editor movement remain deferred because their selection and ownership
+rules are not yet demonstrated.
 
 ## Phase 3 minimal visual editing engine
 

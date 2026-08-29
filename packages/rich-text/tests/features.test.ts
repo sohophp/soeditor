@@ -235,10 +235,12 @@ async function createHarness(options?: {
         isLinkActive: () => false,
         isListActive: () => false,
         isMarkActive: (mark) => options?.activeMarks?.has(mark) ?? false,
+        isStructuredBlockSelected: () => false,
         setBlock,
         setLink: setLink as (
             attributes: VisualLinkAttributes | undefined,
         ) => void,
+        setStructuredBlockAttributes: vi.fn(),
         toggleList,
         toggleMark,
     };

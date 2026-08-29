@@ -4,7 +4,11 @@ import {
     type Editor,
     type Transaction,
 } from '@soeditor/core';
-import { parseHtmlFragment, serializeHtmlFragment } from '@soeditor/html';
+import {
+    parseHtmlFragment,
+    serializeHtmlFragment,
+    type HtmlAttribute,
+} from '@soeditor/html';
 import {
     projectionCoordinatorServiceToken,
     type ProjectionActivity,
@@ -21,6 +25,7 @@ import {
     createEditingModel,
     freezeModel,
     freezeSelection,
+    paragraphLength,
     serializeEditingModel,
     type EditingModel,
     type EditingSelection,
@@ -36,9 +41,12 @@ import {
     isLinkActive,
     isListActive,
     isTextMarkActive,
+    isStructuredBlockSelected,
+    moveStructuredBlock,
     setBlockTag,
     setEditingOperations,
     setLink,
+    setStructuredBlockAttributes,
     toggleMark,
     toggleList,
     type EditingResult,
@@ -101,6 +109,7 @@ export class VisualEditingEngine implements EditingEngine {
     readonly #schema: StructuredEditingSchema;
     readonly #activateOnFocus: boolean;
     #compositionSelection: EditingSelection | undefined;
+    #draggedStructuredBlock: number | undefined;
     #destroyed = false;
     #lockedDocument = false;
     #lastValidModel: EditingModel | undefined;
@@ -162,7 +171,12 @@ export class VisualEditingEngine implements EditingEngine {
         this.element.setAttribute('role', 'textbox');
         this.element.setAttribute('aria-label', ariaLabel);
         this.element.setAttribute('aria-multiline', 'true');
-        this.#projection = new DomProjection(this.element, this.#model);
+        this.#projection = new DomProjection(this.element, this.#model, {
+            executeCommand: (commandId, args) =>
+                this.editor.execute(commandId, ...args),
+            readonly: this.#isReadonly() || this.#lockedDocument,
+            schema: this.#schema,
+        });
         this.#projection.render(this.#model);
         const service: VisualEditingService = {
             canEdit: () => this.#canEdit(),
@@ -171,16 +185,26 @@ export class VisualEditingEngine implements EditingEngine {
             isLinkActive: () => this.#isLinkActive(),
             isListActive: (list) => this.#isListActive(list),
             isMarkActive: (mark) => this.#isMarkActive(mark),
+            isStructuredBlockSelected: (type) =>
+                this.#isStructuredBlockSelected(type),
             setBlock: (tagName) => this.#setBlock(tagName),
             setLink: (attributes) => this.#setLink(attributes),
+            setStructuredBlockAttributes: (type, attributes) =>
+                this.#setStructuredBlockAttributes(type, attributes),
             toggleList: (list) => this.#toggleList(list),
             toggleMark: (mark) => this.#toggleMark(mark),
         };
         this.#service = Object.freeze(service);
         this.editor.services.register(visualEditingServiceToken, this.#service);
 
-        this.#mutationObserver = new view.MutationObserver(() => {
-            if (!this.#destroyed) {
+        this.#mutationObserver = new view.MutationObserver((records) => {
+            if (
+                !this.#destroyed &&
+                records.some(
+                    (record) =>
+                        !this.#projection.ownsNodeViewMutation(record.target),
+                )
+            ) {
                 this.#render(this.#model);
             }
         });
@@ -198,6 +222,10 @@ export class VisualEditingEngine implements EditingEngine {
         this.element.addEventListener('copy', this.#handleCopy);
         this.element.addEventListener('cut', this.#handleCut);
         this.element.addEventListener('paste', this.#handlePaste);
+        this.element.addEventListener('dragstart', this.#handleDragStart);
+        this.element.addEventListener('dragend', this.#handleDragEnd);
+        this.element.addEventListener('dragover', this.#handleDragOver);
+        this.element.addEventListener('drop', this.#handleDrop);
         this.element.addEventListener('focusin', this.#handleFocusIn);
         this.element.addEventListener('pointerdown', this.#handlePointerDown);
         this.#disposeDocumentChange = this.editor.events.on(
@@ -273,11 +301,20 @@ export class VisualEditingEngine implements EditingEngine {
         this.element.removeEventListener('copy', this.#handleCopy);
         this.element.removeEventListener('cut', this.#handleCut);
         this.element.removeEventListener('paste', this.#handlePaste);
+        this.element.removeEventListener('dragstart', this.#handleDragStart);
+        this.element.removeEventListener('dragend', this.#handleDragEnd);
+        this.element.removeEventListener('dragover', this.#handleDragOver);
+        this.element.removeEventListener('drop', this.#handleDrop);
         this.element.removeEventListener('focusin', this.#handleFocusIn);
         this.element.removeEventListener(
             'pointerdown',
             this.#handlePointerDown,
         );
+        try {
+            this.#projection.destroy();
+        } catch (error: unknown) {
+            errors.push(error);
+        }
         try {
             this.#disposeProjection?.();
         } catch (error: unknown) {
@@ -407,11 +444,13 @@ export class VisualEditingEngine implements EditingEngine {
         this.#compositionSelection = undefined;
     };
 
-    readonly #handleFocusIn = (): void => {
+    readonly #handleFocusIn = (event: FocusEvent): void => {
+        this.#projection.selectStructuredBlockFromNode(event.target);
         this.#activateFromUserIntent();
     };
 
-    readonly #handlePointerDown = (): void => {
+    readonly #handlePointerDown = (event: PointerEvent): void => {
+        this.#projection.selectStructuredBlockFromNode(event.target);
         this.#activateFromUserIntent();
     };
 
@@ -427,6 +466,79 @@ export class VisualEditingEngine implements EditingEngine {
     }
 
     readonly #handleKeyDown = (event: KeyboardEvent): void => {
+        const selection = this.#projection.readSelection();
+        if (
+            selection !== undefined &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.altKey &&
+            (event.key === 'ArrowLeft' ||
+                event.key === 'ArrowUp' ||
+                event.key === 'ArrowRight' ||
+                event.key === 'ArrowDown')
+        ) {
+            const direction =
+                event.key === 'ArrowLeft' || event.key === 'ArrowUp' ? -1 : 1;
+            if (
+                this.#projection.moveIntoStructuredBlock(selection, direction)
+            ) {
+                event.preventDefault();
+                return;
+            }
+        }
+        if (
+            selection !== undefined &&
+            isStructuredBlockSelected(this.#model, selection) &&
+            this.#projection.isStructuredBoundary(event.target)
+        ) {
+            if (
+                !event.ctrlKey &&
+                !event.metaKey &&
+                !event.altKey &&
+                (event.key === 'ArrowLeft' || event.key === 'ArrowUp')
+            ) {
+                event.preventDefault();
+                this.#projection.moveFromStructuredBlock(-1);
+                return;
+            }
+            if (
+                !event.ctrlKey &&
+                !event.metaKey &&
+                !event.altKey &&
+                (event.key === 'ArrowRight' ||
+                    event.key === 'ArrowDown' ||
+                    event.key === 'Enter')
+            ) {
+                event.preventDefault();
+                this.#projection.moveFromStructuredBlock(1);
+                return;
+            }
+            if (
+                !event.ctrlKey &&
+                !event.metaKey &&
+                !event.altKey &&
+                (event.key === 'Backspace' || event.key === 'Delete')
+            ) {
+                event.preventDefault();
+                if (!this.#isReadonly() && !this.#lockedDocument) {
+                    try {
+                        const result = deleteSelection(this.#model, selection);
+                        this.#commit(result, {
+                            afterSelection: result.selection,
+                            beforeSelection: selection,
+                        });
+                    } catch (error: unknown) {
+                        if (
+                            !(error instanceof UnsupportedEditingSelectionError)
+                        ) {
+                            throw error;
+                        }
+                    }
+                }
+                return;
+            }
+        }
+
         if (!(event.ctrlKey || event.metaKey) || event.altKey) {
             return;
         }
@@ -495,6 +607,131 @@ export class VisualEditingEngine implements EditingEngine {
                 this.#schema,
             );
             const result = insertModel(this.#model, selection, inserted);
+            this.#commit(result, {
+                afterSelection: result.selection,
+                beforeSelection: selection,
+            });
+        } catch (error: unknown) {
+            if (!(error instanceof UnsupportedEditingSelectionError)) {
+                throw error;
+            }
+        }
+    };
+
+    readonly #handleDragStart = (event: DragEvent): void => {
+        const transfer = event.dataTransfer;
+        if (
+            transfer === null ||
+            this.#isReadonly() ||
+            this.#lockedDocument ||
+            !this.#projection.selectStructuredBlockFromNode(event.target, true)
+        ) {
+            event.preventDefault();
+            return;
+        }
+        const selection = this.#projection.readSelection();
+        if (
+            selection === undefined ||
+            !isStructuredBlockSelected(this.#model, selection)
+        ) {
+            event.preventDefault();
+            return;
+        }
+        const draggedNode = this.#model.blocks[selection.anchor.block];
+        if (
+            draggedNode?.kind !== 'structured-block' ||
+            draggedNode.behavior !== 'atomic'
+        ) {
+            event.preventDefault();
+            return;
+        }
+        const payload = createClipboardPayload(
+            this.#model,
+            selection,
+            this.#schema,
+        );
+        transfer.effectAllowed = 'move';
+        transfer.setData('text/html', payload.html);
+        transfer.setData('text/plain', payload.text);
+        this.#draggedStructuredBlock = selection.anchor.block;
+    };
+
+    readonly #handleDragEnd = (): void => {
+        this.#draggedStructuredBlock = undefined;
+    };
+
+    readonly #handleDragOver = (event: DragEvent): void => {
+        if (
+            !this.#isReadonly() &&
+            !this.#lockedDocument &&
+            this.#projection.readDropTarget(event.target, event.clientY) !==
+                undefined
+        ) {
+            event.preventDefault();
+            if (event.dataTransfer !== null) {
+                event.dataTransfer.dropEffect =
+                    this.#draggedStructuredBlock === undefined
+                        ? 'copy'
+                        : 'move';
+            }
+        }
+    };
+
+    readonly #handleDrop = (event: DragEvent): void => {
+        const transfer = event.dataTransfer;
+        const target = this.#projection.readDropTarget(
+            event.target,
+            event.clientY,
+        );
+        if (
+            transfer === null ||
+            target === undefined ||
+            this.#isReadonly() ||
+            this.#lockedDocument
+        ) {
+            return;
+        }
+        event.preventDefault();
+        const dragged = this.#draggedStructuredBlock;
+        this.#draggedStructuredBlock = undefined;
+        if (dragged !== undefined) {
+            const selection: EditingSelection = {
+                anchor: { block: dragged, offset: 0 },
+                focus: { block: dragged, offset: 1 },
+            };
+            const result = moveStructuredBlock(
+                this.#model,
+                selection,
+                target.block,
+                target.placement,
+            );
+            this.#commit(result, {
+                afterSelection: result.selection,
+                beforeSelection: selection,
+            });
+            return;
+        }
+
+        const targetBlock = this.#model.blocks[target.block];
+        if (targetBlock?.kind !== 'paragraph') {
+            return;
+        }
+        const offset =
+            target.placement === 'before' ? 0 : paragraphLength(targetBlock);
+        const selection: EditingSelection = {
+            anchor: { block: target.block, offset },
+            focus: { block: target.block, offset },
+        };
+        try {
+            const result = insertModel(
+                this.#model,
+                selection,
+                createPastedModel(
+                    transfer.getData('text/html'),
+                    transfer.getData('text/plain'),
+                    this.#schema,
+                ),
+            );
             this.#commit(result, {
                 afterSelection: result.selection,
                 beforeSelection: selection,
@@ -632,6 +869,27 @@ export class VisualEditingEngine implements EditingEngine {
             : isLinkActive(this.#model, selection);
     }
 
+    #setStructuredBlockAttributes(
+        type: string,
+        attributes: readonly HtmlAttribute[],
+    ): void {
+        this.#applyFeature((selection) =>
+            setStructuredBlockAttributes(
+                this.#model,
+                selection,
+                type,
+                attributes,
+            ),
+        );
+    }
+
+    #isStructuredBlockSelected(type?: string): boolean {
+        const selection = this.#projection.readSelection();
+        return selection === undefined
+            ? false
+            : isStructuredBlockSelected(this.#model, selection, type);
+    }
+
     #insertHtml(html: string): void {
         this.#applyFeature((selection) =>
             insertModel(
@@ -645,6 +903,7 @@ export class VisualEditingEngine implements EditingEngine {
     #handleDocumentChange(source: string, transaction: Transaction): void {
         const pending = this.#pending;
         if (pending !== undefined && pending.source === source) {
+            this.#pending = undefined;
             this.#model = pending.model;
             this.#render(pending.model, pending.selection);
             return;
@@ -736,6 +995,7 @@ export class VisualEditingEngine implements EditingEngine {
         this.element.hidden = !visual;
         this.element.contentEditable = readonly ? 'false' : 'true';
         this.element.setAttribute('aria-readonly', String(readonly));
+        this.#projection.setReadonly(readonly);
     }
 
     #isReadonly(): boolean {
