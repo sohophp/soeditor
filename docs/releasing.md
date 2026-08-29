@@ -8,11 +8,11 @@ use an npm identity.
 
 1. Choose and commit exactly one approved `LICENSE`, `LICENSE.md`, or
    `LICENSE.txt`. Add the same approved npm `license` expression to the root
-   manifest and all 16 public package manifests. Confirm it with
+   manifest and all 17 public package manifests. Confirm it with
    `pnpm release:check-license`.
 2. Create the npm organization named `soeditor` on the public-package plan,
    which creates the `@soeditor` scope, and confirm the publishing identity is
-   an owner or member allowed to publish all 16 packages in it.
+   an owner or member allowed to publish all 17 packages in it.
 3. Create the protected GitHub `npm` environment and require reviewer approval.
 4. Configure an environment-scoped `NPM_TOKEN` using a granular npm token with
    read/write package access and **Bypass 2FA** enabled. The bypass setting is
@@ -48,7 +48,7 @@ in a separately approved roadmap. Although 0.x permits breaking SemVer changes,
 avoid them in patch releases; document an unavoidable break and use at least a
 minor version.
 
-All 16 public packages use an aligned version so consumers and support reports
+All 17 public packages use an aligned version so consumers and support reports
 can identify one tested release set. Add a Changeset for each user-visible
 patch, update `CHANGELOG.md`, and let the release change deliberately advance
 the package versions.

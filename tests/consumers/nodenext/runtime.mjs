@@ -11,6 +11,7 @@ import { SourceEditingPlugin } from '@soeditor/source';
 import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import { UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
 import { PreviewPlugin } from '@soeditor/preview';
+import { SplitViewPlugin, splitViewServiceToken } from '@soeditor/layout';
 import {
     ProjectionCoordinatorPlugin,
     projectionCoordinatorServiceToken,
@@ -87,6 +88,14 @@ if (projectionService.snapshot.primary !== 'visual') {
     throw new Error('Packed projection coordinator returned invalid state.');
 }
 await projectionEditor.destroy();
+const layoutEditor = await Editor.create({ plugins: [SplitViewPlugin] });
+if (
+    !layoutEditor.commands.has('layout.split.open') ||
+    layoutEditor.services.get(splitViewServiceToken).attached
+) {
+    throw new Error('Packed split-view command contract failed.');
+}
+await layoutEditor.destroy();
 if (
     extendedRuntimePreset.plugins.at(-1) !== RuntimeSdkPlugin ||
     subpathMinimalPreset !== minimalPreset ||

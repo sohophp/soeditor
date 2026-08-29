@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete through Phase 19. The 0.6 roadmap is approved and Phase 20 is active.
+Complete through Phase 20. The 0.6 roadmap is approved and Phase 21 is active.
 
 This roadmap begins from the current repository state.
 
@@ -877,7 +877,7 @@ They require a new roadmap decision.
 ## Status
 
 APPROVED. The repository owner authorized implementation through the 0.6 to
-1.0 development sequence on 2026-08-29. Phase 20 is active; later 0.6 phases
+1.0 development sequence on 2026-08-29. Phase 21 is active; later 0.6 phases
 remain pending until their predecessors pass the normal release gate.
 
 ## Release theme
@@ -1094,7 +1094,7 @@ writable projection.
 
 ## Status
 
-ACTIVE.
+COMPLETED on 2026-08-30.
 
 ## Goal
 
@@ -1138,7 +1138,7 @@ projection pairs.
 
 ## Status
 
-PENDING.
+ACTIVE.
 
 ## Goal
 

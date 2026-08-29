@@ -192,6 +192,27 @@ retain the 0.5 single-mode policy. Invalid exact HTML remains canonical while
 Visual keeps its last valid model locked. Split-pane DOM, resizers, labels, and
 responsive behavior remain deferred to Phase 20.
 
+## Phase 20 accessible split-view layouts
+
+Phase 20 adds browser-facing `@soeditor/layout`. `SplitViewPlugin` owns
+immutable pair, requested/effective orientation, bounded ratio, collapse, and
+responsive state. Its commands use only the public projection coordinator to
+show pair members or transfer primary authority; layout code never edits the
+canonical document or accesses engine internals.
+
+`createSplitViewLayout()` receives an empty application-owned root and explicit
+caller-owned projection hosts. It renders two named regions, pane focus and
+collapse controls, and an ARIA separator with pointer plus Arrow/Home/End
+resizing. A `ResizeObserver` changes only effective orientation for narrow
+containers, so the requested orientation is restored when space returns.
+
+The supported graph is deliberately finite: Visual | Source, Source | Preview,
+and Markdown | Preview. Applications still construct every surface engine and
+Preview security configuration. DOM anchors and attribute/style snapshots let
+layout teardown return hosts to their exact parents and positions without
+destroying the engines. Arbitrary docking, persistence, and multi-writer
+editing remain deferred.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing

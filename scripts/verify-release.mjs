@@ -76,9 +76,9 @@ for (const directory of await readdir(packagesRoot)) {
     }
 }
 
-if (publishable.length !== 16) {
+if (publishable.length !== 17) {
     throw new Error(
-        `Expected 16 publishable packages, found ${String(publishable.length)}.`,
+        `Expected 17 publishable packages, found ${String(publishable.length)}.`,
     );
 }
 if (new Set(publishable).size !== publishable.length) {
@@ -98,6 +98,7 @@ const globalPath = join(umbrellaDist, 'soeditor.global.js');
 const cssPath = join(umbrellaDist, 'soeditor.css');
 const esmPath = join(umbrellaDist, 'index.js');
 const globalSource = await readFile(globalPath);
+const cssSource = await readFile(cssPath, 'utf8');
 const globalRaw = (await stat(globalPath)).size;
 const globalGzip = gzipSync(globalSource).length;
 const cssRaw = (await stat(cssPath)).size;
@@ -107,6 +108,13 @@ assertBudget('CDN global raw', globalRaw, 1_250_000);
 assertBudget('CDN global gzip', globalGzip, 410_000);
 assertBudget('standalone CSS', cssRaw, 10_000);
 assertBudget('umbrella ESM facade', esmRaw, 2_000);
+for (const requiredSelector of ['.soeditor-split-view', '.soeditor-ui']) {
+    if (!cssSource.includes(requiredSelector)) {
+        throw new Error(
+            `Standalone CSS is missing required selector ${requiredSelector}.`,
+        );
+    }
+}
 
 const playgroundAssets = join(repositoryRoot, 'apps/playground/dist/assets');
 const playgroundJavaScript = (

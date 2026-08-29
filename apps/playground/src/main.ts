@@ -15,6 +15,12 @@ import {
     SeoDiagnosticsPlugin,
 } from '@soeditor/html-tools';
 import {
+    createSplitViewLayout,
+    SplitViewPlugin,
+    splitViewServiceToken,
+    type SplitViewPair,
+} from '@soeditor/layout';
+import {
     createMarkdownEditingEngine,
     createMarkdownPreviewRenderer,
     markdownEditingServiceToken,
@@ -141,6 +147,7 @@ const sourceEditingHost = document.querySelector<HTMLElement>('#source-editor');
 const markdownEditingHost =
     document.querySelector<HTMLElement>('#markdown-editor');
 const previewHost = document.querySelector<HTMLElement>('#preview');
+const splitViewHost = document.querySelector<HTMLElement>('#split-view');
 const uiHost = document.querySelector<HTMLElement>('#editor-ui');
 
 if (
@@ -150,6 +157,7 @@ if (
     sourceEditingHost === null ||
     markdownEditingHost === null ||
     previewHost === null ||
+    splitViewHost === null ||
     uiHost === null
 ) {
     throw new Error('Playground output or editing host was not found.');
@@ -157,13 +165,16 @@ if (
 
 const parameters = new URLSearchParams(window.location.search);
 const markdownDocument = parameters.get('format') === 'markdown';
-const persistentProjections = parameters.get('projections') === 'persistent';
+const splitPair = readSplitPair(parameters.get('split'));
+const persistentProjections =
+    parameters.get('projections') === 'persistent' || splitPair !== undefined;
 const cmsExample = parameters.get('example') === 'cms';
 const developerDocument = parameters.get('preset') !== 'classic';
 const htmlPreset = developerDocument ? developerPreset : classicPreset;
 const htmlPlugins = [
     DemoPlugin,
     ...(persistentProjections ? [ProjectionCoordinatorPlugin] : []),
+    ...(splitPair === undefined ? [] : [SplitViewPlugin]),
     ...htmlPreset.plugins,
     ...(developerDocument
         ? [AccessibilityDiagnosticsPlugin, SeoDiagnosticsPlugin]
@@ -186,6 +197,7 @@ const editor = await Editor.create(
                   ...(persistentProjections
                       ? [ProjectionCoordinatorPlugin]
                       : []),
+                  ...(splitPair === undefined ? [] : [SplitViewPlugin]),
                   ...markdownPreset.plugins,
               ],
               readonly: parameters.has('readonly'),
@@ -290,6 +302,27 @@ const previewEngine = createPreviewEngine({
     element: previewHost,
     renderer: createMarkdownPreviewRenderer(),
 });
+const splitView =
+    splitPair === undefined
+        ? undefined
+        : createSplitViewLayout({
+              editor,
+              element: splitViewHost,
+              hosts: {
+                  markdown: markdownEditingHost,
+                  preview: previewHost,
+                  source: sourceEditingHost,
+                  visual: editingHost,
+              },
+              initialPair: splitPair,
+          });
+if (splitView !== undefined) {
+    document
+        .querySelectorAll<HTMLElement>('[data-surface-heading]')
+        .forEach((heading) => {
+            heading.hidden = true;
+        });
+}
 const toolbarParameter = parameters.get('toolbar');
 const ui = createEditorUi({
     editor,
@@ -320,6 +353,7 @@ const developerToolsEngine =
     createDeveloperToolsEngine,
     createMarkdownEditingEngine,
     createPreviewEngine,
+    createSplitViewLayout,
     createSourceEditingEngine,
     createVisualEditingEngine,
     editor,
@@ -335,6 +369,8 @@ const developerToolsEngine =
     previewServiceToken,
     projectionCoordinatorServiceToken,
     sourceEngine,
+    splitView,
+    splitViewServiceToken,
     ui,
     visualEngine,
 });
@@ -384,3 +420,15 @@ bind('destroy-editor', () => {
     void editor.destroy();
 });
 render();
+
+function readSplitPair(value: string | null): SplitViewPair | undefined {
+    if (value === null) return undefined;
+    if (
+        value === 'visual-source' ||
+        value === 'source-preview' ||
+        value === 'markdown-preview'
+    ) {
+        return value;
+    }
+    throw new TypeError(`Unknown Playground split pair "${value}".`);
+}

@@ -34,6 +34,9 @@ export default defineConfig({
                     import.meta.url,
                 ),
             ),
+            '@soeditor/layout': fileURLToPath(
+                new URL('../../packages/layout/src/index.ts', import.meta.url),
+            ),
             '@soeditor/file-manager': fileURLToPath(
                 new URL(
                     '../../packages/file-manager/src/index.ts',

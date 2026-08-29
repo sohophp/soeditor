@@ -144,6 +144,12 @@ export class SourceEditingEngine implements SourceEngine {
             ],
             parent: this.element,
         });
+        this.#view.scrollDOM.tabIndex = 0;
+        this.#view.scrollDOM.setAttribute('role', 'region');
+        this.#view.scrollDOM.setAttribute(
+            'aria-label',
+            'HTML source scroll area',
+        );
 
         const service: SourceEditingService = {
             focus: () => this.focus(),

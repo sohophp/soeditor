@@ -6,6 +6,7 @@ export * from '@soeditor/engine';
 export * from '@soeditor/file-manager';
 export * from '@soeditor/html';
 export * from '@soeditor/html-tools';
+export * from '@soeditor/layout';
 export * from '@soeditor/markdown';
 export * from '@soeditor/presets';
 export * from '@soeditor/preview';

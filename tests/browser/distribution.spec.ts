@@ -57,7 +57,9 @@ test('loads the self-contained immutable CDN facade in Chromium', async ({
         format: 'html',
         frozen: true,
     });
-    expect(await readFile(stylesheet, 'utf8')).toContain('--soeditor-bg');
+    const stylesheetSource = await readFile(stylesheet, 'utf8');
+    expect(stylesheetSource).toContain('--soeditor-bg');
+    expect(stylesheetSource).toContain('.soeditor-split-view');
     expect(await readFile(globalMap, 'utf8')).toContain('sources');
 });
 

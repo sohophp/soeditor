@@ -76,6 +76,17 @@
                             >CMS + SoFinder adapter</a
                         >
                     </li>
+                    <li>
+                        <a href="/?split=visual-source">Visual | Source</a>
+                    </li>
+                    <li>
+                        <a href="/?split=source-preview">Source | Preview</a>
+                    </li>
+                    <li>
+                        <a href="/?format=markdown&amp;split=markdown-preview"
+                            >Markdown | Preview</a
+                        >
+                    </li>
                 </ul>
             </nav>
             <p>
@@ -100,13 +111,14 @@
                     Destroy Core Editor
                 </button>
             </p>
-            <h2>Visual Surface</h2>
+            <div id="split-view" data-testid="split-view"></div>
+            <h2 data-surface-heading>Visual Surface</h2>
             <div id="editor" data-testid="editor"></div>
-            <h2>HTML Source Editor</h2>
+            <h2 data-surface-heading>HTML Source Editor</h2>
             <div id="source-editor" data-testid="source-editor"></div>
-            <h2>Markdown Editor</h2>
+            <h2 data-surface-heading>Markdown Editor</h2>
             <div id="markdown-editor" data-testid="markdown-editor"></div>
-            <h2>Isolated Preview</h2>
+            <h2 data-surface-heading>Isolated Preview</h2>
             <div id="preview" data-testid="preview"></div>
             <h2>Canonical Source</h2>
             <pre id="source" data-testid="source"></pre>

@@ -2,7 +2,7 @@
 
 ## Status
 
-ACTIVE.
+COMPLETED on 2026-08-30.
 
 ## Goal
 
@@ -71,3 +71,22 @@ configuration explicitly, then pass caller-owned host elements to the layout.
 - cleanup restores caller-owned hosts exactly;
 - ADR 0023 and architecture documentation match implementation;
 - Critical = 0, High = 0, and all repository verification passes.
+
+## Completion record
+
+Completed on 2026-08-30.
+
+- Added `@soeditor/layout` with command-driven immutable split state and an
+  exclusive DOM adapter for all three approved pairs.
+- Added named pane regions, visible focus/collapse/restore controls, bounded
+  ARIA separator values, keyboard and pointer resizing, horizontal/vertical
+  layout, and reversible narrow-container fallback.
+- Preserved application ownership through exact host anchors and root/host
+  state restoration; repeated attachment leaves surface engines running.
+- Kept canonical mutations and authority inside Core/projection commands,
+  including readonly and invalid exact-HTML behavior.
+- Added Playground routes, package/umbrella/tarball distribution, unit tests,
+  and seven real Chromium layout, accessibility, synchronization, lifecycle,
+  and responsive scenarios.
+- Full lint, type, unit, packed-consumer, distribution, release-budget, and
+  Chromium gates passed with Critical = 0 and High = 0.

@@ -12,6 +12,7 @@
         "@soeditor/file-manager": "0.5.1",
         "@soeditor/html": "0.5.1",
         "@soeditor/html-tools": "0.5.1",
+        "@soeditor/layout": "0.5.1",
         "@soeditor/markdown": "0.5.1",
         "@soeditor/preview": "0.5.1",
         "@soeditor/projections": "0.5.1",

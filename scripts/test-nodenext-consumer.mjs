@@ -134,6 +134,17 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/layout',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/ui',
             'pack',
             '--pack-destination',
@@ -259,6 +270,9 @@ try {
     const htmlToolsArchive = archives.find((name) =>
         name.startsWith('soeditor-html-tools-'),
     );
+    const layoutArchive = archives.find((name) =>
+        name.startsWith('soeditor-layout-'),
+    );
     const uiArchive = archives.find((name) => name.startsWith('soeditor-ui-'));
     const previewArchive = archives.find((name) =>
         name.startsWith('soeditor-preview-'),
@@ -270,7 +284,7 @@ try {
         name.startsWith('soeditor-markdown-'),
     );
 
-    if (archives.length !== 16 || coreArchive === undefined) {
+    if (archives.length !== 17 || coreArchive === undefined) {
         throw new Error('Expected one packed @soeditor/core archive.');
     }
 
@@ -292,6 +306,10 @@ try {
 
     if (htmlToolsArchive === undefined) {
         throw new Error('Expected one packed @soeditor/html-tools archive.');
+    }
+
+    if (layoutArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/layout archive.');
     }
 
     if (uiArchive === undefined) {
@@ -385,6 +403,10 @@ try {
     packageData.dependencies['@soeditor/html-tools'] = `file:${join(
         packDirectory,
         htmlToolsArchive,
+    )}`;
+    packageData.dependencies['@soeditor/layout'] = `file:${join(
+        packDirectory,
+        layoutArchive,
     )}`;
     packageData.dependencies['@soeditor/ui'] = `file:${join(
         packDirectory,

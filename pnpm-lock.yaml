@@ -65,6 +65,9 @@ importers:
       '@soeditor/html-tools':
         specifier: workspace:*
         version: link:../../packages/html-tools
+      '@soeditor/layout':
+        specifier: workspace:*
+        version: link:../../packages/layout
       '@soeditor/markdown':
         specifier: workspace:*
         version: link:../../packages/markdown
@@ -162,6 +165,15 @@ importers:
       '@soeditor/html':
         specifier: workspace:*
         version: link:../html
+
+  packages/layout:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/projections':
+        specifier: workspace:*
+        version: link:../projections
 
   packages/markdown:
     dependencies:
@@ -301,6 +313,9 @@ importers:
       '@soeditor/html-tools':
         specifier: workspace:*
         version: link:../html-tools
+      '@soeditor/layout':
+        specifier: workspace:*
+        version: link:../layout
       '@soeditor/markdown':
         specifier: workspace:*
         version: link:../markdown

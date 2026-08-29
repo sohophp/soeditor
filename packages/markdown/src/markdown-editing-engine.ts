@@ -118,6 +118,9 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
             ],
             parent: this.element,
         });
+        this.#view.scrollDOM.tabIndex = 0;
+        this.#view.scrollDOM.setAttribute('role', 'region');
+        this.#view.scrollDOM.setAttribute('aria-label', 'Markdown scroll area');
         this.#service = Object.freeze({ focus: () => this.focus() });
         this.editor.services.register(
             markdownEditingServiceToken,

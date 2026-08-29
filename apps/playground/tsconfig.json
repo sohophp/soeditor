@@ -13,6 +13,7 @@
                 "../../packages/file-manager/src/index.ts"
             ],
             "@soeditor/html": ["../../packages/html/src/index.ts"],
+            "@soeditor/layout": ["../../packages/layout/src/index.ts"],
             "@soeditor/markdown": ["../../packages/markdown/src/index.ts"],
             "@soeditor/preview": ["../../packages/preview/src/index.ts"],
             "@soeditor/projections": [

@@ -1,0 +1,55 @@
+{
+    "name": "@soeditor/layout",
+    "version": "0.5.1",
+    "license": "MIT",
+    "description": "Accessible command-driven split-view layouts for SoEditor.",
+    "keywords": [
+        "content-editor",
+        "split-view",
+        "typescript"
+    ],
+    "homepage": "https://github.com/sohophp/soeditor#readme",
+    "bugs": {
+        "url": "https://github.com/sohophp/soeditor/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sohophp/soeditor.git",
+        "directory": "packages/layout"
+    },
+    "engines": {
+        "node": ">=22.14.0 <23"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true,
+        "registry": "https://registry.npmjs.org/"
+    },
+    "type": "module",
+    "sideEffects": [
+        "*.css"
+    ],
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./styles.css": "./dist/styles.css"
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "test": "vitest run",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "peerDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/projections": "workspace:*"
+    },
+    "devDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/projections": "workspace:*"
+    }
+}

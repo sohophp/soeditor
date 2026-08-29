@@ -16,6 +16,7 @@
         "@soeditor/file-manager": "workspace:*",
         "@soeditor/html": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
+        "@soeditor/layout": "workspace:*",
         "@soeditor/markdown": "workspace:*",
         "@soeditor/preview": "workspace:*",
         "@soeditor/projections": "workspace:*",

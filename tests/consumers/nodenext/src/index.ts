@@ -61,6 +61,11 @@ import {
     type Problem,
 } from '@soeditor/html-tools';
 import {
+    SplitViewPlugin,
+    splitViewServiceToken,
+    type SplitViewPair,
+} from '@soeditor/layout';
+import {
     createVisualEditingEngine,
     HistoryPlugin,
     type EditingSelection,
@@ -223,6 +228,16 @@ if (
     throw new Error('Packed projection contracts were not coordinated.');
 }
 await projectionEditor.destroy();
+
+const layoutEditor = await Editor.create({ plugins: [SplitViewPlugin] });
+const layoutPair: SplitViewPair = 'visual-source';
+if (
+    !layoutEditor.commands.has('layout.split.open') ||
+    layoutEditor.services.get(splitViewServiceToken).attached
+) {
+    throw new Error(`Packed layout contract failed for ${layoutPair}.`);
+}
+await layoutEditor.destroy();
 
 editor.services.register(ExampleServiceToken, { value: 'available' });
 editor.execute('consumer.replace', '<p>Compiled</p>');
