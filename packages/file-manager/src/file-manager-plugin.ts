@@ -1,5 +1,5 @@
 import { Plugin } from '@soeditor/core';
-import { ImagePlugin } from '@soeditor/rich-text';
+import { ImagePlugin, MediaPlugin } from '@soeditor/rich-text';
 import {
     EditorUiDestroyedError,
     UiPlugin,
@@ -20,26 +20,64 @@ const imageRequest: FileManagerOpenOptions = Object.freeze({
     multiple: false,
 });
 
-/** Connects a replaceable FileManager to the existing Image command. */
+/** Connects a replaceable FileManager to image and structured-media commands. */
 export class FileManagerPlugin extends Plugin {
     static readonly id = 'file-manager-image';
-    static readonly requires = [ImagePlugin, UiPlugin];
+    static readonly requires = [ImagePlugin, MediaPlugin, UiPlugin];
     #destroyed = false;
-    #disposeToolbar: (() => void) | undefined;
+    #disposeToolbar: (() => void)[] = [];
     #pending = false;
 
     override init(): void {
+        this.registerBrowseCommand('image.browse', 'image.insert');
+        this.registerBrowseCommand('media.browse', 'media.insert');
+        const ui = this.editor.services.get(uiRegistryServiceToken);
+        this.#disposeToolbar.push(
+            ui.registerToolbarItem(
+                'image-browse',
+                createBrowseButton(
+                    'Browse image',
+                    'Insert image from file manager',
+                    'image.browse',
+                ),
+            ),
+            ui.registerToolbarItem(
+                'media-browse',
+                createBrowseButton(
+                    'Browse media',
+                    'Insert media figure from file manager',
+                    'media.browse',
+                ),
+            ),
+        );
+    }
+
+    override destroy(): void {
+        this.#destroyed = true;
+        for (const dispose of this.#disposeToolbar.reverse()) {
+            dispose();
+        }
+        this.#disposeToolbar = [];
+    }
+
+    private registerBrowseCommand(
+        browseCommand: 'image.browse' | 'media.browse',
+        insertCommand: 'image.insert' | 'media.insert',
+    ): void {
         this.editor.commands.register({
-            id: 'image.browse',
-            label: 'Insert image from file manager',
+            id: browseCommand,
+            label:
+                insertCommand === 'media.insert'
+                    ? 'Insert media from file manager'
+                    : 'Insert image from file manager',
             canExecute: ({ editor }) =>
                 !this.#pending &&
                 editor.services.has(fileManagerServiceToken) &&
-                editor.commands.canExecute('image.insert'),
+                editor.commands.canExecute(insertCommand),
             execute: async ({ editor }, ...args) => {
                 if (args.length !== 0) {
                     throw new TypeError(
-                        'Command "image.browse" does not accept arguments.',
+                        `Command "${browseCommand}" does not accept arguments.`,
                     );
                 }
                 this.#pending = true;
@@ -52,7 +90,7 @@ export class FileManagerPlugin extends Plugin {
                     if (selected === null || this.#destroyed) {
                         return null;
                     }
-                    editor.execute('image.insert', {
+                    editor.execute(insertCommand, {
                         src: selected.url,
                         alt: selected.alt ?? selected.name ?? '',
                         ...(selected.width === undefined
@@ -68,29 +106,24 @@ export class FileManagerPlugin extends Plugin {
                 }
             },
         });
-        this.#disposeToolbar = this.editor.services
-            .get(uiRegistryServiceToken)
-            .registerToolbarItem('image-browse', createBrowseButton());
-    }
-
-    override destroy(): void {
-        this.#destroyed = true;
-        this.#disposeToolbar?.();
-        this.#disposeToolbar = undefined;
     }
 }
 
-function createBrowseButton(): ToolbarItemFactory {
+function createBrowseButton(
+    text: string,
+    title: string,
+    command: 'image.browse' | 'media.browse',
+): ToolbarItemFactory {
     return ({ document, editor, ui }) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'soeditor-ui__button';
-        button.textContent = 'Browse image';
-        button.title = 'Insert image from file manager';
+        button.textContent = text;
+        button.title = title;
         const click = (): void => {
             try {
                 ui.restoreEditingSelection();
-                const result = editor.execute('image.browse');
+                const result = editor.execute(command);
                 if (isPromiseLike(result)) {
                     void Promise.resolve(result).catch((error: unknown) => {
                         showError(ui, error);
@@ -104,7 +137,7 @@ function createBrowseButton(): ToolbarItemFactory {
         return {
             element: button,
             update: () => {
-                button.disabled = !editor.commands.canExecute('image.browse');
+                button.disabled = !editor.commands.canExecute(command);
             },
             destroy: () => button.removeEventListener('click', click),
         };

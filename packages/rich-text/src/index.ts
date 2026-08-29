@@ -11,12 +11,15 @@ export {
     ParagraphPlugin,
     RichTextArgumentError,
     StrikePlugin,
-    TablePlugin,
     UnderlinePlugin,
     UnorderedListPlugin,
 } from './features.js';
+export type { ImageInsertOptions, LinkOptions } from './features.js';
+export { isSafeMediaPreviewUrl, MediaPlugin } from './media.js';
+export type { MediaInsertOptions, MediaUpdateOptions } from './media.js';
+export { TablePlugin } from './table.js';
 export type {
-    ImageInsertOptions,
-    LinkOptions,
+    TableCellPosition,
+    TableCellRange,
     TableInsertOptions,
-} from './features.js';
+} from './table.js';

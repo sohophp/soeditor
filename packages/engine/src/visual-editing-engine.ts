@@ -29,6 +29,8 @@ import {
     serializeEditingModel,
     type EditingModel,
     type EditingSelection,
+    type EditingStructuredBlock,
+    type EditingStructuredBlockContent,
 } from './model.js';
 import {
     deleteBackward,
@@ -43,6 +45,8 @@ import {
     isTextMarkActive,
     isStructuredBlockSelected,
     moveStructuredBlock,
+    getSelectedStructuredBlock,
+    replaceStructuredBlockContent,
     setBlockTag,
     setEditingOperations,
     setLink,
@@ -180,6 +184,8 @@ export class VisualEditingEngine implements EditingEngine {
         this.#projection.render(this.#model);
         const service: VisualEditingService = {
             canEdit: () => this.#canEdit(),
+            getSelectedStructuredBlock: (type) =>
+                this.#getSelectedStructuredBlock(type),
             insertHtml: (html) => this.#insertHtml(html),
             isBlockActive: (tagName) => this.#isBlockActive(tagName),
             isLinkActive: () => this.#isLinkActive(),
@@ -187,6 +193,8 @@ export class VisualEditingEngine implements EditingEngine {
             isMarkActive: (mark) => this.#isMarkActive(mark),
             isStructuredBlockSelected: (type) =>
                 this.#isStructuredBlockSelected(type),
+            replaceStructuredBlockContent: (type, content) =>
+                this.#replaceStructuredBlockContent(type, content),
             setBlock: (tagName) => this.#setBlock(tagName),
             setLink: (attributes) => this.#setLink(attributes),
             setStructuredBlockAttributes: (type, attributes) =>
@@ -358,6 +366,10 @@ export class VisualEditingEngine implements EditingEngine {
             return;
         }
 
+        if (this.#projection.isInsideStructuredView(event.target)) {
+            return;
+        }
+
         event.preventDefault();
         if (this.#isReadonly() || this.#lockedDocument) {
             return;
@@ -436,11 +448,17 @@ export class VisualEditingEngine implements EditingEngine {
         }
     };
 
-    readonly #handleCompositionStart = (): void => {
+    readonly #handleCompositionStart = (event: CompositionEvent): void => {
+        if (this.#projection.isInsideStructuredView(event.target)) {
+            return;
+        }
         this.#compositionSelection = this.#projection.readSelection();
     };
 
-    readonly #handleCompositionEnd = (): void => {
+    readonly #handleCompositionEnd = (event: CompositionEvent): void => {
+        if (this.#projection.isInsideStructuredView(event.target)) {
+            return;
+        }
         this.#compositionSelection = undefined;
     };
 
@@ -562,10 +580,16 @@ export class VisualEditingEngine implements EditingEngine {
     };
 
     readonly #handleCopy = (event: ClipboardEvent): void => {
+        if (this.#projection.isInsideStructuredView(event.target)) {
+            return;
+        }
         this.#writeClipboard(event);
     };
 
     readonly #handleCut = (event: ClipboardEvent): void => {
+        if (this.#projection.isInsideStructuredView(event.target)) {
+            return;
+        }
         const selection = this.#writeClipboard(event);
         if (
             selection === undefined ||
@@ -589,6 +613,9 @@ export class VisualEditingEngine implements EditingEngine {
     };
 
     readonly #handlePaste = (event: ClipboardEvent): void => {
+        if (this.#projection.isInsideStructuredView(event.target)) {
+            return;
+        }
         event.preventDefault();
         if (this.#isReadonly() || this.#lockedDocument) {
             return;
@@ -881,6 +908,29 @@ export class VisualEditingEngine implements EditingEngine {
                 attributes,
             ),
         );
+    }
+
+    #replaceStructuredBlockContent(
+        type: string,
+        content: EditingStructuredBlockContent,
+    ): void {
+        this.#applyFeature((selection) =>
+            replaceStructuredBlockContent(
+                this.#model,
+                selection,
+                type,
+                content,
+            ),
+        );
+    }
+
+    #getSelectedStructuredBlock(
+        type?: string,
+    ): EditingStructuredBlock | undefined {
+        const selection = this.#projection.readSelection();
+        return selection === undefined
+            ? undefined
+            : getSelectedStructuredBlock(this.#model, selection, type);
     }
 
     #isStructuredBlockSelected(type?: string): boolean {

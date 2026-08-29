@@ -21,6 +21,7 @@ export const defaultToolbarConfiguration = Object.freeze([
     'link',
     '|',
     'image',
+    'media',
     'table',
     '|',
     'source',
@@ -194,6 +195,43 @@ const imageButton = dialogCommandButton(
     },
 );
 
+const mediaButton = dialogCommandButton(
+    'Media',
+    'media.insert',
+    (document, run) => {
+        let src: HTMLInputElement;
+        let alt: HTMLInputElement;
+        let caption: HTMLInputElement;
+        let width: HTMLInputElement;
+        let height: HTMLInputElement;
+        return {
+            content: (container) => {
+                src = field(document, container, 'Media URL', 'url', true);
+                alt = field(document, container, 'Alternative text', 'text');
+                caption = field(document, container, 'Caption', 'text');
+                width = field(document, container, 'Width', 'number');
+                height = field(document, container, 'Height', 'number');
+                width.max = '10000';
+                height.max = '10000';
+            },
+            run: () =>
+                run({
+                    src: src.value,
+                    alt: alt.value,
+                    ...(caption.value.length === 0
+                        ? {}
+                        : { caption: caption.value }),
+                    ...(width.value.length === 0
+                        ? {}
+                        : { width: Number(width.value) }),
+                    ...(height.value.length === 0
+                        ? {}
+                        : { height: Number(height.value) }),
+                }),
+        };
+    },
+);
+
 const tableButton = dialogCommandButton(
     'Table',
     'table.insert',
@@ -211,6 +249,8 @@ const tableButton = dialogCommandButton(
                     true,
                     '2',
                 );
+                rows.max = '100';
+                columns.max = '100';
             },
             run: () =>
                 run({
@@ -235,6 +275,7 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
         ['strike', commandButton('Strike', 'format.strike')],
         ['link', linkButton],
         ['image', imageButton],
+        ['media', mediaButton],
         ['table', tableButton],
         ['source', sourceButton],
         ['markdown', commandButton('Markdown', 'editor.markdown')],

@@ -33,6 +33,7 @@ export type {
     EditingPointAffinity,
     EditingSelection,
     EditingStructuredBlock,
+    EditingStructuredBlockContent,
     StructuredBlockBehavior,
     StructuredBlockConversion,
     StructuredEditingRegistry,
@@ -40,6 +41,7 @@ export type {
     StructuredNodeViewContext,
     StructuredNodeViewFactory,
     StructuredNodeViewInstance,
+    StructuredNodeViewSelectionOptions,
     StructuredNodeViewState,
 } from '@soeditor/engine';
 export {

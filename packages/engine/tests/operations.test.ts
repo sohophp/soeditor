@@ -156,6 +156,24 @@ describe('editing operations', () => {
         ).toBe(true);
     });
 
+    it('reports text and link state as inactive for structured selections', () => {
+        const model: EditingModel = {
+            blocks: [
+                {
+                    attributes: [],
+                    behavior: 'atomic',
+                    children: [],
+                    kind: 'structured-block',
+                    type: 'example.widget',
+                },
+            ],
+        };
+        const selection = range(0, 0, 0, 1);
+
+        expect(isTextMarkActive(model, selection, 'strong')).toBe(false);
+        expect(isLinkActive(model, selection)).toBe(false);
+    });
+
     it('refuses edits that would delete opaque custom HTML', () => {
         const model = fromHtml(
             '<p>A<product-card data-id="1"></product-card>B</p>',

@@ -285,37 +285,6 @@ export class ImagePlugin extends FeaturePlugin {
     }
 }
 
-/** Bounded dimensions accepted by `table.insert`. */
-export interface TableInsertOptions {
-    readonly rows: number;
-    readonly columns: number;
-}
-
-/** Registers inert semantic basic-table insertion. */
-export class TablePlugin extends FeaturePlugin {
-    static readonly id = 'table';
-
-    override init(): void {
-        this.register('table.insert', (service, args) => {
-            const options = readTableOptions(args);
-            const rows = Array.from({ length: options.rows }, () =>
-                element(
-                    'tr',
-                    [],
-                    Array.from({ length: options.columns }, () =>
-                        element('td', [], [text('\u00a0')]),
-                    ),
-                ),
-            );
-            service.insertHtml(
-                serializeNodes([
-                    element('table', [], [element('tbody', [], rows)]),
-                ]),
-            );
-        });
-    }
-}
-
 function requireService(
     context: CommandContext,
     commandId: string,
@@ -389,20 +358,6 @@ function readImageOptions(args: readonly unknown[]): ImageInsertOptions {
         ...(width === undefined ? {} : { width }),
         ...(height === undefined ? {} : { height }),
     };
-}
-
-function readTableOptions(args: readonly unknown[]): TableInsertOptions {
-    const value = readRecord('table.insert', args);
-    rejectUnknownKeys('table.insert', value, ['rows', 'columns']);
-    const rows = positiveInteger('table.insert', value, 'rows');
-    const columns = positiveInteger('table.insert', value, 'columns');
-    if (rows > 100 || columns > 100 || rows * columns > 1000) {
-        throw new RichTextArgumentError(
-            'table.insert',
-            'supports at most 100 rows, 100 columns, and 1000 cells.',
-        );
-    }
-    return { columns, rows };
 }
 
 function rejectUnknownKeys(
@@ -482,10 +437,6 @@ function optionalPositiveInteger(
 
 function attribute(name: string, value: string): HtmlAttribute {
     return Object.freeze({ name, value });
-}
-
-function text(value: string): HtmlChildNode {
-    return Object.freeze({ type: 'text', value });
 }
 
 function element(

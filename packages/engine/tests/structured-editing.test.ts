@@ -16,6 +16,7 @@ import {
     isStructuredBlockSelected,
     mapEditingPoint,
     moveStructuredBlock,
+    replaceStructuredBlockContent,
     setStructuredBlockAttributes,
     UnsupportedEditingSelectionError,
 } from '../src/operations.js';
@@ -119,6 +120,40 @@ describe('structured editing contributions', () => {
                 type: 'example.product-card',
             },
         ]);
+        const replacementChildren = parseHtmlFragment(
+            '<template><p>Updated fallback</p></template>',
+        ).document.children;
+        const replaced = replaceStructuredBlockContent(
+            model,
+            selection,
+            'example.product-card',
+            {
+                attributes: [{ name: 'product-id', value: '789' }],
+                children: replacementChildren,
+            },
+        );
+        expect(
+            serializeHtmlFragment(
+                serializeEditingModel(replaced.model, schema),
+            ),
+        ).toBe(
+            '<product-card product-id="789"><template><p>Updated fallback</p></template></product-card>',
+        );
+        expect(replaced.operations).toEqual([
+            {
+                block: 0,
+                kind: 'replace-structured-content',
+                type: 'example.product-card',
+            },
+        ]);
+        expect(() =>
+            Reflect.apply(replaceStructuredBlockContent, undefined, [
+                model,
+                selection,
+                'example.product-card',
+                { attributes: [], children: [{ type: 'invalid' }] },
+            ]),
+        ).toThrow('requires valid HTML attributes and child nodes');
         expect(deleteSelection(model, selection).model.blocks[0]).toMatchObject(
             { kind: 'paragraph' },
         );

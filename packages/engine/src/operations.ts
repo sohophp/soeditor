@@ -1,5 +1,5 @@
 import type { Transaction } from '@soeditor/core';
-import type { HtmlAttribute } from '@soeditor/html';
+import type { HtmlAttribute, HtmlChildNode } from '@soeditor/html';
 
 import {
     freezeModel,
@@ -13,6 +13,8 @@ import {
     type EditingParagraph,
     type EditingPoint,
     type EditingSelection,
+    type EditingStructuredBlock,
+    type EditingStructuredBlockContent,
     type EditingTextRun,
     type EditingTextMark,
     type EditingBlockTag,
@@ -55,6 +57,11 @@ export type EditingOperation =
       }
     | {
           readonly kind: 'set-structured-attributes';
+          readonly block: number;
+          readonly type: string;
+      }
+    | {
+          readonly kind: 'replace-structured-content';
           readonly block: number;
           readonly type: string;
       }
@@ -735,16 +742,7 @@ export function setStructuredBlockAttributes(
     attributes: readonly HtmlAttribute[],
 ): EditingResult {
     const range = orderSelection(selection);
-    const block = wholeStructuredBlock(model, range);
-    if (
-        block === undefined ||
-        block.type !== type ||
-        block.behavior !== 'atomic'
-    ) {
-        throw new UnsupportedEditingSelectionError(
-            `An editable atomic structured block of type "${type}" must be selected.`,
-        );
-    }
+    const block = editableStructuredBlock(model, range, type);
     const blocks = [...model.blocks];
     blocks[range.start.block] = { ...block, attributes };
     return result({ blocks }, selection, [
@@ -756,13 +754,58 @@ export function setStructuredBlockAttributes(
     ]);
 }
 
+export function replaceStructuredBlockContent(
+    model: EditingModel,
+    selection: EditingSelection,
+    type: string,
+    content: EditingStructuredBlockContent,
+): EditingResult {
+    const range = orderSelection(selection);
+    const block = editableStructuredBlock(model, range, type);
+    if (
+        typeof content !== 'object' ||
+        content === null ||
+        !Array.isArray(content.attributes) ||
+        !content.attributes.every(isHtmlAttribute) ||
+        !Array.isArray(content.children) ||
+        !content.children.every(isHtmlChildNode)
+    ) {
+        throw new TypeError(
+            'Structured block content requires valid HTML attributes and child nodes.',
+        );
+    }
+    const blocks = [...model.blocks];
+    blocks[range.start.block] = {
+        ...block,
+        attributes: content.attributes,
+        children: content.children,
+    };
+    return result({ blocks }, selection, [
+        {
+            block: range.start.block,
+            kind: 'replace-structured-content',
+            type,
+        },
+    ]);
+}
+
+export function getSelectedStructuredBlock(
+    model: EditingModel,
+    selection: EditingSelection,
+    type?: string,
+): EditingStructuredBlock | undefined {
+    const block = wholeStructuredBlock(model, orderSelection(selection));
+    return block !== undefined && (type === undefined || block.type === type)
+        ? block
+        : undefined;
+}
+
 export function isStructuredBlockSelected(
     model: EditingModel,
     selection: EditingSelection,
     type?: string,
 ): boolean {
-    const block = wholeStructuredBlock(model, orderSelection(selection));
-    return block !== undefined && (type === undefined || block.type === type);
+    return getSelectedStructuredBlock(model, selection, type) !== undefined;
 }
 
 export function moveStructuredBlock(
@@ -822,7 +865,10 @@ export function isTextMarkActive(
     mark: EditingTextMark,
 ): boolean {
     const range = orderSelection(selection);
-    const paragraph = getParagraph(model, range.start);
+    const paragraph = model.blocks[range.start.block];
+    if (paragraph?.kind !== 'paragraph') {
+        return false;
+    }
     if (comparePoints(range.start, range.end) === 0) {
         return marksAtPoint(paragraph, range.start.offset).includes(mark);
     }
@@ -872,7 +918,10 @@ export function isLinkActive(
     selection: EditingSelection,
 ): boolean {
     const range = orderSelection(selection);
-    const paragraph = getParagraph(model, range.start);
+    const paragraph = model.blocks[range.start.block];
+    if (paragraph?.kind !== 'paragraph') {
+        return false;
+    }
     if (comparePoints(range.start, range.end) === 0) {
         return marksAtPoint(paragraph, range.start.offset).some(
             (mark) => typeof mark !== 'string' && mark.kind === 'link',
@@ -1002,6 +1051,39 @@ function validatePoint(model: EditingModel, point: EditingPoint): void {
     getParagraph(model, point);
 }
 
+function isHtmlChildNode(value: unknown): value is HtmlChildNode {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        return false;
+    }
+    const node = value as Record<string, unknown>;
+    if (node.type === 'text' || node.type === 'comment') {
+        return typeof node.value === 'string';
+    }
+    return (
+        node.type === 'element' &&
+        typeof node.tagName === 'string' &&
+        ['html', 'svg', 'mathml'].includes(String(node.namespace)) &&
+        Array.isArray(node.attributes) &&
+        node.attributes.every(isHtmlAttribute) &&
+        Array.isArray(node.children) &&
+        node.children.every(isHtmlChildNode)
+    );
+}
+
+function isHtmlAttribute(value: unknown): value is HtmlAttribute {
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        return false;
+    }
+    const attribute = value as Record<string, unknown>;
+    return (
+        typeof attribute.name === 'string' &&
+        typeof attribute.value === 'string' &&
+        (attribute.namespace === undefined ||
+            typeof attribute.namespace === 'string') &&
+        (attribute.prefix === undefined || typeof attribute.prefix === 'string')
+    );
+}
+
 function wholeStructuredBlock(
     model: EditingModel,
     range: { readonly start: EditingPoint; readonly end: EditingPoint },
@@ -1015,6 +1097,24 @@ function wholeStructuredBlock(
     }
     const block = model.blocks[range.start.block];
     return block?.kind === 'structured-block' ? block : undefined;
+}
+
+function editableStructuredBlock(
+    model: EditingModel,
+    range: { readonly start: EditingPoint; readonly end: EditingPoint },
+    type: string,
+): EditingStructuredBlock {
+    const block = wholeStructuredBlock(model, range);
+    if (
+        block === undefined ||
+        block.type !== type ||
+        block.behavior !== 'atomic'
+    ) {
+        throw new UnsupportedEditingSelectionError(
+            `An editable atomic structured block of type "${type}" must be selected.`,
+        );
+    }
+    return block;
 }
 
 function deleteStructuredBlock(
@@ -1236,6 +1336,7 @@ function isEditingOperation(value: unknown): value is EditingOperation {
         case 'join-blocks':
             return isIndex(operation.block) && isIndex(operation.leftLength);
         case 'set-structured-attributes':
+        case 'replace-structured-content':
             return (
                 isIndex(operation.block) &&
                 typeof operation.type === 'string' &&
@@ -1370,6 +1471,7 @@ function mapPointThroughOperation(
         case 'format-blocks':
         case 'format-inline':
         case 'set-structured-attributes':
+        case 'replace-structured-content':
             return point;
         case 'move-block':
             if (point.block === operation.fromBlock) {

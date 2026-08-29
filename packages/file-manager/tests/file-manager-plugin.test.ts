@@ -41,6 +41,29 @@ describe('FileManagerPlugin', () => {
         await editor.destroy();
     });
 
+    it('can delegate the same picker result to structured media', async () => {
+        const editor = await Editor.create({ plugins: [FileManagerPlugin] });
+        const inserted: string[] = [];
+        registerVisualService(editor, inserted);
+        editor.services.register(fileManagerServiceToken, {
+            open: () =>
+                Promise.resolve({
+                    alt: 'Hero',
+                    height: 675,
+                    name: 'hero.jpg',
+                    url: '/hero.jpg',
+                    width: 1200,
+                }),
+        });
+
+        await editor.execute('media.browse');
+
+        expect(inserted).toEqual([
+            '<figure data-soeditor-media="image"><img src="/hero.jpg" alt="Hero" width="1200" height="675"></figure>',
+        ]);
+        await editor.destroy();
+    });
+
     it('treats cancellation as a no-op and rejects unsafe results', async () => {
         const editor = await Editor.create({ plugins: [FileManagerPlugin] });
         const inserted: string[] = [];
@@ -102,12 +125,14 @@ describe('FileManagerPlugin', () => {
 function registerVisualService(editor: Editor, inserted: string[]): void {
     editor.services.register(visualEditingServiceToken, {
         canEdit: () => true,
+        getSelectedStructuredBlock: () => undefined,
         insertHtml: (html) => inserted.push(html),
         isBlockActive: () => false,
         isLinkActive: () => false,
         isListActive: () => false,
         isMarkActive: () => false,
         isStructuredBlockSelected: () => false,
+        replaceStructuredBlockContent: () => undefined,
         setBlock: () => undefined,
         setLink: () => undefined,
         setStructuredBlockAttributes: () => undefined,

@@ -13,6 +13,7 @@ import {
     getStructuredNodeViewFactory,
     type StructuredEditingSchema,
     type StructuredNodeViewInstance,
+    type StructuredNodeViewSelectionOptions,
     type StructuredNodeViewState,
 } from './structured-editing.js';
 
@@ -164,6 +165,16 @@ export class DomProjection {
     isStructuredBoundary(node: EventTarget | null): boolean {
         return [...this.#structuredBlocks.values()].some(
             (boundary) => boundary === node,
+        );
+    }
+
+    isInsideStructuredView(node: EventTarget | null): boolean {
+        const view = this.#document.defaultView;
+        if (view === null || !(node instanceof view.Node)) {
+            return false;
+        }
+        return [...this.#structuredBlocks.values()].some(
+            (boundary) => boundary !== node && boundary.contains(node),
         );
     }
 
@@ -373,7 +384,7 @@ export class DomProjection {
             'aria-label',
             `Structured content: ${block.type}`,
         );
-        boundary.setAttribute('aria-selected', 'false');
+        boundary.setAttribute('aria-current', 'false');
         boundary.draggable = block.behavior === 'atomic' && !this.#readonly;
         this.#structuredBlocks.set(blockIndex, boundary);
         this.#spans.set(boundary, { block: blockIndex, end: 1, start: 0 });
@@ -393,8 +404,11 @@ export class DomProjection {
                 actions: Object.freeze({
                     execute: (commandId: string, ...args: readonly unknown[]) =>
                         this.#options.executeCommand(commandId, args),
-                    select: () => {
-                        this.selectStructuredBlock(blockIndex);
+                    select: (options?: StructuredNodeViewSelectionOptions) => {
+                        this.selectStructuredBlock(
+                            blockIndex,
+                            options?.focus ?? true,
+                        );
                     },
                 }),
                 document: this.#document,
@@ -457,7 +471,7 @@ export class DomProjection {
         const errors: unknown[] = [];
         for (const [block, boundary] of this.#structuredBlocks) {
             const selected = block === this.#selectedStructuredBlock;
-            boundary.setAttribute('aria-selected', String(selected));
+            boundary.setAttribute('aria-current', String(selected));
             boundary.classList.toggle('soeditor-structured-selected', selected);
             boundary.setAttribute('aria-disabled', String(this.#readonly));
             const node = this.#model.blocks[block];

@@ -35,6 +35,7 @@ test('renders the configured integrated toolbar, groups, status, and theme', asy
         'link',
         '|',
         'image',
+        'media',
         'table',
         '|',
         'source',
@@ -43,6 +44,7 @@ test('renders the configured integrated toolbar, groups, status, and theme', asy
         '|',
         'problems',
         'image-browse',
+        'media-browse',
         'inspector',
         'outline',
         'find-replace',
@@ -163,8 +165,10 @@ test('inserts image and table data through command dialogs', async ({
     await tableDialog.getByRole('button', { name: 'Insert table' }).click();
     await expect(page.locator(source)).toContainText('<table>');
     await expect(
-        page.locator(`${editor} [data-soeditor-opaque-block]`),
-    ).toContainText('<table>');
+        page.locator(
+            `${editor} [data-soeditor-structured-block="soeditor.table"]`,
+        ),
+    ).toBeVisible();
     await expect(page.locator(source)).toContainText(
         '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>',
     );

@@ -9,13 +9,15 @@ accessibility/SEO diagnostics and projection/split infrastructure without
 owning engines or DOM. The local `0.6.0` release candidate is complete and
 awaiting an explicitly authorized publication.
 
-The evidence-derived 0.7–1.0 roadmap is now approved. Phase 24 — Node Views and
-Widget Runtime — is complete. It adds public host-scoped node-view factories,
-engine-owned inert boundaries, atomic keyboard/clipboard/delete/drop behavior,
-command-backed attribute editing, readonly state, lifecycle cleanup, and an
-accessible product-card reference widget. Public and SDK packed consumers plus
-100 Chromium scenarios pass; the final Phase 24 adversarial review found
-Critical 0 and High 0. Phase 25 — Production Tables and Media — is active.
+The evidence-derived 0.7–1.0 roadmap is now approved. Phase 25 — Production
+Tables and Media — is complete. Bounded structured tables now provide
+transaction-backed row, column, header, merge/split, rectangular selection,
+keyboard, and semantic clipboard behavior. Safe figure/media widgets add
+captions, alt text, dimensions, and generic FileManager insertion while
+unsupported or executable source remains preserved and inert. Public and SDK
+packed consumers plus 109 Chromium scenarios pass; the final Phase 25
+adversarial review found Critical 0 and High 0. Phase 26 — SoEditor 0.7 SDK and
+Release Hardening — is active.
 
 All 17 development package manifests are aligned at the `0.6.0` release
 candidate. The published stable reference remains `0.5.1` until an explicitly
@@ -50,13 +52,13 @@ deliberate and documented under SemVer principles.
   commit `f2e5478`; a clean public-registry consumer installed the scoped
   umbrella, completed a Vite production build, validated all package metadata,
   and passed the jsDelivr/Chromium lifecycle smoke test.
-- current global bundle guard: 1.26 MB raw / 410 kB gzip; measured 1,254.55 kB
-  raw / 404.98 kB gzip after the Phase 24 public node-view runtime. The full
-  Playground chunk remains guarded at 1.01 MB and measures 1,005.87 kB.
+- current global bundle guard: 1.29 MB raw / 415 kB gzip; measured 1,282.04 kB
+  raw / 412.66 kB gzip after bounded tables and media. The full Playground
+  chunk is guarded at 1.04 MB and measures 1,033.29 kB.
 - current minimal Vite consumer: approximately 27.9 kB raw / 8.74 kB gzip.
 - the Phase 21 narrow Core/SDK/minimal-preset packed consumer is approximately
   28.0 kB raw and proves unused Source, Markdown, Preview, split DOM, and CSS
-  families are absent; all 95 Chromium scenarios pass.
+  families are absent; all 109 Chromium scenarios pass.
 - the Phase 22 frozen candidate aligns all 17 packages at 0.6.0, passes strict
   typecheck, unit/consumer/distribution/release/Chromium/build/license/security
   gates, completes a 17-package npm dry run, and confirms read-only that every
@@ -70,9 +72,11 @@ deliberate and documented under SemVer principles.
   ESM/narrow preset imports are recommended for production-size evaluation.
 - Visual editing intentionally supports a bounded schema. Unknown HTML is
   preserved as opaque content; complete documents remain Source-oriented.
-  Phase 24 structured contributions and node views remain block-only. Inline
-  node views and nested editables remain deferred until their selection,
-  clipboard, and ownership rules can be demonstrated deterministically.
+  Structured contributions and node views remain block-only. Table selection
+  is view-local and resets after a source-changing transaction; column changes
+  explicitly reject `colgroup` metadata. Inline node views and nested editables
+  remain deferred until their selection, clipboard, and ownership rules can be
+  demonstrated deterministically.
 - HTML ↔ Markdown conversion is explicitly lossy. Canonical Markdown itself is
   exact in Markdown mode.
 - FileManager selects one existing asset. Upload, rename, delete,
@@ -99,8 +103,9 @@ deliberate and documented under SemVer principles.
 ## Lower-priority notes
 
 Semantic HTML preservation is not byte-for-byte preservation. Framework
-wrappers, SSR DOM emulation, collaboration, and advanced widgets/tables remain
-post-0.6 candidates and are not implied by this preview.
+wrappers, SSR DOM emulation, collaboration, spreadsheet behavior, office-paste
+parity, and arbitrary executable widgets remain post-0.6 candidates and are
+not implied by this preview.
 
 The candidate is not yet a public 0.6 release. npm publication, signed tag,
 GitHub Release, and external npm/jsDelivr verification require explicit owner

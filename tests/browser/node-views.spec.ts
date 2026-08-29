@@ -20,7 +20,7 @@ test('mounts an accessible host-scoped product-card node view and updates it by 
     );
 
     await boundary.focus();
-    await expect(boundary).toHaveAttribute('aria-selected', 'true');
+    await expect(boundary).toHaveAttribute('aria-current', 'true');
     const toggle = boundary.getByRole('button', { name: '切换推荐状态' });
     await toggle.focus();
     await page.keyboard.press('Enter');
@@ -56,7 +56,7 @@ test('copies, navigates from, deletes, restores, and pastes an atomic node view'
         (host as HTMLElement).focus();
     });
     await page.keyboard.press('ArrowRight');
-    await expect(boundary).toHaveAttribute('aria-selected', 'true');
+    await expect(boundary).toHaveAttribute('aria-current', 'true');
 
     await boundary.focus();
     expect(await dispatchClipboard(page, 'copy')).toEqual({
@@ -65,7 +65,7 @@ test('copies, navigates from, deletes, restores, and pastes an atomic node view'
     });
 
     await page.keyboard.press('ArrowLeft');
-    await expect(boundary).toHaveAttribute('aria-selected', 'false');
+    await expect(boundary).toHaveAttribute('aria-current', 'false');
     expect(
         await page.evaluate(
             () =>

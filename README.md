@@ -44,7 +44,7 @@ const editor = await SoEditor.create({
 - `@soeditor/engine` — controlled contenteditable projection, transaction
   history, selection, clipboard handling, and the typed visual-feature service.
 - `@soeditor/rich-text` — independent command plugins for common inline/block
-  formatting, links, lists, images, and basic tables.
+  formatting, links, lists, structured tables, and safe figure/media widgets.
 - `@soeditor/source` — CodeMirror 6 HTML source mode, exact Core
   synchronization, and parser diagnostic projection.
 - `@soeditor/html-tools` — UI-independent diagnostic providers/problems and

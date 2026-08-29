@@ -28,6 +28,7 @@ export type {
     EditingOpaqueInline,
     EditingParagraph,
     EditingStructuredBlock,
+    EditingStructuredBlockContent,
     EditingTextMark,
     EditingTextRun,
 } from './model.js';
@@ -46,6 +47,7 @@ export type {
     StructuredNodeViewContext,
     StructuredNodeViewFactory,
     StructuredNodeViewInstance,
+    StructuredNodeViewSelectionOptions,
     StructuredNodeViewState,
 } from './structured-editing.js';
 export { visualEditingServiceToken } from './visual-editing-service.js';

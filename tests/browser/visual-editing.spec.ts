@@ -273,7 +273,7 @@ test('preserves unsafe link source without exposing an executable anchor', async
     await expect(page.locator(source)).toHaveText('<p>Hello</p>');
 });
 
-test('inserts inert semantic images and tables and supports undo', async ({
+test('inserts inert images and structured semantic tables and supports undo', async ({
     page,
 }) => {
     await page.click('#hello');
@@ -300,8 +300,12 @@ test('inserts inert semantic images and tables and supports undo', async ({
     await setSelection(page, 0, 2);
     await executeCommand(page, 'table.insert', { columns: 2, rows: 2 });
     await expect(page.locator(source)).toContainText('<table><tbody><tr><td>');
-    await expect(page.locator('[data-soeditor-opaque-block]')).toHaveCount(1);
-    await expect(page.locator(`${editor} table`)).toHaveCount(0);
+    await expect(page.locator('[data-soeditor-opaque-block]')).toHaveCount(0);
+    await expect(
+        page.locator(
+            `${editor} [data-soeditor-structured-block="soeditor.table"] table`,
+        ),
+    ).toHaveCount(1);
 });
 
 test('unregisters visual feature capability when the engine is destroyed', async ({

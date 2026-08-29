@@ -1,5 +1,9 @@
 import { createServiceToken } from '@soeditor/core';
 import type { HtmlAttribute } from '@soeditor/html';
+import type {
+    EditingStructuredBlock,
+    EditingStructuredBlockContent,
+} from './model.js';
 
 /** Inline semantic marks supported by the controlled visual service. */
 export type VisualTextMark = 'strong' | 'em' | 'u' | 's' | 'code';
@@ -27,7 +31,14 @@ export interface VisualEditingService {
     setLink(attributes: VisualLinkAttributes | undefined): void;
     isLinkActive(): boolean;
     insertHtml(html: string): void;
+    getSelectedStructuredBlock(
+        type?: string,
+    ): EditingStructuredBlock | undefined;
     isStructuredBlockSelected(type?: string): boolean;
+    replaceStructuredBlockContent(
+        type: string,
+        content: EditingStructuredBlockContent,
+    ): void;
     setStructuredBlockAttributes(
         type: string,
         attributes: readonly HtmlAttribute[],

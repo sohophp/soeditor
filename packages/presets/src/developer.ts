@@ -27,6 +27,7 @@ export const developerPreset = createPreset(
         '|',
         'problems',
         'image-browse',
+        'media-browse',
         'inspector',
         'outline',
         'find-replace',

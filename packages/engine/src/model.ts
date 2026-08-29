@@ -52,13 +52,17 @@ export interface EditingOpaqueBlock {
     readonly node: HtmlChildNode;
 }
 
-/** A plugin-recognized block whose DOM behavior is supplied in a later phase. */
-export interface EditingStructuredBlock {
+/** Source-shaped content owned by one plugin-recognized structured block. */
+export interface EditingStructuredBlockContent {
+    readonly attributes: readonly HtmlAttribute[];
+    readonly children: readonly HtmlChildNode[];
+}
+
+/** A plugin-recognized block rendered through an optional node view. */
+export interface EditingStructuredBlock extends EditingStructuredBlockContent {
     readonly kind: 'structured-block';
     readonly type: string;
     readonly behavior: StructuredBlockBehavior;
-    readonly attributes: readonly HtmlAttribute[];
-    readonly children: readonly HtmlChildNode[];
 }
 
 export type EditingBlock =

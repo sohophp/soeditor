@@ -14,6 +14,7 @@ import {
     type DiagnosticProvider as SdkDiagnosticProvider,
     type DiagnosticsWorkflowConfig,
     type EditingOperation,
+    type EditingStructuredBlockContent,
     type ProjectionAdapter as SdkProjectionAdapter,
     type SplitViewAdapter as SdkSplitViewAdapter,
     type SplitViewPair as SdkSplitViewPair,
@@ -81,7 +82,14 @@ import {
     HistoryPlugin,
     type EditingSelection,
 } from '@soeditor/engine';
-import { BoldPlugin, type LinkOptions } from '@soeditor/rich-text';
+import {
+    BoldPlugin,
+    MediaPlugin,
+    TablePlugin,
+    type LinkOptions,
+    type MediaInsertOptions,
+    type TableCellRange,
+} from '@soeditor/rich-text';
 import {
     createSourceEditingEngine,
     SourceEditingPlugin,
@@ -124,6 +132,12 @@ interface ExampleService {
 }
 
 const ExampleServiceToken = createServiceToken<ExampleService>('example');
+const mediaOptions: MediaInsertOptions = { src: '/media.png', alt: 'Media' };
+const tableRange: TableCellRange = {
+    anchor: { column: 0, row: 0 },
+    focus: { column: 1, row: 1 },
+};
+void [MediaPlugin, TablePlugin, mediaOptions, tableRange];
 
 class ConsumerPlugin extends Plugin {
     static readonly id = 'consumer';
@@ -356,6 +370,10 @@ const editingOperations: readonly EditingOperation[] = [
         toBlock: 0,
     },
 ];
+const structuredContent: EditingStructuredBlockContent = {
+    attributes: [],
+    children: [],
+};
 const mappedVisualPoint = mapEditingPoint(
     visualSelection.focus,
     editingOperations,
@@ -371,6 +389,7 @@ if (
 void visualFactory;
 void visualSelection;
 void mappedVisualPoint;
+void structuredContent;
 const linkOptions: LinkOptions = { href: '/relative' };
 void linkOptions;
 const sourceFactory: typeof createSourceEditingEngine =

@@ -52,9 +52,14 @@ export interface StructuredNodeViewState {
 /** Narrow engine actions available to one structured node view. */
 export interface StructuredNodeViewActions {
     /** Selects the whole structured block in the controlled visual model. */
-    select(): void;
+    select(options?: StructuredNodeViewSelectionOptions): void;
     /** Executes a registered editor command without exposing the Editor object. */
     execute(commandId: string, ...args: readonly unknown[]): unknown;
+}
+
+/** Focus behavior requested while selecting a structured node view. */
+export interface StructuredNodeViewSelectionOptions {
+    readonly focus?: boolean;
 }
 
 /** Mount context supplied to a host-scoped node-view factory. */

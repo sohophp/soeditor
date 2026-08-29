@@ -293,6 +293,43 @@ teardown. Nested editables, inline node views, framework runtimes, and
 cross-editor movement remain deferred because their selection and ownership
 rules are not yet demonstrated.
 
+## Phase 25 bounded structured tables and media
+
+Phase 25 proves the public structured extension path with built-in table and
+media plugins rather than adding feature logic to Core:
+
+```text
+toolbar / keyboard / palette / third-party UI
+                    ↓ command
+       immutable selected structured block
+                    ↓ validated transform
+        replace-structured-content operation
+                    ↓
+       Core transaction + history + source
+```
+
+`TablePlugin` validates a rectangular grid and caps it at 100 rows, 100 columns,
+and 1000 logical cells. Its commands cover insertion and removal of rows and
+columns, header conversion, rectangular merge/split, text replacement, clear,
+and semantic matrix paste. Pointer and arrow-key selection lives in the node
+view; public command consumers may supply the same typed range explicitly.
+Clipboard sources and matrices are bounded before use. Meaningful structures
+outside the supported table grammar remain canonical and render as inert
+unsupported widgets.
+
+`MediaPlugin` recognizes figures containing one direct image and an optional
+caption. Commands insert and update source-shaped values, including removing
+dimensions, while retaining unrelated figure, image, and caption attributes.
+The view builds a controlled image preview and plain-text controls. It never
+injects source markup: executable schemes, non-image data URLs, event handlers,
+scripts, and unsupported figure children remain preserved but cannot execute.
+
+`FileManagerPlugin` contributes separate image and media browse commands over
+the typed `FileManager` service. Both delegate normalized results to rich-text
+commands, so SoFinder and other pickers remain substitutable adapters. Node-view
+listeners have explicit abort-based teardown and all changes continue through
+the visual service's transaction boundary.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing
