@@ -42,9 +42,10 @@ The final authorized roadmap phase was:
 Phase 16 — 0.5.x Publication and Stabilization (complete)
 ```
 
-There is no active implementation phase. Work listed under Post-0.5 Candidate
-Work requires a separate repository-owner roadmap decision and must not begin
-automatically.
+There is no active implementation phase. `docs/ROADMAP.md` contains a proposed
+SoEditor 0.6 Developer Workflow roadmap, but planning authorization is not
+implementation approval. Phase 17 and later must not begin until the repository
+owner explicitly approves that proposed scope.
 
 ---
 

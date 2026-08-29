@@ -2,8 +2,8 @@
 
 ## Status
 
-Complete through Phase 16. A repository-owner decision is required before
-adding a Post-0.5 phase.
+Complete through Phase 16. The proposed 0.6 roadmap is awaiting explicit
+repository-owner approval before implementation begins.
 
 This roadmap begins from the current repository state.
 
@@ -12,7 +12,9 @@ Phases 1–15 are complete.
 The SoEditor 0.5 Developer Preview roadmap is complete. Phase 16 was authorized
 after that checkpoint to prepare and stabilize the public 0.5.x release line.
 
-The target of this roadmap is **SoEditor 0.5 Developer Preview**.
+The completed target is **SoEditor 0.5 Developer Preview** and its stabilized
+public `0.5.1` release. The proposed next target is **SoEditor 0.6 Developer
+Workflow**, subject to the approval gate below.
 
 ---
 
@@ -868,3 +870,355 @@ Possible future work includes:
 - 1.0 API stabilization.
 
 They require a new roadmap decision.
+
+---
+
+# Proposed SoEditor 0.6 Roadmap — Developer Workflow
+
+## Status
+
+PROPOSED. Planning is authorized; implementation is not active until the
+repository owner approves this roadmap.
+
+## Release theme
+
+SoEditor 0.6 should deepen the existing developer-first editing workflow
+without replacing the 0.5 document, transaction, history, or security
+architecture. The release combines two product promises already anticipated by
+the product definition:
+
+```text
+actionable HTML quality diagnostics
+                 +
+synchronized split editing and preview layouts
+```
+
+The sequence deliberately starts with independent diagnostic plugins, then
+introduces persistent projections before adding layout UI. This keeps
+feature-specific policy outside Core and proves synchronization behavior before
+presentation depends on it.
+
+## Approval and activation gate
+
+Before Phase 17 implementation begins, the repository owner must explicitly
+approve this proposed 0.6 scope. Activation then consists of:
+
+1. changing Phases 17–22 from `PROPOSED` to the appropriate active/pending
+   statuses;
+2. updating `docs/DEVELOPMENT-POLICY.md` so Phase 17 is the current phase and
+   Phase 22 is the autonomous endpoint;
+3. deriving `docs/prompts/017-accessibility-seo-diagnostics.md` from the
+   approved roadmap, product definition, accepted ADRs, and actual APIs;
+4. completing the normal implementation, adversarial review, Critical/High
+   fix, and release-gate cycle before advancing to Phase 18.
+
+Approval of the roadmap does not by itself authorize npm publication, tags, or
+GitHub releases.
+
+## Candidate prioritization
+
+| Candidate                                | 0.6 decision | Reason                                                                                                                      |
+| ---------------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------- |
+| Accessibility diagnostics                | Include      | Extends the existing provider/Problems contracts and directly serves the developer-first product identity.                  |
+| SEO diagnostics                          | Include      | Shares the source-oriented diagnostic path while remaining an independent plugin capability.                                |
+| Split view                               | Include      | Completes the planned Visual/Source/Markdown/Preview workflow using the canonical document as the synchronization boundary. |
+| Custom widgets and advanced tables       | Defer        | Require a larger editable-schema, selection, clipboard, and widget-lifecycle design.                                        |
+| Collaboration, comments, track changes   | Defer        | Require an operation/annotation model beyond bounded source-snapshot history.                                               |
+| AI and template-language execution       | Defer        | Introduce separate provider, trust, privacy, and execution decisions.                                                       |
+| Incremental serialization                | Defer        | Is a foundational preservation/performance project and is not required for safe split projections.                          |
+| Framework wrappers and 1.0 stabilization | Defer        | Follow evidence from a stronger framework-agnostic 0.6 API and real consumers.                                              |
+
+## Release-wide constraints
+
+- `@soeditor/core` remains DOM-free and does not acquire diagnostic, layout, or
+  third-party analysis dependencies.
+- Canonical source in `EditorDocument` remains the only cross-projection data
+  authority.
+- Split layouts have exactly one writable primary projection at a time.
+  Secondary projections remain visible and synchronized but readonly; focus or
+  an explicit command may transfer write authority.
+- Invalid exact HTML source continues to lock the visual writer to its last
+  valid model. A split layout must not normalize invalid source through another
+  projection.
+- Preview remains an empty-sandbox `srcdoc` boundary. Split view does not grant
+  scripts, same-origin access, navigation, forms, or new execution capability.
+- Accessibility and SEO diagnostics are bounded source-analysis aids, not
+  claims of WCAG conformance, legal compliance, search ranking, or complete
+  rendered-page analysis.
+- Diagnostic providers remain plugins and publish only SoEditor-owned problem
+  and source-range types.
+- Unknown/custom HTML preservation and inert unsafe-content rendering remain
+  unchanged.
+- Normal editor actions remain commands and document mutations remain Core
+  transactions.
+- No React, Vue, Svelte, Angular, or application framework becomes an editor
+  dependency.
+
+---
+
+# Phase 17 — Accessibility and SEO Diagnostics
+
+## Status
+
+PROPOSED.
+
+## Goal
+
+Add independent, source-oriented accessibility and SEO diagnostic plugins on
+the existing `DiagnosticsService` extension point.
+
+## Required outcomes
+
+- implement bounded rule sets over public `@soeditor/html` trees without
+  executing or injecting canonical HTML;
+- keep accessibility and SEO providers independently installable and
+  configurable;
+- publish stable provider IDs, diagnostic codes, severities, messages, and
+  accurate source ranges where the parser exposes them;
+- distinguish fragment checks from complete-document checks and avoid warnings
+  that require unavailable page/application context;
+- support per-instance immutable rule configuration using existing editor
+  configuration boundaries;
+- document precisely what each rule can and cannot infer;
+- add normal, malformed, unknown-element, namespaced, template, adversarial,
+  concurrency, teardown, and Node/browser consumer tests.
+
+## Explicitly deferred
+
+- automatic fixes or source mutation;
+- dynamic CSS/layout, color-contrast, focus-order, screen-reader, or
+  script-rendered page analysis;
+- claims of full WCAG, legal, Lighthouse, or search-engine compliance;
+- remote crawling, network requests, analytics, or ranking estimates.
+
+## Definition of Done
+
+- providers compose with parser, structural, and third-party diagnostics in
+  deterministic registration order;
+- stale asynchronous results never replace current-document problems;
+- rules do not execute preserved content or discard unknown HTML;
+- public APIs expose no parse5 or other implementation types;
+- Critical = 0, High = 0, and all repository verification passes.
+
+---
+
+# Phase 18 — Diagnostics Workflow and Problems UX
+
+## Status
+
+PROPOSED.
+
+## Goal
+
+Turn the expanded provider set into an efficient, accessible developer
+workflow without coupling diagnostics to a particular editing surface.
+
+## Required outcomes
+
+- add explicit manual and opt-in debounced validation policies with cancellation
+  or stale-result suppression;
+- expose provider/severity filtering and stable problem counts through narrow
+  services and generic UI contributions;
+- enhance the Problems experience with accessible grouping, empty/loading/error
+  states, keyboard navigation, and source reveal where a range exists;
+- make provider failures observable while allowing independent providers to
+  finish according to a documented isolation policy;
+- keep validation read-only and prevent background work after destruction;
+- demonstrate parser, structural, accessibility, SEO, and third-party
+  diagnostics together in the Developer Playground.
+
+## Explicitly deferred
+
+- quick fixes, bulk source mutation, or formatter coupling;
+- worker infrastructure without measured main-thread need;
+- a general task scheduler in Core;
+- diagnostics for Markdown, CSS, JavaScript, or remote pages.
+
+## Definition of Done
+
+- validation remains deterministic under rapid document changes, provider
+  rejection, unregister, and editor destruction;
+- the Problems workflow is usable by keyboard and passes automated WCAG A/AA
+  regression checks;
+- Core and generic UI remain unaware of HTML rule semantics;
+- Critical = 0, High = 0, and all repository verification passes.
+
+---
+
+# Phase 19 — Persistent Projection Coordination
+
+## Status
+
+PROPOSED.
+
+## Goal
+
+Allow supported surfaces to remain mounted and visible outside their legacy
+single-mode visibility policy while preserving one canonical source and one
+writable projection.
+
+## Required outcomes
+
+- define a small framework-agnostic projection-activity contract outside Core
+  for `visible`, `primary`, and `readonly` surface state;
+- adapt Visual, HTML Source, Markdown, and Preview engines through narrow public
+  options/services rather than private cross-package access;
+- retain current single-mode behavior as the default and preserve existing
+  public configuration compatibility;
+- transfer primary write authority only through commands or documented focus
+  activation, never through direct state mutation;
+- synchronize canonical changes into every visible projection without feedback
+  loops, duplicate history entries, selection corruption, or hidden network
+  refreshes;
+- specify behavior for invalid HTML, readonly editors, complete documents,
+  Markdown format, destruction, duplicate attachment, and activation races;
+- record the long-lived projection coordination decision in an ADR.
+
+## Explicitly deferred
+
+- layout DOM, splitters, pane persistence, or responsive design;
+- simultaneous multi-writer editing;
+- shared cross-surface selections or cursor mirroring;
+- collaboration or operational transformation/CRDT infrastructure.
+
+## Definition of Done
+
+- existing single-mode consumers remain behaviorally compatible;
+- exactly one attached projection can accept user mutations at a time;
+- invalid exact source cannot be overwritten by a recovered visual model;
+- all projection/lifecycle race tests pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 20 — Accessible Split-View Layouts
+
+## Status
+
+PROPOSED.
+
+## Goal
+
+Provide framework-independent, command-driven split layouts for the supported
+projection pairs.
+
+## Required outcomes
+
+- support `Visual | Source`, `Source | Preview`, and `Markdown | Preview`;
+- provide horizontal/vertical orientation, bounded resizers, keyboard resizing,
+  pane labels, focus management, collapse/restore, and responsive fallback;
+- represent user-triggerable layout changes as commands shared by toolbar,
+  shortcuts, palette, and host code;
+- keep application ownership of surface hosts and Preview security
+  configuration explicit;
+- ensure the secondary pane is synchronized and readonly until authority is
+  deliberately transferred for editable pairs;
+- clean up only layout-owned DOM/listeners and make retained layout services
+  terminal after destruction;
+- add real-browser accessibility, rapid-switching, resize, readonly, invalid
+  source, and repeated-lifecycle tests.
+
+## Explicitly deferred
+
+- arbitrary IDE-style docking or unbounded pane graphs;
+- persisted workspace management across editor instances;
+- more than two simultaneous projections;
+- collaborative cursors or simultaneous editing.
+
+## Definition of Done
+
+- all three supported pairs pass end-to-end synchronization and lifecycle
+  tests;
+- split controls pass automated WCAG A/AA checks and documented keyboard paths;
+- no layout action bypasses commands or changes canonical content directly;
+- Critical = 0, High = 0, and all repository verification passes.
+
+---
+
+# Phase 21 — 0.6 SDK, Presets, Documentation, and Distribution
+
+## Status
+
+PROPOSED.
+
+## Goal
+
+Expose only the intentional 0.6 extension surface and prove that diagnostics
+and split workflows remain configurable, tree-shakeable, and consumable.
+
+## Required outcomes
+
+- curate new diagnostic and projection/layout contracts through their owning
+  package roots and `@soeditor/plugin-sdk` only where third-party authors need
+  them;
+- update Developer presets without making DOM hosts, layout attachment, or
+  Preview policy implicit;
+- update the umbrella, browser global, CSS, package exports, declarations,
+  source maps, and bundle guards deliberately;
+- add Playground demonstrations for manual/automatic quality diagnostics and
+  all supported split pairs;
+- document migration from 0.5, configuration, rule scope, split-view ownership,
+  accessibility, security, teardown, npm, and CDN usage;
+- test packed NodeNext/native ESM/Vite consumers and narrow imports so unused
+  diagnostic/layout families tree-shake out.
+
+## Explicitly deferred
+
+- framework adapters;
+- plugin scaffolding CLI;
+- automatic mounting or global mutable registries;
+- undocumented internal subpath exports.
+
+## Definition of Done
+
+- public API classification and package ownership are explicit;
+- clean consumers exercise supported package roots with strict TypeScript;
+- distribution budgets are measured and justified;
+- Critical = 0, High = 0, and all repository verification passes.
+
+---
+
+# Phase 22 — SoEditor 0.6 Release Hardening
+
+## Status
+
+PROPOSED.
+
+## Goal
+
+Produce one coherent 0.6 Developer Preview candidate and verify upgrade,
+browser, package, security, and operational behavior.
+
+## Required outcomes
+
+- align all public packages on one 0.6 release version under SemVer;
+- publish a 0.5-to-0.6 migration guide and classify every public API change;
+- run bundle, dependency, accessibility, performance, memory/leak, lifecycle,
+  documentation, and API-surface reviews;
+- test Classic, Developer, Markdown, CMS/SoFinder, diagnostics, and split-view
+  routes in real Chromium;
+- verify packed npm consumers, browser global/CSS/maps, CDN behavior, and the
+  protected publication dry run;
+- perform the normal adversarial review, fix all Critical/High findings, and
+  record accepted Medium/Low limitations.
+
+License, credentials, publication, tags, and releases remain explicit
+repository-owner-controlled operations.
+
+## Definition of Done
+
+- the 0.6 candidate has Critical = 0 and High = 0;
+- lint, strict typecheck, unit, packed-consumer, distribution, release,
+  Chromium, security-audit, and build gates pass locally and in clean CI;
+- migration, status, architecture, ADR, package, and operational documentation
+  agree with the implementation;
+- real registry/CDN publication is complete only after separately authorized
+  protected publication and external verification.
+
+---
+
+# Beyond 0.6
+
+The candidates deferred above remain outside autonomous implementation. A
+future roadmap decision must prioritize widget/schema work, collaboration and
+review workflows, incremental serialization, framework adapters, AI/template
+integrations, or 1.0 API stabilization using evidence from the 0.6 line.
