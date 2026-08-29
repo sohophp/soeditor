@@ -43,6 +43,34 @@ test('replaces intermediate IME composition text instead of duplicating it', asy
     });
 
     await expect(page.locator(source)).toHaveText('<p>Hello你</p>');
+    await page.keyboard.press('Control+z');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+});
+
+test('groups typing for transaction-backed undo and restores selection', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 5);
+    await page.keyboard.type('ABC');
+    await expect(page.locator(source)).toHaveText('<p>HelloABC</p>');
+
+    await page.keyboard.press('Control+z');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+    expect(await readSelection(page)).toEqual({ anchor: 5, focus: 5 });
+
+    await page.keyboard.press('Control+Shift+z');
+    await expect(page.locator(source)).toHaveText('<p>HelloABC</p>');
+    expect(await readSelection(page)).toEqual({ anchor: 8, focus: 8 });
+
+    await page.keyboard.press('Control+z');
+    await page.keyboard.press('Control+y');
+    await expect(page.locator(source)).toHaveText('<p>HelloABC</p>');
+
+    await dispatchBeforeInput(page, 'historyUndo');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+    await dispatchBeforeInput(page, 'historyRedo');
+    await expect(page.locator(source)).toHaveText('<p>HelloABC</p>');
 });
 
 test('splits and merges paragraphs with Enter, Backspace, and Delete', async ({
@@ -62,6 +90,22 @@ test('splits and merges paragraphs with Enter, Backspace, and Delete', async ({
     await setSelection(page, 0, 2);
     await page.keyboard.press('Delete');
     await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+});
+
+test('undoes and redoes paragraph transactions separately', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 2);
+    await page.keyboard.press('Enter');
+    await expect(page.locator(source)).toHaveText('<p>He</p><p>llo</p>');
+
+    await page.keyboard.press('Control+z');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+    expect(await readSelection(page)).toEqual({ anchor: 2, focus: 2 });
+
+    await page.keyboard.press('Control+Shift+z');
+    await expect(page.locator(source)).toHaveText('<p>He</p><p>llo</p>');
 });
 
 test('replaces a basic selection and represents strong and emphasis', async ({
@@ -159,6 +203,91 @@ test('rejects browser deletion across an opaque inline boundary', async ({
 
     await setSelection(page, 0, 0, 2);
     await page.keyboard.press('Backspace');
+    await expect(page.locator(source)).toHaveText(preserved);
+});
+
+test('copies and cuts semantic clipboard MIME data through transactions', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 1, 4);
+
+    expect(await dispatchClipboard(page, 'copy')).toEqual({
+        html: '<p>ell</p>',
+        text: 'ell',
+    });
+    expect(await dispatchClipboard(page, 'cut')).toEqual({
+        html: '<p>ell</p>',
+        text: 'ell',
+    });
+    await expect(page.locator(source)).toHaveText('<p>Ho</p>');
+
+    await page.keyboard.press('Control+z');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+});
+
+test('normalizes multiline plain-text paste and supports undo', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 2);
+    await dispatchPaste(page, '', 'One\r\nTwo');
+
+    await expect(page.locator(source)).toHaveText('<p>HeOne</p><p>Twollo</p>');
+    await page.keyboard.press('Control+z');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+});
+
+test('rejects complete-document HTML paste without changing source', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 2);
+    await dispatchPaste(
+        page,
+        '<!doctype html><html><head><title>X</title></head><body><p>Body</p></body></html>',
+        'Body',
+    );
+
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+});
+
+test('pastes rich, unknown, and unsafe HTML without executing it', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 2);
+    await dispatchPaste(
+        page,
+        '<strong>X</strong><script>window.__pasteExecuted = true</script><custom-inline data-id="1"></custom-inline>',
+        'X',
+    );
+
+    await expect(page.locator(source)).toContainText('<strong>X</strong>');
+    await expect(page.locator(source)).toContainText('<script>');
+    await expect(page.locator(source)).toContainText('<custom-inline');
+    await expect(page.locator(`${editor} strong`)).toHaveText('X');
+    await expect(page.locator('[data-soeditor-opaque-inline]')).toHaveCount(2);
+    expect(
+        await page.evaluate(
+            () =>
+                (window as Window & { __pasteExecuted?: boolean })
+                    .__pasteExecuted,
+        ),
+    ).toBeUndefined();
+});
+
+test('refuses cut across opaque inline content without data loss', async ({
+    page,
+}) => {
+    await page.click('#inline-opaque');
+    const preserved = '<p>A<product-card data-id="1"></product-card>B</p>';
+    await setSelection(page, 0, 0, 2);
+
+    expect(await dispatchClipboard(page, 'cut')).toEqual({
+        html: '',
+        text: '',
+    });
     await expect(page.locator(source)).toHaveText(preserved);
 });
 
@@ -314,4 +443,46 @@ async function dispatchBeforeInput(
             }),
         );
     }, inputType);
+}
+
+async function dispatchClipboard(
+    page: Page,
+    type: 'copy' | 'cut',
+): Promise<{ readonly html: string; readonly text: string }> {
+    return page.locator(editor).evaluate((host, eventType) => {
+        const data = new DataTransfer();
+        host.dispatchEvent(
+            new ClipboardEvent(eventType, {
+                bubbles: true,
+                cancelable: true,
+                clipboardData: data,
+            }),
+        );
+        return {
+            html: data.getData('text/html'),
+            text: data.getData('text/plain'),
+        };
+    }, type);
+}
+
+async function dispatchPaste(
+    page: Page,
+    html: string,
+    text: string,
+): Promise<void> {
+    await page.locator(editor).evaluate(
+        (host, data) => {
+            const clipboard = new DataTransfer();
+            clipboard.setData('text/html', data.html);
+            clipboard.setData('text/plain', data.text);
+            host.dispatchEvent(
+                new ClipboardEvent('paste', {
+                    bubbles: true,
+                    cancelable: true,
+                    clipboardData: clipboard,
+                }),
+            );
+        },
+        { html, text },
+    );
 }

@@ -5,7 +5,7 @@ import {
     Plugin,
 } from '@soeditor/core';
 import { parseHtmlFragment, serializeHtmlFragment } from '@soeditor/html';
-import { createVisualEditingEngine } from '@soeditor/engine';
+import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';
@@ -24,10 +24,19 @@ try {
     }
 }
 
-const editor = await Editor.create({ data: '<p>Runtime</p>' });
+const editor = await Editor.create({
+    data: '<p>Runtime</p>',
+    plugins: [HistoryPlugin],
+});
 
 if (editor.getData() !== '<p>Runtime</p>') {
     throw new Error('Packed editor returned unexpected document data.');
+}
+
+editor.setData('<p>Changed</p>');
+editor.execute('editor.undo');
+if (editor.getData() !== '<p>Runtime</p>') {
+    throw new Error('Packed history plugin failed undo.');
 }
 
 await editor.destroy();

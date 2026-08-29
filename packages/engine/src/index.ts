@@ -3,6 +3,7 @@ export {
     VisualEditingEngine,
     VisualEditingEngineDestroyedError,
 } from './visual-editing-engine.js';
+export { HistoryPlugin } from './history.js';
 export type {
     EditingEngine,
     VisualEditingEngineOptions,

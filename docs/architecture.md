@@ -143,6 +143,44 @@ restores native selections after controlled rendering. History, clipboard,
 advanced selection semantics, rich-text plugins, and incremental rendering are
 not part of Phase 3.
 
+## Phase 4 selection, history, and clipboard
+
+Phase 4 adds `HistoryPlugin` in `@soeditor/engine`. It observes committed Core
+document transactions and exposes `editor.undo` / `editor.redo` commands.
+Entries store bounded canonical before/after source snapshots plus structured
+selection snapshots when an editing surface supplies them. Replay always uses a
+new Core transaction; browser-native undo is prevented at the visual surface.
+
+Private transaction metadata connects the visual engine and history plugin:
+
+```text
+controlled input
+    ↓
+Core transaction + selection/group metadata
+    ↓
+HistoryPlugin source snapshot
+    ↓
+editor.undo / editor.redo replay transaction
+    ↓
+visual model rebuild + selection restoration
+```
+
+Typing and repeated deletion group only across matching source, selection,
+group, and time continuity. Paragraph, formatting, paste, cut, and external
+source transactions remain distinct. A new committed edit clears redo.
+
+The visual surface owns copy, cut, and paste events. Copy derives `text/plain`
+and semantic `text/html` from the structured model. Paste prefers HTML parsed by
+`@soeditor/html`; inline runs are normalized into paragraphs, while plain text
+normalizes CRLF and LF into paragraph blocks. Inserted custom or executable
+markup remains opaque and inert in the editing projection. Selection or delete
+operations that cross opaque content or would silently remove retained
+paragraph attributes are rejected.
+
+History currently uses a bounded source-snapshot strategy. Operation inversion,
+advanced selection, platform word deletion, table/widget clipboard behavior,
+and office-grade paste cleanup remain deferred.
+
 ## 1. 项目定位
 
 SoEditor 是一个面向开发者、CMS 和内容系统的现代可扩展内容编辑器。

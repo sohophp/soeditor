@@ -3,6 +3,7 @@ import {
     freezeSelection,
     normalizeInlines,
     paragraphLength,
+    type EditingBlock,
     type EditingInline,
     type EditingMark,
     type EditingModel,
@@ -98,6 +99,9 @@ export function deleteBackward(
     if (previous?.kind !== 'paragraph') {
         return unchanged(model, selection);
     }
+    if (paragraph.attributes.length > 0) {
+        return unchanged(model, selection);
+    }
 
     const previousLength = paragraphLength(previous);
     const blocks = [...model.blocks];
@@ -133,6 +137,9 @@ export function deleteForward(
 
     const following = model.blocks[point.block + 1];
     if (following?.kind !== 'paragraph') {
+        return unchanged(model, selection);
+    }
+    if (following.attributes.length > 0) {
         return unchanged(model, selection);
     }
 
@@ -236,6 +243,14 @@ export function deleteSelection(
     }
 
     assertEditableRange(endParagraph, 0, ordered.end.offset);
+    if (
+        endParagraph.attributes.length > 0 &&
+        ordered.end.offset < paragraphLength(endParagraph)
+    ) {
+        throw new UnsupportedEditingSelectionError(
+            'The selection would discard attributes from a partially retained paragraph.',
+        );
+    }
     for (
         let index = ordered.start.block + 1;
         index < ordered.end.block;
@@ -267,6 +282,115 @@ export function validateSelection(
 ): void {
     validatePoint(model, selection.anchor);
     validatePoint(model, selection.focus);
+}
+
+export function extractSelection(
+    model: EditingModel,
+    selection: EditingSelection,
+): EditingModel {
+    const ordered = orderSelection(selection);
+    if (comparePoints(ordered.start, ordered.end) === 0) {
+        return freezeModel({ blocks: [] });
+    }
+
+    const blocks = [] as EditingParagraph[];
+
+    for (
+        let index = ordered.start.block;
+        index <= ordered.end.block;
+        index += 1
+    ) {
+        const block = model.blocks[index];
+        if (block?.kind !== 'paragraph') {
+            throw new UnsupportedEditingSelectionError();
+        }
+
+        const from = index === ordered.start.block ? ordered.start.offset : 0;
+        const to =
+            index === ordered.end.block
+                ? ordered.end.offset
+                : paragraphLength(block);
+        assertEditableRange(block, from, to);
+        const [, remainder] = splitInlines(block.inlines, from);
+        const [selected] = splitInlines(remainder, to - from);
+        blocks.push({
+            attributes:
+                from === 0 && to === paragraphLength(block)
+                    ? block.attributes
+                    : [],
+            inlines: selected,
+            kind: 'paragraph',
+        });
+    }
+
+    return freezeModel({ blocks });
+}
+
+export function insertModel(
+    model: EditingModel,
+    selection: EditingSelection,
+    inserted: EditingModel,
+): EditingResult {
+    const deleted = deleteSelection(model, selection);
+    if (inserted.blocks.length === 0) {
+        return deleted;
+    }
+
+    const point = deleted.selection.focus;
+    const paragraph = getParagraph(deleted.model, point);
+    const [before, after] = splitInlines(paragraph.inlines, point.offset);
+    const insertedBlocks = [...inserted.blocks];
+
+    if (
+        insertedBlocks.length === 1 &&
+        insertedBlocks[0]?.kind === 'paragraph' &&
+        insertedBlocks[0].attributes.length === 0
+    ) {
+        const pastedLength = paragraphLength(insertedBlocks[0]);
+        return replaceParagraph(
+            deleted.model,
+            point.block,
+            {
+                ...paragraph,
+                inlines: [...before, ...insertedBlocks[0].inlines, ...after],
+            },
+            { block: point.block, offset: point.offset + pastedLength },
+        );
+    }
+
+    const replacement: EditingBlock[] = [];
+    const first = insertedBlocks[0];
+    if (first?.kind === 'paragraph' && first.attributes.length === 0) {
+        replacement.push({
+            ...paragraph,
+            inlines: [...before, ...first.inlines],
+        });
+        insertedBlocks.shift();
+    } else {
+        replacement.push({ ...paragraph, inlines: before });
+    }
+
+    replacement.push(...insertedBlocks);
+    const last = replacement.at(-1);
+    let caretBlock = point.block + replacement.length;
+    let caretOffset = 0;
+    if (last?.kind === 'paragraph' && last.attributes.length === 0) {
+        caretBlock -= 1;
+        caretOffset = paragraphLength(last);
+        replacement[replacement.length - 1] = {
+            ...last,
+            inlines: [...last.inlines, ...after],
+        };
+    } else {
+        replacement.push({ attributes: [], inlines: after, kind: 'paragraph' });
+    }
+
+    const blocks = [...deleted.model.blocks];
+    blocks.splice(point.block, 1, ...replacement);
+    return result(
+        { blocks },
+        collapsed({ block: caretBlock, offset: caretOffset }),
+    );
 }
 
 function replaceParagraph(

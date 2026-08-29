@@ -1,7 +1,13 @@
-import type { Editor } from '@soeditor/core';
+import type { Editor, Transaction } from '@soeditor/core';
 import { parseHtmlFragment, serializeHtmlFragment } from '@soeditor/html';
 
 import { DomProjection } from './dom-projection.js';
+import { createClipboardPayload, createPastedModel } from './clipboard.js';
+import {
+    readReplaySelection,
+    setHistoryMetadata,
+    type HistoryMetadata,
+} from './history-metadata.js';
 import {
     createEditingModel,
     freezeModel,
@@ -13,6 +19,8 @@ import {
 import {
     deleteBackward,
     deleteForward,
+    deleteSelection,
+    insertModel,
     insertParagraph,
     insertText,
     toggleMark,
@@ -95,9 +103,14 @@ export class VisualEditingEngine implements EditingEngine {
             'compositionend',
             this.#handleCompositionEnd,
         );
+        this.element.addEventListener('keydown', this.#handleKeyDown);
+        this.element.addEventListener('copy', this.#handleCopy);
+        this.element.addEventListener('cut', this.#handleCut);
+        this.element.addEventListener('paste', this.#handlePaste);
         this.#disposeDocumentChange = this.editor.events.on(
             'document:change',
-            ({ current }) => this.#handleDocumentChange(current.source),
+            ({ current, transaction }) =>
+                this.#handleDocumentChange(current.source, transaction),
         );
         this.#disposeEditorDestroy = this.editor.events.on(
             'editor:destroy',
@@ -141,6 +154,10 @@ export class VisualEditingEngine implements EditingEngine {
             'compositionend',
             this.#handleCompositionEnd,
         );
+        this.element.removeEventListener('keydown', this.#handleKeyDown);
+        this.element.removeEventListener('copy', this.#handleCopy);
+        this.element.removeEventListener('cut', this.#handleCut);
+        this.element.removeEventListener('paste', this.#handlePaste);
         this.#disposeDocumentChange();
         this.#disposeEditorDestroy();
         this.element.replaceChildren();
@@ -163,6 +180,15 @@ export class VisualEditingEngine implements EditingEngine {
             return;
         }
 
+        if (event.inputType === 'historyUndo') {
+            this.#executeHistory('editor.undo');
+            return;
+        }
+        if (event.inputType === 'historyRedo') {
+            this.#executeHistory('editor.redo');
+            return;
+        }
+
         const nativeSelection = this.#projection.readSelection();
         const selection =
             event.inputType === 'insertCompositionText'
@@ -173,12 +199,14 @@ export class VisualEditingEngine implements EditingEngine {
         }
 
         let result: EditingResult | undefined;
+        let group: string | undefined;
         try {
             switch (event.inputType) {
                 case 'insertText':
                 case 'insertCompositionText':
                     if (event.data !== null) {
                         result = insertText(this.#model, selection, event.data);
+                        group = 'typing';
                     }
                     break;
                 case 'insertParagraph':
@@ -186,9 +214,11 @@ export class VisualEditingEngine implements EditingEngine {
                     break;
                 case 'deleteContentBackward':
                     result = deleteBackward(this.#model, selection);
+                    group = 'delete-backward';
                     break;
                 case 'deleteContentForward':
                     result = deleteForward(this.#model, selection);
+                    group = 'delete-forward';
                     break;
                 case 'formatBold':
                     result = toggleMark(this.#model, selection, 'strong');
@@ -207,7 +237,11 @@ export class VisualEditingEngine implements EditingEngine {
         }
 
         if (result !== undefined) {
-            this.#commit(result);
+            this.#commit(result, {
+                afterSelection: result.selection,
+                beforeSelection: nativeSelection ?? selection,
+                ...(group === undefined ? {} : { group }),
+            });
             if (event.inputType === 'insertCompositionText') {
                 this.#compositionSelection = freezeSelection({
                     anchor: selection.anchor,
@@ -227,7 +261,86 @@ export class VisualEditingEngine implements EditingEngine {
         this.#compositionSelection = undefined;
     };
 
-    #commit(result: EditingResult): void {
+    readonly #handleKeyDown = (event: KeyboardEvent): void => {
+        if (!(event.ctrlKey || event.metaKey) || event.altKey) {
+            return;
+        }
+
+        const key = event.key.toLowerCase();
+        const command =
+            key === 'z'
+                ? event.shiftKey
+                    ? 'editor.redo'
+                    : 'editor.undo'
+                : key === 'y' && !event.shiftKey
+                  ? 'editor.redo'
+                  : undefined;
+
+        if (command === undefined) {
+            return;
+        }
+
+        event.preventDefault();
+        this.#executeHistory(command);
+    };
+
+    readonly #handleCopy = (event: ClipboardEvent): void => {
+        this.#writeClipboard(event);
+    };
+
+    readonly #handleCut = (event: ClipboardEvent): void => {
+        const selection = this.#writeClipboard(event);
+        if (
+            selection === undefined ||
+            this.editor.state.readonly ||
+            this.#lockedDocument
+        ) {
+            return;
+        }
+
+        try {
+            const result = deleteSelection(this.#model, selection);
+            this.#commit(result, {
+                afterSelection: result.selection,
+                beforeSelection: selection,
+            });
+        } catch (error: unknown) {
+            if (!(error instanceof UnsupportedEditingSelectionError)) {
+                throw error;
+            }
+        }
+    };
+
+    readonly #handlePaste = (event: ClipboardEvent): void => {
+        event.preventDefault();
+        if (this.editor.state.readonly || this.#lockedDocument) {
+            return;
+        }
+
+        const clipboard = event.clipboardData;
+        const selection = this.#projection.readSelection();
+        if (clipboard === null || selection === undefined) {
+            return;
+        }
+
+        try {
+            const inserted = createPastedModel(
+                clipboard.getData('text/html'),
+                clipboard.getData('text/plain'),
+            );
+            const result = insertModel(this.#model, selection, inserted);
+            this.#commit(result, {
+                afterSelection: result.selection,
+                beforeSelection: selection,
+            });
+        } catch (error: unknown) {
+            if (!(error instanceof UnsupportedEditingSelectionError)) {
+                throw error;
+            }
+        }
+    };
+
+    #commit(result: EditingResult, history: HistoryMetadata): void {
         const source = serializeHtmlFragment(
             serializeEditingModel(result.model),
         );
@@ -239,7 +352,10 @@ export class VisualEditingEngine implements EditingEngine {
 
         try {
             this.editor.update(
-                (transaction) => transaction.replaceDocument(source),
+                (transaction) => {
+                    transaction.replaceDocument(source);
+                    setHistoryMetadata(transaction, history);
+                },
                 { origin: 'user' },
             );
 
@@ -252,7 +368,7 @@ export class VisualEditingEngine implements EditingEngine {
         }
     }
 
-    #handleDocumentChange(source: string): void {
+    #handleDocumentChange(source: string, transaction: Transaction): void {
         const pending = this.#pending;
         if (pending !== undefined && pending.source === source) {
             this.#model = pending.model;
@@ -264,7 +380,7 @@ export class VisualEditingEngine implements EditingEngine {
         this.#model = next.model;
         this.#lockedDocument = next.locked;
         this.#updateEditableState();
-        this.#render(this.#model);
+        this.#render(this.#model, readReplaySelection(transaction));
     }
 
     #render(model: EditingModel, selection?: EditingSelection): void {
@@ -285,6 +401,38 @@ export class VisualEditingEngine implements EditingEngine {
             childList: true,
             subtree: true,
         });
+    }
+
+    #writeClipboard(event: ClipboardEvent): EditingSelection | undefined {
+        const clipboard = event.clipboardData;
+        const selection = this.#projection.readSelection();
+        if (clipboard === null || selection === undefined) {
+            return undefined;
+        }
+
+        try {
+            const payload = createClipboardPayload(this.#model, selection);
+            clipboard.setData('text/plain', payload.text);
+            clipboard.setData('text/html', payload.html);
+            event.preventDefault();
+            return selection;
+        } catch (error: unknown) {
+            if (error instanceof UnsupportedEditingSelectionError) {
+                event.preventDefault();
+                return undefined;
+            }
+            throw error;
+        }
+    }
+
+    #executeHistory(command: 'editor.undo' | 'editor.redo'): void {
+        if (
+            !this.editor.state.readonly &&
+            this.editor.commands.has(command) &&
+            this.editor.commands.canExecute(command)
+        ) {
+            this.editor.execute(command);
+        }
     }
 
     #updateEditableState(): void {

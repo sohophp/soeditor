@@ -1,5 +1,5 @@
 import { Editor, Plugin } from '@soeditor/core';
-import { createVisualEditingEngine } from '@soeditor/engine';
+import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
 
 class DemoPlugin extends Plugin {
     static readonly id = 'demo';
@@ -31,7 +31,7 @@ if (stateOutput === null || sourceOutput === null || editingHost === null) {
 
 const editor = await Editor.create({
     data: '<p>Hello <strong>SoEditor</strong></p><product-card data-id="123"></product-card><!--CMS:block-->',
-    plugins: [DemoPlugin],
+    plugins: [DemoPlugin, HistoryPlugin],
     readonly: new URLSearchParams(window.location.search).has('readonly'),
 });
 const visualEngine = createVisualEditingEngine({

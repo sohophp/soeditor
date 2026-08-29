@@ -11,6 +11,7 @@ import {
 } from '@soeditor/html';
 import {
     createVisualEditingEngine,
+    HistoryPlugin,
     type EditingSelection,
 } from '@soeditor/engine';
 // @ts-expect-error Editing-model internals are not a package subpath API.
@@ -43,7 +44,7 @@ class ConsumerPlugin extends Plugin {
 const editor = await Editor.create({
     config: { nested: { enabled: true } },
     data: '<p>NodeNext</p>',
-    plugins: [ConsumerPlugin],
+    plugins: [ConsumerPlugin, HistoryPlugin],
 });
 
 editor.services.register(ExampleServiceToken, { value: 'available' });

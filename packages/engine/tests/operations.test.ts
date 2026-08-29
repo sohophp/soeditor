@@ -110,6 +110,26 @@ describe('editing operations', () => {
             UnsupportedEditingSelectionError,
         );
     });
+
+    it('does not merge away meaningful attributes on the removed paragraph', () => {
+        const backward = fromHtml('<p>A</p><p data-id="second">B</p>');
+        const forward = fromHtml('<p>A</p><p data-id="second">B</p>');
+
+        expect(toHtml(deleteBackward(backward, collapsed(1, 0)).model)).toBe(
+            '<p>A</p><p data-id="second">B</p>',
+        );
+        expect(toHtml(deleteForward(forward, collapsed(0, 1)).model)).toBe(
+            '<p>A</p><p data-id="second">B</p>',
+        );
+    });
+
+    it('rejects partial cross-paragraph deletion that would lose attributes', () => {
+        const model = fromHtml('<p>First</p><p data-id="second">Last</p>');
+
+        expect(() => deleteSelection(model, range(0, 2, 1, 2))).toThrow(
+            UnsupportedEditingSelectionError,
+        );
+    });
 });
 
 function fromHtml(source: string): EditingModel {
