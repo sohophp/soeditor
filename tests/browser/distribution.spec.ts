@@ -60,3 +60,52 @@ test('loads the self-contained immutable CDN facade in Chromium', async ({
     expect(await readFile(stylesheet, 'utf8')).toContain('--soeditor-bg');
     expect(await readFile(globalMap, 'utf8')).toContain('sources');
 });
+
+test('runs accessibility and SEO diagnostics from the browser global', async ({
+    page,
+}) => {
+    await page.addScriptTag({ path: globalBundle });
+
+    const result = await page.evaluate(async () => {
+        const api = Reflect.get(globalThis, 'SoEditor') as {
+            AccessibilityDiagnosticsPlugin: new (...args: never[]) => unknown;
+            SeoDiagnosticsPlugin: new (...args: never[]) => unknown;
+            diagnosticsServiceToken: unknown;
+            create(options: {
+                data: string;
+                plugins: readonly unknown[];
+            }): Promise<{
+                destroy(): Promise<void>;
+                services: {
+                    get(token: unknown): {
+                        validate(): Promise<
+                            readonly { code: string; provider: string }[]
+                        >;
+                    };
+                };
+            }>;
+        };
+        const editor = await api.create({
+            data: '<!doctype html><html><head></head><body><button></button></body></html>',
+            plugins: [
+                api.AccessibilityDiagnosticsPlugin,
+                api.SeoDiagnosticsPlugin,
+            ],
+        });
+        const problems = await editor.services
+            .get(api.diagnosticsServiceToken)
+            .validate();
+        await editor.destroy();
+        return problems.map(({ code, provider }) => ({ code, provider }));
+    });
+
+    expect(result).toEqual(
+        expect.arrayContaining([
+            {
+                code: 'a11y.interactive-name',
+                provider: 'html.accessibility',
+            },
+            { code: 'seo.document-title', provider: 'html.seo' },
+        ]),
+    );
+});

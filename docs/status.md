@@ -1,6 +1,15 @@
-# SoEditor 0.5 Developer Preview status
+# SoEditor development status
 
-## Release scope
+## Current development
+
+The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 17. Accessibility and SEO diagnostic plugins now provide configurable,
+source-only rule sets through the existing diagnostics service. Phase 18 —
+Diagnostics Workflow and Problems UX — is active.
+
+The published stable reference remains `0.5.1`; development package manifests
+stay at that version until the coordinated 0.6 release-hardening phase.
+
+## Published 0.5 release scope
 
 Phases 1–15 of the 0.5 roadmap are implemented: Core, HTML document handling,
 controlled visual editing, history/clipboard, rich text, HTML Source,

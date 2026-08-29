@@ -20,3 +20,15 @@ export type {
     Problem,
     ProblemSeverity,
 } from './problems.js';
+export {
+    AccessibilityDiagnosticsPlugin,
+    InvalidDiagnosticRuleConfigurationError,
+    SeoDiagnosticsPlugin,
+} from './quality-diagnostics.js';
+export type {
+    AccessibilityDiagnosticRuleCode,
+    AccessibilityDiagnosticsConfig,
+    DiagnosticRuleSetting,
+    SeoDiagnosticRuleCode,
+    SeoDiagnosticsConfig,
+} from './quality-diagnostics.js';

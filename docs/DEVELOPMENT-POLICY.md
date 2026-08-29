@@ -36,16 +36,18 @@ Phases 1–15 are complete and the SoEditor 0.5 Developer Preview release gate
 has passed. The repository owner subsequently authorized Phase 16 publication
 and stabilization work.
 
-The final authorized roadmap phase was:
+The current authorized roadmap phase is:
 
 ```text
-Phase 16 — 0.5.x Publication and Stabilization (complete)
+Phase 18 — Diagnostics Workflow and Problems UX (active)
 ```
 
-There is no active implementation phase. `docs/ROADMAP.md` contains a proposed
-SoEditor 0.6 Developer Workflow roadmap, but planning authorization is not
-implementation approval. Phase 17 and later must not begin until the repository
-owner explicitly approves that proposed scope.
+The repository owner authorized the SoEditor 0.6 through 1.0 development goal
+on 2026-08-29. Autonomous progression is currently bounded by the approved 0.6
+roadmap through Phase 22. Later 0.7–1.0 implementation requires those roadmap
+phases to be written deliberately from product evidence before work enters
+their scope. npm publication, tags, and hosted releases remain separately
+owner-controlled operations.
 
 ---
 

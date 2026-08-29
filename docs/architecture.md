@@ -1,8 +1,8 @@
-# SoEditor Architecture 0.5
+# SoEditor Architecture 0.6
 
 ## Current implementation status
 
-Phases 1–15 are implemented. Runtime document formats are `html | markdown`
+Phases 1–16 and Phase 17 are implemented. Runtime document formats are `html | markdown`
 and projections are `visual | source | markdown | preview`. HTML and Markdown
 remain canonical source formats for separate editor instances; projection
 changes never perform an implicit format conversion. Later sections that
@@ -101,6 +101,43 @@ attributes can remain represented in the tree while later rendering and
 security layers independently decide whether they may execute. Phase 2 adds no
 DOM, visual editing, selection, history, source editor, preview, or formatting
 behavior.
+
+## Phase 17 accessibility and SEO diagnostics
+
+Phase 17 extends `@soeditor/html-tools` through two independently selectable
+plugins. Both depend on the existing `DiagnosticsPlugin`; neither adds policy
+to Core, UI, the visual engine, or the HTML parser.
+
+```text
+canonical HTML source
+        ↓
+@soeditor/html immutable tree
+        ↓
+accessibility / SEO provider
+        ↓
+existing DiagnosticsService
+        ↓
+SoEditor-owned immutable Problems
+```
+
+`AccessibilityDiagnosticsPlugin` registers `html.accessibility` and
+`SeoDiagnosticsPlugin` registers `html.seo`. Rule settings are read from the
+editor's defensive immutable configuration copy during plugin initialization.
+Known rules may be disabled or assigned a supported problem severity; unknown
+or malformed settings abort initialization rather than being ignored.
+
+Accessibility checks are limited to relationships inferable from source, such
+as detectable form labels, interactive names, iframe titles, and complete-page
+heading progression. SEO checks for title, meta-description, and `h1` structure
+run only for complete documents. Template descendants are excluded because
+template content is not rendered page content. Unknown HTML remains preserved,
+and SVG/MathML are not diagnosed using HTML-only semantics.
+
+The providers do not render, inject, execute, sanitize, fetch, or mutate HTML.
+They cannot determine dynamic layout, CSS contrast, focus order, assistive-
+technology behavior, script-rendered output, remote indexing, or ranking.
+Phase 18 owns automatic validation policy, provider failure isolation, and the
+expanded Problems workflow.
 
 ## Phase 3 minimal visual editing engine
 

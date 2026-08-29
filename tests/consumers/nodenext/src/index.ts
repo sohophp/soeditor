@@ -48,9 +48,12 @@ import {
     type HtmlElement,
 } from '@soeditor/html';
 import {
+    AccessibilityDiagnosticsPlugin,
     DiagnosticsPlugin,
     HtmlFormattingPlugin,
+    SeoDiagnosticsPlugin,
     diagnosticsServiceToken,
+    type AccessibilityDiagnosticsConfig,
     type DiagnosticProvider,
     type HtmlFormattingOptions,
     type Problem,
@@ -172,6 +175,27 @@ const umbrellaEditor = await SoEditor.create({
     plugins: umbrellaMinimalPreset.plugins,
 });
 await umbrellaEditor.destroy();
+
+const accessibilityConfig: AccessibilityDiagnosticsConfig = {
+    rules: { 'a11y.iframe-title': 'error' },
+};
+const qualityEditor = await Editor.create({
+    data: '<!doctype html><html><head></head><body><button></button></body></html>',
+    plugins: [AccessibilityDiagnosticsPlugin, SeoDiagnosticsPlugin],
+    config: { htmlTools: { accessibility: accessibilityConfig } },
+});
+const qualityProblems = await qualityEditor.services
+    .get(diagnosticsServiceToken)
+    .validate();
+if (
+    !qualityProblems.some(
+        ({ provider }) => provider === 'html.accessibility',
+    ) ||
+    !qualityProblems.some(({ provider }) => provider === 'html.seo')
+) {
+    throw new Error('Packed quality diagnostic plugins were not registered.');
+}
+await qualityEditor.destroy();
 
 editor.services.register(ExampleServiceToken, { value: 'available' });
 editor.execute('consumer.replace', '<p>Compiled</p>');

@@ -2,8 +2,7 @@
 
 ## Status
 
-Complete through Phase 16. The proposed 0.6 roadmap is awaiting explicit
-repository-owner approval before implementation begins.
+Complete through Phase 17. The 0.6 roadmap is approved and Phase 18 is active.
 
 This roadmap begins from the current repository state.
 
@@ -13,8 +12,8 @@ The SoEditor 0.5 Developer Preview roadmap is complete. Phase 16 was authorized
 after that checkpoint to prepare and stabilize the public 0.5.x release line.
 
 The completed target is **SoEditor 0.5 Developer Preview** and its stabilized
-public `0.5.1` release. The proposed next target is **SoEditor 0.6 Developer
-Workflow**, subject to the approval gate below.
+public `0.5.1` release. The active target is **SoEditor 0.6 Developer
+Workflow**.
 
 ---
 
@@ -873,12 +872,13 @@ They require a new roadmap decision.
 
 ---
 
-# Proposed SoEditor 0.6 Roadmap — Developer Workflow
+# SoEditor 0.6 Roadmap — Developer Workflow
 
 ## Status
 
-PROPOSED. Planning is authorized; implementation is not active until the
-repository owner approves this roadmap.
+APPROVED. The repository owner authorized implementation through the 0.6 to
+1.0 development sequence on 2026-08-29. Phase 18 is active; later 0.6 phases
+remain pending until their predecessors pass the normal release gate.
 
 ## Release theme
 
@@ -898,10 +898,10 @@ introduces persistent projections before adding layout UI. This keeps
 feature-specific policy outside Core and proves synchronization behavior before
 presentation depends on it.
 
-## Approval and activation gate
+## Approval and activation record
 
-Before Phase 17 implementation begins, the repository owner must explicitly
-approve this proposed 0.6 scope. Activation then consists of:
+The repository owner approved this 0.6 scope as part of the continuing goal to
+complete SoEditor 0.6 through 1.0. Activation consists of:
 
 1. changing Phases 17–22 from `PROPOSED` to the appropriate active/pending
    statuses;
@@ -912,8 +912,8 @@ approve this proposed 0.6 scope. Activation then consists of:
 4. completing the normal implementation, adversarial review, Critical/High
    fix, and release-gate cycle before advancing to Phase 18.
 
-Approval of the roadmap does not by itself authorize npm publication, tags, or
-GitHub releases.
+This approval does not by itself authorize npm publication, tags, or GitHub
+releases; those remain separately protected operations.
 
 ## Candidate prioritization
 
@@ -960,7 +960,7 @@ GitHub releases.
 
 ## Status
 
-PROPOSED.
+COMPLETE.
 
 ## Goal
 
@@ -1006,7 +1006,7 @@ the existing `DiagnosticsService` extension point.
 
 ## Status
 
-PROPOSED.
+ACTIVE.
 
 ## Goal
 
@@ -1049,7 +1049,7 @@ workflow without coupling diagnostics to a particular editing surface.
 
 ## Status
 
-PROPOSED.
+PENDING.
 
 ## Goal
 
@@ -1094,7 +1094,7 @@ writable projection.
 
 ## Status
 
-PROPOSED.
+PENDING.
 
 ## Goal
 
@@ -1138,7 +1138,7 @@ projection pairs.
 
 ## Status
 
-PROPOSED.
+PENDING.
 
 ## Goal
 
@@ -1181,7 +1181,7 @@ and split workflows remain configurable, tree-shakeable, and consumable.
 
 ## Status
 
-PROPOSED.
+PENDING.
 
 ## Goal
 
