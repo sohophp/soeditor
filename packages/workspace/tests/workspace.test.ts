@@ -7,6 +7,7 @@ import {
     WorkspaceNotReadyError,
     WorkspaceRecoveryLimitError,
     WorkspaceValuePolicyError,
+    type WorkspaceDiagnostic,
     type WorkspaceAttachmentFactory,
 } from '../src/index.js';
 
@@ -318,6 +319,141 @@ describe('EditorWorkspace', () => {
         await destruction;
         expect(events).toEqual(['destroy-initial', 'destroy-late']);
         expect(workspace.snapshot.status).toBe('destroyed');
+    });
+
+    it('rejects missing services and incompatible formats before attachment', async () => {
+        const diagnostics: WorkspaceDiagnostic[] = [];
+        const attached = vi.fn();
+        await expect(
+            createEditorWorkspace({
+                attachments: [
+                    {
+                        id: 'html-service-surface',
+                        attach: attached,
+                        requirements: {
+                            formats: ['html'],
+                            services: [
+                                {
+                                    label: 'FileManager',
+                                    token: { id: 'file-manager' },
+                                },
+                            ],
+                        },
+                    },
+                ],
+                createEditor: ({ source }) =>
+                    Editor.create({ data: source, format: 'markdown' }),
+                onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+                value: { initialValue: '# Markdown', kind: 'uncontrolled' },
+            }),
+        ).rejects.toThrow('does not support document format');
+        expect(attached).not.toHaveBeenCalled();
+        expect(diagnostics.map(({ code }) => code)).toEqual([
+            'incompatible-format',
+        ]);
+
+        await expect(
+            createEditorWorkspace({
+                attachments: [
+                    {
+                        id: 'service-surface',
+                        attach: attached,
+                        requirements: {
+                            services: [
+                                {
+                                    label: 'FileManager',
+                                    token: { id: 'file-manager' },
+                                },
+                            ],
+                        },
+                    },
+                ],
+                createEditor: ({ source }) => Editor.create({ data: source }),
+                onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+                value: { initialValue: '<p>HTML</p>', kind: 'uncontrolled' },
+            }),
+        ).rejects.toThrow('requires service');
+        expect(attached).not.toHaveBeenCalled();
+        expect(diagnostics.at(-1)?.code).toBe('missing-service');
+    });
+
+    it('requires explicit Preview isolation and diagnoses recovery limits', async () => {
+        const diagnostics: WorkspaceDiagnostic[] = [];
+        await expect(
+            createEditorWorkspace({
+                attachments: [
+                    {
+                        id: 'preview',
+                        attach: () => ({ destroy: () => {} }),
+                        requirements: { isolatedPreview: true },
+                    },
+                ],
+                createEditor: ({ source }) => Editor.create({ data: source }),
+                onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+                previewIsolation: 'trusted',
+                value: { initialValue: '', kind: 'uncontrolled' },
+            }),
+        ).rejects.toThrow('explicitly isolated');
+        expect(diagnostics.at(-1)?.code).toBe('unsafe-preview-policy');
+
+        const workspace = await createEditorWorkspace({
+            createEditor: ({ source }) => Editor.create({ data: source }),
+            recovery: { maxRestarts: 1, now: () => 1_000, windowMs: 1_000 },
+            value: { initialValue: '<p>Source</p>', kind: 'uncontrolled' },
+        });
+        await workspace.reportFailure(new Error('first'));
+        await expect(
+            workspace.reportFailure(new Error('second')),
+        ).rejects.toThrow('recovery limit');
+        expect(workspace.snapshot.diagnostics.at(-1)?.code).toBe(
+            'recovery-limit',
+        );
+        await workspace.destroy();
+    });
+
+    it('snapshots attachment requirements before asynchronous mounting', async () => {
+        const formats: Array<'html' | 'markdown'> = ['html'];
+        const attached = vi.fn(() => ({ destroy: () => {} }));
+        const creation = createEditorWorkspace({
+            attachments: [
+                {
+                    id: 'stable-requirements',
+                    attach: attached,
+                    requirements: { formats },
+                },
+            ],
+            createEditor: ({ source }) => Editor.create({ data: source }),
+            value: { initialValue: '<p>HTML</p>', kind: 'uncontrolled' },
+        });
+
+        formats.splice(0, formats.length, 'markdown');
+        const workspace = await creation;
+        expect(attached).toHaveBeenCalledOnce();
+        await workspace.destroy();
+    });
+
+    it('keeps diagnostic listener failures observable', async () => {
+        const listenerError = new Error('diagnostic sink failed');
+        await expect(
+            createEditorWorkspace({
+                attachments: [
+                    {
+                        id: 'html-only',
+                        attach: () => ({ destroy: () => {} }),
+                        requirements: { formats: ['html'] },
+                    },
+                ],
+                createEditor: ({ source }) =>
+                    Editor.create({ data: source, format: 'markdown' }),
+                onDiagnostic: () => {
+                    throw listenerError;
+                },
+                value: { initialValue: '# Markdown', kind: 'uncontrolled' },
+            }),
+        ).rejects.toMatchObject({
+            errors: expect.arrayContaining([listenerError]),
+            name: 'AggregateError',
+        });
     });
 });
 

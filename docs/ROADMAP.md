@@ -1223,7 +1223,7 @@ repository-owner-controlled operations.
 ## Status
 
 APPROVED from the repository owner's 2026-08-29 authorization to complete
-SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 32 is active.
+SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 33 is active.
 
 The sequence is justified in
 `docs/research/editor-landscape-2026.md`. Each release must pass its own
@@ -1538,7 +1538,7 @@ Provide thin official framework adapters over the workspace controller.
 
 ## Status
 
-ACTIVE.
+COMPLETE.
 
 ## Goal
 
@@ -1553,13 +1553,27 @@ Reduce extension setup errors without introducing a hosted marketplace.
   unsafe Preview policy, and failed recovery;
 - no remote code loading or mutable global plugin catalog.
 
+## Delivered
+
+- private Node-only `@soeditor/plugin-tools` with a versioned strict ESM 0.9
+  SDK scaffold, CLI/API entry points, and no-overwrite creation;
+- read-only manifest/source checks plus script-disabled packed inspection for
+  peer range, exports, plugin identity, public-root imports, tree shaking, and
+  required artifacts;
+- an actual generated plugin build, tarball, clean NodeNext type consumer, and
+  runtime lifecycle proof;
+- immutable Workspace attachment requirements and bounded diagnostics for
+  format, service, Preview isolation, recreation, and crash limits;
+- focused unit/browser coverage, synchronized docs, ADR, and Critical 0 / High
+  0 adversarial review.
+
 ---
 
 # Phase 33 — SoEditor 0.9 Integration Release
 
 ## Status
 
-PENDING.
+ACTIVE.
 
 ## Goal
 

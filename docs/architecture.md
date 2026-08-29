@@ -449,6 +449,23 @@ rethrow stored asynchronous failures for an Error Boundary. Vue creates from
 `onMounted()`, cleans from `onUnmounted()`, and watches ref/getter value and
 readonly inputs. Neither adapter performs DOM work during import or SSR.
 
+## Phase 32 offline plugin tooling and explicit integration diagnostics
+
+The private Node-only `@soeditor/plugin-tools` package generates a strict ESM
+plugin package from a versioned 0.9 SDK template. Its checker reads metadata
+and TypeScript source without importing plugin code. Optional packed inspection
+uses `npm pack --dry-run --ignore-scripts`, then requires root JavaScript,
+declarations, and metadata while rejecting source leakage. Static checks reduce
+packaging mistakes; they are not a behavioral, security, or registry-trust
+proof.
+
+Workspace attachment factories can declare immutable format, service, and
+Preview-isolation requirements. The controller snapshots these declarations
+before asynchronous creation and validates them against the actual Editor
+instance immediately before attachment. Rejected integrations and recovery
+failures become frozen, bounded, per-workspace diagnostics. No global catalog,
+telemetry, remote source loading, or runtime plugin discovery is introduced.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing

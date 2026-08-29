@@ -1,0 +1,32 @@
+{
+    "name": "@soeditor/plugin-tools",
+    "version": "0.8.0",
+    "private": true,
+    "license": "MIT",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist",
+        "templates"
+    ],
+    "bin": {
+        "soeditor-plugin": "./dist/cli.js"
+    },
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "test": "vitest run",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "engines": {
+        "node": ">=22.14.0 <23"
+    },
+    "devDependencies": {
+        "@types/node": "^22.18.0"
+    }
+}

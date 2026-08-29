@@ -7,10 +7,16 @@
   policies, observable lifecycle snapshots, and opt-in bounded recovery from
   the last known canonical source.
 - Added focused unit and Chromium coverage plus an executable Workspace demo;
-  React/Vue adapters and public 0.9 exports remain deferred.
+  public 0.9 exports remain deferred.
 - Added private React and Vue lifecycle adapters with controlled values,
   readonly updates, SSR-safe rendering, React StrictMode/Error Boundary
   behavior, Vue Composition API lifecycle, and an executable comparison demo.
+- Added private offline plugin scaffolding and static package checks targeting
+  the 0.9 SDK, including script-free packed-artifact inspection and a generated
+  plugin's clean NodeNext consumer workflow.
+- Added immutable Workspace attachment requirements and bounded per-instance
+  diagnostics for incompatible formats, missing services, unsafe Preview
+  policy, failed recreation, and crash-limit termination.
 
 ## 0.8.0 — Review Workflow candidate
 

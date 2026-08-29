@@ -28,3 +28,10 @@ export class WorkspaceValuePolicyError extends Error {
         this.name = 'WorkspaceValuePolicyError';
     }
 }
+
+export class WorkspaceIntegrationError extends Error {
+    constructor(message: string) {
+        super(message);
+        this.name = 'WorkspaceIntegrationError';
+    }
+}

@@ -234,6 +234,25 @@ Plugins continue to expose framework-neutral commands, services, and explicit
 attachment handles; they must not import React/Vue or assume an adapter owns
 their DOM host.
 
+The private Phase 32 `@soeditor/plugin-tools` package can create a versioned
+0.9 SDK package and check its metadata, root exports, plugin IDs, public-root
+imports, tree-shaking declaration, and packed files. Run the packed check only
+after building:
+
+```bash
+soeditor-plugin create ./my-plugin \
+  --name @example/my-plugin \
+  --id example.my-plugin
+cd ./my-plugin
+pnpm install
+pnpm build
+pnpm check
+```
+
+This is an offline package-shape check. It does not certify plugin behavior or
+safety, replace strict tests, or load code from a catalog. See
+[`plugin-tooling.md`](plugin-tooling.md) for its exact boundary.
+
 ## Compatibility rules
 
 - Import package roots only; internal subpaths are unsupported.

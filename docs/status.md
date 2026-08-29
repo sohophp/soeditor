@@ -43,6 +43,12 @@ bind Workspace through React StrictMode-safe Effects and Vue mounted/unmounted
 lifecycle, with controlled values, readonly updates, SSR-safe rendering, Error
 Boundary behavior, and explicit cleanup. All 121 Chromium scenarios pass with
 Critical 0 and High 0. Phase 32 — Plugin Tooling and Integration Diagnostics —
+is complete. Its private offline scaffold/check package targets the 0.9 SDK,
+and Workspace now rejects incompatible format, missing service, and unsafe
+Preview integration before attachment while retaining bounded recovery
+diagnostics. The generated plugin/packed consumer, 23-directory distribution,
+19-public-package release, all 121 Chromium scenarios, and supply-chain gates
+pass with Critical 0 and High 0. Phase 33 — SoEditor 0.9 Integration Release —
 is active.
 
 All 19 public package manifests are aligned at the `0.8.0` release candidate.
@@ -136,6 +142,14 @@ deliberate and documented under SemVer principles.
   cleanup. All strict type, unit, 121-scenario Chromium, build, 22-directory
   distribution, 19-public-package release, and high-severity audit gates pass.
   Final adversarial review: Critical 0, High 0.
+- Phase 32 adds three plugin-tool unit tests, 14 Workspace unit tests, and the
+  existing three Workspace Chromium workflows with an explicit crash-limit
+  diagnostic assertion. A generated strict ESM plugin builds, passes static and
+  script-disabled packed inspection, and runs from a clean NodeNext consumer.
+  Lint, strict typecheck, all unit/consumer/distribution/release tests, all 121
+  Chromium scenarios, 23-package-directory builds, MIT verification, zero
+  known high-severity vulnerabilities, 19-package npm dry run, and unpublished
+  registry preflight pass. Final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
 
@@ -177,6 +191,10 @@ deliberate and documented under SemVer principles.
   packages as peers. Bundlers remove unused families, but a plugin consumer
   must still satisfy that peer set; narrower domain SDK entries remain a future
   packaging decision.
+- The Phase 32 plugin checker is a bounded static package-shape check, not a
+  parser, behavioral test, malware scanner, signing service, or trust verdict.
+  Its template intentionally targets the pending 0.9 SDK and remains private
+  until Phase 33 aligns and audits the public integration release.
 - FileManager selects one existing asset. Upload, rename, delete,
   authentication, and a concrete SoFinder SDK remain host responsibilities.
 - Accessibility and SEO providers cover only bounded source-inferable rules;

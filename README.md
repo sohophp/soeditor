@@ -4,8 +4,8 @@ Developer-first extensible content editor.
 
 **Status: 0.8 Review Workflow release candidate.** SoEditor is suitable for
 evaluation and integration development, but is not yet a stable 1.0 release.
-The public registry reference remains 0.5.1 until authorized publication. The repository
-contains the framework-agnostic Core, HTML document layer, controlled visual
+The public registry reference remains 0.5.1 until authorized publication. The
+repository contains the framework-agnostic Core, HTML document layer, controlled visual
 editing engine, transaction history/clipboard boundaries, and Phase 5
 command-driven rich-text feature plugins. Phase 6 adds exact CodeMirror-powered
 HTML source editing and parser diagnostics. Phase 7 adds extensible HTML
@@ -32,7 +32,9 @@ host-owned revision history, semantic comparison, restore, and review policies.
 Phase 29 makes those packages public with explicit export/erasure governance
 and a 19-package release gate. Phase 30 adds a private, framework-neutral
 workspace controller for explicit application mounting, reverse teardown,
-controlled/uncontrolled values, and bounded in-process recovery.
+controlled/uncontrolled values, and bounded in-process recovery. Phases 31–32
+add private React/Vue adapters, offline plugin tooling, and explicit Workspace
+integration diagnostics for the pending 0.9 line.
 
 ```ts
 import { SoEditor, minimalPreset } from '@soeditor/editor';
@@ -87,6 +89,8 @@ const editor = await SoEditor.create({
   recovery controller; public exposure is deferred to the 0.9 release gate.
 - `@soeditor/react` / `@soeditor/vue` — private Phase 31 lifecycle adapters over
   Workspace; framework dependencies remain isolated to their owning package.
+- `@soeditor/plugin-tools` — private Phase 32 offline plugin scaffold and
+  package checker targeting the 0.9 SDK.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
 
@@ -100,6 +104,7 @@ the [revisions guide](docs/revisions.md),
 [review data governance](docs/review-data-governance.md),
 [workspace lifecycle and recovery](docs/workspace.md),
 [React and Vue adapters](docs/framework-adapters.md),
+[plugin tooling and integration diagnostics](docs/plugin-tooling.md),
 [public API policy](docs/public-api.md), and
 [development status](docs/status.md).
 

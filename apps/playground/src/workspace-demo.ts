@@ -97,6 +97,9 @@ Reflect.set(
             Object.freeze({
                 changeCount,
                 createCount,
+                diagnostics: workspace?.snapshot.diagnostics.map(
+                    ({ code }) => code,
+                ),
                 editingChildren: editingHost.childNodes.length,
                 source: workspace?.snapshot.lastKnownSource,
                 status: workspace?.snapshot.status,

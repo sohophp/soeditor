@@ -22,10 +22,10 @@
         "security:audit": "pnpm audit --audit-level high --registry=https://registry.npmjs.org",
         "test": "pnpm test:unit && pnpm test:consumer && pnpm test:distribution && pnpm test:release && pnpm test:browser",
         "test:browser": "playwright test",
-        "test:consumer": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk build && node scripts/test-nodenext-consumer.mjs",
+        "test:consumer": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk --filter @soeditor/plugin-tools build && node scripts/test-nodenext-consumer.mjs && node scripts/test-plugin-tools-consumer.mjs",
         "test:distribution": "node scripts/verify-distribution.mjs",
         "test:release": "pnpm --filter @soeditor/editor --filter @soeditor/playground build && node scripts/verify-release.mjs",
-        "test:unit": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk --filter @soeditor/comments --filter @soeditor/revisions --filter @soeditor/workspace --filter @soeditor/react --filter @soeditor/vue test",
+        "test:unit": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk --filter @soeditor/comments --filter @soeditor/revisions --filter @soeditor/workspace --filter @soeditor/react --filter @soeditor/vue --filter @soeditor/plugin-tools test",
         "test:coverage": "pnpm --filter @soeditor/core test:coverage",
         "typecheck": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk build && pnpm -r --if-present run typecheck"
     },

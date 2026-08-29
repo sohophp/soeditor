@@ -2,6 +2,7 @@ import { Editor, type DocumentChangeEvent } from '@soeditor/core';
 
 import {
     WorkspaceDestroyedError,
+    WorkspaceIntegrationError,
     WorkspaceNotReadyError,
     WorkspaceRecoveryLimitError,
     WorkspaceValuePolicyError,
@@ -10,7 +11,11 @@ import type {
     CreateWorkspaceOptions,
     EditorWorkspace,
     WorkspaceAttachment,
+    WorkspaceAttachmentContext,
+    WorkspaceAttachmentFactory,
+    WorkspaceAttachmentRequirements,
     WorkspaceChange,
+    WorkspaceDiagnostic,
     WorkspaceSnapshot,
     WorkspaceStatus,
 } from './types.js';
@@ -42,6 +47,7 @@ export async function createEditorWorkspace(
 
 class EditorWorkspaceController {
     readonly #externalValueMarker = Object.freeze({});
+    readonly #diagnostics: WorkspaceDiagnostic[] = [];
     readonly #listeners = new Set<(snapshot: WorkspaceSnapshot) => void>();
     readonly #options: CreateWorkspaceOptions;
     readonly #recovery: RecoveryPolicy | undefined;
@@ -95,6 +101,7 @@ class EditorWorkspaceController {
 
     get snapshot(): WorkspaceSnapshot {
         return Object.freeze({
+            diagnostics: Object.freeze([...this.#diagnostics]),
             error: this.#error,
             lastKnownSource: this.#lastKnownSource,
             recoveryCount: this.#recoveryCount,
@@ -200,13 +207,32 @@ class EditorWorkspaceController {
                 [cause, cleanupError],
                 'Workspace recovery stopped because cleanup failed.',
             );
-            this.#fail(error);
-            throw error;
+            const reportedError = combineDiagnosticError(
+                error,
+                this.#emitDiagnostic({
+                    code: 'recovery-failed',
+                    error,
+                    message: 'Workspace recovery cleanup failed.',
+                    severity: 'error',
+                }),
+            );
+            this.#fail(reportedError);
+            throw reportedError;
         }
         if (this.#destroyRequested) throw new WorkspaceDestroyedError();
         if (this.#recovery === undefined) {
-            this.#fail(cause);
-            throw cause;
+            const reportedError = combineDiagnosticError(
+                cause,
+                this.#emitDiagnostic({
+                    code: 'recovery-failed',
+                    error: cause,
+                    message:
+                        'Workspace recovery was requested but is not enabled.',
+                    severity: 'error',
+                }),
+            );
+            this.#fail(reportedError);
+            throw reportedError;
         }
         const now = recoveryTime(this.#recovery.now());
         const windowStart = now - this.#recovery.windowMs;
@@ -218,8 +244,17 @@ class EditorWorkspaceController {
         }
         if (this.#restartTimes.length >= this.#recovery.maxRestarts) {
             const error = new WorkspaceRecoveryLimitError(cause);
-            this.#fail(error);
-            throw error;
+            const reportedError = combineDiagnosticError(
+                error,
+                this.#emitDiagnostic({
+                    code: 'recovery-limit',
+                    error,
+                    message: error.message,
+                    severity: 'error',
+                }),
+            );
+            this.#fail(reportedError);
+            throw reportedError;
         }
         this.#restartTimes.push(now);
         this.#recoveryCount += 1;
@@ -256,7 +291,19 @@ class EditorWorkspaceController {
             this.#revision += 1;
             this.#notify();
         } catch (error: unknown) {
-            if (!this.#destroyRequested) this.#fail(error);
+            if (!this.#destroyRequested) {
+                const reportedError = combineDiagnosticError(
+                    error,
+                    this.#emitDiagnostic({
+                        code: 'recovery-failed',
+                        error,
+                        message: 'Workspace recreation failed.',
+                        severity: 'error',
+                    }),
+                );
+                this.#fail(reportedError);
+                throw reportedError;
+            }
             throw error;
         }
     }
@@ -285,6 +332,7 @@ class EditorWorkspaceController {
                 (event) => this.#documentChanged(mountedEditor, event),
             );
             for (const factory of this.#options.attachments ?? []) {
+                this.#validateAttachment(factory, mountedEditor);
                 const attachment = await factory.attach({
                     editor: mountedEditor,
                     recovery,
@@ -396,6 +444,69 @@ class EditorWorkspaceController {
         this.#notify();
     }
 
+    #validateAttachment(
+        factory: WorkspaceAttachmentFactory,
+        editor: Editor,
+    ): void {
+        const requirements = factory.requirements;
+        if (requirements === undefined) return;
+        const format = editor.state.document.format;
+        if (
+            requirements.formats !== undefined &&
+            !requirements.formats.includes(format)
+        ) {
+            this.#rejectIntegration(factory.id, {
+                code: 'incompatible-format',
+                message: `Workspace attachment "${factory.id}" does not support document format "${format}".`,
+            });
+        }
+        for (const service of requirements.services ?? []) {
+            if (!editor.services.has(service.token.id)) {
+                this.#rejectIntegration(factory.id, {
+                    code: 'missing-service',
+                    message: `Workspace attachment "${factory.id}" requires service "${service.label}" (${service.token.id}).`,
+                });
+            }
+        }
+        if (
+            requirements.isolatedPreview === true &&
+            this.#options.previewIsolation !== 'isolated'
+        ) {
+            this.#rejectIntegration(factory.id, {
+                code: 'unsafe-preview-policy',
+                message: `Workspace attachment "${factory.id}" requires an explicitly isolated Preview policy.`,
+            });
+        }
+    }
+
+    #rejectIntegration(
+        attachmentId: string,
+        diagnostic: Pick<WorkspaceDiagnostic, 'code' | 'message'>,
+    ): never {
+        const error = new WorkspaceIntegrationError(diagnostic.message);
+        throw combineDiagnosticError(
+            error,
+            this.#emitDiagnostic({
+                ...diagnostic,
+                attachmentId,
+                error,
+                severity: 'error',
+            }),
+        );
+    }
+
+    #emitDiagnostic(diagnostic: WorkspaceDiagnostic): unknown | undefined {
+        const value = Object.freeze({ ...diagnostic });
+        if (this.#diagnostics.length === 100) this.#diagnostics.shift();
+        this.#diagnostics.push(value);
+        try {
+            this.#options.onDiagnostic?.(value);
+            return undefined;
+        } catch (error: unknown) {
+            return error;
+        }
+    }
+
     #notify(): void {
         const snapshot = this.snapshot;
         const errors: unknown[] = [];
@@ -462,6 +573,7 @@ function validateOptions(
         throw new TypeError('Workspace attachments must be an array.');
     }
     const ids = new Set<string>();
+    const attachments: WorkspaceAttachmentFactory[] = [];
     for (const factory of options.attachments ?? []) {
         if (
             typeof factory !== 'object' ||
@@ -480,17 +592,118 @@ function validateOptions(
             );
         }
         ids.add(factory.id);
+        attachments.push(normalizeAttachmentFactory(factory));
+    }
+    if (
+        options.onDiagnostic !== undefined &&
+        typeof options.onDiagnostic !== 'function'
+    ) {
+        throw new TypeError('Workspace onDiagnostic must be a function.');
+    }
+    if (
+        options.previewIsolation !== undefined &&
+        options.previewIsolation !== 'isolated' &&
+        options.previewIsolation !== 'trusted'
+    ) {
+        throw new TypeError(
+            'Workspace previewIsolation must be isolated or trusted.',
+        );
     }
     return Object.freeze({
         ...(options.attachments === undefined
             ? {}
-            : { attachments: Object.freeze([...options.attachments]) }),
+            : { attachments: Object.freeze(attachments) }),
         createEditor: options.createEditor,
+        ...(options.onDiagnostic === undefined
+            ? {}
+            : { onDiagnostic: options.onDiagnostic }),
+        ...(options.previewIsolation === undefined
+            ? {}
+            : { previewIsolation: options.previewIsolation }),
         ...(options.recovery === undefined
             ? {}
             : { recovery: Object.freeze({ ...options.recovery }) }),
         value: Object.freeze({ ...options.value }),
     });
+}
+
+function normalizeAttachmentFactory(
+    factory: WorkspaceAttachmentFactory,
+): WorkspaceAttachmentFactory {
+    const requirements = factory.requirements;
+    if (requirements === undefined) {
+        return Object.freeze({
+            attach: (context: WorkspaceAttachmentContext) =>
+                factory.attach(context),
+            id: factory.id,
+        });
+    }
+    if (
+        (requirements.formats !== undefined &&
+            (!Array.isArray(requirements.formats) ||
+                requirements.formats.length === 0 ||
+                requirements.formats.some(
+                    (format) => format !== 'html' && format !== 'markdown',
+                ))) ||
+        (requirements.services !== undefined &&
+            (!Array.isArray(requirements.services) ||
+                requirements.services.some(
+                    (service) =>
+                        typeof service.label !== 'string' ||
+                        service.label.trim().length === 0 ||
+                        typeof service.token?.id !== 'string' ||
+                        service.token.id.trim().length === 0,
+                ))) ||
+        (requirements.isolatedPreview !== undefined &&
+            typeof requirements.isolatedPreview !== 'boolean')
+    ) {
+        throw new TypeError(
+            `Workspace attachment "${factory.id}" has invalid requirements.`,
+        );
+    }
+    return Object.freeze({
+        attach: (context: WorkspaceAttachmentContext) =>
+            factory.attach(context),
+        id: factory.id,
+        requirements: freezeRequirements(requirements),
+    });
+}
+
+function freezeRequirements(
+    requirements: WorkspaceAttachmentRequirements,
+): WorkspaceAttachmentRequirements {
+    return Object.freeze({
+        ...(requirements.formats === undefined
+            ? {}
+            : { formats: Object.freeze([...requirements.formats]) }),
+        ...(requirements.isolatedPreview === undefined
+            ? {}
+            : { isolatedPreview: requirements.isolatedPreview }),
+        ...(requirements.services === undefined
+            ? {}
+            : {
+                  services: Object.freeze(
+                      requirements.services.map((service) =>
+                          Object.freeze({
+                              label: service.label,
+                              token: Object.freeze({ id: service.token.id }),
+                          }),
+                      ),
+                  ),
+              }),
+    });
+}
+
+function combineDiagnosticError(
+    error: unknown,
+    listenerError: unknown | undefined,
+): unknown {
+    if (listenerError === undefined) return error;
+    const message =
+        error instanceof Error
+            ? `${error.message} The Workspace diagnostic listener also failed.`
+            : 'The Workspace operation and diagnostic listener both failed.';
+    return new AggregateError([error, listenerError], message);
 }
 
 function createRecoveryPolicy(

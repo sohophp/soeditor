@@ -1,4 +1,35 @@
-import type { Editor, TransactionOrigin } from '@soeditor/core';
+import type {
+    DocumentFormat,
+    Editor,
+    ServiceToken,
+    TransactionOrigin,
+} from '@soeditor/core';
+
+export type WorkspaceDiagnosticCode =
+    | 'incompatible-format'
+    | 'missing-service'
+    | 'recovery-failed'
+    | 'recovery-limit'
+    | 'unsafe-preview-policy';
+
+export interface WorkspaceDiagnostic {
+    readonly attachmentId?: string;
+    readonly code: WorkspaceDiagnosticCode;
+    readonly error?: unknown;
+    readonly message: string;
+    readonly severity: 'error' | 'warning';
+}
+
+export interface WorkspaceServiceRequirement {
+    readonly label: string;
+    readonly token: Pick<ServiceToken<unknown>, 'id'>;
+}
+
+export interface WorkspaceAttachmentRequirements {
+    readonly formats?: readonly DocumentFormat[];
+    readonly isolatedPreview?: boolean;
+    readonly services?: readonly WorkspaceServiceRequirement[];
+}
 
 export interface WorkspaceAttachment {
     destroy(): PromiseLike<void> | void;
@@ -15,6 +46,7 @@ export interface WorkspaceAttachmentFactory {
         context: WorkspaceAttachmentContext,
     ): PromiseLike<WorkspaceAttachment> | WorkspaceAttachment;
     readonly id: string;
+    readonly requirements?: WorkspaceAttachmentRequirements;
 }
 
 export interface WorkspaceEditorContext {
@@ -58,6 +90,8 @@ export interface CreateWorkspaceOptions {
     readonly createEditor: (
         context: WorkspaceEditorContext,
     ) => PromiseLike<Editor> | Editor;
+    readonly onDiagnostic?: (diagnostic: WorkspaceDiagnostic) => void;
+    readonly previewIsolation?: 'isolated' | 'trusted';
     readonly recovery?: WorkspaceRecoveryOptions;
     readonly value: WorkspaceValue;
 }
@@ -65,6 +99,7 @@ export interface CreateWorkspaceOptions {
 export type WorkspaceStatus = 'destroyed' | 'failed' | 'ready' | 'recovering';
 
 export interface WorkspaceSnapshot {
+    readonly diagnostics: readonly WorkspaceDiagnostic[];
     readonly error: unknown;
     readonly lastKnownSource: string;
     readonly recoveryCount: number;

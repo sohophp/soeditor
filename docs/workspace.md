@@ -97,3 +97,13 @@ durable drafts and deliberately decide which errors are fatal enough to report.
 
 The executable demo is `/workspace.html`; add `?controlled=1` for controlled
 value behavior.
+
+## Integration diagnostics
+
+Attachment requirements may list supported formats, required service tokens,
+and an isolated Preview requirement. Validation runs before attachment and
+fails explicitly with `incompatible-format`, `missing-service`, or
+`unsafe-preview-policy`. Recovery failures and crash-limit termination are
+also retained in the bounded immutable `snapshot.diagnostics` list. The host
+may observe each value through `onDiagnostic`; diagnostics remain per instance
+and are not telemetry.

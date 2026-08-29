@@ -73,6 +73,7 @@ test('stops recovery at the crash-rate limit without losing source evidence', as
     expect(await crash(page)).toBe('failed');
     expect(await snapshot(page)).toMatchObject({
         createCount: 3,
+        diagnostics: ['recovery-limit'],
         editingChildren: 0,
         recoveryCount: 2,
         source: '<p>Workspace initial retained</p>',
@@ -129,6 +130,7 @@ async function snapshot(page: Page): Promise<WorkspaceDemoSnapshot> {
 interface WorkspaceDemoSnapshot {
     readonly changeCount: number;
     readonly createCount: number;
+    readonly diagnostics?: readonly string[];
     readonly editingChildren: number;
     readonly error?: string;
     readonly recoveryCount?: number;

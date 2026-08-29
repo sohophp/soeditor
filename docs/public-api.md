@@ -46,6 +46,11 @@ Phase 31's `@soeditor/react` and `@soeditor/vue` packages are likewise private
 validation surfaces. They are not 0.8 SDK or umbrella exports, and their React
 or Vue peers do not become dependencies of any existing public package.
 
+Phase 32's `@soeditor/plugin-tools` and new Workspace diagnostic contracts are
+private until the Phase 33 0.9 release audit. The checker does not define plugin
+runtime compatibility by itself; public SDK types and behavioral consumers
+remain authoritative.
+
 ## Structured extension boundary
 
 A third-party structured widget can register a DOM-free conversion and a node
