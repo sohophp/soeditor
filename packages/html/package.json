@@ -1,0 +1,24 @@
+{
+    "name": "@soeditor/html",
+    "version": "0.0.0",
+    "description": "Standards-oriented HTML document infrastructure for SoEditor.",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "test": "vitest run",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "dependencies": {
+        "parse5": "^8.0.0"
+    }
+}

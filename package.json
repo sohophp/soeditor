@@ -14,8 +14,8 @@
         "format:check": "prettier --check .",
         "lint": "eslint . && prettier --check .",
         "test": "pnpm test:unit && pnpm test:consumer",
-        "test:consumer": "pnpm --filter @soeditor/core build && node scripts/test-nodenext-consumer.mjs",
-        "test:unit": "pnpm --filter @soeditor/core test",
+        "test:consumer": "pnpm --filter @soeditor/core --filter @soeditor/html build && node scripts/test-nodenext-consumer.mjs",
+        "test:unit": "pnpm --filter @soeditor/core test && pnpm --filter @soeditor/html test",
         "test:coverage": "pnpm --filter @soeditor/core test:coverage",
         "typecheck": "pnpm -r --if-present run typecheck"
     },

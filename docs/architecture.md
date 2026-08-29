@@ -72,6 +72,40 @@ manager in this phase.
   promise. The shared promise waits for that hook, so awaiting it from the hook
   would create a self-dependency; obtaining or comparing it remains allowed.
 
+## Phase 2 HTML document layer
+
+Phase 2 introduces `@soeditor/html` as an independent, framework-free package:
+
+```text
+HTML source
+    ↕
+@soeditor/html
+    ↕
+SoEditor HtmlTree
+```
+
+HTML source remains the canonical serialized and persistence representation.
+`HtmlTree` is the immutable structured representation used while content is
+parsed, inspected, or serialized. Complete documents and fragments are both
+first-class inputs.
+
+The package uses parse5 internally for WHATWG-oriented parsing, error recovery,
+source locations, and semantic serialization. Conversion adapters isolate that
+dependency: public nodes, attributes, locations, diagnostics, parser contracts,
+and serializer contracts are all SoEditor-owned types. parse5 AST types are not
+part of the extension API.
+
+The tree preserves custom elements, unknown and namespaced attributes, comments,
+doctypes, template content, and HTML/SVG/MathML namespaces. Parser-synthesized
+nodes deliberately have no invented source range. Round trips promise semantic
+preservation, not byte-for-byte formatting or casing preservation.
+
+Parsing does not sanitize or execute content. Scripts and event-handler
+attributes can remain represented in the tree while later rendering and
+security layers independently decide whether they may execute. Phase 2 adds no
+DOM, visual editing, selection, history, source editor, preview, or formatting
+behavior.
+
 ## 1. 项目定位
 
 SoEditor 是一个面向开发者、CMS 和内容系统的现代可扩展内容编辑器。

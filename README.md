@@ -3,8 +3,8 @@
 Developer-first extensible content editor.
 
 **Status: early development.** SoEditor is not production ready. Phase 1
-establishes framework-agnostic state, transaction, command, plugin, event, and
-service infrastructure; it does not include an editing UI.
+established framework-agnostic core infrastructure, and Phase 2 completed the
+independent HTML document layer. There is no editing UI yet.
 
 ```ts
 import { Editor } from '@soeditor/core';
@@ -17,6 +17,8 @@ const editor = await Editor.create({
 ## Workspace
 
 - `@soeditor/core` — independent editor infrastructure with no DOM dependency.
+- `@soeditor/html` — HTML parsing, diagnostics, source locations, and semantic
+  serialization with a SoEditor-owned public tree.
 - `@soeditor/engine` — an intentionally empty future editing-engine boundary.
 - `@soeditor/playground` — a minimal development harness for the core APIs.
 

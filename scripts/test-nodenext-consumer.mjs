@@ -41,20 +41,46 @@ try {
         ],
         repositoryRoot,
     );
+    run(
+        'pnpm',
+        [
+            '--filter',
+            '@soeditor/html',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
 
     const archives = (await readdir(packDirectory)).filter((name) =>
         name.endsWith('.tgz'),
     );
 
-    if (archives.length !== 1 || archives[0] === undefined) {
-        throw new Error('Expected exactly one packed @soeditor/core archive.');
+    const coreArchive = archives.find((name) =>
+        name.startsWith('soeditor-core-'),
+    );
+    const htmlArchive = archives.find((name) =>
+        name.startsWith('soeditor-html-'),
+    );
+
+    if (archives.length !== 2 || coreArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/core archive.');
+    }
+
+    if (htmlArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/html archive.');
     }
 
     const packagePath = join(fixtureDirectory, 'package.json');
     const packageData = JSON.parse(await readFile(packagePath, 'utf8'));
     packageData.dependencies['@soeditor/core'] = `file:${join(
         packDirectory,
-        archives[0],
+        coreArchive,
+    )}`;
+    packageData.dependencies['@soeditor/html'] = `file:${join(
+        packDirectory,
+        htmlArchive,
     )}`;
     await writeFile(packagePath, `${JSON.stringify(packageData, null, 4)}\n`);
 

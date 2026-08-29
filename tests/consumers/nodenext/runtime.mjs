@@ -4,6 +4,7 @@ import {
     EditorInitializationAbortedError,
     Plugin,
 } from '@soeditor/core';
+import { parseHtmlFragment, serializeHtmlFragment } from '@soeditor/html';
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';
@@ -29,6 +30,18 @@ if (editor.getData() !== '<p>Runtime</p>') {
 }
 
 await editor.destroy();
+
+const html = parseHtmlFragment(
+    '<!--marker--><product-card data-id="123">Runtime</product-card>',
+);
+const serialized = serializeHtmlFragment(html.document);
+
+if (
+    !serialized.includes('<!--marker-->') ||
+    !serialized.includes('<product-card data-id="123">Runtime</product-card>')
+) {
+    throw new Error('Packed HTML runtime failed semantic preservation.');
+}
 
 try {
     editor.commands.has('missing');
