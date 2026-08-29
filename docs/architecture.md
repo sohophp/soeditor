@@ -2,7 +2,7 @@
 
 ## Current implementation status
 
-Phases 1–16 and Phase 17 are implemented. Runtime document formats are `html | markdown`
+Phases 1–18 are implemented. Runtime document formats are `html | markdown`
 and projections are `visual | source | markdown | preview`. HTML and Markdown
 remain canonical source formats for separate editor instances; projection
 changes never perform an implicit format conversion. Later sections that
@@ -138,6 +138,29 @@ They cannot determine dynamic layout, CSS contrast, focus order, assistive-
 technology behavior, script-rendered output, remote indexing, or ranking.
 Phase 18 owns automatic validation policy, provider failure isolation, and the
 expanded Problems workflow.
+
+## Phase 18 diagnostics workflow and Problems UX
+
+`DiagnosticsService` now publishes immutable `idle`, `validating`, and `ready`
+snapshots. Manual validation remains the default; an instance may opt into a
+bounded debounced policy using immutable editor configuration. Document-change
+subscriptions and timers belong to the diagnostics plugin and are removed
+during plugin destruction.
+
+Each validation captures the ordered provider registry and runs that snapshot
+concurrently. Results are flattened in registration order rather than
+completion order. Provider rejection, invalid diagnostics, and invalid source
+ranges become observable provider failures while independent providers still
+complete. A generation and exact-source check prevents overlapping,
+unregistered, changed-document, or destroyed work from publishing stale state.
+
+The service supplies filtered Problems and stable overall/provider/severity
+counts without depending on UI. Its subscription boundary lets the
+developer-tools Problems contribution render loading, empty, partial-failure,
+grouped, and filtered states. Problem navigation remains command-driven through
+`developer.reveal`; native controls and arrow-key movement provide the keyboard
+path. Generic `@soeditor/ui` continues to know nothing about HTML rules or
+diagnostic providers.
 
 ## Phase 3 minimal visual editing engine
 

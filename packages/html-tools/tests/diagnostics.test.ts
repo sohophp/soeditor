@@ -91,7 +91,7 @@ describe('HTML diagnostics', () => {
         ]);
     });
 
-    it('keeps the last successful publication when a provider fails', async () => {
+    it('isolates and publishes provider failures without rejecting validation', async () => {
         const editor = await Editor.create({ plugins: [DiagnosticsPlugin] });
         const service = editor.services.get(diagnosticsServiceToken);
         const previous = await service.validate();
@@ -102,8 +102,14 @@ describe('HTML diagnostics', () => {
             },
         });
 
-        await expect(service.validate()).rejects.toThrow('provider failed');
-        expect(service.problems).toBe(previous);
+        await expect(service.validate()).resolves.toEqual([]);
+        expect(service.problems).not.toBe(previous);
+        expect(service.failures).toEqual([
+            expect.objectContaining({
+                provider: 'example.failure',
+                error: expect.objectContaining({ message: 'provider failed' }),
+            }),
+        ]);
     });
 
     it('does not publish stale asynchronous validation over newer results', async () => {
@@ -148,7 +154,7 @@ describe('HTML diagnostics', () => {
         );
     });
 
-    it('rejects provider ranges outside or reversed within the source', async () => {
+    it('isolates provider ranges outside or reversed within the source', async () => {
         const editor = await Editor.create({
             data: 'abc',
             plugins: [DiagnosticsPlugin],
@@ -169,8 +175,18 @@ describe('HTML diagnostics', () => {
             ],
         });
 
-        await expect(service.validate()).rejects.toThrow(
-            'returned an invalid source range',
+        await expect(service.validate()).resolves.toEqual([]);
+        expect(service.failures).toEqual(
+            expect.arrayContaining([
+                expect.objectContaining({
+                    provider: 'example.invalid-range',
+                    error: expect.objectContaining({
+                        message: expect.stringContaining(
+                            'returned an invalid source range',
+                        ),
+                    }),
+                }),
+            ]),
         );
     });
 
@@ -180,6 +196,11 @@ describe('HTML diagnostics', () => {
 
         await editor.destroy();
         expect(() => service.problems).toThrow('destroyed');
+        expect(() => service.failures).toThrow('destroyed');
+        expect(() => service.snapshot).toThrow('destroyed');
+        expect(() => service.getCounts()).toThrow('destroyed');
+        expect(() => service.getProblems()).toThrow('destroyed');
+        expect(() => service.subscribe(() => undefined)).toThrow('destroyed');
         await expect(service.validate()).rejects.toThrow('destroyed');
         expect(() => service.register(provider('late', 'late'))).toThrow(
             'destroyed',

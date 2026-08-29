@@ -1,5 +1,14 @@
 export { DiagnosticsPlugin, diagnosticsServiceToken } from './diagnostics.js';
 export type { DiagnosticsService } from './diagnostics.js';
+export type {
+    DiagnosticCounts,
+    DiagnosticFilter,
+    DiagnosticProviderFailure,
+    DiagnosticsSnapshot,
+    DiagnosticsStatus,
+    DiagnosticsValidationPolicy,
+    DiagnosticsWorkflowConfig,
+} from './diagnostics.js';
 export {
     HtmlFormattingPlugin,
     htmlFormattingServiceToken,

@@ -148,6 +148,14 @@ test('has no automated WCAG A/AA violations across primary projections', async (
     }
 
     await page.goto('/');
+    await page.locator('[data-toolbar-item="problems"]').click();
+    await expect(page.locator('.soeditor-ui__panel')).toHaveAttribute(
+        'aria-label',
+        'Problems',
+    );
+    await expectWcagScanToPass(page);
+
+    await page.goto('/');
     await page.locator('[data-toolbar-item="preview"]').click();
     await expect(page.locator('[data-testid="preview"] iframe')).toBeVisible();
     await expectWcagScanToPass(page, '[data-testid="preview"] iframe');

@@ -10,6 +10,11 @@ import {
     type FileManager,
 } from '@soeditor/file-manager';
 import {
+    AccessibilityDiagnosticsPlugin,
+    diagnosticsServiceToken,
+    SeoDiagnosticsPlugin,
+} from '@soeditor/html-tools';
+import {
     createMarkdownEditingEngine,
     createMarkdownPreviewRenderer,
     markdownEditingServiceToken,
@@ -151,7 +156,13 @@ const markdownDocument = parameters.get('format') === 'markdown';
 const cmsExample = parameters.get('example') === 'cms';
 const developerDocument = parameters.get('preset') !== 'classic';
 const htmlPreset = developerDocument ? developerPreset : classicPreset;
-const htmlPlugins = [DemoPlugin, ...htmlPreset.plugins];
+const htmlPlugins = [
+    DemoPlugin,
+    ...htmlPreset.plugins,
+    ...(developerDocument
+        ? [AccessibilityDiagnosticsPlugin, SeoDiagnosticsPlugin]
+        : []),
+];
 document.body.dataset.demo = markdownDocument
     ? 'markdown'
     : cmsExample
@@ -173,8 +184,38 @@ const editor = await Editor.create(
                   : '<p>Hello <strong>SoEditor</strong></p><product-card data-id="123"></product-card><!--CMS:block-->',
               plugins: htmlPlugins,
               readonly: parameters.has('readonly'),
+              ...(developerDocument
+                  ? {
+                        config: {
+                            htmlTools: {
+                                diagnostics: {
+                                    validation: {
+                                        mode: 'debounced' as const,
+                                        delay: 250,
+                                    },
+                                },
+                            },
+                        },
+                    }
+                  : {}),
           },
 );
+if (!markdownDocument && developerDocument) {
+    editor.services.get(diagnosticsServiceToken).register({
+        id: 'playground.cms-markers',
+        provide: (source) =>
+            source.includes('<product-card')
+                ? [
+                      {
+                          code: 'playground.custom-element',
+                          message:
+                              'Custom product-card content is preserved for the CMS.',
+                          severity: 'hint',
+                      },
+                  ]
+                : [],
+    });
+}
 if (!markdownDocument) {
     const customManager: FileManager = {
         open: async () => ({
@@ -260,6 +301,7 @@ const developerToolsEngine =
     editor,
     developerToolsEngine,
     developerToolsServiceToken,
+    diagnosticsServiceToken,
     fileManagerServiceToken,
     markdownEditingServiceToken,
     markdownEngine,

@@ -22,8 +22,13 @@ export {
 } from '@soeditor/html-tools';
 export type {
     Diagnostic,
+    DiagnosticCounts,
+    DiagnosticFilter,
     DiagnosticProvider,
+    DiagnosticProviderFailure,
     DiagnosticsService,
+    DiagnosticsSnapshot,
+    DiagnosticsStatus,
     Problem,
     ProblemSeverity,
 } from '@soeditor/html-tools';

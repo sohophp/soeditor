@@ -2,9 +2,10 @@
 
 ## Current development
 
-The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 17. Accessibility and SEO diagnostic plugins now provide configurable,
-source-only rule sets through the existing diagnostics service. Phase 18 —
-Diagnostics Workflow and Problems UX — is active.
+The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 18. Diagnostics now support configurable source-quality rules, debounced or
+manual workflows, provider failure isolation, filtering/counts, and an
+accessible grouped Problems experience. Phase 19 — Persistent Projection
+Coordination — is active.
 
 The published stable reference remains `0.5.1`; development package manifests
 stay at that version until the coordinated 0.6 release-hardening phase.

@@ -1,6 +1,12 @@
 import { Plugin, type Editor } from '@soeditor/core';
 import type { SourcePosition, SourceRange } from '@soeditor/html';
-import { DiagnosticsPlugin, type Problem } from '@soeditor/html-tools';
+import {
+    DiagnosticsPlugin,
+    diagnosticsServiceToken,
+    type DiagnosticsSnapshot,
+    type Problem,
+    type ProblemSeverity,
+} from '@soeditor/html-tools';
 import {
     SourceEditingPlugin,
     sourceEditingServiceToken,
@@ -90,10 +96,101 @@ export class DeveloperToolsPlugin extends Plugin {
 function createProblemsButton(): ToolbarItemFactory {
     return ({ document, editor, ui }) => {
         const button = toolbarButton(document, 'Problems');
+        const diagnostics = editor.services.get(diagnosticsServiceToken);
+        let disposePanelSubscription: (() => void) | undefined;
+        const updateButtonCount = (): void => {
+            const count = diagnostics.snapshot.counts.total;
+            button.textContent =
+                count === 0 ? 'Problems' : `Problems (${String(count)})`;
+            button.setAttribute(
+                'aria-label',
+                count === 0 ? 'Problems' : `Problems, ${String(count)} found`,
+            );
+        };
+        const disposeCountSubscription =
+            diagnostics.subscribe(updateButtonCount);
+        updateButtonCount();
         const click = (): void => {
+            disposePanelSubscription?.();
             const content = document.createElement('div');
-            content.textContent = 'Validating HTML…';
+            content.className = 'soeditor-dev-tools__problems-workflow';
+            const selectedSeverities = new Set<ProblemSeverity>([
+                'error',
+                'warning',
+                'info',
+                'hint',
+            ]);
+            const selectedProviders = new Set<string>();
+            const status = document.createElement('p');
+            status.setAttribute('role', 'status');
+            status.setAttribute('aria-live', 'polite');
+            const filters = document.createElement('div');
+            filters.className = 'soeditor-dev-tools__problem-filters';
+            const severityFilters = createProblemFilterGroup(
+                document,
+                'Severity',
+                ['error', 'warning', 'info', 'hint'],
+                selectedSeverities,
+                () => render(),
+            );
+            const providerFilters = document.createElement('fieldset');
+            const providerLegend = document.createElement('legend');
+            providerLegend.textContent = 'Provider';
+            providerFilters.append(providerLegend);
+            filters.append(severityFilters, providerFilters);
+            const failures = document.createElement('div');
+            const results = document.createElement('div');
+            results.className = 'soeditor-dev-tools__problems';
+            results.addEventListener('keydown', handleProblemArrowNavigation);
+            content.append(status, filters, failures, results);
+            let providerSignature = '';
+            const render = (): void => {
+                const snapshot = diagnostics.snapshot;
+                const providers = availableProviders(snapshot);
+                const nextSignature = providers.join('\u0000');
+                if (nextSignature !== providerSignature) {
+                    const previouslyKnown = new Set(selectedProviders);
+                    selectedProviders.clear();
+                    for (const provider of providers) {
+                        if (
+                            providerSignature.length === 0 ||
+                            previouslyKnown.has(provider)
+                        ) {
+                            selectedProviders.add(provider);
+                        }
+                    }
+                    providerFilters.replaceChildren(providerLegend);
+                    appendProblemFilterOptions(
+                        providerFilters,
+                        providers,
+                        selectedProviders,
+                        render,
+                    );
+                    providerSignature = nextSignature;
+                }
+                renderProblemsWorkflow(
+                    status,
+                    failures,
+                    results,
+                    snapshot,
+                    diagnostics.getProblems({
+                        providers: [...selectedProviders],
+                        severities: [...selectedSeverities],
+                    }),
+                    editor,
+                    ui,
+                );
+            };
             ui.panels.show({ title: 'Problems', content });
+            disposePanelSubscription = diagnostics.subscribe(() => {
+                if (!content.isConnected) {
+                    disposePanelSubscription?.();
+                    disposePanelSubscription = undefined;
+                    return;
+                }
+                render();
+            });
+            render();
             let result: unknown;
             try {
                 result = editor.execute('document.validate');
@@ -101,20 +198,8 @@ function createProblemsButton(): ToolbarItemFactory {
                 showError(ui, error);
                 return;
             }
-            void Promise.resolve(result).then(
-                () => {
-                    if (content.isConnected) {
-                        renderProblems(
-                            content,
-                            editor.services
-                                .get(developerToolsServiceToken)
-                                .getProblems(),
-                            editor,
-                            ui,
-                        );
-                    }
-                },
-                (error: unknown) => showError(ui, error),
+            void Promise.resolve(result).catch((error: unknown) =>
+                showError(ui, error),
             );
         };
         button.addEventListener('click', click);
@@ -125,7 +210,11 @@ function createProblemsButton(): ToolbarItemFactory {
                     developerToolsServiceToken,
                 );
             },
-            destroy: () => button.removeEventListener('click', click),
+            destroy: () => {
+                disposePanelSubscription?.();
+                disposeCountSubscription();
+                button.removeEventListener('click', click);
+            },
         };
     };
 }
@@ -289,40 +378,154 @@ function openCommandPalette(
     input.focus();
 }
 
-function renderProblems(
-    container: HTMLElement,
+function renderProblemsWorkflow(
+    status: HTMLElement,
+    failures: HTMLElement,
+    results: HTMLElement,
+    snapshot: DiagnosticsSnapshot,
     problems: readonly Problem[],
     editor: Editor,
     ui: EditorUi,
 ): void {
-    container.replaceChildren();
-    if (problems.length === 0) {
-        container.textContent = 'No problems found.';
+    const document = results.ownerDocument;
+    status.textContent =
+        snapshot.status === 'validating'
+            ? `Validating HTML… ${String(snapshot.counts.total)} previous problems.`
+            : `${String(snapshot.counts.total)} problems found.`;
+    failures.replaceChildren();
+    if (snapshot.failures.length > 0) {
+        const heading = document.createElement('h3');
+        heading.textContent = 'Provider errors';
+        const list = document.createElement('ul');
+        for (const failure of snapshot.failures) {
+            const item = document.createElement('li');
+            item.textContent = `${failure.provider}: ${errorMessage(failure.error)}`;
+            list.append(item);
+        }
+        failures.append(heading, list);
+    }
+    results.replaceChildren();
+    if (snapshot.status !== 'validating' && problems.length === 0) {
+        const empty = document.createElement('p');
+        empty.textContent =
+            snapshot.failures.length === 0
+                ? 'No problems found.'
+                : 'No problems were returned by the providers that completed.';
+        results.append(empty);
         return;
     }
-    const list = container.ownerDocument.createElement('ul');
-    list.className = 'soeditor-dev-tools__problems';
+    const groups = new Map<string, Problem[]>();
     for (const problem of problems) {
-        const item = container.ownerDocument.createElement('li');
-        item.dataset.severity = problem.severity;
-        const button = container.ownerDocument.createElement('button');
-        button.type = 'button';
-        button.textContent = `${problem.severity}: ${problem.message}${formatLocation(problem)}`;
-        button.disabled = problem.source === undefined;
-        button.addEventListener('click', () => {
-            if (problem.source === undefined) {
-                return;
-            }
-            try {
-                editor.execute('developer.reveal', problem.source);
-            } catch (error: unknown) {
-                showError(ui, error);
-            }
-        });
-        item.append(button);
-        list.append(item);
+        const group = groups.get(problem.provider) ?? [];
+        group.push(problem);
+        groups.set(problem.provider, group);
     }
-    container.append(list);
+    for (const [provider, providerProblems] of groups) {
+        const section = document.createElement('section');
+        const heading = document.createElement('h3');
+        heading.textContent = `${provider} (${String(providerProblems.length)})`;
+        const list = document.createElement('ul');
+        for (const problem of providerProblems) {
+            const item = document.createElement('li');
+            item.dataset.severity = problem.severity;
+            const label = `${problem.severity}: ${problem.message}${formatLocation(problem)}`;
+            if (problem.source === undefined) {
+                const text = document.createElement('span');
+                text.textContent = label;
+                item.append(text);
+            } else {
+                const button = document.createElement('button');
+                button.type = 'button';
+                button.dataset.problem = 'true';
+                button.textContent = label;
+                button.addEventListener('click', () => {
+                    try {
+                        editor.execute('developer.reveal', problem.source);
+                    } catch (error: unknown) {
+                        showError(ui, error);
+                    }
+                });
+                item.append(button);
+            }
+            list.append(item);
+        }
+        section.append(heading, list);
+        results.append(section);
+    }
+}
+
+function createProblemFilterGroup<Value extends string>(
+    document: Document,
+    legendText: string,
+    values: readonly Value[],
+    selected: Set<Value>,
+    render: () => void,
+): HTMLFieldSetElement {
+    const fieldset = document.createElement('fieldset');
+    const legend = document.createElement('legend');
+    legend.textContent = legendText;
+    fieldset.append(legend);
+    appendProblemFilterOptions(fieldset, values, selected, render);
+    return fieldset;
+}
+
+function appendProblemFilterOptions<Value extends string>(
+    fieldset: HTMLFieldSetElement,
+    values: readonly Value[],
+    selected: Set<Value>,
+    render: () => void,
+): void {
+    for (const value of values) {
+        const label = fieldset.ownerDocument.createElement('label');
+        const input = fieldset.ownerDocument.createElement('input');
+        input.type = 'checkbox';
+        input.checked = selected.has(value);
+        input.addEventListener('change', () => {
+            if (input.checked) {
+                selected.add(value);
+            } else {
+                selected.delete(value);
+            }
+            render();
+        });
+        label.append(input, ` ${value}`);
+        fieldset.append(label);
+    }
+}
+
+function availableProviders(snapshot: DiagnosticsSnapshot): readonly string[] {
+    return [
+        ...new Set([
+            ...snapshot.problems.map(({ provider }) => provider),
+            ...snapshot.failures.map(({ provider }) => provider),
+        ]),
+    ];
+}
+
+function handleProblemArrowNavigation(event: KeyboardEvent): void {
+    if (event.key !== 'ArrowDown' && event.key !== 'ArrowUp') {
+        return;
+    }
+    const buttons = Array.from(
+        (
+            event.currentTarget as HTMLElement
+        ).querySelectorAll<HTMLButtonElement>('button[data-problem="true"]'),
+    );
+    const current = buttons.indexOf(event.target as HTMLButtonElement);
+    if (current < 0 || buttons.length === 0) {
+        return;
+    }
+    event.preventDefault();
+    const offset = event.key === 'ArrowDown' ? 1 : -1;
+    buttons[(current + offset + buttons.length) % buttons.length]?.focus();
+}
+
+function errorMessage(error: unknown): string {
+    try {
+        return error instanceof Error ? error.message : String(error);
+    } catch {
+        return 'Unknown provider failure.';
+    }
 }
 
 function renderInspector(

@@ -36,6 +36,9 @@ test('validates Problems and navigates a source-backed diagnostic to CodeMirror'
     await page.locator('[data-toolbar-item="problems"]').click();
     const panel = page.locator('.soeditor-ui__panel');
     await expect(panel).toHaveAttribute('aria-label', 'Problems');
+    await expect(
+        panel.getByRole('heading', { name: /html\.structure/ }),
+    ).toBeVisible();
     const problem = panel.getByRole('button', { name: /missing an alt/i });
     await expect(problem).toBeVisible();
     await problem.click();
@@ -44,6 +47,58 @@ test('validates Problems and navigates a source-backed diagnostic to CodeMirror'
     await expect(
         page.locator('[data-testid="source-editor"] .cm-selectionBackground'),
     ).toHaveCount(1);
+});
+
+test('filters grouped Problems, reports provider failures, and supports arrow navigation', async ({
+    page,
+}) => {
+    await page.evaluate(() => {
+        const harness = (window as Window & { __soeditor?: DeveloperHarness })
+            .__soeditor;
+        if (harness === undefined)
+            throw new Error('Missing developer harness.');
+        const diagnostics = harness.editor.services.get(
+            harness.diagnosticsServiceToken,
+        ) as unknown as {
+            register(provider: {
+                id: string;
+                provide(): readonly never[];
+            }): () => void;
+        };
+        diagnostics.register({
+            id: 'browser.failure',
+            provide: () => {
+                throw new Error('Browser provider failed');
+            },
+        });
+        harness.editor.setData(
+            '<div id="same"></div><p id="same"><img><button></button><iframe></iframe></p>',
+        );
+    });
+
+    const toolbarButton = page.locator('[data-toolbar-item="problems"]');
+    await expect(toolbarButton).toHaveAttribute(
+        'aria-label',
+        /Problems, \d+ found/,
+    );
+    await toolbarButton.click();
+    const panel = page.locator('.soeditor-ui__panel');
+    await expect(
+        panel.getByRole('heading', { name: 'Provider errors' }),
+    ).toBeVisible();
+    await expect(panel).toContainText('Browser provider failed');
+    await expect(panel.getByRole('group', { name: 'Provider' })).toBeVisible();
+    await expect(panel.getByRole('group', { name: 'Severity' })).toBeVisible();
+
+    const problemButtons = panel.locator('button[data-problem="true"]');
+    await expect(problemButtons).toHaveCount(4);
+    await problemButtons.first().focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(problemButtons.nth(1)).toBeFocused();
+
+    await panel.getByRole('checkbox', { name: 'warning' }).uncheck();
+    await expect(panel.locator('button[data-problem="true"]')).toHaveCount(0);
+    await expect(panel).toContainText('No problems were returned');
 });
 
 test('builds a heading outline and navigates headings into Source mode', async ({
@@ -211,6 +266,7 @@ interface DeveloperHarness {
     }): { destroy(): void };
     developerToolsEngine?: { destroy(): void };
     developerToolsServiceToken: unknown;
+    diagnosticsServiceToken: unknown;
     editor: {
         destroy(): Promise<void>;
         execute(id: string, ...args: readonly unknown[]): unknown;

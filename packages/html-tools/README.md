@@ -66,3 +66,35 @@ computed styles, contrast, focus order, screen-reader behavior, rendered
 scripts, application context, remote pages, search indexing, or ranking. Their
 results are not a claim of WCAG, legal, Lighthouse, or search-engine
 compliance.
+
+## Validation workflow
+
+Validation remains manual by default through `document.validate` or
+`DiagnosticsService.validate()`. Applications may opt into per-editor
+debounced validation:
+
+```ts
+const editor = await Editor.create({
+    plugins: [DiagnosticsPlugin],
+    config: {
+        htmlTools: {
+            diagnostics: {
+                validation: { mode: 'debounced', delay: 300 },
+            },
+        },
+    },
+});
+```
+
+Each run snapshots the registered providers, runs them independently, and
+retains registration order in the final Problems list. A rejected or malformed
+provider is recorded in `service.failures`; it does not prevent other providers
+from completing. Overlapping, unregistered, changed-document, and destroyed
+runs cannot publish stale results.
+
+`service.snapshot` exposes immutable `idle | validating | ready` state,
+Problems, provider failures, and counts. `service.subscribe()` observes
+published workflow transitions. `service.getProblems(filter)` and
+`service.getCounts(filter)` accept optional provider and severity filters. The
+original `service.problems`, `register()`, and `validate()` entry points remain
+available.
