@@ -34,6 +34,28 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/adapter-sofinder',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
+            '@soeditor/file-manager',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/dev-tools',
             'pack',
             '--pack-destination',
@@ -148,11 +170,17 @@ try {
     const coreArchive = archives.find((name) =>
         name.startsWith('soeditor-core-'),
     );
+    const adapterSoFinderArchive = archives.find((name) =>
+        name.startsWith('soeditor-adapter-sofinder-'),
+    );
     const devToolsArchive = archives.find((name) =>
         name.startsWith('soeditor-dev-tools-'),
     );
     const htmlArchive = archives.find((name) =>
         name.startsWith('soeditor-html-'),
+    );
+    const fileManagerArchive = archives.find((name) =>
+        name.startsWith('soeditor-file-manager-'),
     );
     const engineArchive = archives.find((name) =>
         name.startsWith('soeditor-engine-'),
@@ -174,7 +202,7 @@ try {
         name.startsWith('soeditor-markdown-'),
     );
 
-    if (archives.length !== 10 || coreArchive === undefined) {
+    if (archives.length !== 12 || coreArchive === undefined) {
         throw new Error('Expected one packed @soeditor/core archive.');
     }
 
@@ -214,8 +242,22 @@ try {
         throw new Error('Expected one packed @soeditor/dev-tools archive.');
     }
 
+    if (fileManagerArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/file-manager archive.');
+    }
+
+    if (adapterSoFinderArchive === undefined) {
+        throw new Error(
+            'Expected one packed @soeditor/adapter-sofinder archive.',
+        );
+    }
+
     const packagePath = join(fixtureDirectory, 'package.json');
     const packageData = JSON.parse(await readFile(packagePath, 'utf8'));
+    packageData.dependencies['@soeditor/adapter-sofinder'] = `file:${join(
+        packDirectory,
+        adapterSoFinderArchive,
+    )}`;
     packageData.dependencies['@soeditor/core'] = `file:${join(
         packDirectory,
         coreArchive,
@@ -223,6 +265,10 @@ try {
     packageData.dependencies['@soeditor/dev-tools'] = `file:${join(
         packDirectory,
         devToolsArchive,
+    )}`;
+    packageData.dependencies['@soeditor/file-manager'] = `file:${join(
+        packDirectory,
+        fileManagerArchive,
     )}`;
     packageData.dependencies['@soeditor/html'] = `file:${join(
         packDirectory,

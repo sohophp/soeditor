@@ -13,6 +13,19 @@ import {
     type OutlineItem,
 } from '@soeditor/dev-tools';
 import {
+    FileManagerPlugin,
+    fileManagerServiceToken,
+    normalizeFileManagerResult,
+    type FileManager,
+    type FileManagerOpenOptions,
+    type FileManagerResult,
+} from '@soeditor/file-manager';
+import {
+    SoFinderAdapter,
+    type SoFinderAdapterOptions,
+    type SoFinderSelection,
+} from '@soeditor/adapter-sofinder';
+import {
     parseHtmlFragment,
     serializeHtmlFragment,
     type HtmlElement,
@@ -198,6 +211,26 @@ void developerToolsOptions;
 void outline;
 void inspector;
 void DeveloperToolsPlugin;
+const fileManager: FileManager = new SoFinderAdapter({
+    pick: async (
+        options: FileManagerOpenOptions,
+    ): Promise<SoFinderSelection> => ({
+        metadata: { kind: options.kind },
+        mimeType: 'image/png',
+        url: '/consumer.png',
+    }),
+});
+const adapterOptions: SoFinderAdapterOptions = {
+    pick: async () => ({ url: '/consumer.png' }),
+};
+const fileResult: FileManagerResult | null = normalizeFileManagerResult({
+    url: '/consumer.png',
+});
+void fileManager;
+void adapterOptions;
+void fileResult;
+void fileManagerServiceToken;
+void FileManagerPlugin;
 const rejectInternalModel = (value: EditingModel): void => {
     void value;
 };

@@ -269,6 +269,7 @@ function openCommandPalette(
             button.disabled = !editor.commands.canExecute(id);
             button.addEventListener('click', () => {
                 try {
+                    ui.restoreEditingSelection();
                     const result = editor.execute(id);
                     handle.close();
                     if (isPromiseLike(result)) {

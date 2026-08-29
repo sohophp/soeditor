@@ -2,11 +2,11 @@
 
 ## Current implementation status
 
-Phases 1–11 are implemented. Runtime document formats are `html | markdown`
+Phases 1–12 are implemented. Runtime document formats are `html | markdown`
 and projections are `visual | source | markdown | preview`. HTML and Markdown
 remain canonical source formats for separate editor instances; projection
 changes never perform an implicit format conversion. Later sections that
-describe post-Phase-11 capabilities remain product direction rather than an
+describe post-Phase-12 capabilities remain product direction rather than an
 implementation claim.
 
 ### Phase 1.1 stabilization policies
@@ -386,6 +386,27 @@ panel behind SoEditor-owned APIs. No CodeMirror types cross the package root.
 The Inspector reads the controlled visual selection as a non-authoritative
 projection and never mutates canonical source. Split views are deferred because
 the current architecture intentionally has one active projection at a time.
+
+## Phase 12 file manager and SoFinder integration
+
+Phase 12 adds browser-facing `@soeditor/file-manager` as an application-owned
+selection capability. `FileManagerPlugin` contributes `image.browse`, permits
+only one pending picker per editor, validates the returned value, and delegates
+the actual mutation to the existing `image.insert` command. Neither
+`ImagePlugin` nor Core knows which manager produced the asset.
+
+Selection results are treated as untrusted integration data. The boundary
+rejects accessors, malformed dimensions, control characters, executable URL
+schemes, cycles, non-JSON metadata, excessive metadata depth/size, and mutable
+input aliases. Cancellation is an explicit no-op, and late results cannot edit
+an editor whose plugin lifecycle has ended.
+
+`@soeditor/adapter-sofinder` maps an injected `SoFinderPicker` function to that
+generic capability. The repository has no authoritative SoFinder SDK contract,
+so the host remains responsible for loading SoFinder, authentication, dialog
+security, and adapting its concrete selection value. The adapter has no
+SoFinder runtime dependency and no SoFinder detail enters Core, Rich Text, or
+generic UI.
 
 ## 1. 项目定位
 

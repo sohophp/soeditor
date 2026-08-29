@@ -1,3 +1,4 @@
+import { SoFinderAdapter } from '@soeditor/adapter-sofinder';
 import { Editor, Plugin } from '@soeditor/core';
 import {
     createDeveloperToolsEngine,
@@ -5,6 +6,11 @@ import {
     developerToolsServiceToken,
 } from '@soeditor/dev-tools';
 import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
+import {
+    FileManagerPlugin,
+    fileManagerServiceToken,
+    type FileManager,
+} from '@soeditor/file-manager';
 import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import {
     createMarkdownEditingEngine,
@@ -148,6 +154,7 @@ const htmlPlugins = [
     InlineCodePlugin,
     CodeBlockPlugin,
     ImagePlugin,
+    FileManagerPlugin,
     TablePlugin,
     SourceEditingPlugin,
     DiagnosticsPlugin,
@@ -174,6 +181,28 @@ const editor = await Editor.create(
               readonly: parameters.has('readonly'),
           },
 );
+if (!markdownDocument) {
+    const customManager: FileManager = {
+        open: async () => ({
+            alt: 'Custom manager image',
+            name: 'custom-manager-image.png',
+            url: '/custom-manager-image.png',
+        }),
+    };
+    const manager =
+        parameters.get('files') === 'sofinder'
+            ? new SoFinderAdapter({
+                  pick: async () => ({
+                      height: 480,
+                      mimeType: 'image/png',
+                      name: 'sofinder-image.png',
+                      url: '/sofinder-image.png',
+                      width: 640,
+                  }),
+              })
+            : customManager;
+    editor.services.register(fileManagerServiceToken, manager);
+}
 const visualEngine = markdownDocument
     ? undefined
     : createVisualEditingEngine({ editor, element: editingHost });
@@ -219,6 +248,7 @@ const ui = createEditorUi({
                         ...defaultToolbarConfiguration,
                         '|',
                         'problems',
+                        'image-browse',
                         'inspector',
                         'outline',
                         'find-replace',
@@ -244,6 +274,7 @@ const developerToolsEngine = markdownDocument
     editor,
     developerToolsEngine,
     developerToolsServiceToken,
+    fileManagerServiceToken,
     markdownEditingServiceToken,
     markdownEngine,
     previewEngine,

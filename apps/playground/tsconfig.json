@@ -3,9 +3,15 @@
     "compilerOptions": {
         "lib": ["DOM", "ES2022"],
         "paths": {
+            "@soeditor/adapter-sofinder": [
+                "../../packages/adapter-sofinder/src/index.ts"
+            ],
             "@soeditor/core": ["../../packages/core/src/index.ts"],
             "@soeditor/dev-tools": ["../../packages/dev-tools/src/index.ts"],
             "@soeditor/engine": ["../../packages/engine/src/index.ts"],
+            "@soeditor/file-manager": [
+                "../../packages/file-manager/src/index.ts"
+            ],
             "@soeditor/html": ["../../packages/html/src/index.ts"],
             "@soeditor/markdown": ["../../packages/markdown/src/index.ts"],
             "@soeditor/preview": ["../../packages/preview/src/index.ts"],

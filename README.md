@@ -13,6 +13,8 @@ preview environment. Phase 10 adds canonical Markdown source editing, isolated
 Markdown preview, raw HTML passthrough, and an explicitly lossy HTML bridge.
 Phase 11 adds docked HTML Problems, element path/Inspector, heading Outline,
 command palette, Find/Replace, and diagnostic-to-source navigation.
+Phase 12 adds a replaceable FileManager capability, validated command-driven
+image selection, and a dependency-free SoFinder picker adapter.
 
 ```ts
 import { Editor } from '@soeditor/core';
@@ -43,6 +45,10 @@ const editor = await Editor.create({
   rendering, Preview integration, and explicit HTML conversion losses.
 - `@soeditor/dev-tools` — HTML Problems, Inspector, Outline, command palette,
   Find/Replace, and source-location navigation.
+- `@soeditor/file-manager` — generic file-selection contracts, boundary
+  validation, and command-driven Image integration.
+- `@soeditor/adapter-sofinder` — a narrow injected SoFinder picker adapter with
+  no SoFinder dependency in Core or feature packages.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
 

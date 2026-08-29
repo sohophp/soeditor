@@ -7,6 +7,12 @@ export default defineConfig({
     },
     resolve: {
         alias: {
+            '@soeditor/adapter-sofinder': fileURLToPath(
+                new URL(
+                    '../../packages/adapter-sofinder/src/index.ts',
+                    import.meta.url,
+                ),
+            ),
             '@soeditor/core': fileURLToPath(
                 new URL('../../packages/core/src/index.ts', import.meta.url),
             ),
@@ -19,6 +25,12 @@ export default defineConfig({
             '@soeditor/html-tools': fileURLToPath(
                 new URL(
                     '../../packages/html-tools/src/index.ts',
+                    import.meta.url,
+                ),
+            ),
+            '@soeditor/file-manager': fileURLToPath(
+                new URL(
+                    '../../packages/file-manager/src/index.ts',
                     import.meta.url,
                 ),
             ),

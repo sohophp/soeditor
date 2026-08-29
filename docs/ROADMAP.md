@@ -6,9 +6,9 @@ Active roadmap.
 
 This roadmap begins from the current repository state.
 
-Phase 1 Core Architecture is complete.
+Phases 1–12 are complete.
 
-Phase 2 is the next implementation phase.
+Phase 13 is the next implementation phase.
 
 The target of this roadmap is **SoEditor 0.5 Developer Preview**.
 

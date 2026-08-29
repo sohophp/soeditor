@@ -9,9 +9,11 @@
         "typecheck": "tsc -p tsconfig.json"
     },
     "dependencies": {
+        "@soeditor/adapter-sofinder": "workspace:*",
         "@soeditor/core": "workspace:*",
         "@soeditor/dev-tools": "workspace:*",
         "@soeditor/engine": "workspace:*",
+        "@soeditor/file-manager": "workspace:*",
         "@soeditor/html": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
         "@soeditor/markdown": "workspace:*",

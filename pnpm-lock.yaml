@@ -41,6 +41,9 @@ importers:
 
   apps/playground:
     dependencies:
+      '@soeditor/adapter-sofinder':
+        specifier: workspace:*
+        version: link:../../packages/adapter-sofinder
       '@soeditor/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -50,6 +53,9 @@ importers:
       '@soeditor/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@soeditor/file-manager':
+        specifier: workspace:*
+        version: link:../../packages/file-manager
       '@soeditor/html':
         specifier: workspace:*
         version: link:../../packages/html
@@ -71,6 +77,12 @@ importers:
       '@soeditor/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+
+  packages/adapter-sofinder:
+    devDependencies:
+      '@soeditor/file-manager':
+        specifier: workspace:*
+        version: link:../file-manager
 
   packages/core:
     devDependencies:
@@ -104,6 +116,21 @@ importers:
       '@soeditor/html':
         specifier: workspace:*
         version: link:../html
+
+  packages/file-manager:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@soeditor/rich-text':
+        specifier: workspace:*
+        version: link:../rich-text
+      '@soeditor/ui':
+        specifier: workspace:*
+        version: link:../ui
 
   packages/html:
     dependencies:

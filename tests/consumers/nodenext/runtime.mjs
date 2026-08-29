@@ -20,6 +20,8 @@ import {
     createDocumentOutline,
     DeveloperToolsPlugin,
 } from '@soeditor/dev-tools';
+import { SoFinderAdapter } from '@soeditor/adapter-sofinder';
+import { normalizeFileManagerResult } from '@soeditor/file-manager';
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';
@@ -69,6 +71,21 @@ if (
     !editor.commands.has('document.format')
 ) {
     throw new Error('Packed HTML tools did not register their commands.');
+}
+
+const selectedAsset = await new SoFinderAdapter({
+    pick: async () => ({
+        mimeType: 'image/png',
+        url: '/runtime.png',
+    }),
+}).open({ kind: 'image', multiple: false });
+if (
+    selectedAsset?.mime !== 'image/png' ||
+    normalizeFileManagerResult(selectedAsset)?.url !== '/runtime.png'
+) {
+    throw new Error(
+        'Packed file-manager adapter failed its runtime smoke test.',
+    );
 }
 
 if (editor.services.tryGet(uiRegistryServiceToken) === undefined) {

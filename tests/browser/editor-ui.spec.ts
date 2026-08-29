@@ -42,6 +42,7 @@ test('renders the configured integrated toolbar, groups, status, and theme', asy
         'format',
         '|',
         'problems',
+        'image-browse',
         'inspector',
         'outline',
         'find-replace',
