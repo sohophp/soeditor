@@ -24,6 +24,8 @@
   while keeping framework and Node-only dependencies in their owning packages.
 - Added 0.8-to-0.9 migration guidance, packed consumers for all 23 public
   packages, framework/CMS/SSR verification, and measured integration budgets.
+- Added a generated symbol/declaration API report and explicit candidate 1.x
+  compatibility, deprecation, runtime, security, and maintenance policies.
 
 This entry describes a verified local release candidate. npm publication, the
 `v0.9.0` tag, hosted release, and registry/CDN verification remain pending

@@ -480,6 +480,21 @@ notifications, mapped annotations, structured tables, startup/teardown,
 recovery, direct-browser/ESM/CSS bundles, and real Chromium Visual input. These
 are reproducible guards rather than device-independent performance claims.
 
+## Phase 34 generated public API contract
+
+The 1.0 candidate treats built declaration entry points as the auditable public
+boundary. A generated, committed report enumerates every symbol from all 23
+package roots and declared preset subpaths, records declaration hashes, and
+lists CSS/CLI resources. CI regenerates the report after building and rejects
+unreviewed drift. Undeclared subpaths remain internal regardless of checkout or
+tarball visibility.
+
+Stable contracts receive the documented 1.x SemVer/deprecation policy.
+Structured models and operations, node-view/conversion registries, visual
+decorations, and table/media extension breadth remain explicitly experimental.
+The report does not replace packed consumers or behavioral tests and introduces
+no runtime dependency, registry, reflection, or global state.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing

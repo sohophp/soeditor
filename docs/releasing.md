@@ -64,6 +64,7 @@ pnpm install --frozen-lockfile
 pnpm exec playwright install chromium
 pnpm lint
 pnpm typecheck
+pnpm test:api
 pnpm test
 pnpm build
 pnpm security:audit
@@ -75,6 +76,8 @@ the configured installation mirror does not implement npm's audit endpoint.
 
 Review the tarball list, package versions, public export maps, source maps,
 bundle budgets, repository metadata, and absence of `workspace:` protocols.
+Review any generated `docs/api-report.md` diff; a changed declaration hash is a
+public-contract change even when the symbol name is unchanged.
 Never publish from a dirty checkout or a commit different from the reviewed CI
 commit.
 

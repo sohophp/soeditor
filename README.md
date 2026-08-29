@@ -108,7 +108,8 @@ the [revisions guide](docs/revisions.md),
 [plugin tooling and integration diagnostics](docs/plugin-tooling.md),
 [performance budgets](docs/performance.md),
 [0.8-to-0.9 migration](docs/migration-0.8-to-0.9.md),
-[public API policy](docs/public-api.md), and
+[public API policy](docs/public-api.md), the generated
+[API report](docs/api-report.md), [support policy](docs/support-policy.md), and
 [development status](docs/status.md).
 
 ## Development

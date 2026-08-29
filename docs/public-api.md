@@ -5,14 +5,20 @@ file being present in a tarball does not make it public; `src`, `dist` file
 paths, concrete registries, DOM projection internals, and undocumented globals
 are internal and may change without migration support.
 
-## 0.9 classifications
+## 1.0 candidate classifications
 
-| Classification          | Surface                                                                                                                                                                                                                                             | Compatibility expectation                                                             |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
-| Application public      | `@soeditor/editor`, preset entries, documented feature package roots, configuration and lifecycle APIs                                                                                                                                              | Deliberate SemVer changes with migration notes                                        |
-| Extension-author public | Curated exports from `@soeditor/plugin-sdk`: plugin lifecycle, commands/events/services, UI/diagnostic/projection/layout/FileManager contributions, structured conversions/node views, immutable editing operations, and the visual editing service | Deliberate SemVer changes; packed external consumers are a release gate               |
-| Experimental public     | Structured block/node-view model, selection and mutation contracts, table/media command breadth                                                                                                                                                     | Available from documented roots, but may evolve during 0.x with an explicit migration |
-| Internal                | Concrete registry implementations, renderer/projection classes, parser/editor implementation types, private symbols, and all undeclared subpaths                                                                                                    | No compatibility promise                                                              |
+The generated [`api-report.md`](api-report.md) inventories every exported
+symbol and declaration signature. [`support-policy.md`](support-policy.md)
+defines the exact SemVer, deprecation, runtime, security, and maintenance
+contract. The classifications below explain the architectural groups; the
+generated report is the symbol-level review gate.
+
+| Classification          | Surface                                                                                                                                                                                                                                             | Compatibility expectation                                                            |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| Application public      | `@soeditor/editor`, preset entries, documented feature package roots, configuration and lifecycle APIs                                                                                                                                              | Stable entries receive the 1.x SemVer policy                                         |
+| Extension-author public | Curated exports from `@soeditor/plugin-sdk`: plugin lifecycle, commands/events/services, UI/diagnostic/projection/layout/FileManager contributions, structured conversions/node views, immutable editing operations, and the visual editing service | Stable entries receive the 1.x SemVer policy; packed consumers remain a release gate |
+| Experimental public     | Structured block/node-view model, selection and mutation contracts, visual decorations, table/media extension breadth                                                                                                                               | May evolve in 1.x minors only with changelog and migration guidance                  |
+| Internal                | Concrete registry implementations, renderer/projection classes, parser/editor implementation types, private symbols, and all undeclared subpaths                                                                                                    | No compatibility promise                                                             |
 
 The SDK is a curated facade over owning packages, not a second runtime and not
 an export of every built-in feature. Third-party plugins declare aligned
@@ -49,6 +55,9 @@ the umbrella. `@soeditor/plugin-tools` is a public Node-only CLI/API package and
 is also absent from the browser umbrella. Its checker does not define runtime
 compatibility by itself; public SDK types and behavioral consumers remain
 authoritative.
+
+There are currently no deprecated package-root exports. Undeclared subpaths
+remain internal and are intentionally rejected by packed NodeNext consumers.
 
 ## Structured extension boundary
 

@@ -53,7 +53,10 @@ is complete. The local `0.9.0` release candidate promotes Workspace, React,
 Vue, and Node-only plugin tooling as four independent public package roots.
 Its 23-package release, consumer, performance, browser, supply-chain, and
 adversarial gates pass with Critical 0 and High 0. Phase 34 — 1.0 Public API
-Stabilization — is active.
+Stabilization — is complete. Every declared public entry is now covered by a
+generated symbol/signature/declaration-tree report and explicit compatibility,
+deprecation, runtime, security, and maintenance policies. The complete 0.9
+consumer and release gates remain unchanged and pass with Critical 0 and High 0. Phase 35 — 1.0 Qualification and Documentation — is active.
 
 All 23 public package manifests are aligned at the `0.9.0` release candidate.
 The published stable reference remains `0.5.1` until an explicitly authorized
@@ -161,6 +164,14 @@ deliberate and documented under SemVer principles.
   scenarios, accessibility, distribution/release, MIT license, zero known
   high-severity vulnerability, 23-package npm dry-run, and unpublished registry
   preflight gates. Final adversarial review: Critical 0, High 0.
+- Phase 34 inventories all 23 public packages and declared subpaths in a
+  generated API report. Across independently consumable roots it records 816
+  stable and 121 experimental symbol entries, no deprecated exports, per-
+  symbol signature hashes, entry hashes, full declaration-tree hashes, CSS,
+  and CLI resources; undeclared subpaths remain internal. The frozen 0.9
+  packed consumers, strict typecheck, unit/performance/API/distribution/release,
+  all 122 Chromium scenarios, MIT, security, dry-run, and registry gates pass.
+  Final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
 
@@ -220,6 +231,13 @@ deliberate and documented under SemVer principles.
   Preview document content is outside the parent-page axe traversal.
 - Lifecycle timing uses a generous regression budget, not a cross-device
   performance guarantee. Snapshot history has linear memory cost.
+- The public API report is a deterministic review gate, not behavioral proof.
+  Its hashes intentionally change with public declaration signatures and may
+  also require review after TypeScript declaration-emitter or formatting
+  changes. Experimental entries do not receive the stable 1.x promise.
+- Dedicated Firefox and Safari gates are not yet present. Chrome/Edge support
+  follows the qualified Chromium platform; other standards-oriented browsers
+  remain best effort until equivalent evidence exists.
 - The immutable scoped `0.5.0` artifacts remain available from an incomplete
   publication attempt, but they are not the supported complete release set.
   npm rejected the former unscoped umbrella name `soeditor` as too similar to

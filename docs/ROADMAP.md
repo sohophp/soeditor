@@ -1223,7 +1223,7 @@ repository-owner-controlled operations.
 ## Status
 
 APPROVED from the repository owner's 2026-08-29 authorization to complete
-SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 34 is active.
+SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 35 is active.
 
 The sequence is justified in
 `docs/research/editor-landscape-2026.md`. Each release must pass its own
@@ -1609,7 +1609,7 @@ large-document behavior as the final pre-1.0 integration line.
 
 ## Status
 
-ACTIVE.
+COMPLETE.
 
 ## Goal
 
@@ -1625,13 +1625,27 @@ Classify, simplify, and freeze the evidence-backed public platform.
   conversion, node-view, annotation, workspace, and adapter contracts;
 - publish API reports and compile representative 0.9 integrations unchanged.
 
+## Delivered
+
+- generated inventory for all 23 public packages, declared preset subpaths,
+  CSS resources, and the plugin CLI, with 816 stable, 121 experimental, and no
+  deprecated symbol entries across independently consumable roots;
+- per-symbol signature, entry declaration, and complete package declaration-
+  tree hashes with deterministic build-and-check commands in the normal gate;
+- explicit 1.x SemVer, deprecation, Node/browser/framework, security, and
+  maintenance policies while retaining undeclared subpaths as internal;
+- unchanged packed 0.9 NodeNext/native ESM/Vite/React/Vue/plugin/CMS/browser
+  consumers plus the complete release and 122-scenario Chromium gates;
+- Critical 0 / High 0 adversarial review with unqualified browsers,
+  experimental surfaces, and hash-toolchain sensitivity documented.
+
 ---
 
 # Phase 35 — 1.0 Qualification and Documentation
 
 ## Status
 
-PENDING.
+ACTIVE.
 
 ## Goal
 
