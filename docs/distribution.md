@@ -95,9 +95,9 @@ own static assets. Pin an exact package version in production:
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.6.0/dist/soeditor.css"
+    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.7.0/dist/soeditor.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.6.0/dist/soeditor.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.7.0/dist/soeditor.global.js"></script>
 <script>
     const editor = await SoEditor.create({
         data: '<p>Hello from a script tag.</p>',
@@ -114,7 +114,9 @@ automatically create editors. ESM and the scoped public package roots remain
 the authoritative APIs. The self-contained global contains optional features,
 so size-sensitive applications should use ESM.
 
-The example is the exact 0.6.0 URL to use after authorized publication and
+The example is the exact 0.7.0 URL to use after authorized publication and
 external CDN verification. Until then it is a candidate URL; the public stable
 reference remains 0.5.1. Consumers must not mix release lines. See the
-[migration guide](migration-0.5-to-0.6.md).
+[0.6-to-0.7 migration guide](migration-0.6-to-0.7.md). The 0.6 candidate was
+not published; public 0.5.1 consumers should also review the
+[0.5-to-0.6 migration guide](migration-0.5-to-0.6.md).

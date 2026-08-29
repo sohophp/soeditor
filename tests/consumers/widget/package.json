@@ -1,18 +1,19 @@
 {
-    "name": "soeditor-vite-narrow-consumer",
+    "name": "soeditor-packed-widget-consumer",
     "version": "0.0.0",
     "private": true,
     "type": "module",
     "packageManager": "pnpm@11.20.0",
     "dependencies": {
         "@soeditor/core": "0.7.0",
-        "@soeditor/plugin-sdk": "0.7.0",
-        "@soeditor/presets": "0.7.0"
+        "@soeditor/engine": "0.7.0",
+        "@soeditor/plugin-sdk": "0.7.0"
     },
     "devDependencies": {
+        "typescript": "5.9.2",
         "vite": "7.3.6"
     },
     "scripts": {
-        "build": "vite build"
+        "build": "tsc --noEmit && vite build"
     }
 }

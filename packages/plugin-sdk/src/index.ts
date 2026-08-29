@@ -24,6 +24,7 @@ export {
     StructuredEditingPlugin,
     StructuredEditingRegistrySealedError,
     structuredEditingRegistryToken,
+    visualEditingServiceToken,
 } from '@soeditor/engine';
 export type {
     EditingBlock,
@@ -43,6 +44,10 @@ export type {
     StructuredNodeViewInstance,
     StructuredNodeViewSelectionOptions,
     StructuredNodeViewState,
+    VisualBlockTag,
+    VisualEditingService,
+    VisualLinkAttributes,
+    VisualTextMark,
 } from '@soeditor/engine';
 export {
     DiagnosticsPlugin,

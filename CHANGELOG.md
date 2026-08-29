@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.7.0 — Structured Extensions candidate
+
+- Added deterministic structured block conversions, immutable editing models
+  and operations, command-backed node views, and curated extension contracts.
+- Added bounded production tables with row/column/header/merge/split,
+  rectangular selection, keyboard, history, and semantic clipboard behavior.
+- Added safe figure/media widgets with captions, alt text, dimensions, and a
+  replaceable FileManager browse path while preserving inert unknown or unsafe
+  source.
+- Added a packed third-party product-card consumer proving that plugins can
+  register, render, read, and replace structured content using package roots
+  and the public SDK only.
+- Aligned all 17 MIT-licensed public packages at `0.7.0` and hardened release,
+  registry, accessibility, teardown, bundle, and migration gates.
+
+This entry describes a verified local release candidate. npm publication, the
+`v0.7.0` tag, hosted release, and registry/CDN verification remain pending
+explicit owner authorization.
+
 ## 0.6.0 — Developer Workflow candidate
 
 - Added bounded source-only accessibility and SEO diagnostic providers with

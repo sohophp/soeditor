@@ -3,8 +3,8 @@
 ## Supported versions
 
 The latest published SoEditor line is supported for security fixes. That is
-0.5.1 until the verified 0.6 candidate is published; after a 0.6 publication,
-the latest 0.6.x patch becomes the supported line. Unpublished commits and older
+0.5.1 until the verified 0.7 candidate is published; after a 0.7 publication,
+the latest 0.7.x patch becomes the supported line. Unpublished commits and older
 patches do not receive separate fixes unless maintainers announce an exception.
 
 ## Reporting a vulnerability

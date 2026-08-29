@@ -1,5 +1,6 @@
 import { execFileSync } from 'node:child_process';
 import { Buffer } from 'node:buffer';
+import { createServer } from 'node:http';
 import {
     cp,
     mkdir,
@@ -11,9 +12,11 @@ import {
     writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { extname, join, resolve, sep } from 'node:path';
 import { stdout } from 'node:process';
 import { fileURLToPath, URL } from 'node:url';
+import AxeBuilder from '@axe-core/playwright';
+import { chromium } from '@playwright/test';
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const workspaceManifest = JSON.parse(
@@ -31,11 +34,13 @@ const narrowViteFixtureSource = join(
     repositoryRoot,
     'tests/consumers/vite-narrow',
 );
+const widgetFixtureSource = join(repositoryRoot, 'tests/consumers/widget');
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'soeditor-nodenext-'));
 const packDirectory = join(temporaryRoot, 'package');
 const fixtureDirectory = join(temporaryRoot, 'consumer');
 const viteFixtureDirectory = join(temporaryRoot, 'vite-consumer');
 const narrowViteFixtureDirectory = join(temporaryRoot, 'vite-narrow-consumer');
+const widgetFixtureDirectory = join(temporaryRoot, 'widget-consumer');
 
 function run(command, args, cwd) {
     execFileSync(command, args, {
@@ -477,6 +482,27 @@ try {
     }
     stdout.write('Vite packed-package production build passed.\n');
 
+    await cp(widgetFixtureSource, widgetFixtureDirectory, { recursive: true });
+    const widgetPackagePath = join(widgetFixtureDirectory, 'package.json');
+    const widgetPackageData = JSON.parse(
+        await readFile(widgetPackagePath, 'utf8'),
+    );
+    widgetPackageData.dependencies = { ...packageData.dependencies };
+    await writeFile(
+        widgetPackagePath,
+        `${JSON.stringify(widgetPackageData, null, 4)}\n`,
+    );
+    await writeOverrides(
+        widgetFixtureDirectory,
+        widgetPackageData.dependencies,
+    );
+    run('pnpm', ['install'], widgetFixtureDirectory);
+    run('pnpm', ['build'], widgetFixtureDirectory);
+    await verifyPackedWidget(widgetFixtureDirectory);
+    stdout.write(
+        'Packed third-party widget TypeScript, Vite, Chromium, accessibility, security, and teardown consumer passed.\n',
+    );
+
     await cp(narrowViteFixtureSource, narrowViteFixtureDirectory, {
         recursive: true,
     });
@@ -539,6 +565,116 @@ try {
     );
 } finally {
     await rm(temporaryRoot, { force: true, recursive: true });
+}
+
+async function verifyPackedWidget(directory) {
+    const distributionRoot = resolve(directory, 'dist');
+    const server = createServer(async (request, response) => {
+        try {
+            const requestUrl = new URL(request.url ?? '/', 'http://127.0.0.1');
+            const relativePath =
+                requestUrl.pathname === '/'
+                    ? 'index.html'
+                    : decodeURIComponent(requestUrl.pathname.slice(1));
+            const filePath = resolve(distributionRoot, relativePath);
+            if (
+                filePath !== distributionRoot &&
+                !filePath.startsWith(`${distributionRoot}${sep}`)
+            ) {
+                response.writeHead(403).end();
+                return;
+            }
+            const content = await readFile(filePath);
+            response.writeHead(200, {
+                'content-type': contentType(extname(filePath)),
+            });
+            response.end(content);
+        } catch (error) {
+            response.writeHead(error?.code === 'ENOENT' ? 404 : 500).end();
+        }
+    });
+    await new Promise((resolvePromise, reject) => {
+        server.once('error', reject);
+        server.listen(0, '127.0.0.1', resolvePromise);
+    });
+    const address = server.address();
+    if (typeof address !== 'object' || address === null) {
+        server.close();
+        throw new Error('Packed widget server did not expose a TCP address.');
+    }
+
+    const browser = await chromium.launch({ headless: true });
+    try {
+        const context = await browser.newContext();
+        const page = await context.newPage();
+        await page.goto(`http://127.0.0.1:${String(address.port)}/`);
+        await page.locator('body[data-ready="true"]').waitFor();
+        const boundary = page.locator(
+            '[data-soeditor-structured-block="consumer.product-card"]',
+        );
+        if ((await boundary.count()) !== 1) {
+            throw new Error('Packed widget node view did not mount.');
+        }
+        await boundary.getByRole('button', { name: 'Rename product' }).click();
+        await page.waitForFunction(() =>
+            globalThis.document.body.dataset.source?.includes(
+                'data-title="Renamed"',
+            ),
+        );
+        const result = await page.evaluate(() => ({
+            executed: Reflect.get(globalThis, '__packedWidgetExecuted'),
+            source: globalThis.document.body.dataset.source,
+        }));
+        if (
+            result.executed !== undefined ||
+            !result.source?.includes('<script>') ||
+            !result.source.includes('data-id="123"')
+        ) {
+            throw new Error(
+                'Packed widget failed source preservation or execution isolation.',
+            );
+        }
+        const accessibility = await new AxeBuilder({ page })
+            .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
+            .analyze();
+        if (accessibility.violations.length > 0) {
+            throw new Error(
+                `Packed widget has accessibility violations: ${accessibility.violations
+                    .map(({ id }) => id)
+                    .join(', ')}.`,
+            );
+        }
+        const remaining = await page.evaluate(async () => {
+            const harness = Reflect.get(globalThis, '__packedWidget');
+            return Reflect.apply(Reflect.get(harness, 'destroy'), harness, []);
+        });
+        if (remaining !== 0) {
+            throw new Error('Packed widget visual teardown left DOM residue.');
+        }
+    } finally {
+        await browser.close();
+        await new Promise((resolvePromise, reject) => {
+            server.close((error) =>
+                error === undefined ? resolvePromise() : reject(error),
+            );
+        });
+    }
+}
+
+function contentType(extension) {
+    switch (extension) {
+        case '.css':
+            return 'text/css; charset=utf-8';
+        case '.html':
+            return 'text/html; charset=utf-8';
+        case '.js':
+            return 'text/javascript; charset=utf-8';
+        case '.map':
+        case '.json':
+            return 'application/json; charset=utf-8';
+        default:
+            return 'application/octet-stream';
+    }
 }
 
 async function writeOverrides(directory, dependencies) {

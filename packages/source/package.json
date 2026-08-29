@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/source",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "license": "MIT",
     "description": "CodeMirror-powered HTML source editing for SoEditor.",
     "keywords": [

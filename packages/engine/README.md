@@ -30,6 +30,6 @@ undo/redo keyboard shortcuts.
 
 `StructuredEditingPlugin` provides a per-editor registry for custom structured
 block conversion. Phase 23 custom blocks are atomic or readonly and remain
-inert; interactive node views arrive in the separate Phase 24 runtime. Visual
+inert; interactive node views are an optional, separate runtime contribution. Visual
 transactions expose validated `EditingOperation` metadata through
 `readEditingOperations()` for position-aware plugins.

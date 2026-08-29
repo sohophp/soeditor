@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/file-manager",
-    "version": "0.6.0",
+    "version": "0.7.0",
     "license": "MIT",
     "description": "Generic file-selection capability and Image integration for SoEditor.",
     "keywords": [

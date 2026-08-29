@@ -99,6 +99,7 @@ import {
     Plugin,
     StructuredEditingPlugin,
     structuredEditingRegistryToken,
+    visualEditingServiceToken,
     type StructuredBlockConversion,
     type StructuredNodeViewFactory,
 } from '@soeditor/plugin-sdk';
@@ -130,13 +131,16 @@ const productCardView: StructuredNodeViewFactory = ({
     const element = document.createElement('article');
     const button = document.createElement('button');
     button.type = 'button';
-    button.textContent = 'Select product';
-    const select = () => actions.select();
-    button.addEventListener('click', select);
+    button.textContent = 'Rename product';
+    const rename = () => {
+        actions.select({ focus: false });
+        actions.execute('example.product-card.rename', 'Renamed');
+    };
+    button.addEventListener('click', rename);
     element.append(`Product attributes: ${node.attributes.length}`, button);
     return {
         element,
-        destroy: () => button.removeEventListener('click', select),
+        destroy: () => button.removeEventListener('click', rename),
     };
 };
 
@@ -153,6 +157,28 @@ export class ProductCardPlugin extends Plugin {
         this.#dispose.push(
             registry.registerNodeView(productCard.type, productCardView),
         );
+        this.editor.commands.register({
+            id: 'example.product-card.rename',
+            execute: ({ editor }, title) => {
+                if (typeof title !== 'string' || title.length === 0) {
+                    throw new TypeError('A non-empty title is required.');
+                }
+                const visual = editor.services.get(visualEditingServiceToken);
+                const block = visual.getSelectedStructuredBlock(
+                    productCard.type,
+                );
+                if (block === undefined) return;
+                visual.replaceStructuredBlockContent(productCard.type, {
+                    attributes: [
+                        ...block.attributes.filter(
+                            ({ name }) => name !== 'data-title',
+                        ),
+                        { name: 'data-title', value: title },
+                    ],
+                    children: block.children,
+                });
+            },
+        });
     }
 
     override destroy(): void {

@@ -12,16 +12,16 @@ const releaseVersion = workspaceManifest.version;
 const releaseLicense = workspaceManifest.license;
 if (
     typeof releaseVersion !== 'string' ||
-    !/^0\.6\.\d+$/u.test(releaseVersion)
+    !/^0\.7\.\d+$/u.test(releaseVersion)
 ) {
-    throw new Error('The release audit only accepts an aligned 0.6.x version.');
+    throw new Error('The release audit only accepts an aligned 0.7.x version.');
 }
 const packagesRoot = join(repositoryRoot, 'packages');
 const publishable = [];
 const [changelog, migrationGuide, releaseGuide, statusDocument] =
     await Promise.all([
         readFile(join(repositoryRoot, 'CHANGELOG.md'), 'utf8'),
-        readFile(join(repositoryRoot, 'docs/migration-0.5-to-0.6.md'), 'utf8'),
+        readFile(join(repositoryRoot, 'docs/migration-0.6-to-0.7.md'), 'utf8'),
         readFile(join(repositoryRoot, 'docs/releasing.md'), 'utf8'),
         readFile(join(repositoryRoot, 'docs/status.md'), 'utf8'),
     ]);
@@ -117,6 +117,22 @@ if (
 }
 
 const umbrellaDist = join(packagesRoot, 'soeditor', 'dist');
+const pluginSdkDeclarations = await readFile(
+    join(packagesRoot, 'plugin-sdk', 'dist', 'index.d.ts'),
+    'utf8',
+);
+for (const contract of [
+    'StructuredBlockConversion',
+    'StructuredNodeViewFactory',
+    'VisualEditingService',
+    'visualEditingServiceToken',
+]) {
+    if (!pluginSdkDeclarations.includes(contract)) {
+        throw new Error(
+            `The curated plugin SDK is missing required contract ${contract}.`,
+        );
+    }
+}
 const globalPath = join(umbrellaDist, 'soeditor.global.js');
 const cssPath = join(umbrellaDist, 'soeditor.css');
 const esmPath = join(umbrellaDist, 'index.js');

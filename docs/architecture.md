@@ -330,6 +330,20 @@ commands, so SoFinder and other pickers remain substitutable adapters. Node-view
 listeners have explicit abort-based teardown and all changes continue through
 the visual service's transaction boundary.
 
+## Phase 26 curated 0.7 extension boundary
+
+The 0.7 SDK adds the generic visual service token and types needed for a
+third-party node view to delegate canonical changes to a command. It does not
+export renderer internals or concrete registries. Public API ownership and
+stability are classified in `docs/public-api.md`.
+
+A packed external product-card fixture compiles with strict TypeScript and
+Vite using package roots only. Chromium verifies registration, selection,
+command-backed immutable replacement, preserved inert script source,
+accessibility, and complete teardown. This consumer is part of the release
+gate, so SDK declarations and actual packed runtime resolution are tested
+together rather than inferred from workspace source imports.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing

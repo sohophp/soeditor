@@ -6,8 +6,7 @@ The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 2
 one write authority and appear in accessible Visual | Source, Source | Preview,
 or Markdown | Preview layouts. The Developer preset now selects bounded
 accessibility/SEO diagnostics and projection/split infrastructure without
-owning engines or DOM. The local `0.6.0` release candidate is complete and
-awaiting an explicitly authorized publication.
+owning engines or DOM. That candidate was not published.
 
 The evidence-derived 0.7–1.0 roadmap is now approved. Phase 25 — Production
 Tables and Media — is complete. Bounded structured tables now provide
@@ -17,9 +16,13 @@ captions, alt text, dimensions, and generic FileManager insertion while
 unsupported or executable source remains preserved and inert. Public and SDK
 packed consumers plus 109 Chromium scenarios pass; the final Phase 25
 adversarial review found Critical 0 and High 0. Phase 26 — SoEditor 0.7 SDK and
-Release Hardening — is active.
+Release Hardening — has aligned the curated SDK, packed third-party widget
+consumer, public API classification, migration, and release boundaries for the
+local `0.7.0` release candidate. Its full release and adversarial gates pass
+with Critical 0 and High 0. Phase 27 — Mapped Annotations and Comments — is
+active.
 
-All 17 development package manifests are aligned at the `0.6.0` release
+All 17 development package manifests are aligned at the `0.7.0` release
 candidate. The published stable reference remains `0.5.1` until an explicitly
 authorized npm publication and external registry/CDN verification complete.
 
@@ -63,6 +66,14 @@ deliberate and documented under SemVer principles.
   typecheck, unit/consumer/distribution/release/Chromium/build/license/security
   gates, completes a 17-package npm dry run, and confirms read-only that every
   0.6.0 package version is unpublished.
+- the Phase 26 `0.7.0` release candidate adds a strict packed third-party
+  product-card consumer using only public package roots and the curated SDK;
+  Vite and Chromium verify command-backed immutable replacement, inert unsafe
+  source preservation, accessibility, and teardown.
+- the aligned candidate passes lint, strict typecheck, unit/consumer/
+  distribution/release tests, all 109 Chromium scenarios, build, MIT license
+  verification, high-severity dependency audit, 17-package npm publication dry
+  run, and a read-only check that all 17 `0.7.0` versions are unpublished.
 - final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
@@ -72,13 +83,18 @@ deliberate and documented under SemVer principles.
   ESM/narrow preset imports are recommended for production-size evaluation.
 - Visual editing intentionally supports a bounded schema. Unknown HTML is
   preserved as opaque content; complete documents remain Source-oriented.
-  Structured contributions and node views remain block-only. Table selection
-  is view-local and resets after a source-changing transaction; column changes
+  Structured contributions and node views remain experimental and block-only.
+  Table selection is view-local and resets after a source-changing transaction;
+  column changes
   explicitly reject `colgroup` metadata. Inline node views and nested editables
   remain deferred until their selection, clipboard, and ownership rules can be
   demonstrated deterministically.
 - HTML ↔ Markdown conversion is explicitly lossy. Canonical Markdown itself is
   exact in Markdown mode.
+- The aggregate SDK facade currently declares the aligned generic owning
+  packages as peers. Bundlers remove unused families, but a plugin consumer
+  must still satisfy that peer set; narrower domain SDK entries remain a future
+  packaging decision.
 - FileManager selects one existing asset. Upload, rename, delete,
   authentication, and a concrete SoFinder SDK remain host responsibilities.
 - Accessibility and SEO providers cover only bounded source-inferable rules;
@@ -104,9 +120,9 @@ deliberate and documented under SemVer principles.
 
 Semantic HTML preservation is not byte-for-byte preservation. Framework
 wrappers, SSR DOM emulation, collaboration, spreadsheet behavior, office-paste
-parity, and arbitrary executable widgets remain post-0.6 candidates and are
+parity, and arbitrary executable widgets remain post-0.7 candidates and are
 not implied by this preview.
 
-The candidate is not yet a public 0.6 release. npm publication, signed tag,
+The candidate is not yet a public 0.7 release. npm publication, signed tag,
 GitHub Release, and external npm/jsDelivr verification require explicit owner
 authorization and must refer to the exact reviewed commit.
