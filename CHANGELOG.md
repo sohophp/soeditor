@@ -13,6 +13,9 @@
 - Added bounded retry handling to the read-only npm availability preflight so
   transient registry throttling or server/network failures do not masquerade
   as release collisions.
+- Wait for npm's abbreviated installation metadata to propagate before the
+  post-publish clean consumer install, preventing a successful release from
+  being reported as failed during registry index convergence.
 - No product API or runtime behavior changed from the verified 0.5.0 release
   candidate.
 

@@ -62,6 +62,15 @@ try {
             '',
         ].join('\n'),
     );
+    await fetchWithRetry(
+        'https://registry.npmjs.org/%40soeditor%2Feditor',
+        {
+            headers: {
+                Accept: 'application/vnd.npm.install-v1+json',
+            },
+        },
+        36,
+    );
     run(
         'pnpm',
         ['install', '--registry=https://registry.npmjs.org'],
@@ -159,11 +168,12 @@ async function verifyPublishedPackages(releaseVersion, releaseLicense) {
     );
 }
 
-async function fetchWithRetry(url) {
+async function fetchWithRetry(url, init = {}, attempts = 12) {
     let latestFailure = 'no response';
-    for (let attempt = 0; attempt < 12; attempt += 1) {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
         try {
             const response = await globalThis.fetch(url, {
+                ...init,
                 signal: globalThis.AbortSignal.timeout(15_000),
             });
             if (response.ok) return response;
@@ -171,7 +181,7 @@ async function fetchWithRetry(url) {
         } catch (error) {
             latestFailure = error instanceof Error ? error.message : 'unknown';
         }
-        if (attempt < 11) {
+        if (attempt < attempts - 1) {
             await delay(10_000);
         }
     }

@@ -13,7 +13,7 @@ deliberate and documented under SemVer principles.
 
 ## Release evidence
 
-- 15 MIT-licensed ESM publishable packages at version 0.5.0; every packed
+- 15 MIT-licensed ESM packages published at version 0.5.1; every packed
   artifact includes the repository license text.
 - strict declarations, declaration maps, JavaScript source maps, packed
   NodeNext/native ESM/Vite consumers, and a real Chromium CDN smoke test.
@@ -25,6 +25,10 @@ deliberate and documented under SemVer principles.
   publication dry run from a frozen install.
 - the GitHub `npm` environment requires an explicit `sohophp` review, and
   private vulnerability reporting is enabled.
+- `@soeditor/editor@0.5.1` and its 14 supporting packages were published from
+  commit `f2e5478`; a clean public-registry consumer installed the scoped
+  umbrella, completed a Vite production build, validated all package metadata,
+  and passed the jsDelivr/Chromium lifecycle smoke test.
 - current global bundle guard: 1.25 MB raw / 410 kB gzip; measured approximately
   1.198 MB raw / 390 kB gzip.
 - current minimal Vite consumer: approximately 27.9 kB raw / 8.74 kB gzip.
@@ -46,17 +50,12 @@ deliberate and documented under SemVer principles.
   Preview document content is outside the parent-page axe traversal.
 - Lifecycle timing uses a generous regression budget, not a cross-device
   performance guarantee. Snapshot history has linear memory cost.
-- Public npm publication is in recovery. The third protected `0.5.0` attempt
-  published all 14 `@soeditor/*` packages, then the unscoped `soeditor` package
-  was denied. Those immutable artifacts remain published, but `0.5.0` is not
-  the complete supported release set. The aligned `0.5.1` recovery candidate
-  passed local and clean CI gates and remains entirely unpublished. Its
-  unscoped package guard proved the final blocker is npm's package-name
-  similarity rule: npm rejects `soeditor` as too similar to `jsoneditor`.
-  The owner approved `@soeditor/editor` as the scoped umbrella replacement;
-  the renamed candidate passes every local release gate and remains entirely
-  unpublished at `0.5.1`. It still requires a clean CI pass and protected
-  publication before it becomes the supported complete release set.
+- The immutable scoped `0.5.0` artifacts remain available from an incomplete
+  publication attempt, but they are not the supported complete release set.
+  npm rejected the former unscoped umbrella name `soeditor` as too similar to
+  `jsoneditor`; `0.5.1` therefore uses the owner-approved scoped umbrella
+  `@soeditor/editor`. Consumers should install and pin the aligned `0.5.1`
+  package set.
 
 ## Lower-priority notes
 
