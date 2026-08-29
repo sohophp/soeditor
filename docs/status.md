@@ -49,9 +49,11 @@ deliberate and documented under SemVer principles.
 - Public npm publication has not yet been performed. Repository/package
   metadata, green CI, dry-run, protected manual workflow/environment, and
   private vulnerability reporting are prepared. The repository owner selected
-  MIT, confirmed npm name control, and configured the environment-scoped
-  credential. The protected publication workflow is the remaining release
-  operation.
+  MIT and confirmed npm name control. The first protected publication stopped
+  before its first package because the configured token did not bypass npm's
+  non-interactive 2FA requirement; all 15 versions remain unpublished. Replace
+  the environment credential with a granular read/write token that has Bypass
+  2FA enabled, then rerun the protected workflow.
 
 ## Lower-priority notes
 

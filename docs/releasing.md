@@ -13,14 +13,22 @@ use an npm identity.
 2. Confirm the publishing npm identity controls both the unscoped `soeditor`
    name and the `@soeditor` organization scope.
 3. Create the protected GitHub `npm` environment and require reviewer approval.
-4. Configure an environment-scoped `NPM_TOKEN` automation secret for this
-   repository/workflow. It must be restricted to the required packages.
+4. Configure an environment-scoped `NPM_TOKEN` using a granular npm token with
+   read/write package access and **Bypass 2FA** enabled. The bypass setting is
+   required for this non-interactive initial publication and is disabled by
+   default when a token is created. Restrict the token to the required package
+   names/scopes where npm's token controls allow it.
 5. Enable GitHub private vulnerability reporting for the repository.
 
 No package should be published until all five conditions are true. As a
 separate repository-governance decision, protect `master` and require the CI
 release gate when the maintainer is ready to require pull requests for release
 changes.
+
+After the packages exist, configure npm trusted publishing for `publish.yml`
+and the `npm` GitHub environment, verify one release through OIDC, then remove
+the long-lived publishing secret. Until that migration is complete, an OIDC
+exchange warning does not replace the granular token requirement.
 
 ## Patch policy
 
