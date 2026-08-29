@@ -1,6 +1,7 @@
 {
     "name": "@soeditor/engine",
     "version": "0.5.0",
+    "license": "MIT",
     "description": "Controlled browser visual-editing engine for SoEditor.",
     "keywords": [
         "content-editor",

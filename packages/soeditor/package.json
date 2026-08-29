@@ -1,6 +1,7 @@
 {
     "name": "soeditor",
     "version": "0.5.0",
+    "license": "MIT",
     "description": "Developer-first, HTML-first extensible content editor.",
     "keywords": [
         "content-editor",

@@ -1,5 +1,12 @@
 import { execFileSync } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+    mkdir,
+    mkdtemp,
+    readFile,
+    readdir,
+    rm,
+    writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { argv, stdout } from 'node:process';
@@ -62,6 +69,8 @@ try {
     );
     run('pnpm', ['build'], consumerRoot);
 
+    await verifyPublishedPackages(version, workspaceManifest.license);
+
     const cdnBase = `https://cdn.jsdelivr.net/npm/soeditor@${version}/dist`;
     const [globalResponse, cssResponse, mapResponse] = await Promise.all([
         fetchWithRetry(`${cdnBase}/soeditor.global.js`),
@@ -111,6 +120,45 @@ function run(command, args, cwd) {
     execFileSync(command, args, { cwd, stdio: 'inherit' });
 }
 
+async function verifyPublishedPackages(releaseVersion, releaseLicense) {
+    const packagesRoot = new URL('../packages/', import.meta.url);
+    const expectedPackages = [];
+    for (const directory of await readdir(packagesRoot)) {
+        const manifest = JSON.parse(
+            await readFile(
+                new URL(`${directory}/package.json`, packagesRoot),
+                'utf8',
+            ),
+        );
+        if (manifest.private !== true) {
+            expectedPackages.push({ directory, name: manifest.name });
+        }
+    }
+    if (expectedPackages.length !== 15) {
+        throw new Error('Registry verification expected 15 public packages.');
+    }
+
+    await Promise.all(
+        expectedPackages.map(async ({ directory, name }) => {
+            const endpoint = `https://registry.npmjs.org/${encodeURIComponent(name)}/${releaseVersion}`;
+            const response = await fetchWithRetry(endpoint);
+            const manifest = await response.json();
+            if (
+                manifest.name !== name ||
+                manifest.version !== releaseVersion ||
+                manifest.license !== releaseLicense ||
+                manifest.repository?.url !==
+                    'git+https://github.com/sohophp/soeditor.git' ||
+                manifest.repository?.directory !== `packages/${directory}`
+            ) {
+                throw new Error(
+                    `Published metadata is incorrect for ${name}@${releaseVersion}.`,
+                );
+            }
+        }),
+    );
+}
+
 async function fetchWithRetry(url) {
     let latestFailure = 'no response';
     for (let attempt = 0; attempt < 12; attempt += 1) {
@@ -128,6 +176,6 @@ async function fetchWithRetry(url) {
         }
     }
     throw new Error(
-        `Published CDN artifact ${url} remained unavailable (${latestFailure}).`,
+        `Published resource ${url} remained unavailable (${latestFailure}).`,
     );
 }

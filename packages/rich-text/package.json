@@ -1,6 +1,7 @@
 {
     "name": "@soeditor/rich-text",
     "version": "0.5.0",
+    "license": "MIT",
     "description": "Command-driven rich-text feature plugins for SoEditor.",
     "keywords": [
         "content-editor",

@@ -5,9 +5,11 @@ import { fileURLToPath, URL } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const releaseVersion = JSON.parse(
+const workspaceManifest = JSON.parse(
     await readFile(join(repositoryRoot, 'package.json'), 'utf8'),
-).version;
+);
+const releaseVersion = workspaceManifest.version;
+const releaseLicense = workspaceManifest.license;
 if (
     typeof releaseVersion !== 'string' ||
     !/^0\.5\.\d+$/u.test(releaseVersion)
@@ -45,6 +47,7 @@ for (const directory of await readdir(packagesRoot)) {
     if (
         manifest.repository?.url !==
             'git+https://github.com/sohophp/soeditor.git' ||
+        manifest.license !== releaseLicense ||
         manifest.repository?.directory !== `packages/${directory}` ||
         manifest.homepage !== 'https://github.com/sohophp/soeditor#readme' ||
         manifest.bugs?.url !== 'https://github.com/sohophp/soeditor/issues' ||

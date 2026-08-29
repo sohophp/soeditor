@@ -1,6 +1,7 @@
 {
     "name": "@soeditor/core",
     "version": "0.5.0",
+    "license": "MIT",
     "description": "Framework-agnostic core architecture for SoEditor.",
     "keywords": [
         "content-editor",

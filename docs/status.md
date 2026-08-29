@@ -13,7 +13,8 @@ deliberate and documented under SemVer principles.
 
 ## Release evidence
 
-- 15 ESM publishable packages at version 0.5.0.
+- 15 MIT-licensed ESM publishable packages at version 0.5.0; every packed
+  artifact includes the repository license text.
 - strict declarations, declaration maps, JavaScript source maps, packed
   NodeNext/native ESM/Vite consumers, and a real Chromium CDN smoke test.
 - real-browser coverage for visual/source/Markdown/Preview/UI/developer tools,
@@ -47,9 +48,10 @@ deliberate and documented under SemVer principles.
   performance guarantee. Snapshot history has linear memory cost.
 - Public npm publication has not yet been performed. Repository/package
   metadata, green CI, dry-run, protected manual workflow/environment, and
-  private vulnerability reporting are prepared. The repository owner must
-  still choose a license, confirm control of both npm names, add the
-  environment-scoped `NPM_TOKEN`, and authorize the publication.
+  private vulnerability reporting are prepared. The repository owner selected
+  MIT, confirmed npm name control, and configured the environment-scoped
+  credential. The protected publication workflow is the remaining release
+  operation.
 
 ## Lower-priority notes
 

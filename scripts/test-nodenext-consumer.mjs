@@ -15,9 +15,15 @@ import { stdout } from 'node:process';
 import { fileURLToPath, URL } from 'node:url';
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const releaseVersion = JSON.parse(
+const workspaceManifest = JSON.parse(
     await readFile(join(repositoryRoot, 'package.json'), 'utf8'),
-).version;
+);
+const releaseVersion = workspaceManifest.version;
+const releaseLicense = workspaceManifest.license;
+const releaseLicenseText = await readFile(
+    join(repositoryRoot, 'LICENSE'),
+    'utf8',
+);
 const fixtureSource = join(repositoryRoot, 'tests/consumers/nodenext');
 const viteFixtureSource = join(repositoryRoot, 'tests/consumers/vite');
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'soeditor-nodenext-'));
@@ -448,6 +454,7 @@ async function verifyInstalledManifests(directory, packageNames) {
                 : `packages/${packageName.slice('@soeditor/'.length)}`;
         if (
             manifest.version !== releaseVersion ||
+            manifest.license !== releaseLicense ||
             manifest.repository?.url !==
                 'git+https://github.com/sohophp/soeditor.git' ||
             manifest.repository?.directory !== expectedDirectory ||
@@ -464,6 +471,15 @@ async function verifyInstalledManifests(directory, packageNames) {
         ) {
             throw new Error(
                 `Packed manifest for ${packageName} is not publication-safe.`,
+            );
+        }
+        const packedLicenseText = await readFile(
+            join(directory, 'node_modules', packageName, 'LICENSE'),
+            'utf8',
+        );
+        if (packedLicenseText !== releaseLicenseText) {
+            throw new Error(
+                `Packed license for ${packageName} does not match the repository license.`,
             );
         }
         for (const target of exportTargets(manifest.exports)) {
