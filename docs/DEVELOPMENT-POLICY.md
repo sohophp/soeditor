@@ -36,17 +36,17 @@ Phases 1–15 are complete and the SoEditor 0.5 Developer Preview release gate
 has passed. The repository owner subsequently authorized Phase 16 publication
 and stabilization work.
 
-The current approved implementation roadmap is complete through:
+The current authorized roadmap phase is:
 
 ```text
-Phase 22 — SoEditor 0.6 Release Hardening (complete)
+Phase 23 — Extensible Structured Editing Foundation (active)
 ```
 
 The repository owner authorized the SoEditor 0.6 through 1.0 development goal
-on 2026-08-29. The approved 0.6 roadmap through Phase 22 is complete. Later
-0.7–1.0 implementation requires those roadmap phases to be written deliberately
-from 0.6 product evidence before work enters their scope. npm publication,
-tags, and hosted releases remain separately owner-controlled operations.
+on 2026-08-29. The 0.7–1.0 roadmap was derived deliberately from the verified
+0.6 evidence and recorded in `docs/research/editor-landscape-2026.md` and
+`docs/ROADMAP.md`. npm publication, tags, and hosted releases remain separately
+owner-controlled operations.
 
 ---
 

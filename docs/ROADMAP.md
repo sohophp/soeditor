@@ -3,8 +3,8 @@
 ## Status
 
 Complete through Phase 22. The verified 0.6.0 candidate is awaiting
-owner-authorized publication; the next roadmap must be derived deliberately
-from 0.6 evidence before later implementation begins.
+owner-authorized publication. The evidence-derived 0.7–1.0 roadmap is approved
+and Phase 23 is active.
 
 This roadmap begins from the current repository state.
 
@@ -1218,9 +1218,402 @@ repository-owner-controlled operations.
 
 ---
 
-# Beyond 0.6
+# SoEditor 0.7–1.0 Roadmap — Extensible Production Editor
 
-The candidates deferred above remain outside autonomous implementation. A
-future roadmap decision must prioritize widget/schema work, collaboration and
-review workflows, incremental serialization, framework adapters, AI/template
-integrations, or 1.0 API stabilization using evidence from the 0.6 line.
+## Status
+
+APPROVED from the repository owner's 2026-08-29 authorization to complete
+SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 23 is active.
+
+The sequence is justified in
+`docs/research/editor-landscape-2026.md`. Each release must pass its own
+adversarial and release gate before the next release begins.
+
+## Cross-release rules
+
+- Preserve unknown HTML independently from visual support and execution.
+- Keep Core DOM-free, small, instance-scoped, transaction-authoritative, and
+  framework-independent.
+- New content behavior is plugin-contributed; UI invokes commands.
+- Public editing types are SoEditor-owned and do not expose a third-party
+  editor, parser, CRDT, or framework runtime.
+- Do not promise lossless HTML/Markdown conversion or arbitrary executable
+  previews.
+- npm publication, tags, hosted releases, license changes, and external service
+  credentials remain owner-controlled.
+
+---
+
+# Phase 23 — Extensible Structured Editing Foundation
+
+## Status
+
+ACTIVE.
+
+## Goal
+
+Replace the closed 0.6 visual schema with a bounded plugin contribution model
+for structured HTML while preserving unknown and unsupported source.
+
+## Required outcomes
+
+- define immutable SoEditor-owned structured node, attribute, selection, and
+  position types needed by demonstrated features;
+- define deterministic feature-owned schema and source conversion
+  contributions with duplicate/conflict validation;
+- distinguish editable, atomic/readonly, and opaque-preserved content;
+- add granular structured operations and position mappings needed by current
+  editing, history, and future annotations without moving DOM into Core;
+- retain exact Source replacement and last-valid Visual behavior;
+- migrate existing visual/rich-text features without breaking public 0.6 data
+  APIs or silently normalizing unknown HTML;
+- document the architectural decision and prove semantic round trips,
+  transaction/history behavior, malformed input, and lifecycle cleanup.
+
+## Explicitly deferred
+
+- public node-view DOM factories, advanced tables/media, comments, collaboration,
+  and framework adapters;
+- a universal HTML DTD or arbitrary CSS execution;
+- speculative operations not required by migrated features.
+
+## Definition of Done
+
+- third-party schema/conversion contributions can represent a custom structured
+  element using only public SoEditor types;
+- existing supported content remains editable and unknown content remains
+  preserved/inert;
+- Critical = 0, High = 0, and all repository gates pass.
+
+---
+
+# Phase 24 — Node Views and Widget Runtime
+
+## Status
+
+PENDING.
+
+## Goal
+
+Let plugins render and interact with structured atomic blocks and bounded
+nested editables without giving the editing DOM authority over canonical data.
+
+## Required outcomes
+
+- host-scoped framework-neutral node-view factories with explicit lifecycle;
+- atomic block/inline selection, keyboard entry/exit, deletion, copy/paste, and
+  drag/drop transaction rules;
+- nested editable proof only where selection/history mapping is deterministic;
+- command/service-based attribute editing and contextual UI integration;
+- inert rendering and explicit security policy for unknown or unsafe markup;
+- a reference custom-element widget preserving meaningful attributes/source.
+
+## Explicitly deferred
+
+- React/Vue node-view runtimes, arbitrary nested editors, remote component
+  execution, and simultaneous writers.
+
+## Definition of Done
+
+- an external-style plugin can implement an accessible custom widget without
+  private engine access;
+- teardown, focus, readonly, history, clipboard, and source synchronization pass
+  real-browser tests;
+- Critical = 0, High = 0.
+
+---
+
+# Phase 25 — Production Tables and Media
+
+## Status
+
+PENDING.
+
+## Goal
+
+Use the 0.7 extension model for the first production-grade structured features.
+
+## Required outcomes
+
+- table row/cell/header structure, rectangular selections, row/column
+  insertion/removal, merge/split rules, keyboard navigation, clipboard, and
+  accessible semantics;
+- figure/image/media widgets with captions, alt text, dimensions, and typed
+  FileManager integration;
+- preserve unsupported table/media attributes and children without executing
+  unsafe content;
+- command parity across toolbar, keyboard, palette, and third-party UI;
+- large table and repeated widget lifecycle budgets.
+
+## Explicitly deferred
+
+- spreadsheet formulas, arbitrary embeds, uploads owned by Core, and office
+  paste parity.
+
+## Definition of Done
+
+- tables and media prove the same public extension path available to third-party
+  widgets;
+- accessibility, source round trips, history, clipboard, readonly, and teardown
+  pass Chromium;
+- Critical = 0, High = 0.
+
+---
+
+# Phase 26 — SoEditor 0.7 SDK and Release Hardening
+
+## Status
+
+PENDING.
+
+## Goal
+
+Curate and verify the 0.7 structured-extension surface and migration.
+
+## Required outcomes
+
+- public API classification, plugin SDK contracts, examples, and packed
+  third-party widget consumer;
+- 0.6-to-0.7 migration, package/version alignment, bundle and dependency review;
+- complete release, browser, accessibility, security, performance, and
+  adversarial gates.
+
+---
+
+# Phase 27 — Mapped Annotations and Comments
+
+## Status
+
+PENDING.
+
+## Goal
+
+Prove operation-mapped document annotations through an accessible, host-stored
+comments workflow.
+
+## Required outcomes
+
+- immutable annotation/range types mapped across supported transactions;
+- explicit linked, unlinked, resolved, and deleted comment-thread states;
+- typed author/permission/storage adapter boundaries with no backend in Core;
+- inline and sidebar UI, keyboard navigation, commands, source-mode policy,
+  widgets/tables, copy/paste, history, and teardown behavior;
+- safe handling of ambiguous destructive Source edits.
+
+## Explicitly deferred
+
+- real-time synchronization, track changes, and a hosted comments service.
+
+---
+
+# Phase 28 — Revision History and Review Modes
+
+## Status
+
+PENDING.
+
+## Goal
+
+Add host-owned revisions, comparison, restoration, and review permissions
+without turning snapshots into the live editing model.
+
+## Required outcomes
+
+- typed revision provider/storage interfaces and immutable metadata;
+- current/draft/saved revision viewing, semantic comparison, and explicit
+  transaction-based restore;
+- edit, readonly, and comments-only policies enforced consistently by commands
+  and surfaces;
+- comments/annotations behavior across revision viewing and restore;
+- CMS adapter example and bounded large-document comparison budgets.
+
+## Explicitly deferred
+
+- track changes/suggestions, branch merging, and real-time collaboration.
+
+---
+
+# Phase 29 — SoEditor 0.8 Review Workflow Release
+
+## Status
+
+PENDING.
+
+## Goal
+
+Harden the mapped-annotation and asynchronous review platform as 0.8.
+
+## Required outcomes
+
+- SDK/storage-adapter consumers, 0.7-to-0.8 migration, security/privacy review,
+  accessibility and lifecycle verification;
+- explicit data ownership/export/deletion semantics;
+- aligned packages, release dry run, adversarial review, and owner-controlled
+  publication boundary.
+
+---
+
+# Phase 30 — Framework-neutral Workspace and Recovery
+
+## Status
+
+PENDING.
+
+## Goal
+
+Make complete editor configurations mountable, recoverable, and observable
+without hiding application ownership or adding a framework to editor packages.
+
+## Required outcomes
+
+- an application-layer workspace controller for explicit surface/layout/service
+  creation and reverse-order teardown;
+- controlled value/uncontrolled initial-value policies and loop prevention;
+- opt-in bounded recovery using creator/destructor callbacks, last known
+  canonical source, crash-rate limits, and observable terminal failure;
+- no global registries, DOM discovery, or silent unsaved-data loss.
+
+---
+
+# Phase 31 — React and Vue Adapters
+
+## Status
+
+PENDING.
+
+## Goal
+
+Provide thin official framework adapters over the workspace controller.
+
+## Required outcomes
+
+- separate `@soeditor/react` and `@soeditor/vue` packages with peer framework
+  dependencies only in their owning adapters;
+- strict-mode/remount, prop updates, readonly, controlled/uncontrolled,
+  suspense/error-boundary, teardown, and SSR-import safety tests;
+- no framework components in Core, engine, feature, UI, or SDK packages.
+
+## Explicitly deferred
+
+- Angular/Svelte adapters until independent demand is demonstrated.
+
+---
+
+# Phase 32 — Plugin Tooling and Integration Diagnostics
+
+## Status
+
+PENDING.
+
+## Goal
+
+Reduce extension setup errors without introducing a hosted marketplace.
+
+## Required outcomes
+
+- a versioned plugin-package scaffold/check command using public SDK templates;
+- manifest, peer range, duplicate ID, contribution, tree-shaking, and packed
+  consumer checks;
+- workspace/runtime diagnostics for missing services, incompatible formats,
+  unsafe Preview policy, and failed recovery;
+- no remote code loading or mutable global plugin catalog.
+
+---
+
+# Phase 33 — SoEditor 0.9 Integration Release
+
+## Status
+
+PENDING.
+
+## Goal
+
+Harden workspace ownership, recovery, framework adapters, tooling, and
+large-document behavior as the final pre-1.0 integration line.
+
+## Required outcomes
+
+- 0.8-to-0.9 migration and framework/CMS examples;
+- measured input, projection, annotation, table, bundle, startup, teardown, and
+  recovery budgets;
+- dependency, API, accessibility, browser, SSR-import, security, and
+  adversarial reviews;
+- aligned package dry run and owner-controlled publication boundary.
+
+---
+
+# Phase 34 — 1.0 Public API Stabilization
+
+## Status
+
+PENDING.
+
+## Goal
+
+Classify, simplify, and freeze the evidence-backed public platform.
+
+## Required outcomes
+
+- inventory every package-root export as stable, experimental, deprecated, or
+  internal and remove accidental surfaces through documented migrations;
+- define compatibility, deprecation, browser/Node/framework support, security,
+  and maintenance policies;
+- freeze canonical lifecycle, transaction, command, plugin, service, schema,
+  conversion, node-view, annotation, workspace, and adapter contracts;
+- publish API reports and compile representative 0.9 integrations unchanged.
+
+---
+
+# Phase 35 — 1.0 Qualification and Documentation
+
+## Status
+
+PENDING.
+
+## Goal
+
+Qualify the stable API with production-scale evidence and complete learning
+paths.
+
+## Required outcomes
+
+- end-to-end ordinary author, HTML developer, CMS, widget, table/media, review,
+  React, and Vue scenarios;
+- accessibility testing beyond automated axe where the environment permits,
+  security threat review, failure recovery, memory/lifecycle, and large-document
+  performance evidence;
+- versioned guides, API reference, examples, migration chain from 0.5, and
+  troubleshooting/operations documentation;
+- no unsupported claim of WCAG certification, perfect preservation, or
+  real-time collaboration.
+
+---
+
+# Phase 36 — SoEditor 1.0 Release Candidate and Hardening
+
+## Status
+
+PENDING.
+
+## Goal
+
+Produce one coherent 1.0 release candidate from the frozen APIs.
+
+## Required outcomes
+
+- aligned 1.0 package versions, changelog, licenses, export maps, declarations,
+  maps, CSS, ESM/global builds, framework packages, and provenance metadata;
+- clean frozen-install CI and packed NodeNext/ESM/Vite/React/Vue consumers;
+- complete browser, accessibility, security, dependency, bundle, performance,
+  lifecycle, documentation, and adversarial gates;
+- Critical = 0 and High = 0; accepted Medium/Low limitations documented;
+- npm publication, tags, hosted release, and external CDN verification remain
+  explicit owner-authorized actions.
+
+## Explicit non-goals for 1.0
+
+- built-in real-time collaboration or CRDT/OT backend;
+- track changes/suggestion mode;
+- AI authoring, arbitrary remote widgets, hosted marketplace, or arbitrary
+  docking;
+- byte-for-byte HTML preservation or lossless HTML/Markdown conversion.

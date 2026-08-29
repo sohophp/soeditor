@@ -9,6 +9,12 @@ accessibility/SEO diagnostics and projection/split infrastructure without
 owning engines or DOM. The local `0.6.0` release candidate is complete and
 awaiting an explicitly authorized publication.
 
+The evidence-derived 0.7–1.0 roadmap is now approved. Phase 23 — Extensible
+Structured Editing Foundation — is active; it will establish plugin-contributed
+schema/conversion and granular operation mapping before public node views,
+production tables/media, review workflows, framework adapters, or 1.0 API
+stabilization.
+
 All 17 development package manifests are aligned at the `0.6.0` release
 candidate. The published stable reference remains `0.5.1` until an explicitly
 authorized npm publication and external registry/CDN verification complete.
