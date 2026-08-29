@@ -46,17 +46,13 @@ deliberate and documented under SemVer principles.
   Preview document content is outside the parent-page axe traversal.
 - Lifecycle timing uses a generous regression budget, not a cross-device
   performance guarantee. Snapshot history has linear memory cost.
-- Public npm publication has not yet been performed. Repository/package
-  metadata, green CI, dry-run, protected manual workflow/environment, and
-  private vulnerability reporting are prepared. The repository owner selected
-  MIT and confirmed npm name availability. The first protected publication
-  stopped before its first package because the configured token did not bypass
-  npm's non-interactive 2FA requirement. After that was corrected, the second
-  attempt stopped before its first package with `Scope not found` for
-  `@soeditor/core`. All 15 versions remain unpublished. Create or grant the
-  publishing identity access to the npm `soeditor` organization, recreate the
-  granular read/write token with Bypass 2FA and that scope access, then rerun
-  the protected workflow.
+- Public npm publication is in recovery. The third protected `0.5.0` attempt
+  published all 14 `@soeditor/*` packages, then the unscoped `soeditor` package
+  was denied by its token permissions. Those immutable artifacts remain
+  published, but `0.5.0` is not the complete supported release set. The
+  recovery candidate advances all 15 packages to `0.5.1` and publishes the
+  unscoped umbrella first. Publication must use a granular token with package
+  read/write access set to **All Packages** and Bypass 2FA enabled.
 
 ## Lower-priority notes
 

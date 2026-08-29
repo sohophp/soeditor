@@ -1,6 +1,6 @@
 {
     "name": "soeditor-workspace",
-    "version": "0.5.0",
+    "version": "0.5.1",
     "license": "MIT",
     "private": true,
     "type": "module",
@@ -16,8 +16,8 @@
         "lint": "eslint . && prettier --check .",
         "release:check-license": "node scripts/verify-release-license.mjs",
         "release:check-registry": "node scripts/check-registry-availability.mjs",
-        "release:dry-run": "pnpm build && pnpm --filter './packages/**' -r publish --dry-run --access public --no-git-checks",
-        "release:publish": "pnpm --filter './packages/**' -r publish --access public --provenance --no-git-checks",
+        "release:dry-run": "pnpm build && pnpm --filter soeditor publish --dry-run --access public --no-git-checks && pnpm --filter '@soeditor/*' -r publish --dry-run --access public --no-git-checks",
+        "release:publish": "pnpm --filter soeditor publish --access public --provenance --no-git-checks && pnpm --filter '@soeditor/*' -r publish --access public --provenance --no-git-checks",
         "release:verify-registry": "node scripts/verify-registry-release.mjs",
         "security:audit": "pnpm audit --audit-level high --registry=https://registry.npmjs.org",
         "test": "pnpm test:unit && pnpm test:consumer && pnpm test:distribution && pnpm test:release && pnpm test:browser",

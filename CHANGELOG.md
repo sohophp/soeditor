@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.5.1 — Complete Developer Preview release set
+
+- Advanced all 15 public packages together after the initial `0.5.0`
+  publication stopped after 14 scoped packages and before the unscoped
+  `soeditor` package.
+- Kept the verified `0.5.0` artifacts immutable and changed publication order
+  to validate the unscoped umbrella-package permission before scoped packages.
+- No product API or runtime behavior changed from the verified 0.5.0 release
+  candidate.
+
 ## 0.5.0 — Developer Preview
 
 First coherent SoEditor developer preview.

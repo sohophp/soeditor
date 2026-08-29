@@ -447,7 +447,7 @@ JavaScript source map accompany it. See `docs/distribution.md` and ADR 0020.
 ## Phase 15 release hardening
 
 The 0.5 release gate keeps the Phase 14 architecture unchanged and adds
-evidence around it. All 15 publishable packages share version 0.5.0. A release
+evidence around it. All 15 publishable packages share one aligned 0.5.x version. A release
 audit checks explicit export maps, mapped artifacts, and bundle budgets; packed
 NodeNext/native ESM/Vite consumers exercise actual tarballs.
 

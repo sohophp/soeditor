@@ -86,9 +86,9 @@ own static assets. Pin an exact package version in production:
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/soeditor@0.5.0/dist/soeditor.css"
+    href="https://cdn.jsdelivr.net/npm/soeditor@0.5.1/dist/soeditor.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/soeditor@0.5.0/dist/soeditor.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/soeditor@0.5.1/dist/soeditor.global.js"></script>
 <script>
     const editor = await SoEditor.create({
         data: '<p>Hello from a script tag.</p>',

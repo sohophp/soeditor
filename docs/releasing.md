@@ -20,9 +20,11 @@ use an npm identity.
    read/write package access and **Bypass 2FA** enabled. The bypass setting is
    required for this non-interactive initial publication and is disabled by
    default when a token is created. Restrict the token to the required package
-   names/scopes where npm's token controls allow it. If the token predates the
-   organization, recreate it after joining the organization so its package and
-   organization access includes `@soeditor`.
+   names/scopes where npm's token controls allow it. The initial release token
+   must select **All Packages**, not only `@soeditor`, because the unscoped
+   `soeditor` package does not exist yet and cannot be selected individually.
+   If the token predates the organization, recreate it after joining the
+   organization.
 5. Enable GitHub private vulnerability reporting for the repository.
 
 No package should be published until all five conditions are true. As a
@@ -78,8 +80,9 @@ Run the `Publish npm packages` workflow from the verified commit. Enter its full
 commit SHA, type `PUBLISH`, choose `latest` or `next`, and approve the protected
 `npm` environment. The workflow repeats every release gate, performs a dry run,
 verifies that none of the aligned package versions already exist, publishes
-with provenance, then installs from npm and loads the jsDelivr global in
-Chromium.
+the unscoped `soeditor` package first as a credential guard, publishes the
+scoped packages with provenance, then installs from npm and loads the jsDelivr
+global in Chromium.
 
 Do not run `release:publish` casually from a developer workstation. It exists
 as the workflow primitive and requires an already authorized npm identity.
