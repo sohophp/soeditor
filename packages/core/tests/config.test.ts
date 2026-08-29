@@ -64,6 +64,23 @@ describe('Config', () => {
         );
     });
 
+    it('does not invoke an inherited constructor accessor for diagnostics', () => {
+        let reads = 0;
+        const prototype = {};
+        Object.defineProperty(prototype, 'constructor', {
+            get: () => {
+                reads += 1;
+                throw new Error('constructor accessor must not run');
+            },
+        });
+        const value = Object.create(prototype) as object;
+
+        expect(() => new Config({ value })).toThrow(
+            new UnsupportedConfigValueError('config.value', 'non-plain object'),
+        );
+        expect(reads).toBe(0);
+    });
+
     it('rejects cyclic configuration with a descriptive path', () => {
         const cyclic: Record<string, unknown> = {};
         cyclic.self = cyclic;

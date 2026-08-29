@@ -8,10 +8,6 @@ function isRecord(value: object): value is Record<string, unknown> {
     return prototype === Object.prototype || prototype === null;
 }
 
-function valueKind(value: object): string {
-    return value.constructor?.name ?? 'object';
-}
-
 /** @internal Creates an immutable copy of supported plain configuration data. */
 export function cloneConfig<T>(
     value: T,
@@ -47,7 +43,7 @@ export function cloneConfig<T>(
 
     if (!isRecord(value)) {
         ancestors.delete(value);
-        throw new UnsupportedConfigValueError(path, valueKind(value));
+        throw new UnsupportedConfigValueError(path, 'non-plain object');
     }
 
     try {
