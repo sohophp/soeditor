@@ -19,6 +19,9 @@ deliberate and documented under SemVer principles.
 - real-browser coverage for visual/source/Markdown/Preview/UI/developer tools,
   security, FileManager, SoFinder, accessibility semantics, CMS integration,
   and repeated lifecycle cleanup.
+- automated axe WCAG A/AA scans cover the primary Visual, HTML Source,
+  Markdown, and outer Preview UI; CI repeats the complete release gate and npm
+  publication dry run from a frozen install.
 - current global bundle guard: 1.25 MB raw / 410 kB gzip; measured approximately
   1.198 MB raw / 390 kB gzip.
 - current minimal Vite consumer: approximately 27.9 kB raw / 8.74 kB gzip.
@@ -34,14 +37,17 @@ deliberate and documented under SemVer principles.
   exact in Markdown mode.
 - FileManager 0.5 selects one existing asset. Upload, rename, delete,
   authentication, and a concrete SoFinder SDK remain host responsibilities.
-- Accessibility release checks cover semantics, accessible names, keyboard
-  paths, status announcements, and iframe titles, but are not a substitute for
-  a full assistive-technology/WCAG audit by downstream products.
+- Automated accessibility checks cover WCAG A/AA rules, semantics, accessible
+  names, keyboard paths, status announcements, and iframe titles, but are not a
+  substitute for manual assistive-technology testing. Sandboxed, host-supplied
+  Preview document content is outside the parent-page axe traversal.
 - Lifecycle timing uses a generous regression budget, not a cross-device
   performance guarantee. Snapshot history has linear memory cost.
-- Public npm publication was not performed. The repository owner must choose
-  and add licensing/repository metadata and publication credentials before a
-  public registry release.
+- Public npm publication has not yet been performed. Repository/package
+  metadata, CI, dry-run, and the protected manual workflow are prepared. The
+  repository owner must still choose a license, confirm control of both npm
+  names, configure the protected `npm` environment/token, and authorize the
+  publication.
 
 ## Lower-priority notes
 

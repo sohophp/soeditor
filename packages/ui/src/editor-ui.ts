@@ -64,6 +64,7 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
     panelLayer.className = 'soeditor-ui__panels';
     const notificationRegion = document.createElement('div');
     notificationRegion.className = 'soeditor-ui__notifications';
+    notificationRegion.setAttribute('role', 'log');
     notificationRegion.setAttribute('aria-live', 'polite');
     notificationRegion.setAttribute('aria-label', 'Editor notifications');
     const overlayLayer = document.createElement('div');

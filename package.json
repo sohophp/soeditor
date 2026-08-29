@@ -13,6 +13,12 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "lint": "eslint . && prettier --check .",
+        "release:check-license": "node scripts/verify-release-license.mjs",
+        "release:check-registry": "node scripts/check-registry-availability.mjs",
+        "release:dry-run": "pnpm build && pnpm --filter './packages/**' -r publish --dry-run --access public --no-git-checks",
+        "release:publish": "pnpm --filter './packages/**' -r publish --access public --provenance --no-git-checks",
+        "release:verify-registry": "node scripts/verify-registry-release.mjs",
+        "security:audit": "pnpm audit --audit-level high --registry=https://registry.npmjs.org",
         "test": "pnpm test:unit && pnpm test:consumer && pnpm test:distribution && pnpm test:release && pnpm test:browser",
         "test:browser": "playwright test",
         "test:consumer": "pnpm --filter soeditor... --filter @soeditor/plugin-sdk build && node scripts/test-nodenext-consumer.mjs",
@@ -23,6 +29,7 @@
         "typecheck": "pnpm -r --if-present run typecheck"
     },
     "devDependencies": {
+        "@axe-core/playwright": "4.13.0",
         "@changesets/cli": "^2.29.7",
         "@eslint/js": "^9.34.0",
         "@playwright/test": "^1.62.1",

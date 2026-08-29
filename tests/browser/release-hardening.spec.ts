@@ -1,3 +1,4 @@
+import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Page } from '@playwright/test';
 
 test('exposes the documented Classic, Developer, Markdown, and CMS examples', async ({
@@ -83,9 +84,16 @@ test('provides accessible release surfaces and named keyboard controls', async (
         'aria-live',
         'polite',
     );
+    await expect(
+        page.getByRole('log', { name: 'Editor notifications' }),
+    ).toBeAttached();
     await expect(page.getByRole('textbox').first()).toHaveAttribute(
         'aria-multiline',
         'true',
+    );
+    await expect(page.getByRole('textbox').first()).toHaveAttribute(
+        'aria-label',
+        'Visual editor',
     );
 
     const audit = await page.evaluate(() => {
@@ -121,6 +129,27 @@ test('provides accessible release surfaces and named keyboard controls', async (
     ).toHaveAttribute('title', 'SoEditor content preview');
 });
 
+test('has no automated WCAG A/AA violations across primary projections', async ({
+    page,
+}) => {
+    for (const scenario of [
+        { ready: '[data-testid="editor"]', url: '/' },
+        {
+            ready: '[data-testid="markdown-editor"] .cm-content',
+            url: '/?format=markdown',
+        },
+    ]) {
+        await page.goto(scenario.url);
+        await expect(page.locator(scenario.ready)).toBeVisible();
+        await expectWcagScanToPass(page);
+    }
+
+    await page.goto('/');
+    await page.locator('[data-toolbar-item="preview"]').click();
+    await expect(page.locator('[data-testid="preview"] iframe')).toBeVisible();
+    await expectWcagScanToPass(page, '[data-testid="preview"] iframe');
+});
+
 test('survives repeated editor and surface lifecycles within the release budget', async ({
     page,
 }) => {
@@ -151,6 +180,44 @@ test('survives repeated editor and surface lifecycles within the release budget'
         }
         const scratch = document.createElement('section');
         document.body.append(scratch);
+        const labeledHost = document.createElement('div');
+        labeledHost.setAttribute('aria-label', 'CMS field');
+        scratch.append(labeledHost);
+        const labeledEditor = await harness.Editor.create({
+            data: '<p>Accessible</p>',
+            plugins: harness.minimalPreset.plugins,
+        });
+        const labeledVisual = harness.createVisualEditingEngine({
+            ariaLabel: 'Article visual editor',
+            editor: labeledEditor,
+            element: labeledHost,
+        });
+        const mountedLabel = labeledHost.getAttribute('aria-label');
+        labeledVisual.destroy();
+        await labeledEditor.destroy();
+        const restoredLabel = labeledHost.getAttribute('aria-label');
+        labeledHost.remove();
+
+        const invalidHost = document.createElement('div');
+        scratch.append(invalidHost);
+        const invalidEditor = await harness.Editor.create({
+            data: '<p>Invalid label</p>',
+            plugins: harness.minimalPreset.plugins,
+        });
+        let invalidLabelError = '';
+        try {
+            harness.createVisualEditingEngine({
+                ariaLabel: ' ',
+                editor: invalidEditor,
+                element: invalidHost,
+            });
+        } catch (error: unknown) {
+            invalidLabelError =
+                error instanceof Error ? error.message : 'unknown';
+        }
+        await invalidEditor.destroy();
+        invalidHost.remove();
+
         const started = performance.now();
         for (let index = 0; index < 20; index += 1) {
             const uiHost = document.createElement('div');
@@ -181,9 +248,18 @@ test('survives repeated editor and surface lifecycles within the release budget'
             '.soeditor-ui__chrome, [contenteditable], .soeditor-visual-root',
         ).length;
         scratch.remove();
-        return { duration, residue };
+        return {
+            duration,
+            invalidLabelError,
+            mountedLabel,
+            residue,
+            restoredLabel,
+        };
     });
 
+    expect(result.mountedLabel).toBe('Article visual editor');
+    expect(result.restoredLabel).toBe('CMS field');
+    expect(result.invalidLabelError).toContain('must not be empty');
     expect(result.residue).toBe(0);
     expect(result.duration).toBeLessThan(6_000);
 });
@@ -195,4 +271,31 @@ function monitorPageErrors(page: Page): string[] {
         if (message.type() === 'error') errors.push(message.text());
     });
     return errors;
+}
+
+async function expectWcagScanToPass(
+    page: Page,
+    excludedSelector?: string,
+): Promise<void> {
+    let builder = new AxeBuilder({ page }).withTags([
+        'wcag2a',
+        'wcag2aa',
+        'wcag21a',
+        'wcag21aa',
+    ]);
+    if (excludedSelector !== undefined) {
+        builder = builder.exclude(excludedSelector);
+    }
+    const results = await builder.analyze();
+    expect(
+        results.violations.map((violation) => ({
+            id: violation.id,
+            impact: violation.impact,
+            nodes: violation.nodes.map((node) => ({
+                failureSummary: node.failureSummary,
+                html: node.html,
+                target: node.target,
+            })),
+        })),
+    ).toEqual([]);
 }

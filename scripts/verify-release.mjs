@@ -4,8 +4,16 @@ import { stdout } from 'node:process';
 import { fileURLToPath, URL } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-const releaseVersion = '0.5.0';
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const releaseVersion = JSON.parse(
+    await readFile(join(repositoryRoot, 'package.json'), 'utf8'),
+).version;
+if (
+    typeof releaseVersion !== 'string' ||
+    !/^0\.5\.\d+$/u.test(releaseVersion)
+) {
+    throw new Error('The release audit only accepts an aligned 0.5.x version.');
+}
 const packagesRoot = join(repositoryRoot, 'packages');
 const publishable = [];
 const changesetConfiguration = JSON.parse(
@@ -33,6 +41,19 @@ for (const directory of await readdir(packagesRoot)) {
         throw new Error(
             `${manifest.name} must use release version ${releaseVersion}.`,
         );
+    }
+    if (
+        manifest.repository?.url !==
+            'git+https://github.com/sohophp/soeditor.git' ||
+        manifest.repository?.directory !== `packages/${directory}` ||
+        manifest.homepage !== 'https://github.com/sohophp/soeditor#readme' ||
+        manifest.bugs?.url !== 'https://github.com/sohophp/soeditor/issues' ||
+        manifest.engines?.node !== '>=22.14.0 <23' ||
+        manifest.publishConfig?.access !== 'public' ||
+        manifest.publishConfig?.provenance !== true ||
+        manifest.publishConfig?.registry !== 'https://registry.npmjs.org/'
+    ) {
+        throw new Error(`${manifest.name} has incomplete release metadata.`);
     }
     for (const [key, value] of Object.entries(manifest.exports ?? {})) {
         if (key.includes('*')) {

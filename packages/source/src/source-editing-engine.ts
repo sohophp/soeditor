@@ -35,6 +35,10 @@ import {
     type SourceEditingService,
 } from './source-editing-service.js';
 
+const accessibleActiveLineTheme = EditorView.theme({
+    '.cm-activeLine': { backgroundColor: 'transparent' },
+});
+
 /** Options for attaching a source surface to one editor and host. */
 export interface SourceEditingEngineOptions {
     readonly editor: Editor;
@@ -105,6 +109,7 @@ export class SourceEditingEngine implements SourceEngine {
             doc: source,
             extensions: [
                 basicSetup,
+                accessibleActiveLineTheme,
                 html({ autoCloseTags: false }),
                 lintGutter(),
                 linter(

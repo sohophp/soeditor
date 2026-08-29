@@ -48,7 +48,7 @@ surface hosts.
 
 Surface configuration is deliberately separate from Core:
 
-- Visual: `{ editor, element }`.
+- Visual: `{ editor, element, ariaLabel? }`.
 - HTML Source: `{ editor, element, ariaLabel? }`.
 - Markdown: `{ editor, element, ariaLabel? }`.
 - UI: `{ editor, element, toolbar?, theme? }`.

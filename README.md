@@ -70,7 +70,8 @@ Start with [Getting started](docs/getting-started.md). See
 [Configuration](docs/configuration.md), [Distribution](docs/distribution.md),
 [Source editing](docs/source-editing.md), [Preview](docs/preview.md),
 [CMS/SoFinder integration](docs/cms-integration.md), the
-[Plugin Guide](docs/plugin-guide.md), and [0.5 status](docs/status.md).
+[Plugin Guide](docs/plugin-guide.md), [Release procedure](docs/releasing.md),
+and [0.5 status](docs/status.md).
 
 ## Development
 

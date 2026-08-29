@@ -1,0 +1,68 @@
+name: Publish npm packages
+
+on:
+    workflow_dispatch:
+        inputs:
+            confirmation:
+                description: Type PUBLISH after approving the license and release commit
+                required: true
+                type: string
+            commit_sha:
+                description: Full verified commit SHA to publish
+                required: true
+                type: string
+            tag:
+                description: npm distribution tag
+                required: true
+                default: latest
+                type: choice
+                options:
+                    - latest
+                    - next
+
+permissions:
+    contents: read
+    id-token: write
+
+jobs:
+    publish:
+        environment: npm
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - name: Verify explicit publication confirmation
+              env:
+                  RELEASE_CONFIRMATION: ${{ inputs.confirmation }}
+              run: test "$RELEASE_CONFIRMATION" = PUBLISH
+            - uses: actions/checkout@v4
+            - name: Verify checked-out release commit
+              env:
+                  RELEASE_COMMIT: ${{ inputs.commit_sha }}
+              run: test "$(git rev-parse HEAD)" = "$RELEASE_COMMIT"
+            - uses: pnpm/action-setup@v4
+              with:
+                  version: 11.20.0
+            - uses: actions/setup-node@v4
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+                  registry-url: https://registry.npmjs.org
+            - name: Verify repository-owner license decision
+              run: pnpm release:check-license
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm exec playwright install --with-deps chromium
+            - run: pnpm lint
+            - run: pnpm typecheck
+            - run: pnpm test
+            - run: pnpm build
+            - run: pnpm security:audit
+            - run: pnpm release:dry-run
+            - name: Verify all release versions are unpublished
+              run: pnpm release:check-registry
+            - name: Publish verified packages
+              env:
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+                  RELEASE_TAG: ${{ inputs.tag }}
+              run: pnpm release:publish --tag "$RELEASE_TAG"
+            - name: Verify public npm and CDN artifacts
+              run: pnpm release:verify-registry

@@ -15,6 +15,9 @@ import { stdout } from 'node:process';
 import { fileURLToPath, URL } from 'node:url';
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const releaseVersion = JSON.parse(
+    await readFile(join(repositoryRoot, 'package.json'), 'utf8'),
+).version;
 const fixtureSource = join(repositoryRoot, 'tests/consumers/nodenext');
 const viteFixtureSource = join(repositoryRoot, 'tests/consumers/vite');
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'soeditor-nodenext-'));
@@ -367,6 +370,12 @@ try {
     await writeOverrides(fixtureDirectory, packageData.dependencies);
 
     run('pnpm', ['install'], fixtureDirectory);
+    await verifyInstalledManifests(
+        fixtureDirectory,
+        Object.keys(packageData.dependencies).filter(
+            (name) => name === 'soeditor' || name.startsWith('@soeditor/'),
+        ),
+    );
     run('pnpm', ['exec', 'tsc', '-p', 'tsconfig.json'], fixtureDirectory);
     stdout.write('NodeNext packed-package consumer passed.\n');
     run('node', ['runtime.mjs'], fixtureDirectory);
@@ -423,4 +432,57 @@ async function writeOverrides(directory, dependencies) {
         '',
     ].join('\n');
     await writeFile(join(directory, 'pnpm-workspace.yaml'), yaml);
+}
+
+async function verifyInstalledManifests(directory, packageNames) {
+    for (const packageName of packageNames) {
+        const manifest = JSON.parse(
+            await readFile(
+                join(directory, 'node_modules', packageName, 'package.json'),
+                'utf8',
+            ),
+        );
+        const expectedDirectory =
+            packageName === 'soeditor'
+                ? 'packages/soeditor'
+                : `packages/${packageName.slice('@soeditor/'.length)}`;
+        if (
+            manifest.version !== releaseVersion ||
+            manifest.repository?.url !==
+                'git+https://github.com/sohophp/soeditor.git' ||
+            manifest.repository?.directory !== expectedDirectory ||
+            manifest.homepage !==
+                'https://github.com/sohophp/soeditor#readme' ||
+            manifest.bugs?.url !==
+                'https://github.com/sohophp/soeditor/issues' ||
+            manifest.engines?.node !== '>=22.14.0 <23' ||
+            manifest.publishConfig?.access !== 'public' ||
+            manifest.publishConfig?.provenance !== true ||
+            manifest.publishConfig?.registry !==
+                'https://registry.npmjs.org/' ||
+            JSON.stringify(manifest).includes('workspace:')
+        ) {
+            throw new Error(
+                `Packed manifest for ${packageName} is not publication-safe.`,
+            );
+        }
+        for (const target of exportTargets(manifest.exports)) {
+            if (
+                !target.startsWith('./dist/') ||
+                target.includes('/internal/') ||
+                target.includes('/src/')
+            ) {
+                throw new Error(
+                    `Packed manifest for ${packageName} exposes ${target}.`,
+                );
+            }
+        }
+    }
+    stdout.write('Packed publication metadata audit passed.\n');
+}
+
+function exportTargets(value) {
+    if (typeof value === 'string') return [value];
+    if (typeof value !== 'object' || value === null) return [];
+    return Object.values(value).flatMap(exportTargets);
 }

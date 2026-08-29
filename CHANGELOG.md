@@ -14,6 +14,9 @@ First coherent SoEditor developer preview.
   plugin SDK, immutable presets, and the `soeditor` npm/browser distribution.
 - Added clean NodeNext, native ESM, Vite, packed-package, and Chromium release
   gates.
+- Added public npm metadata, publication dry runs, CI/manual release workflows,
+  packed-manifest checks, and automated WCAG A/AA regression scanning before
+  the initial registry publication.
 
 See `docs/status.md` for Developer Preview limitations. There is no migration
 from an earlier public SoEditor version.

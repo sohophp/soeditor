@@ -33,18 +33,17 @@ Apply the Stop Conditions in this document.
 # 2. Current Starting Point
 
 Phases 1–15 are complete and the SoEditor 0.5 Developer Preview release gate
-has passed.
+has passed. The repository owner subsequently authorized Phase 16 publication
+and stabilization work.
 
-The autonomous roadmap has no next implementation phase. Work listed under
-Post-0.5 Candidate Work requires a new roadmap decision and must not begin
-automatically.
+The current roadmap phase is:
 
 ```text
-SoEditor 0.5 Developer Preview
+Phase 16 — 0.5.x Publication and Stabilization
 ```
 
-Completed phase specifications remain implementation records under
-`docs/prompts/`.
+Work listed under Post-0.5 Candidate Work still requires a separate roadmap
+decision and must not begin automatically.
 
 ---
 

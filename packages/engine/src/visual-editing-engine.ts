@@ -51,6 +51,7 @@ import {
 export interface VisualEditingEngineOptions {
     readonly editor: Editor;
     readonly element: HTMLElement;
+    readonly ariaLabel?: string;
 }
 
 export interface EditingEngine {
@@ -106,6 +107,10 @@ export class VisualEditingEngine implements EditingEngine {
                 this.editor.state.document.format,
             );
         }
+        const ariaLabel = options.ariaLabel ?? 'Visual editor';
+        if (typeof ariaLabel !== 'string' || ariaLabel.trim().length === 0) {
+            throw new TypeError('A visual editor ariaLabel must not be empty.');
+        }
         const view = this.element.ownerDocument.defaultView;
         if (view === null) {
             throw new Error(
@@ -123,12 +128,17 @@ export class VisualEditingEngine implements EditingEngine {
         this.#lastValidModel = initial.valid ? initial.model : undefined;
         this.#previousHidden = this.element.hidden;
         this.#previousAttributes = new Map(
-            ['contenteditable', 'role', 'aria-multiline', 'aria-readonly'].map(
-                (name) => [name, this.element.getAttribute(name)],
-            ),
+            [
+                'contenteditable',
+                'role',
+                'aria-label',
+                'aria-multiline',
+                'aria-readonly',
+            ].map((name) => [name, this.element.getAttribute(name)]),
         );
         this.#updateEditableState();
         this.element.setAttribute('role', 'textbox');
+        this.element.setAttribute('aria-label', ariaLabel);
         this.element.setAttribute('aria-multiline', 'true');
         this.#projection = new DomProjection(this.element, this.#model);
         this.#projection.render(this.#model);

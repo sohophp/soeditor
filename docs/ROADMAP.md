@@ -8,7 +8,8 @@ This roadmap begins from the current repository state.
 
 Phases 1–15 are complete.
 
-The SoEditor 0.5 Developer Preview autonomous roadmap is complete.
+The SoEditor 0.5 Developer Preview roadmap is complete. Phase 16 was authorized
+after that checkpoint to prepare and stabilize the public 0.5.x release line.
 
 The target of this roadmap is **SoEditor 0.5 Developer Preview**.
 
@@ -792,6 +793,43 @@ High = 0
 ```
 
 Known Medium issues must be documented and judged acceptable for a Developer Preview.
+
+---
+
+# Phase 16 — 0.5.x Publication and Stabilization
+
+## Status
+
+ACTIVE.
+
+## Goal
+
+Turn the verified local Developer Preview into a reproducible public 0.5.x
+release line and strengthen the operational quality gates around it.
+
+## Required outcomes
+
+- complete npm repository/homepage/bugs/engine/publication metadata;
+- add CI for clean installation and the full release gate;
+- add an explicit, manually authorized npm publication workflow;
+- verify packed manifests and a publication dry run;
+- audit production dependencies against the canonical npm advisory endpoint;
+- strengthen bundle, accessibility, performance, and lifecycle regression
+  evidence where gaps remain;
+- document release, rollback/deprecation, and 0.5.x maintenance procedures;
+- verify the real npm and CDN artifacts after publication.
+
+License selection and npm authentication remain repository-owner decisions.
+No agent may invent a license, publish with unknown authority, or expose a
+credential.
+
+## Definition of Done
+
+- all local and CI release checks pass with Critical = 0 and High = 0;
+- a repository-owner-selected license is present;
+- `soeditor` and scoped packages are published from the verified commit;
+- clean npm and direct-CDN consumers pass against the registry artifacts;
+- remaining Medium/Low risks are documented for the 0.5.x line.
 
 ---
 

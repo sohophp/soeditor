@@ -18,6 +18,10 @@ import {
     type MarkdownEditingService,
 } from './markdown-service.js';
 
+const accessibleActiveLineTheme = EditorView.theme({
+    '.cm-activeLine': { backgroundColor: 'transparent' },
+});
+
 /** Options for attaching canonical Markdown editing to one host. */
 export interface MarkdownEditingEngineOptions {
     readonly ariaLabel?: string;
@@ -87,6 +91,7 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
             doc: this.editor.getData(),
             extensions: [
                 basicSetup,
+                accessibleActiveLineTheme,
                 markdown(),
                 this.#editable.of([
                     EditorState.readOnly.of(readonly),
