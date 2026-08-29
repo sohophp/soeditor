@@ -2,10 +2,12 @@ import { Editor, createServiceToken, type Transaction } from '@soeditor/core';
 import {
     DiagnosticsPlugin as SdkDiagnosticsPlugin,
     Plugin,
+    ProjectionCoordinatorPlugin as SdkProjectionCoordinatorPlugin,
     UiPlugin as SdkUiPlugin,
     diagnosticsServiceToken as sdkDiagnosticsServiceToken,
     uiRegistryServiceToken as sdkUiRegistryServiceToken,
     type DiagnosticProvider as SdkDiagnosticProvider,
+    type ProjectionAdapter as SdkProjectionAdapter,
     type StatusItemFactory,
 } from '@soeditor/plugin-sdk';
 import {
@@ -93,6 +95,11 @@ import {
     type PreviewConfiguration,
     type PreviewEngineOptions,
 } from '@soeditor/preview';
+import {
+    ProjectionCoordinatorPlugin,
+    projectionCoordinatorServiceToken,
+    type ProjectionActivity,
+} from '@soeditor/projections';
 // @ts-expect-error Editing-model internals are not a package subpath API.
 import type { EditingModel } from '@soeditor/engine/model';
 
@@ -196,6 +203,26 @@ if (
     throw new Error('Packed quality diagnostic plugins were not registered.');
 }
 await qualityEditor.destroy();
+
+const projectionEditor = await Editor.create({
+    plugins: [ProjectionCoordinatorPlugin],
+});
+const projectionService = projectionEditor.services.get(
+    projectionCoordinatorServiceToken,
+);
+const visualActivity: ProjectionActivity[] = [];
+const adapter: SdkProjectionAdapter = {
+    id: 'visual',
+    update: (activity) => visualActivity.push(activity),
+};
+projectionService.attach(adapter);
+if (
+    SdkProjectionCoordinatorPlugin !== ProjectionCoordinatorPlugin ||
+    visualActivity.at(-1)?.primary !== true
+) {
+    throw new Error('Packed projection contracts were not coordinated.');
+}
+await projectionEditor.destroy();
 
 editor.services.register(ExampleServiceToken, { value: 'available' });
 editor.execute('consumer.replace', '<p>Compiled</p>');

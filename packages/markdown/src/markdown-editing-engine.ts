@@ -4,6 +4,10 @@ import {
     type Editor,
 } from '@soeditor/core';
 import { groupHistoryTransaction } from '@soeditor/engine';
+import {
+    projectionCoordinatorServiceToken,
+    type ProjectionActivity,
+} from '@soeditor/projections';
 import { markdown } from '@codemirror/lang-markdown';
 import {
     Compartment,
@@ -24,6 +28,7 @@ const accessibleActiveLineTheme = EditorView.theme({
 
 /** Options for attaching canonical Markdown editing to one host. */
 export interface MarkdownEditingEngineOptions {
+    readonly activateOnFocus?: boolean;
     readonly ariaLabel?: string;
     readonly editor: Editor;
     readonly element: HTMLElement;
@@ -54,6 +59,7 @@ export class UnsupportedMarkdownDocumentFormatError extends Error {
 
 /** CodeMirror-backed exact Markdown source surface for one editor. */
 export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
+    readonly #activateOnFocus: boolean;
     readonly editor: Editor;
     readonly element: HTMLElement;
     readonly #disposeDocumentChange: () => void;
@@ -64,11 +70,15 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
     readonly #service: MarkdownEditingService;
     readonly #view: EditorView;
     #destroyed = false;
+    #disposeProjection: (() => void) | undefined;
+    #programmaticFocus = false;
+    #projectionActivity: ProjectionActivity | undefined;
     #synchronizing = false;
 
     constructor(options: MarkdownEditingEngineOptions) {
         this.editor = options.editor;
         this.element = options.element;
+        this.#activateOnFocus = options.activateOnFocus ?? false;
         if (this.editor.state.document.format !== 'markdown') {
             throw new UnsupportedMarkdownDocumentFormatError(
                 this.editor.state.document.format,
@@ -114,7 +124,8 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
             this.#service,
         );
         this.element.addEventListener('keydown', this.#handleKeyDown, true);
-        this.#updateMode();
+        this.element.addEventListener('focusin', this.#handleFocusIn);
+        this.element.addEventListener('pointerdown', this.#handlePointerDown);
         this.#disposeDocumentChange = this.editor.events.on(
             'document:change',
             ({ current }) => this.#synchronizeSource(current.source),
@@ -126,11 +137,29 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
             'editor:destroy',
             () => this.destroy(),
         );
+        const coordinator = this.editor.services.tryGet(
+            projectionCoordinatorServiceToken,
+        );
+        this.#disposeProjection = coordinator?.attach({
+            id: 'markdown',
+            update: (activity) => {
+                this.#projectionActivity = activity;
+                this.#updateMode();
+            },
+        });
+        if (coordinator === undefined) {
+            this.#updateMode();
+        }
     }
 
     focus(): void {
         this.#assertAlive();
-        this.#view.focus();
+        this.#programmaticFocus = true;
+        try {
+            this.#view.focus();
+        } finally {
+            this.#programmaticFocus = false;
+        }
     }
 
     destroy(): void {
@@ -138,10 +167,22 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
             return;
         }
         this.#destroyed = true;
+        const errors: unknown[] = [];
         this.#disposeDocumentChange();
         this.#disposeModeChange();
         this.#disposeEditorDestroy();
         this.element.removeEventListener('keydown', this.#handleKeyDown, true);
+        this.element.removeEventListener('focusin', this.#handleFocusIn);
+        this.element.removeEventListener(
+            'pointerdown',
+            this.#handlePointerDown,
+        );
+        try {
+            this.#disposeProjection?.();
+        } catch (error: unknown) {
+            errors.push(error);
+        }
+        this.#disposeProjection = undefined;
         try {
             if (
                 this.editor.services.tryGet(markdownEditingServiceToken) ===
@@ -151,15 +192,24 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
             }
         } catch (error: unknown) {
             if (!(error instanceof EditorDestroyedError)) {
-                throw error;
+                errors.push(error);
             }
         }
         this.#view.destroy();
         this.element.replaceChildren();
         this.element.hidden = this.#previousHidden;
+        if (errors.length > 0) {
+            throw new AggregateError(
+                errors,
+                'Markdown editing engine cleanup failed.',
+            );
+        }
     }
 
     #handleSourceChange(source: string): void {
+        if (this.#isReadonly()) {
+            return;
+        }
         this.editor.update(
             (transaction) => {
                 transaction.replaceDocument(source);
@@ -199,6 +249,25 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
         }
     };
 
+    readonly #handleFocusIn = (): void => {
+        this.#activateFromUserIntent();
+    };
+
+    readonly #handlePointerDown = (): void => {
+        this.#activateFromUserIntent();
+    };
+
+    #activateFromUserIntent(): void {
+        if (
+            this.#activateOnFocus &&
+            !this.#programmaticFocus &&
+            this.#projectionActivity?.visible === true &&
+            this.#projectionActivity.primary === false
+        ) {
+            this.editor.execute('projection.activate', 'markdown');
+        }
+    }
+
     #synchronizeSource(source: string): void {
         const current = this.#view.state.doc.toString();
         if (current === source) {
@@ -217,7 +286,10 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
 
     #updateMode(): void {
         const readonly = this.#isReadonly();
-        this.element.hidden = this.editor.state.mode !== 'markdown';
+        this.element.hidden = !(
+            this.#projectionActivity?.visible ??
+            this.editor.state.mode === 'markdown'
+        );
         this.#view.dispatch({
             effects: this.#editable.reconfigure([
                 EditorState.readOnly.of(readonly),
@@ -228,7 +300,9 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
 
     #isReadonly(): boolean {
         return (
-            this.editor.state.readonly || this.editor.state.mode !== 'markdown'
+            this.#projectionActivity?.readonly ??
+            (this.editor.state.readonly ||
+                this.editor.state.mode !== 'markdown')
         );
     }
 

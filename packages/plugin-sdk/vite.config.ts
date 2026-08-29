@@ -9,6 +9,7 @@ export default defineConfig({
                 '@soeditor/core',
                 '@soeditor/file-manager',
                 '@soeditor/html-tools',
+                '@soeditor/projections',
                 '@soeditor/ui',
             ],
         },

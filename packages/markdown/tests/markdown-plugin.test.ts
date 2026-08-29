@@ -1,4 +1,5 @@
 import { Editor } from '@soeditor/core';
+import { ProjectionCoordinatorPlugin } from '@soeditor/projections';
 import { describe, expect, it } from 'vitest';
 
 import { MarkdownPlugin } from '../src/index.js';
@@ -33,6 +34,19 @@ describe('MarkdownPlugin', () => {
         expect(() => editor.execute('editor.markdown', 'unexpected')).toThrow(
             'does not accept arguments',
         );
+        expect(editor.state.mode).toBe('preview');
+        await editor.destroy();
+    });
+
+    it('does not activate a coordinated Markdown surface before attachment', async () => {
+        const editor = await Editor.create({
+            format: 'markdown',
+            mode: 'preview',
+            plugins: [ProjectionCoordinatorPlugin, MarkdownPlugin],
+        });
+
+        expect(editor.commands.canExecute('editor.markdown')).toBe(false);
+        expect(editor.execute('editor.markdown')).toBeUndefined();
         expect(editor.state.mode).toBe('preview');
         await editor.destroy();
     });

@@ -76,9 +76,9 @@ for (const directory of await readdir(packagesRoot)) {
     }
 }
 
-if (publishable.length !== 15) {
+if (publishable.length !== 16) {
     throw new Error(
-        `Expected 15 publishable packages, found ${String(publishable.length)}.`,
+        `Expected 16 publishable packages, found ${String(publishable.length)}.`,
     );
 }
 if (new Set(publishable).size !== publishable.length) {

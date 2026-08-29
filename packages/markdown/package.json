@@ -52,12 +52,14 @@
     "peerDependencies": {
         "@soeditor/core": "workspace:*",
         "@soeditor/engine": "workspace:*",
-        "@soeditor/html": "workspace:*"
+        "@soeditor/html": "workspace:*",
+        "@soeditor/projections": "workspace:*"
     },
     "devDependencies": {
         "@soeditor/core": "workspace:*",
         "@soeditor/engine": "workspace:*",
         "@soeditor/html": "workspace:*",
+        "@soeditor/projections": "workspace:*",
         "@types/turndown": "5.0.6"
     }
 }

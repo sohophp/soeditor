@@ -2,10 +2,10 @@
 
 ## Current development
 
-The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 18. Diagnostics now support configurable source-quality rules, debounced or
-manual workflows, provider failure isolation, filtering/counts, and an
-accessible grouped Problems experience. Phase 19 — Persistent Projection
-Coordination — is active.
+The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 19. Visual, HTML Source, Markdown, and Preview can now remain mounted and
+synchronized under one command-driven projection coordinator while exactly one
+compatible surface holds write authority. Phase 20 — Accessible Split-View
+Layouts — is active.
 
 The published stable reference remains `0.5.1`; development package manifests
 stay at that version until the coordinated 0.6 release-hardening phase.

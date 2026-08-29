@@ -42,9 +42,11 @@
         "typecheck": "tsc -p tsconfig.json"
     },
     "peerDependencies": {
-        "@soeditor/core": "workspace:*"
+        "@soeditor/core": "workspace:*",
+        "@soeditor/projections": "workspace:*"
     },
     "devDependencies": {
-        "@soeditor/core": "workspace:*"
+        "@soeditor/core": "workspace:*",
+        "@soeditor/projections": "workspace:*"
     }
 }

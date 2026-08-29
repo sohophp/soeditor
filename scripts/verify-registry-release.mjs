@@ -143,8 +143,8 @@ async function verifyPublishedPackages(releaseVersion, releaseLicense) {
             expectedPackages.push({ directory, name: manifest.name });
         }
     }
-    if (expectedPackages.length !== 15) {
-        throw new Error('Registry verification expected 15 public packages.');
+    if (expectedPackages.length !== 16) {
+        throw new Error('Registry verification expected 16 public packages.');
     }
 
     await Promise.all(

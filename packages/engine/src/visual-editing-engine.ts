@@ -5,6 +5,10 @@ import {
     type Transaction,
 } from '@soeditor/core';
 import { parseHtmlFragment, serializeHtmlFragment } from '@soeditor/html';
+import {
+    projectionCoordinatorServiceToken,
+    type ProjectionActivity,
+} from '@soeditor/projections';
 
 import { DomProjection } from './dom-projection.js';
 import { createClipboardPayload, createPastedModel } from './clipboard.js';
@@ -49,6 +53,7 @@ import {
 } from './visual-editing-service.js';
 
 export interface VisualEditingEngineOptions {
+    readonly activateOnFocus?: boolean;
     readonly editor: Editor;
     readonly element: HTMLElement;
     readonly ariaLabel?: string;
@@ -86,6 +91,7 @@ export class VisualEditingEngine implements EditingEngine {
     readonly #previousHidden: boolean;
     readonly #projection: DomProjection;
     readonly #service: VisualEditingService;
+    readonly #activateOnFocus: boolean;
     #compositionSelection: EditingSelection | undefined;
     #destroyed = false;
     #lockedDocument = false;
@@ -98,10 +104,14 @@ export class VisualEditingEngine implements EditingEngine {
               readonly source: string;
           }
         | undefined;
+    #disposeProjection: (() => void) | undefined;
+    #programmaticFocus = false;
+    #projectionActivity: ProjectionActivity | undefined;
 
     constructor(options: VisualEditingEngineOptions) {
         this.editor = options.editor;
         this.element = options.element;
+        this.#activateOnFocus = options.activateOnFocus ?? false;
         if (this.editor.state.document.format !== 'html') {
             throw new UnsupportedVisualDocumentFormatError(
                 this.editor.state.document.format,
@@ -136,7 +146,6 @@ export class VisualEditingEngine implements EditingEngine {
                 'aria-readonly',
             ].map((name) => [name, this.element.getAttribute(name)]),
         );
-        this.#updateEditableState();
         this.element.setAttribute('role', 'textbox');
         this.element.setAttribute('aria-label', ariaLabel);
         this.element.setAttribute('aria-multiline', 'true');
@@ -176,6 +185,8 @@ export class VisualEditingEngine implements EditingEngine {
         this.element.addEventListener('copy', this.#handleCopy);
         this.element.addEventListener('cut', this.#handleCut);
         this.element.addEventListener('paste', this.#handlePaste);
+        this.element.addEventListener('focusin', this.#handleFocusIn);
+        this.element.addEventListener('pointerdown', this.#handlePointerDown);
         this.#disposeDocumentChange = this.editor.events.on(
             'document:change',
             ({ current, transaction }) =>
@@ -188,6 +199,19 @@ export class VisualEditingEngine implements EditingEngine {
         this.#disposeModeChange = this.editor.events.on('mode:change', () =>
             this.#updateEditableState(),
         );
+        const coordinator = this.editor.services.tryGet(
+            projectionCoordinatorServiceToken,
+        );
+        this.#disposeProjection = coordinator?.attach({
+            id: 'visual',
+            update: (activity) => {
+                this.#projectionActivity = activity;
+                this.#updateEditableState();
+            },
+        });
+        if (coordinator === undefined) {
+            this.#updateEditableState();
+        }
     }
 
     get selection(): EditingSelection | undefined {
@@ -204,7 +228,12 @@ export class VisualEditingEngine implements EditingEngine {
 
     focus(): void {
         this.#assertAlive();
-        this.element.focus();
+        this.#programmaticFocus = true;
+        try {
+            this.element.focus();
+        } finally {
+            this.#programmaticFocus = false;
+        }
     }
 
     destroy(): void {
@@ -213,6 +242,7 @@ export class VisualEditingEngine implements EditingEngine {
         }
 
         this.#destroyed = true;
+        const errors: unknown[] = [];
         this.#mutationObserver.disconnect();
         this.element.removeEventListener(
             'beforeinput',
@@ -230,6 +260,17 @@ export class VisualEditingEngine implements EditingEngine {
         this.element.removeEventListener('copy', this.#handleCopy);
         this.element.removeEventListener('cut', this.#handleCut);
         this.element.removeEventListener('paste', this.#handlePaste);
+        this.element.removeEventListener('focusin', this.#handleFocusIn);
+        this.element.removeEventListener(
+            'pointerdown',
+            this.#handlePointerDown,
+        );
+        try {
+            this.#disposeProjection?.();
+        } catch (error: unknown) {
+            errors.push(error);
+        }
+        this.#disposeProjection = undefined;
         this.#disposeDocumentChange();
         this.#disposeEditorDestroy();
         this.#disposeModeChange();
@@ -242,7 +283,7 @@ export class VisualEditingEngine implements EditingEngine {
             }
         } catch (error: unknown) {
             if (!(error instanceof EditorDestroyedError)) {
-                throw error;
+                errors.push(error);
             }
         }
         this.element.replaceChildren();
@@ -254,6 +295,12 @@ export class VisualEditingEngine implements EditingEngine {
                 this.element.setAttribute(name, value);
             }
         }
+        if (errors.length > 0) {
+            throw new AggregateError(
+                errors,
+                'Visual editing engine cleanup failed.',
+            );
+        }
     }
 
     readonly #handleBeforeInput = (event: InputEvent): void => {
@@ -262,7 +309,7 @@ export class VisualEditingEngine implements EditingEngine {
         }
 
         event.preventDefault();
-        if (this.editor.state.readonly || this.#lockedDocument) {
+        if (this.#isReadonly() || this.#lockedDocument) {
             return;
         }
 
@@ -347,6 +394,25 @@ export class VisualEditingEngine implements EditingEngine {
         this.#compositionSelection = undefined;
     };
 
+    readonly #handleFocusIn = (): void => {
+        this.#activateFromUserIntent();
+    };
+
+    readonly #handlePointerDown = (): void => {
+        this.#activateFromUserIntent();
+    };
+
+    #activateFromUserIntent(): void {
+        if (
+            this.#activateOnFocus &&
+            !this.#programmaticFocus &&
+            this.#projectionActivity?.visible === true &&
+            this.#projectionActivity.primary === false
+        ) {
+            this.editor.execute('projection.activate', 'visual');
+        }
+    }
+
     readonly #handleKeyDown = (event: KeyboardEvent): void => {
         if (!(event.ctrlKey || event.metaKey) || event.altKey) {
             return;
@@ -378,7 +444,7 @@ export class VisualEditingEngine implements EditingEngine {
         const selection = this.#writeClipboard(event);
         if (
             selection === undefined ||
-            this.editor.state.readonly ||
+            this.#isReadonly() ||
             this.#lockedDocument
         ) {
             return;
@@ -399,7 +465,7 @@ export class VisualEditingEngine implements EditingEngine {
 
     readonly #handlePaste = (event: ClipboardEvent): void => {
         event.preventDefault();
-        if (this.editor.state.readonly || this.#lockedDocument) {
+        if (this.#isReadonly() || this.#lockedDocument) {
             return;
         }
 
@@ -457,8 +523,7 @@ export class VisualEditingEngine implements EditingEngine {
     #canEdit(): boolean {
         return (
             !this.#destroyed &&
-            this.editor.state.mode === 'visual' &&
-            !this.editor.state.readonly &&
+            !this.#isReadonly() &&
             !this.#lockedDocument &&
             this.#projection.readSelection() !== undefined
         );
@@ -469,8 +534,7 @@ export class VisualEditingEngine implements EditingEngine {
         const selection = this.#projection.readSelection();
         if (
             selection === undefined ||
-            this.editor.state.mode !== 'visual' ||
-            this.editor.state.readonly ||
+            this.#isReadonly() ||
             this.#lockedDocument
         ) {
             throw new UnsupportedEditingSelectionError(
@@ -621,7 +685,7 @@ export class VisualEditingEngine implements EditingEngine {
 
     #executeHistory(command: 'editor.undo' | 'editor.redo'): void {
         if (
-            !this.editor.state.readonly &&
+            !this.#isReadonly() &&
             this.editor.commands.has(command) &&
             this.editor.commands.canExecute(command)
         ) {
@@ -630,12 +694,20 @@ export class VisualEditingEngine implements EditingEngine {
     }
 
     #updateEditableState(): void {
-        const visual = this.editor.state.mode === 'visual';
-        const readonly =
-            this.editor.state.readonly || this.#lockedDocument || !visual;
+        const visual =
+            this.#projectionActivity?.visible ??
+            this.editor.state.mode === 'visual';
+        const readonly = this.#isReadonly() || this.#lockedDocument || !visual;
         this.element.hidden = !visual;
         this.element.contentEditable = readonly ? 'false' : 'true';
         this.element.setAttribute('aria-readonly', String(readonly));
+    }
+
+    #isReadonly(): boolean {
+        return (
+            this.#projectionActivity?.readonly ??
+            (this.editor.state.readonly || this.editor.state.mode !== 'visual')
+        );
     }
 
     #assertAlive(): void {

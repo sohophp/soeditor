@@ -39,7 +39,7 @@ and stabilization work.
 The current authorized roadmap phase is:
 
 ```text
-Phase 19 — Persistent Projection Coordination (active)
+Phase 20 — Accessible Split-View Layouts (active)
 ```
 
 The repository owner authorized the SoEditor 0.6 through 1.0 development goal

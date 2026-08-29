@@ -145,6 +145,17 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/projections',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/preview',
             'pack',
             '--pack-destination',
@@ -252,11 +263,14 @@ try {
     const previewArchive = archives.find((name) =>
         name.startsWith('soeditor-preview-'),
     );
+    const projectionsArchive = archives.find((name) =>
+        name.startsWith('soeditor-projections-'),
+    );
     const markdownArchive = archives.find((name) =>
         name.startsWith('soeditor-markdown-'),
     );
 
-    if (archives.length !== 15 || coreArchive === undefined) {
+    if (archives.length !== 16 || coreArchive === undefined) {
         throw new Error('Expected one packed @soeditor/core archive.');
     }
 
@@ -286,6 +300,10 @@ try {
 
     if (previewArchive === undefined) {
         throw new Error('Expected one packed @soeditor/preview archive.');
+    }
+
+    if (projectionsArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/projections archive.');
     }
 
     if (markdownArchive === undefined) {
@@ -375,6 +393,10 @@ try {
     packageData.dependencies['@soeditor/preview'] = `file:${join(
         packDirectory,
         previewArchive,
+    )}`;
+    packageData.dependencies['@soeditor/projections'] = `file:${join(
+        packDirectory,
+        projectionsArchive,
     )}`;
     packageData.dependencies['@soeditor/markdown'] = `file:${join(
         packDirectory,

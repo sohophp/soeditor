@@ -74,6 +74,9 @@ importers:
       '@soeditor/preview':
         specifier: workspace:*
         version: link:../../packages/preview
+      '@soeditor/projections':
+        specifier: workspace:*
+        version: link:../../packages/projections
       '@soeditor/rich-text':
         specifier: workspace:*
         version: link:../../packages/rich-text
@@ -122,6 +125,9 @@ importers:
       '@soeditor/html':
         specifier: workspace:*
         version: link:../html
+      '@soeditor/projections':
+        specifier: workspace:*
+        version: link:../projections
 
   packages/file-manager:
     devDependencies:
@@ -187,6 +193,9 @@ importers:
       '@soeditor/html':
         specifier: workspace:*
         version: link:../html
+      '@soeditor/projections':
+        specifier: workspace:*
+        version: link:../projections
       '@types/turndown':
         specifier: 5.0.6
         version: 5.0.6
@@ -202,6 +211,9 @@ importers:
       '@soeditor/html-tools':
         specifier: workspace:*
         version: link:../html-tools
+      '@soeditor/projections':
+        specifier: workspace:*
+        version: link:../projections
       '@soeditor/ui':
         specifier: workspace:*
         version: link:../ui
@@ -240,6 +252,15 @@ importers:
         version: link:../ui
 
   packages/preview:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/projections':
+        specifier: workspace:*
+        version: link:../projections
+
+  packages/projections:
     devDependencies:
       '@soeditor/core':
         specifier: workspace:*
@@ -289,6 +310,9 @@ importers:
       '@soeditor/preview':
         specifier: workspace:*
         version: link:../preview
+      '@soeditor/projections':
+        specifier: workspace:*
+        version: link:../projections
       '@soeditor/rich-text':
         specifier: workspace:*
         version: link:../rich-text
@@ -342,6 +366,9 @@ importers:
       '@soeditor/html':
         specifier: workspace:*
         version: link:../html
+      '@soeditor/projections':
+        specifier: workspace:*
+        version: link:../projections
 
   packages/ui:
     devDependencies:

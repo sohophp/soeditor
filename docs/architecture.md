@@ -162,6 +162,36 @@ grouped, and filtered states. Problem navigation remains command-driven through
 path. Generic `@soeditor/ui` continues to know nothing about HTML rules or
 diagnostic providers.
 
+## Phase 19 persistent projection coordination
+
+Phase 19 adds DOM-free `@soeditor/projections`. Its per-editor coordinator owns
+only projection attachment and immutable `visible`, `primary`, and effective
+`readonly` activity for Visual, HTML Source, Markdown, and Preview. Canonical
+content, history, parsing, rendering, selections, and host layout remain owned
+by their existing layers.
+
+```text
+user command / optional user focus intent
+                   ↓
+       ProjectionCoordinatorPlugin
+          ↓ activity snapshots
+ Visual / Source / Markdown / Preview adapters
+          ↘       ↓       ↙
+        canonical EditorDocument source
+```
+
+Exactly one format-compatible editing projection is the logical primary;
+Preview is always readonly. A visible non-primary editor remains synchronized
+but cannot originate document transactions. Editor-level readonly policy makes
+all activities readonly without discarding the logical primary. Primary and
+visibility transitions use commands, and programmatic focus used for search or
+source reveal never transfers authority.
+
+Engines automatically attach when the coordinator service exists and otherwise
+retain the 0.5 single-mode policy. Invalid exact HTML remains canonical while
+Visual keeps its last valid model locked. Split-pane DOM, resizers, labels, and
+responsive behavior remain deferred to Phase 20.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing
@@ -301,8 +331,9 @@ invoke the shared `editor.undo` / `editor.redo` commands. Consecutive
 `source`-origin snapshots group within the existing history time window. A
 surface without Core history falls back to CodeMirror's local history.
 
-Only the active surface is visible and editable. Invalid source remains
-canonical and source-editable. The visual engine retains its last parse-valid
+Without the optional projection coordinator, only the active surface is
+visible and editable. Invalid source remains canonical and source-editable. The
+visual engine retains its last parse-valid
 fragment model as a locked projection while parser errors exist, so a recovered
 tree cannot be edited and serialized over the invalid source. It resumes from
 the new model after source becomes valid. Initial invalid source uses an inert
@@ -444,8 +475,9 @@ docked-panel service and does not depend on HTML or developer tooling.
 The HTML Source service owns range reveal and CodeMirror's built-in Find/Replace
 panel behind SoEditor-owned APIs. No CodeMirror types cross the package root.
 The Inspector reads the controlled visual selection as a non-authoritative
-projection and never mutates canonical source. Split views are deferred because
-the current architecture intentionally has one active projection at a time.
+projection and never mutates canonical source. Phase 19 later replaced the
+single-visible-projection limitation with coordinated activity while preserving
+this read-only developer-tools boundary.
 
 ## Phase 12 file manager and SoFinder integration
 
@@ -507,8 +539,10 @@ JavaScript source map accompany it. See `docs/distribution.md` and ADR 0020.
 ## Phase 15 release hardening
 
 The 0.5 release gate keeps the Phase 14 architecture unchanged and adds
-evidence around it. All 15 publishable packages share one aligned 0.5.x version. A release
-audit checks explicit export maps, mapped artifacts, and bundle budgets; packed
+evidence around it. The 15 packages published for 0.5 share one aligned 0.5.x
+version; the Phase 19 development tree adds `@soeditor/projections` as a
+sixteenth publishable boundary. A release audit checks explicit export maps,
+mapped artifacts, and bundle budgets; packed
 NodeNext/native ESM/Vite consumers exercise actual tarballs.
 
 The Playground exposes Classic, Developer, Markdown, and CMS + injected

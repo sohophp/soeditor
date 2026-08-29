@@ -28,6 +28,12 @@ export default defineConfig({
                     import.meta.url,
                 ),
             ),
+            '@soeditor/markdown': fileURLToPath(
+                new URL(
+                    '../../packages/markdown/src/index.ts',
+                    import.meta.url,
+                ),
+            ),
             '@soeditor/file-manager': fileURLToPath(
                 new URL(
                     '../../packages/file-manager/src/index.ts',
@@ -36,6 +42,12 @@ export default defineConfig({
             ),
             '@soeditor/preview': fileURLToPath(
                 new URL('../../packages/preview/src/index.ts', import.meta.url),
+            ),
+            '@soeditor/projections': fileURLToPath(
+                new URL(
+                    '../../packages/projections/src/index.ts',
+                    import.meta.url,
+                ),
             ),
             '@soeditor/presets': fileURLToPath(
                 new URL('../../packages/presets/src/index.ts', import.meta.url),

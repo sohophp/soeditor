@@ -9,7 +9,11 @@ export default defineConfig({
         },
         minify: false,
         rollupOptions: {
-            external: ['@soeditor/core', '@soeditor/html'],
+            external: [
+                '@soeditor/core',
+                '@soeditor/html',
+                '@soeditor/projections',
+            ],
         },
         sourcemap: true,
     },

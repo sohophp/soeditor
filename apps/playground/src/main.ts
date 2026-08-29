@@ -26,6 +26,10 @@ import {
     minimalPreset,
 } from '@soeditor/presets';
 import { createPreviewEngine, previewServiceToken } from '@soeditor/preview';
+import {
+    ProjectionCoordinatorPlugin,
+    projectionCoordinatorServiceToken,
+} from '@soeditor/projections';
 import { createSourceEditingEngine } from '@soeditor/source';
 import { createEditorUi, UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
 import '@soeditor/ui/styles.css';
@@ -153,11 +157,13 @@ if (
 
 const parameters = new URLSearchParams(window.location.search);
 const markdownDocument = parameters.get('format') === 'markdown';
+const persistentProjections = parameters.get('projections') === 'persistent';
 const cmsExample = parameters.get('example') === 'cms';
 const developerDocument = parameters.get('preset') !== 'classic';
 const htmlPreset = developerDocument ? developerPreset : classicPreset;
 const htmlPlugins = [
     DemoPlugin,
+    ...(persistentProjections ? [ProjectionCoordinatorPlugin] : []),
     ...htmlPreset.plugins,
     ...(developerDocument
         ? [AccessibilityDiagnosticsPlugin, SeoDiagnosticsPlugin]
@@ -175,7 +181,13 @@ const editor = await Editor.create(
         ? {
               data: '# SoEditor Markdown\n\n- canonical source\n- isolated preview\n\n<product-card data-id="123"></product-card>',
               format: 'markdown',
-              plugins: [DemoPlugin, ...markdownPreset.plugins],
+              plugins: [
+                  DemoPlugin,
+                  ...(persistentProjections
+                      ? [ProjectionCoordinatorPlugin]
+                      : []),
+                  ...markdownPreset.plugins,
+              ],
               readonly: parameters.has('readonly'),
           }
         : {
@@ -240,12 +252,24 @@ if (!markdownDocument) {
 }
 const visualEngine = markdownDocument
     ? undefined
-    : createVisualEditingEngine({ editor, element: editingHost });
+    : createVisualEditingEngine({
+          activateOnFocus: persistentProjections,
+          editor,
+          element: editingHost,
+      });
 const sourceEngine = markdownDocument
     ? undefined
-    : createSourceEditingEngine({ editor, element: sourceEditingHost });
+    : createSourceEditingEngine({
+          activateOnFocus: persistentProjections,
+          editor,
+          element: sourceEditingHost,
+      });
 const markdownEngine = markdownDocument
-    ? createMarkdownEditingEngine({ editor, element: markdownEditingHost })
+    ? createMarkdownEditingEngine({
+          activateOnFocus: persistentProjections,
+          editor,
+          element: markdownEditingHost,
+      })
     : undefined;
 editingHost.hidden = markdownDocument;
 sourceEditingHost.hidden = markdownDocument;
@@ -309,6 +333,7 @@ const developerToolsEngine =
     selectedDemo: document.body.dataset.demo,
     previewEngine,
     previewServiceToken,
+    projectionCoordinatorServiceToken,
     sourceEngine,
     ui,
     visualEngine,

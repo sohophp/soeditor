@@ -45,12 +45,14 @@
         "@soeditor/core": "workspace:*",
         "@soeditor/file-manager": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
+        "@soeditor/projections": "workspace:*",
         "@soeditor/ui": "workspace:*"
     },
     "devDependencies": {
         "@soeditor/core": "workspace:*",
         "@soeditor/file-manager": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
+        "@soeditor/projections": "workspace:*",
         "@soeditor/ui": "workspace:*"
     }
 }

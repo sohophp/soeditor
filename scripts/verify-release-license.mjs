@@ -58,9 +58,9 @@ for (const directory of await readdir(packagesRoot)) {
     }
 }
 
-if (publicPackageCount !== 15) {
+if (publicPackageCount !== 16) {
     throw new Error(
-        `Expected 15 public package licenses, found ${String(publicPackageCount)}.`,
+        `Expected 16 public package licenses, found ${String(publicPackageCount)}.`,
     );
 }
 

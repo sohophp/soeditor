@@ -9,6 +9,7 @@ export * from '@soeditor/html-tools';
 export * from '@soeditor/markdown';
 export * from '@soeditor/presets';
 export * from '@soeditor/preview';
+export * from '@soeditor/projections';
 export * from '@soeditor/rich-text';
 export * from '@soeditor/source';
 export * from '@soeditor/ui';

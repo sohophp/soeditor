@@ -32,6 +32,18 @@ export type {
     Problem,
     ProblemSeverity,
 } from '@soeditor/html-tools';
+export {
+    ProjectionCoordinatorPlugin,
+    projectionCoordinatorServiceToken,
+} from '@soeditor/projections';
+export type {
+    EditableProjectionId,
+    ProjectionActivity,
+    ProjectionAdapter,
+    ProjectionCoordinatorService,
+    ProjectionId,
+    ProjectionSnapshot,
+} from '@soeditor/projections';
 export { fileManagerServiceToken } from '@soeditor/file-manager';
 export type {
     FileManager,

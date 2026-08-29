@@ -1,4 +1,5 @@
-import { Plugin } from '@soeditor/core';
+import { Plugin, type Editor } from '@soeditor/core';
+import { projectionCoordinatorServiceToken } from '@soeditor/projections';
 
 import { previewServiceToken } from './preview-service.js';
 
@@ -12,31 +13,49 @@ export class PreviewPlugin extends Plugin {
             id: 'editor.preview',
             label: 'Open preview',
             canExecute: ({ editor }) =>
-                editor.state.mode !== 'preview' &&
+                !isPreviewVisible(editor) &&
                 (editor.services.tryGet(previewServiceToken)?.canRender() ??
                     false),
             execute: ({ editor }, ...args) => {
                 assertNoArguments('editor.preview', args);
+                const coordinator = editor.services.tryGet(
+                    projectionCoordinatorServiceToken,
+                );
                 this.#returnMode =
-                    editor.state.document.format === 'markdown'
+                    coordinator?.snapshot.primary ??
+                    (editor.state.document.format === 'markdown'
                         ? 'markdown'
                         : editor.state.mode === 'source'
                           ? 'source'
-                          : 'visual';
+                          : 'visual');
+                if (coordinator?.isAttached('preview') === true) {
+                    editor.execute('projection.show', 'preview');
+                }
                 editor.update((transaction) => transaction.setMode('preview'), {
                     origin: 'command',
                 });
             },
-            isActive: ({ editor }) => editor.state.mode === 'preview',
+            isActive: ({ editor }) => isPreviewVisible(editor),
         });
         this.editor.commands.register({
             id: 'editor.preview.close',
             label: 'Close preview',
-            canExecute: ({ editor }) => editor.state.mode === 'preview',
+            canExecute: ({ editor }) => isPreviewVisible(editor),
             execute: ({ editor }, ...args) => {
                 assertNoArguments('editor.preview.close', args);
+                const coordinator = editor.services.tryGet(
+                    projectionCoordinatorServiceToken,
+                );
+                if (
+                    coordinator?.isAttached('preview') === true &&
+                    coordinator.get('preview').visible
+                ) {
+                    editor.execute('projection.hide', 'preview');
+                }
+                const returnMode =
+                    coordinator?.snapshot.primary ?? this.#returnMode;
                 editor.update(
-                    (transaction) => transaction.setMode(this.#returnMode),
+                    (transaction) => transaction.setMode(returnMode),
                     { origin: 'command' },
                 );
             },
@@ -52,6 +71,15 @@ export class PreviewPlugin extends Plugin {
             },
         });
     }
+}
+
+function isPreviewVisible(editor: Editor): boolean {
+    const coordinator = editor.services.tryGet(
+        projectionCoordinatorServiceToken,
+    );
+    return coordinator?.isAttached('preview') === true
+        ? coordinator.get('preview').visible
+        : editor.state.mode === 'preview';
 }
 
 function assertNoArguments(id: string, args: readonly unknown[]): void {

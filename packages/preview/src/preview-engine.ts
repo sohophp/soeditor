@@ -3,6 +3,10 @@ import {
     ServiceAlreadyRegisteredError,
     type Editor,
 } from '@soeditor/core';
+import {
+    projectionCoordinatorServiceToken,
+    type ProjectionActivity,
+} from '@soeditor/projections';
 
 import {
     normalizePreviewConfiguration,
@@ -58,6 +62,8 @@ class DomPreviewEngine implements PreviewEngine {
     readonly #service: PreviewService;
     readonly #view: Window;
     #destroyed = false;
+    #disposeProjection: (() => void) | undefined;
+    #projectionActivity: ProjectionActivity | undefined;
     #stale = true;
 
     constructor(options: PreviewEngineOptions) {
@@ -78,8 +84,12 @@ class DomPreviewEngine implements PreviewEngine {
         this.#configuration = normalizePreviewConfiguration(
             options.configuration,
         );
+        const coordinatedActivity = options.editor.services
+            .tryGet(projectionCoordinatorServiceToken)
+            ?.get('preview');
         const initialSrcdoc =
-            options.editor.state.mode === 'preview'
+            (coordinatedActivity?.visible ??
+            options.editor.state.mode === 'preview')
                 ? this.#renderCurrentSource()
                 : undefined;
         this.#previousHidden = options.element.hidden;
@@ -113,6 +123,16 @@ class DomPreviewEngine implements PreviewEngine {
             'editor:destroy',
             () => this.destroy(),
         );
+        const coordinator = options.editor.services.tryGet(
+            projectionCoordinatorServiceToken,
+        );
+        this.#disposeProjection = coordinator?.attach({
+            id: 'preview',
+            update: (activity) => {
+                this.#projectionActivity = activity;
+                this.#updateMode();
+            },
+        });
     }
 
     destroy(): void {
@@ -124,6 +144,12 @@ class DomPreviewEngine implements PreviewEngine {
         this.#disposeModeChange();
         this.#disposeEditorDestroy();
         const errors: unknown[] = [];
+        try {
+            this.#disposeProjection?.();
+        } catch (error: unknown) {
+            errors.push(error);
+        }
+        this.#disposeProjection = undefined;
         try {
             if (
                 this.#editor.services.tryGet(previewServiceToken) ===
@@ -138,12 +164,17 @@ class DomPreviewEngine implements PreviewEngine {
         }
         try {
             if (this.#editor.state.mode === 'preview') {
+                const coordinatedPrimary = this.#editor.services.tryGet(
+                    projectionCoordinatorServiceToken,
+                )?.snapshot.primary;
                 this.#editor.update(
                     (transaction) =>
                         transaction.setMode(
-                            this.#editor.state.document.format === 'markdown'
-                                ? 'markdown'
-                                : 'visual',
+                            coordinatedPrimary ??
+                                (this.#editor.state.document.format ===
+                                'markdown'
+                                    ? 'markdown'
+                                    : 'visual'),
                         ),
                     { origin: 'system' },
                 );
@@ -181,7 +212,9 @@ class DomPreviewEngine implements PreviewEngine {
     }
 
     #updateMode(): void {
-        const preview = this.#editor.state.mode === 'preview';
+        const preview =
+            this.#projectionActivity?.visible ??
+            this.#editor.state.mode === 'preview';
         this.#element.hidden = !preview;
         if (preview && this.#stale) {
             this.#refresh();
@@ -190,7 +223,10 @@ class DomPreviewEngine implements PreviewEngine {
 
     #handleDocumentChange(): void {
         this.#stale = true;
-        if (this.#editor.state.mode === 'preview') {
+        if (
+            this.#projectionActivity?.visible ??
+            this.#editor.state.mode === 'preview'
+        ) {
             this.#refresh();
         }
     }

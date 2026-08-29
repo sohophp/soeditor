@@ -10,6 +10,10 @@ import {
     type HtmlParseDiagnostic,
     type SourceRange,
 } from '@soeditor/html';
+import {
+    projectionCoordinatorServiceToken,
+    type ProjectionActivity,
+} from '@soeditor/projections';
 import { html } from '@codemirror/lang-html';
 import {
     lintGutter,
@@ -41,6 +45,7 @@ const accessibleActiveLineTheme = EditorView.theme({
 
 /** Options for attaching a source surface to one editor and host. */
 export interface SourceEditingEngineOptions {
+    readonly activateOnFocus?: boolean;
     readonly editor: Editor;
     readonly element: HTMLElement;
     readonly ariaLabel?: string;
@@ -69,6 +74,7 @@ export class UnsupportedSourceDocumentFormatError extends Error {
 
 /** CodeMirror-backed exact-source editing surface for one editor instance. */
 export class SourceEditingEngine implements SourceEngine {
+    readonly #activateOnFocus: boolean;
     readonly editor: Editor;
     readonly element: HTMLElement;
     readonly #disposeDocumentChange: () => void;
@@ -80,11 +86,15 @@ export class SourceEditingEngine implements SourceEngine {
     readonly #view: EditorView;
     #destroyed = false;
     #diagnostics: readonly HtmlParseDiagnostic[];
+    #disposeProjection: (() => void) | undefined;
+    #programmaticFocus = false;
+    #projectionActivity: ProjectionActivity | undefined;
     #synchronizing = false;
 
     constructor(options: SourceEditingEngineOptions) {
         this.editor = options.editor;
         this.element = options.element;
+        this.#activateOnFocus = options.activateOnFocus ?? false;
         if (this.editor.state.document.format !== 'html') {
             throw new UnsupportedSourceDocumentFormatError(
                 this.editor.state.document.format,
@@ -144,7 +154,8 @@ export class SourceEditingEngine implements SourceEngine {
         this.#service = Object.freeze(service);
         this.editor.services.register(sourceEditingServiceToken, this.#service);
         this.element.addEventListener('keydown', this.#handleKeyDown, true);
-        this.#updateMode();
+        this.element.addEventListener('focusin', this.#handleFocusIn);
+        this.element.addEventListener('pointerdown', this.#handlePointerDown);
         this.#disposeDocumentChange = this.editor.events.on(
             'document:change',
             ({ current }) => this.#synchronizeSource(current.source),
@@ -156,6 +167,19 @@ export class SourceEditingEngine implements SourceEngine {
             'editor:destroy',
             () => this.destroy(),
         );
+        const coordinator = this.editor.services.tryGet(
+            projectionCoordinatorServiceToken,
+        );
+        this.#disposeProjection = coordinator?.attach({
+            id: 'source',
+            update: (activity) => {
+                this.#projectionActivity = activity;
+                this.#updateMode();
+            },
+        });
+        if (coordinator === undefined) {
+            this.#updateMode();
+        }
     }
 
     get diagnostics(): readonly HtmlParseDiagnostic[] {
@@ -165,7 +189,7 @@ export class SourceEditingEngine implements SourceEngine {
 
     focus(): void {
         this.#assertAlive();
-        this.#view.focus();
+        this.#withoutFocusActivation(() => this.#view.focus());
     }
 
     openSearchPanel(query?: string): void {
@@ -173,15 +197,19 @@ export class SourceEditingEngine implements SourceEngine {
         if (query !== undefined && typeof query !== 'string') {
             throw new TypeError('A source search query must be a string.');
         }
-        openSearchPanel(this.#view);
-        if (query !== undefined) {
-            this.#view.dispatch({
-                effects: setSearchQuery.of(new SearchQuery({ search: query })),
-            });
-            if (query.length > 0) {
-                findNext(this.#view);
+        this.#withoutFocusActivation(() => {
+            openSearchPanel(this.#view);
+            if (query !== undefined) {
+                this.#view.dispatch({
+                    effects: setSearchQuery.of(
+                        new SearchQuery({ search: query }),
+                    ),
+                });
+                if (query.length > 0) {
+                    findNext(this.#view);
+                }
             }
-        }
+        });
     }
 
     reveal(range: SourceRange): void {
@@ -189,11 +217,13 @@ export class SourceEditingEngine implements SourceEngine {
         const length = this.#view.state.doc.length;
         const from = clampSourceOffset(range.start.offset, length);
         const to = Math.max(from, clampSourceOffset(range.end.offset, length));
-        this.#view.dispatch({
-            effects: EditorView.scrollIntoView(from, { y: 'center' }),
-            selection: { anchor: from, head: to },
+        this.#withoutFocusActivation(() => {
+            this.#view.dispatch({
+                effects: EditorView.scrollIntoView(from, { y: 'center' }),
+                selection: { anchor: from, head: to },
+            });
+            this.#view.focus();
         });
-        this.#view.focus();
     }
 
     destroy(): void {
@@ -202,10 +232,22 @@ export class SourceEditingEngine implements SourceEngine {
         }
 
         this.#destroyed = true;
+        const errors: unknown[] = [];
         this.#disposeDocumentChange();
         this.#disposeModeChange();
         this.#disposeEditorDestroy();
         this.element.removeEventListener('keydown', this.#handleKeyDown, true);
+        this.element.removeEventListener('focusin', this.#handleFocusIn);
+        this.element.removeEventListener(
+            'pointerdown',
+            this.#handlePointerDown,
+        );
+        try {
+            this.#disposeProjection?.();
+        } catch (error: unknown) {
+            errors.push(error);
+        }
+        this.#disposeProjection = undefined;
         try {
             if (
                 this.editor.services.tryGet(sourceEditingServiceToken) ===
@@ -215,16 +257,25 @@ export class SourceEditingEngine implements SourceEngine {
             }
         } catch (error: unknown) {
             if (!(error instanceof EditorDestroyedError)) {
-                throw error;
+                errors.push(error);
             }
         }
         this.#view.destroy();
         this.element.replaceChildren();
         this.element.hidden = this.#previousHidden;
+        if (errors.length > 0) {
+            throw new AggregateError(
+                errors,
+                'Source editing engine cleanup failed.',
+            );
+        }
     }
 
     #handleSourceChange(source: string): void {
         this.#diagnostics = readDiagnostics(source);
+        if (this.#isReadonly()) {
+            return;
+        }
         this.editor.update(
             (transaction) => {
                 transaction.replaceDocument(source);
@@ -264,6 +315,25 @@ export class SourceEditingEngine implements SourceEngine {
         }
     };
 
+    readonly #handleFocusIn = (): void => {
+        this.#activateFromUserIntent();
+    };
+
+    readonly #handlePointerDown = (): void => {
+        this.#activateFromUserIntent();
+    };
+
+    #activateFromUserIntent(): void {
+        if (
+            this.#activateOnFocus &&
+            !this.#programmaticFocus &&
+            this.#projectionActivity?.visible === true &&
+            this.#projectionActivity.primary === false
+        ) {
+            this.editor.execute('projection.activate', 'source');
+        }
+    }
+
     #synchronizeSource(source: string): void {
         this.#diagnostics = readDiagnostics(source);
         const current = this.#view.state.doc.toString();
@@ -284,7 +354,10 @@ export class SourceEditingEngine implements SourceEngine {
 
     #updateMode(): void {
         const readonly = this.#isReadonly();
-        this.element.hidden = this.editor.state.mode !== 'source';
+        this.element.hidden = !(
+            this.#projectionActivity?.visible ??
+            this.editor.state.mode === 'source'
+        );
         this.#view.dispatch({
             effects: this.#editable.reconfigure([
                 EditorState.readOnly.of(readonly),
@@ -295,8 +368,18 @@ export class SourceEditingEngine implements SourceEngine {
 
     #isReadonly(): boolean {
         return (
-            this.editor.state.readonly || this.editor.state.mode !== 'source'
+            this.#projectionActivity?.readonly ??
+            (this.editor.state.readonly || this.editor.state.mode !== 'source')
         );
+    }
+
+    #withoutFocusActivation(callback: () => void): void {
+        this.#programmaticFocus = true;
+        try {
+            callback();
+        } finally {
+            this.#programmaticFocus = false;
+        }
     }
 
     #assertAlive(): void {

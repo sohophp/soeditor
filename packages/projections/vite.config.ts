@@ -8,9 +8,7 @@ export default defineConfig({
             formats: ['es'],
         },
         minify: false,
-        rollupOptions: {
-            external: ['@soeditor/core', '@soeditor/projections'],
-        },
+        rollupOptions: { external: ['@soeditor/core'] },
         sourcemap: true,
     },
 });

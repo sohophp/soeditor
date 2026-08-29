@@ -14,6 +14,7 @@
         "@soeditor/html-tools": "0.5.1",
         "@soeditor/markdown": "0.5.1",
         "@soeditor/preview": "0.5.1",
+        "@soeditor/projections": "0.5.1",
         "@soeditor/plugin-sdk": "0.5.1",
         "@soeditor/presets": "0.5.1",
         "@soeditor/rich-text": "0.5.1",

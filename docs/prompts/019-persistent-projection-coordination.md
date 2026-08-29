@@ -2,7 +2,7 @@
 
 ## Status
 
-ACTIVE.
+COMPLETED on 2026-08-30.
 
 ## Goal
 
@@ -69,3 +69,23 @@ behavior.
 - lifecycle and race tests pass;
 - ADR 0022 and current architecture documentation match implementation;
 - Critical = 0, High = 0, and all repository verification passes.
+
+## Completion record
+
+Completed on 2026-08-30.
+
+- Added DOM-free `@soeditor/projections` with immutable activity snapshots,
+  command-driven visibility/authority transitions, typed failures, attachment
+  rollback, deterministic notification, and terminal lifecycle behavior.
+- Adapted Visual, HTML Source, Markdown, and sandboxed Preview while preserving
+  the legacy single-mode path when the coordinator is absent.
+- Added opt-in user focus/pointer authority transfer without allowing
+  programmatic focus, search, or source reveal to steal the primary role.
+- Preserved exact invalid HTML, last-valid locked Visual projection, shared
+  history, readonly policy, and isolated Preview execution boundaries.
+- Added public umbrella/plugin-SDK exports, 16-package tarball/distribution
+  audits, a persistent Playground route, unit coverage, and six Chromium
+  projection/lifecycle scenarios.
+- `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm build`, release/license
+  checks, and dependency audit gates passed.
+- Read-only adversarial review: Critical = 0, High = 0.

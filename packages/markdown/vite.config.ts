@@ -13,6 +13,7 @@ export default defineConfig({
                 '@soeditor/core',
                 '@soeditor/engine',
                 '@soeditor/html',
+                '@soeditor/projections',
                 'codemirror',
                 'micromark',
                 'turndown',

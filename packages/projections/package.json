@@ -1,11 +1,11 @@
 {
-    "name": "@soeditor/source",
+    "name": "@soeditor/projections",
     "version": "0.5.1",
     "license": "MIT",
-    "description": "CodeMirror-powered HTML source editing for SoEditor.",
+    "description": "Framework-independent projection activity coordination for SoEditor.",
     "keywords": [
         "content-editor",
-        "html",
+        "projection",
         "typescript"
     ],
     "homepage": "https://github.com/sohophp/soeditor#readme",
@@ -15,7 +15,7 @@
     "repository": {
         "type": "git",
         "url": "git+https://github.com/sohophp/soeditor.git",
-        "directory": "packages/source"
+        "directory": "packages/projections"
     },
     "engines": {
         "node": ">=22.14.0 <23"
@@ -41,24 +41,10 @@
         "test": "vitest run",
         "typecheck": "tsc -p tsconfig.json"
     },
-    "dependencies": {
-        "@codemirror/lang-html": "^6.4.12",
-        "@codemirror/lint": "^6.9.7",
-        "@codemirror/search": "^6.7.1",
-        "@codemirror/state": "^6.7.1",
-        "@codemirror/view": "^6.43.9",
-        "codemirror": "^6.0.2"
-    },
     "peerDependencies": {
-        "@soeditor/core": "workspace:*",
-        "@soeditor/engine": "workspace:*",
-        "@soeditor/html": "workspace:*",
-        "@soeditor/projections": "workspace:*"
+        "@soeditor/core": "workspace:*"
     },
     "devDependencies": {
-        "@soeditor/core": "workspace:*",
-        "@soeditor/engine": "workspace:*",
-        "@soeditor/html": "workspace:*",
-        "@soeditor/projections": "workspace:*"
+        "@soeditor/core": "workspace:*"
     }
 }

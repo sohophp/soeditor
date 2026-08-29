@@ -43,10 +43,12 @@
     },
     "peerDependencies": {
         "@soeditor/core": "workspace:*",
-        "@soeditor/html": "workspace:*"
+        "@soeditor/html": "workspace:*",
+        "@soeditor/projections": "workspace:*"
     },
     "devDependencies": {
         "@soeditor/core": "workspace:*",
-        "@soeditor/html": "workspace:*"
+        "@soeditor/html": "workspace:*",
+        "@soeditor/projections": "workspace:*"
     }
 }

@@ -12,6 +12,10 @@ import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import { UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
 import { PreviewPlugin } from '@soeditor/preview';
 import {
+    ProjectionCoordinatorPlugin,
+    projectionCoordinatorServiceToken,
+} from '@soeditor/projections';
+import {
     createMarkdownPreviewRenderer,
     markdownToHtml,
     MarkdownPlugin,
@@ -72,6 +76,17 @@ if (umbrellaEditor.getData() !== '<p>Umbrella runtime</p>') {
     );
 }
 await umbrellaEditor.destroy();
+const projectionEditor = await Editor.create({
+    plugins: [ProjectionCoordinatorPlugin],
+});
+const projectionService = projectionEditor.services.get(
+    projectionCoordinatorServiceToken,
+);
+projectionService.attach({ id: 'visual', update: () => undefined });
+if (projectionService.snapshot.primary !== 'visual') {
+    throw new Error('Packed projection coordinator returned invalid state.');
+}
+await projectionEditor.destroy();
 if (
     extendedRuntimePreset.plugins.at(-1) !== RuntimeSdkPlugin ||
     subpathMinimalPreset !== minimalPreset ||
