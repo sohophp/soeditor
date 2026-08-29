@@ -10,19 +10,16 @@ use an npm identity.
    `LICENSE.txt`. Add the same approved npm `license` expression to the root
    manifest and all 15 public package manifests. Confirm it with
    `pnpm release:check-license`.
-2. Confirm the publishing npm identity controls the unscoped `soeditor` name.
-   Create the npm organization named `soeditor` on the public-package plan,
+2. Create the npm organization named `soeditor` on the public-package plan,
    which creates the `@soeditor` scope, and confirm the publishing identity is
-   an owner or member allowed to publish packages in it. Name availability
-   alone does not create an npm scope.
+   an owner or member allowed to publish all 15 packages in it.
 3. Create the protected GitHub `npm` environment and require reviewer approval.
 4. Configure an environment-scoped `NPM_TOKEN` using a granular npm token with
    read/write package access and **Bypass 2FA** enabled. The bypass setting is
    required for this non-interactive initial publication and is disabled by
    default when a token is created. Restrict the token to the required package
    names/scopes where npm's token controls allow it. The initial release token
-   must select **All Packages**, not only `@soeditor`, because the unscoped
-   `soeditor` package does not exist yet and cannot be selected individually.
+   must select **All Packages** so it can create every package in the release.
    If the token predates the organization, recreate it after joining the
    organization.
 5. Enable GitHub private vulnerability reporting for the repository.
@@ -86,8 +83,8 @@ Run the `Publish npm packages` workflow from the verified commit. Enter its full
 commit SHA, type `PUBLISH`, choose `latest` or `next`, and approve the protected
 `npm` environment. The workflow repeats every release gate, performs a dry run,
 verifies that none of the aligned package versions already exist, publishes
-the unscoped `soeditor` package first as a credential guard, publishes the
-scoped packages with provenance, then installs from npm and loads the jsDelivr
+the `@soeditor/editor` umbrella first as a credential guard, publishes the
+other packages with provenance, then installs from npm and loads the jsDelivr
 global in Chromium.
 
 Do not run `release:publish` casually from a developer workstation. It exists
@@ -113,7 +110,7 @@ do not republish identical artifacts.
 After publication, or to recheck propagation:
 
 ```bash
-pnpm release:verify-registry 0.5.0
+pnpm release:verify-registry 0.5.1
 ```
 
 This creates a clean Vite consumer from the public npm registry and checks the

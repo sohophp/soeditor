@@ -84,6 +84,14 @@ if (publishable.length !== 15) {
 if (new Set(publishable).size !== publishable.length) {
     throw new Error('Publishable package names must be unique.');
 }
+if (
+    !publishable.includes('@soeditor/editor') ||
+    publishable.some((name) => !name.startsWith('@soeditor/'))
+) {
+    throw new Error(
+        'All public packages must use the @soeditor scope and include @soeditor/editor.',
+    );
+}
 
 const umbrellaDist = join(packagesRoot, 'soeditor', 'dist');
 const globalPath = join(umbrellaDist, 'soeditor.global.js');

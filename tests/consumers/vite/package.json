@@ -5,7 +5,7 @@
     "type": "module",
     "packageManager": "pnpm@11.20.0",
     "dependencies": {
-        "soeditor": "0.5.0"
+        "@soeditor/editor": "0.5.1"
     },
     "devDependencies": {
         "vite": "7.3.6"

@@ -4,7 +4,7 @@ HTML Source is a first-class CodeMirror 6 projection over exact canonical HTML.
 CodeMirror types do not cross the public SoEditor API.
 
 ```ts
-import { createSourceEditingEngine } from 'soeditor';
+import { createSourceEditingEngine } from '@soeditor/editor';
 
 const source = createSourceEditingEngine({
     editor,

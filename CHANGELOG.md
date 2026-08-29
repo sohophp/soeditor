@@ -5,8 +5,14 @@
 - Advanced all 15 public packages together after the initial `0.5.0`
   publication stopped after 14 scoped packages and before the unscoped
   `soeditor` package.
-- Kept the verified `0.5.0` artifacts immutable and changed publication order
-  to validate the unscoped umbrella-package permission before scoped packages.
+- Kept the verified `0.5.0` artifacts immutable, adopted the owner-approved
+  `@soeditor/editor` umbrella after npm rejected the unscoped name, and changed
+  publication order to validate the umbrella before the other packages.
+- Applied the selected npm distribution tag explicitly to both protected
+  publication batches.
+- Added bounded retry handling to the read-only npm availability preflight so
+  transient registry throttling or server/network failures do not masquerade
+  as release collisions.
 - No product API or runtime behavior changed from the verified 0.5.0 release
   candidate.
 

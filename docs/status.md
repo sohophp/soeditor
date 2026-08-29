@@ -53,9 +53,10 @@ deliberate and documented under SemVer principles.
   passed local and clean CI gates and remains entirely unpublished. Its
   unscoped package guard proved the final blocker is npm's package-name
   similarity rule: npm rejects `soeditor` as too similar to `jsoneditor`.
-  Publication is paused for an explicit owner decision between a scoped
-  umbrella name and an npm support appeal; credential retries cannot resolve
-  this policy response.
+  The owner approved `@soeditor/editor` as the scoped umbrella replacement;
+  the renamed candidate passes every local release gate and remains entirely
+  unpublished at `0.5.1`. It still requires a clean CI pass and protected
+  publication before it becomes the supported complete release set.
 
 ## Lower-priority notes
 

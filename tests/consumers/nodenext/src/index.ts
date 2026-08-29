@@ -17,7 +17,10 @@ import {
     type EditorPreset,
 } from '@soeditor/presets';
 import { minimalPreset as subpathMinimalPreset } from '@soeditor/presets/minimal';
-import { SoEditor, minimalPreset as umbrellaMinimalPreset } from 'soeditor';
+import {
+    SoEditor,
+    minimalPreset as umbrellaMinimalPreset,
+} from '@soeditor/editor';
 import {
     createDeveloperToolsEngine,
     createDocumentOutline,

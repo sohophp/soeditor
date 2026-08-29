@@ -1,5 +1,5 @@
-import { SoEditor, minimalPreset } from 'soeditor';
-import 'soeditor/styles.css';
+import { SoEditor, minimalPreset } from '@soeditor/editor';
+import '@soeditor/editor/styles.css';
 
 const editor = await SoEditor.create({
     data: '<p>Vite consumer</p>',

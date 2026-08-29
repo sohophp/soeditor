@@ -1,6 +1,6 @@
 # ADR 0020: ESM authority and explicit browser global distribution
 
-- Status: Accepted
+- Status: Accepted; npm package identity amended by ADR 0021
 - Date: 2026-08-29
 
 ## Context

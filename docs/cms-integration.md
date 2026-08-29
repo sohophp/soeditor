@@ -15,8 +15,8 @@ import {
     createVisualEditingEngine,
     developerPreset,
     fileManagerServiceToken,
-} from 'soeditor';
-import 'soeditor/styles.css';
+} from '@soeditor/editor';
+import '@soeditor/editor/styles.css';
 
 const editor = await SoEditor.create({
     data: await cms.loadEntrySource(entryId),

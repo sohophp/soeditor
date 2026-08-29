@@ -4,7 +4,7 @@ Preview renders canonical content into a sandboxed `srcdoc` iframe. It is a
 projection, never the authoritative document or part of the main editor DOM.
 
 ```ts
-import { createPreviewEngine } from 'soeditor';
+import { createPreviewEngine } from '@soeditor/editor';
 
 const preview = createPreviewEngine({
     editor,

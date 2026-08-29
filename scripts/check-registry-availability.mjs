@@ -1,6 +1,7 @@
 import { readFile, readdir } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { stdout } from 'node:process';
+import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath, URL } from 'node:url';
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -39,14 +40,19 @@ if (
 ) {
     throw new Error('Expected exactly 15 named public packages.');
 }
+if (
+    !packageNames.includes('@soeditor/editor') ||
+    packageNames.some((name) => !name.startsWith('@soeditor/'))
+) {
+    throw new Error(
+        'All public packages must use the @soeditor scope and include @soeditor/editor.',
+    );
+}
 
 const collisions = [];
 for (const packageName of packageNames.sort()) {
     const endpoint = `https://registry.npmjs.org/${encodeURIComponent(packageName)}/${releaseVersion}`;
-    const response = await globalThis.fetch(endpoint, {
-        headers: { accept: 'application/json' },
-        signal: globalThis.AbortSignal.timeout(15_000),
-    });
+    const response = await fetchRegistry(endpoint);
     if (response.ok) {
         collisions.push(`${packageName}@${releaseVersion}`);
     } else if (response.status !== 404) {
@@ -65,3 +71,25 @@ if (collisions.length > 0) {
 stdout.write(
     `All ${String(packageNames.length)} package versions are unpublished at ${releaseVersion}.\n`,
 );
+
+async function fetchRegistry(endpoint) {
+    let latestFailure = 'no response';
+    for (let attempt = 0; attempt < 3; attempt += 1) {
+        try {
+            const response = await globalThis.fetch(endpoint, {
+                headers: { accept: 'application/json' },
+                signal: globalThis.AbortSignal.timeout(15_000),
+            });
+            if (response.status !== 429 && response.status < 500) {
+                return response;
+            }
+            latestFailure = `HTTP ${String(response.status)}`;
+        } catch (error) {
+            latestFailure = error instanceof Error ? error.message : 'unknown';
+        }
+        if (attempt < 2) await delay(2_000);
+    }
+    throw new Error(
+        `npm registry availability check failed for ${endpoint} (${latestFailure}).`,
+    );
+}

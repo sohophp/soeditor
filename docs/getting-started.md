@@ -7,7 +7,7 @@ needs.
 ## Install and create
 
 ```bash
-pnpm add soeditor
+pnpm add @soeditor/editor
 ```
 
 ```ts
@@ -16,8 +16,8 @@ import {
     createEditorUi,
     createVisualEditingEngine,
     minimalPreset,
-} from 'soeditor';
-import 'soeditor/styles.css';
+} from '@soeditor/editor';
+import '@soeditor/editor/styles.css';
 
 const editor = await SoEditor.create({
     data: '<p>Hello <strong>SoEditor</strong>.</p>',

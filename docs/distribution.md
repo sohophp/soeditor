@@ -1,13 +1,13 @@
 # Distribution and integration
 
-SoEditor 0.5 Developer Preview is ESM-first. The `soeditor` package is the
-straightforward application entry; the scoped packages remain available for
-smaller or more tightly controlled integrations.
+SoEditor 0.5 Developer Preview is ESM-first. The `@soeditor/editor` package is
+the straightforward application entry; the other scoped packages remain
+available for smaller or more tightly controlled integrations.
 
 ## Install
 
 ```bash
-pnpm add soeditor
+pnpm add @soeditor/editor
 ```
 
 SoEditor does not create or mount a UI automatically. Create the document
@@ -19,8 +19,8 @@ import {
     createEditorUi,
     createVisualEditingEngine,
     minimalPreset,
-} from 'soeditor';
-import 'soeditor/styles.css';
+} from '@soeditor/editor';
+import '@soeditor/editor/styles.css';
 
 const editor = await SoEditor.create({
     data: '<p>Hello, SoEditor.</p>',
@@ -51,7 +51,8 @@ Applications must destroy attached surfaces before destroying the editor.
 
 Presets are immutable configuration values, not pre-mounted editor classes.
 `minimalPreset`, `classicPreset`, `developerPreset`, and `markdownPreset` are
-available from `soeditor` and from the aggregate `@soeditor/presets` package.
+available from `@soeditor/editor` and from the aggregate `@soeditor/presets`
+package.
 Narrow preset paths avoid evaluating unrelated preset families:
 
 ```ts
@@ -70,8 +71,8 @@ JavaScript source maps. Vite needs no SoEditor-specific plugin. CSS is an
 explicit import:
 
 ```ts
-import { SoEditor, classicPreset } from 'soeditor';
-import 'soeditor/styles.css';
+import { SoEditor, classicPreset } from '@soeditor/editor';
+import '@soeditor/editor/styles.css';
 ```
 
 The repository release gate installs packed tarballs into clean NodeNext,
@@ -86,9 +87,9 @@ own static assets. Pin an exact package version in production:
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/soeditor@0.5.1/dist/soeditor.css"
+    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.5.1/dist/soeditor.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/soeditor@0.5.1/dist/soeditor.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.5.1/dist/soeditor.global.js"></script>
 <script>
     const editor = await SoEditor.create({
         data: '<p>Hello from a script tag.</p>',

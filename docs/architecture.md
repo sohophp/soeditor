@@ -430,7 +430,7 @@ returns a new frozen preset and rejects duplicate plugin IDs.
 
 ## Phase 14 distribution and integration
 
-Phase 14 adds the thin `soeditor` umbrella as a convenience projection over
+Phase 14 adds the thin `@soeditor/editor` umbrella as a convenience projection over
 intentionally public package roots. `Editor` is also exported as `SoEditor`;
 the scoped packages remain the ownership and tree-shaking boundaries. The ESM
 build externalizes scoped packages and publishes declarations plus source maps.
@@ -1945,14 +1945,14 @@ Command Palette
 推荐：
 
 ```bash
-pnpm add soeditor
+pnpm add @soeditor/editor
 ```
 
 使用：
 
 ```ts
-import { SoEditor, minimalPreset } from 'soeditor';
-import 'soeditor/styles.css';
+import { SoEditor, minimalPreset } from '@soeditor/editor';
+import '@soeditor/editor/styles.css';
 
 const editor = await SoEditor.create({
     data: '<p>Hello</p>',
@@ -1971,11 +1971,11 @@ Visual 和 UI surface 由应用显式创建并管理生命周期。需要更细�
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/soeditor@0.5.0/dist/soeditor.css"
+    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.5.1/dist/soeditor.css"
 >
 
 <script
-    src="https://cdn.jsdelivr.net/npm/soeditor@0.5.0/dist/soeditor.global.js"
+    src="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.5.1/dist/soeditor.global.js"
 ></script>
 ```
 

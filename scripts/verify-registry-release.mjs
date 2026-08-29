@@ -36,7 +36,7 @@ try {
                 private: true,
                 type: 'module',
                 scripts: { build: 'vite build' },
-                dependencies: { soeditor: version },
+                dependencies: { '@soeditor/editor': version },
                 devDependencies: { vite: '7.3.6' },
             },
             null,
@@ -54,8 +54,8 @@ try {
     await writeFile(
         join(consumerRoot, 'src/main.js'),
         [
-            "import { SoEditor, minimalPreset } from 'soeditor';",
-            "import 'soeditor/styles.css';",
+            "import { SoEditor, minimalPreset } from '@soeditor/editor';",
+            "import '@soeditor/editor/styles.css';",
             "const editor = await SoEditor.create({ data: '<p>Registry</p>', format: minimalPreset.format, plugins: minimalPreset.plugins });",
             'document.body.dataset.source = editor.getData();',
             'await editor.destroy();',
@@ -71,7 +71,7 @@ try {
 
     await verifyPublishedPackages(version, workspaceManifest.license);
 
-    const cdnBase = `https://cdn.jsdelivr.net/npm/soeditor@${version}/dist`;
+    const cdnBase = `https://cdn.jsdelivr.net/npm/@soeditor/editor@${version}/dist`;
     const [globalResponse, cssResponse, mapResponse] = await Promise.all([
         fetchWithRetry(`${cdnBase}/soeditor.global.js`),
         fetchWithRetry(`${cdnBase}/soeditor.css`),
@@ -110,7 +110,7 @@ try {
     }
 
     stdout.write(
-        `Registry and CDN verification passed for soeditor@${version}.\n`,
+        `Registry and CDN verification passed for @soeditor/editor@${version}.\n`,
     );
 } finally {
     await rm(temporaryRoot, { force: true, recursive: true });

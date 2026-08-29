@@ -1,5 +1,5 @@
 {
-    "name": "soeditor",
+    "name": "@soeditor/editor",
     "version": "0.5.1",
     "license": "MIT",
     "description": "Developer-first, HTML-first extensible content editor.",

@@ -711,7 +711,7 @@ Provide straightforward npm usage.
 Example:
 
 ```ts
-import { SoEditor } from 'soeditor';
+import { SoEditor } from '@soeditor/editor';
 ```
 
 Provide browser/CDN usage where practical.

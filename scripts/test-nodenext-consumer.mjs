@@ -44,7 +44,13 @@ try {
     await mkdir(packDirectory, { recursive: true });
     run(
         'pnpm',
-        ['--filter', 'soeditor', 'pack', '--pack-destination', packDirectory],
+        [
+            '--filter',
+            '@soeditor/editor',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
         repositoryRoot,
     );
     run(
@@ -209,7 +215,9 @@ try {
     const coreArchive = archives.find((name) =>
         name.startsWith('soeditor-core-'),
     );
-    const soeditorArchive = archives.find((name) => /^soeditor-\d/u.test(name));
+    const soeditorArchive = archives.find((name) =>
+        name.startsWith('soeditor-editor-'),
+    );
     const pluginSdkArchive = archives.find((name) =>
         name.startsWith('soeditor-plugin-sdk-'),
     );
@@ -307,12 +315,12 @@ try {
     }
 
     if (soeditorArchive === undefined) {
-        throw new Error('Expected one packed soeditor archive.');
+        throw new Error('Expected one packed @soeditor/editor archive.');
     }
 
     const packagePath = join(fixtureDirectory, 'package.json');
     const packageData = JSON.parse(await readFile(packagePath, 'utf8'));
-    packageData.dependencies.soeditor = `file:${join(
+    packageData.dependencies['@soeditor/editor'] = `file:${join(
         packDirectory,
         soeditorArchive,
     )}`;
@@ -378,8 +386,8 @@ try {
     run('pnpm', ['install'], fixtureDirectory);
     await verifyInstalledManifests(
         fixtureDirectory,
-        Object.keys(packageData.dependencies).filter(
-            (name) => name === 'soeditor' || name.startsWith('@soeditor/'),
+        Object.keys(packageData.dependencies).filter((name) =>
+            name.startsWith('@soeditor/'),
         ),
     );
     run('pnpm', ['exec', 'tsc', '-p', 'tsconfig.json'], fixtureDirectory);
@@ -449,7 +457,7 @@ async function verifyInstalledManifests(directory, packageNames) {
             ),
         );
         const expectedDirectory =
-            packageName === 'soeditor'
+            packageName === '@soeditor/editor'
                 ? 'packages/soeditor'
                 : `packages/${packageName.slice('@soeditor/'.length)}`;
         if (
