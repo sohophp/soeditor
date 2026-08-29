@@ -2,7 +2,8 @@
 
 ## Status
 
-Active roadmap.
+Complete through Phase 16. A repository-owner decision is required before
+adding a Post-0.5 phase.
 
 This roadmap begins from the current repository state.
 
@@ -800,7 +801,17 @@ Known Medium issues must be documented and judged acceptable for a Developer Pre
 
 ## Status
 
-ACTIVE.
+COMPLETE.
+
+## Delivered
+
+- 15 aligned MIT-licensed ESM packages published at version `0.5.1` under the
+  `@soeditor/*` scope;
+- owner-approved umbrella package `@soeditor/editor` published with npm and
+  jsDelivr consumer verification;
+- protected manual publication, clean CI, packed-manifest, security, bundle,
+  accessibility, lifecycle, and post-publication quality gates;
+- documented 0.5.x release, recovery, deprecation, and maintenance procedures.
 
 ## Goal
 
@@ -827,7 +838,8 @@ credential.
 
 - all local and CI release checks pass with Critical = 0 and High = 0;
 - a repository-owner-selected license is present;
-- `soeditor` and scoped packages are published from the verified commit;
+- `@soeditor/editor` and its scoped supporting packages are published from the
+  verified commit;
 - clean npm and direct-CDN consumers pass against the registry artifacts;
 - remaining Medium/Low risks are documented for the 0.5.x line.
 

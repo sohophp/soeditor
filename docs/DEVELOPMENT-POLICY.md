@@ -36,14 +36,15 @@ Phases 1–15 are complete and the SoEditor 0.5 Developer Preview release gate
 has passed. The repository owner subsequently authorized Phase 16 publication
 and stabilization work.
 
-The current roadmap phase is:
+The final authorized roadmap phase was:
 
 ```text
-Phase 16 — 0.5.x Publication and Stabilization
+Phase 16 — 0.5.x Publication and Stabilization (complete)
 ```
 
-Work listed under Post-0.5 Candidate Work still requires a separate roadmap
-decision and must not begin automatically.
+There is no active implementation phase. Work listed under Post-0.5 Candidate
+Work requires a separate repository-owner roadmap decision and must not begin
+automatically.
 
 ---
 
