@@ -36,6 +36,9 @@ test('exposes the documented Classic, Developer, Markdown, and CMS examples', as
 test('keeps CMS markers and custom elements through SoFinder image insertion and preview', async ({
     page,
 }) => {
+    await page.route('https://example.test/**', (route) =>
+        route.fulfill({ status: 204 }),
+    );
     const pageErrors = monitorPageErrors(page);
     await page.goto('/?example=cms&files=sofinder');
     await page.locator('[data-testid="editor"]').evaluate((host) => {
