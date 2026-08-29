@@ -132,6 +132,25 @@ export class DomProjection {
             return placeholder;
         }
 
+        if (block.kind === 'structured-block') {
+            const placeholder = this.#document.createElement('div');
+            placeholder.dataset.soeditorStructuredBlock = block.type;
+            placeholder.dataset.soeditorStructuredBehavior = block.behavior;
+            placeholder.contentEditable = 'false';
+            placeholder.setAttribute('role', 'group');
+            placeholder.setAttribute(
+                'aria-label',
+                `Structured content: ${block.type}`,
+            );
+            placeholder.textContent = `<${block.type}>`;
+            this.#spans.set(placeholder, {
+                block: blockIndex,
+                end: 1,
+                start: 0,
+            });
+            return placeholder;
+        }
+
         return this.#renderParagraph(block, blockIndex, block.tagName);
     }
 

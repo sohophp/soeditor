@@ -1,3 +1,4 @@
+import type { Transaction } from '@soeditor/core';
 import type { HtmlAttribute } from '@soeditor/html';
 
 import {
@@ -19,7 +20,84 @@ import {
 
 export interface EditingResult {
     readonly model: EditingModel;
+    readonly operations: readonly EditingOperation[];
     readonly selection: EditingSelection;
+}
+
+/** The bounded operation descriptions emitted by the current visual editor. */
+export type EditingOperation =
+    | {
+          readonly kind: 'replace-text';
+          readonly block: number;
+          readonly from: number;
+          readonly to: number;
+          readonly insertedLength: number;
+      }
+    | {
+          readonly kind: 'split-block';
+          readonly point: EditingPoint;
+      }
+    | {
+          readonly kind: 'join-blocks';
+          readonly block: number;
+          readonly leftLength: number;
+      }
+    | {
+          readonly kind: 'replace-range';
+          readonly from: EditingPoint;
+          readonly to: EditingPoint;
+          readonly insertedEnd: EditingPoint;
+      }
+    | {
+          readonly kind: 'format-blocks' | 'format-inline';
+          readonly from: EditingPoint;
+          readonly to: EditingPoint;
+      };
+
+export type EditingPointAffinity = 'backward' | 'forward';
+
+const EDITING_OPERATIONS_METADATA = 'soeditor.engine.editingOperations';
+
+/** Maps a model point through an ordered list of immutable editing operations. */
+export function mapEditingPoint(
+    point: EditingPoint,
+    operations: readonly EditingOperation[],
+    affinity: EditingPointAffinity = 'forward',
+): EditingPoint {
+    if (!isEditingPoint(point)) {
+        throw new TypeError('An editing point requires non-negative indexes.');
+    }
+    if (!Array.isArray(operations) || !operations.every(isEditingOperation)) {
+        throw new TypeError('Editing operations are malformed.');
+    }
+    if (affinity !== 'backward' && affinity !== 'forward') {
+        throw new TypeError(
+            'Editing point affinity must be "backward" or "forward".',
+        );
+    }
+    return operations.reduce(
+        (mapped, operation) =>
+            mapPointThroughOperation(mapped, operation, affinity),
+        Object.freeze({ ...point }),
+    );
+}
+
+/** Reads validated structured operations from a visual document transaction. */
+export function readEditingOperations(
+    transaction: Transaction,
+): readonly EditingOperation[] | undefined {
+    const value = transaction.getMeta(EDITING_OPERATIONS_METADATA);
+    return Array.isArray(value) && value.every(isEditingOperation)
+        ? Object.freeze(value.map((operation) => freezeOperation(operation)))
+        : undefined;
+}
+
+/** @internal Attaches engine-owned operations to a visual transaction. */
+export function setEditingOperations(
+    transaction: Transaction,
+    operations: readonly EditingOperation[],
+): void {
+    transaction.setMeta(EDITING_OPERATIONS_METADATA, operations);
 }
 
 export class UnsupportedEditingSelectionError extends Error {
@@ -53,6 +131,17 @@ export function insertText(
         point.block,
         nextParagraph,
         nextPoint,
+        collapsed(nextPoint),
+        [
+            ...deleted.operations,
+            {
+                block: point.block,
+                from: point.offset,
+                insertedLength: text.length,
+                kind: 'replace-text',
+                to: point.offset,
+            },
+        ],
     );
 }
 
@@ -79,7 +168,10 @@ export function insertParagraph(
     );
     const nextPoint = { block: point.block + 1, offset: 0 };
 
-    return result({ blocks }, collapsed(nextPoint));
+    return result({ blocks }, collapsed(nextPoint), [
+        ...deleted.operations,
+        { kind: 'split-block', point },
+    ]);
 }
 
 export function deleteBackward(
@@ -122,6 +214,13 @@ export function deleteBackward(
     return result(
         { blocks },
         collapsed({ block: point.block - 1, offset: previousLength }),
+        [
+            {
+                block: point.block - 1,
+                kind: 'join-blocks',
+                leftLength: previousLength,
+            },
+        ],
     );
 }
 
@@ -158,7 +257,13 @@ export function deleteForward(
         ...paragraph,
         inlines: [...paragraph.inlines, ...following.inlines],
     });
-    return result({ blocks }, collapsed(point));
+    return result({ blocks }, collapsed(point), [
+        {
+            block: point.block,
+            kind: 'join-blocks',
+            leftLength: length,
+        },
+    ]);
 }
 
 export function toggleMark(
@@ -211,6 +316,13 @@ export function toggleMark(
         { ...paragraph, inlines: [...before, ...marked, ...after] },
         selection.focus,
         selection,
+        [
+            {
+                from: ordered.start,
+                kind: 'format-inline',
+                to: ordered.end,
+            },
+        ],
     );
 }
 
@@ -249,6 +361,16 @@ export function deleteSelection(
             ordered.start.block,
             { ...startParagraph, inlines: [...before, ...after] },
             ordered.start,
+            collapsed(ordered.start),
+            [
+                {
+                    block: ordered.start.block,
+                    from: ordered.start.offset,
+                    insertedLength: 0,
+                    kind: 'replace-text',
+                    to: ordered.end.offset,
+                },
+            ],
         );
     }
 
@@ -283,7 +405,14 @@ export function deleteSelection(
         ordered.end.block - ordered.start.block + 1,
         { ...startParagraph, inlines: [...before, ...after] },
     );
-    return result({ blocks }, collapsed(ordered.start));
+    return result({ blocks }, collapsed(ordered.start), [
+        {
+            from: ordered.start,
+            insertedEnd: ordered.start,
+            kind: 'replace-range',
+            to: ordered.end,
+        },
+    ]);
 }
 
 export function validateSelection(
@@ -370,6 +499,20 @@ export function insertModel(
                 inlines: [...before, ...insertedBlocks[0].inlines, ...after],
             },
             { block: point.block, offset: point.offset + pastedLength },
+            collapsed({
+                block: point.block,
+                offset: point.offset + pastedLength,
+            }),
+            [
+                ...deleted.operations,
+                {
+                    block: point.block,
+                    from: point.offset,
+                    insertedLength: pastedLength,
+                    kind: 'replace-text',
+                    to: point.offset,
+                },
+            ],
         );
     }
 
@@ -418,6 +561,18 @@ export function insertModel(
     return result(
         { blocks },
         collapsed({ block: caretBlock, offset: caretOffset }),
+        [
+            ...deleted.operations,
+            {
+                from: point,
+                insertedEnd: {
+                    block: caretBlock,
+                    offset: caretOffset,
+                },
+                kind: 'replace-range',
+                to: point,
+            },
+        ],
     );
 }
 
@@ -442,7 +597,13 @@ export function setBlockTag(
         };
     }
 
-    return result({ blocks }, selection);
+    return result({ blocks }, selection, [
+        {
+            from: range.start,
+            kind: 'format-blocks',
+            to: range.end,
+        },
+    ]);
 }
 
 export function toggleList(
@@ -478,7 +639,13 @@ export function toggleList(
               };
     }
 
-    return result({ blocks }, selection);
+    return result({ blocks }, selection, [
+        {
+            from: range.start,
+            kind: 'format-blocks',
+            to: range.end,
+        },
+    ]);
 }
 
 export function setLink(
@@ -526,6 +693,13 @@ export function setLink(
         { ...paragraph, inlines: [...before, ...linked, ...after] },
         selection.focus,
         selection,
+        [
+            {
+                from: range.start,
+                kind: 'format-inline',
+                to: range.end,
+            },
+        ],
     );
 }
 
@@ -618,10 +792,11 @@ function replaceParagraph(
     paragraph: EditingParagraph,
     point: EditingPoint,
     selection: EditingSelection = collapsed(point),
+    operations: readonly EditingOperation[] = [],
 ): EditingResult {
     const blocks = [...model.blocks];
     blocks[index] = paragraph;
-    return result({ blocks }, selection);
+    return result({ blocks }, selection, operations);
 }
 
 function isPlainParagraph(paragraph: EditingParagraph): boolean {
@@ -814,9 +989,13 @@ function orderedMarks(marks: readonly EditingMark[]): readonly EditingMark[] {
 function result(
     model: EditingModel,
     selection: EditingSelection,
+    operations: readonly EditingOperation[] = [],
 ): EditingResult {
     return Object.freeze({
         model: freezeModel(model),
+        operations: Object.freeze(
+            operations.map((operation) => freezeOperation(operation)),
+        ),
         selection: freezeSelection(selection),
     });
 }
@@ -826,5 +1005,186 @@ function unchanged(
     selection: EditingSelection,
 ): EditingResult {
     validateSelection(model, selection);
-    return Object.freeze({ model, selection: freezeSelection(selection) });
+    return Object.freeze({
+        model,
+        operations: Object.freeze([]),
+        selection: freezeSelection(selection),
+    });
+}
+
+function freezeOperation(operation: EditingOperation): EditingOperation {
+    if (operation.kind === 'split-block') {
+        return Object.freeze({
+            ...operation,
+            point: Object.freeze({ ...operation.point }),
+        });
+    }
+    if (
+        operation.kind === 'replace-range' ||
+        operation.kind === 'format-blocks' ||
+        operation.kind === 'format-inline'
+    ) {
+        if (operation.kind === 'replace-range') {
+            return Object.freeze({
+                ...operation,
+                from: Object.freeze({ ...operation.from }),
+                insertedEnd: Object.freeze({ ...operation.insertedEnd }),
+                to: Object.freeze({ ...operation.to }),
+            });
+        }
+        return Object.freeze({
+            ...operation,
+            from: Object.freeze({ ...operation.from }),
+            to: Object.freeze({ ...operation.to }),
+        });
+    }
+    return Object.freeze({ ...operation });
+}
+
+function isEditingOperation(value: unknown): value is EditingOperation {
+    if (typeof value !== 'object' || value === null) {
+        return false;
+    }
+    const operation = value as Record<string, unknown>;
+    switch (operation.kind) {
+        case 'replace-text':
+            return (
+                isIndex(operation.block) &&
+                isIndex(operation.from) &&
+                isIndex(operation.to) &&
+                isIndex(operation.insertedLength) &&
+                operation.from <= operation.to
+            );
+        case 'split-block':
+            return isEditingPoint(operation.point);
+        case 'join-blocks':
+            return isIndex(operation.block) && isIndex(operation.leftLength);
+        case 'replace-range':
+            return (
+                isEditingPoint(operation.from) &&
+                isEditingPoint(operation.to) &&
+                comparePoints(operation.from, operation.to) <= 0 &&
+                isEditingPoint(operation.insertedEnd)
+            );
+        case 'format-blocks':
+        case 'format-inline':
+            return (
+                isEditingPoint(operation.from) &&
+                isEditingPoint(operation.to) &&
+                comparePoints(operation.from, operation.to) <= 0
+            );
+        default:
+            return false;
+    }
+}
+
+function isEditingPoint(value: unknown): value is EditingPoint {
+    if (typeof value !== 'object' || value === null) {
+        return false;
+    }
+    const point = value as Record<string, unknown>;
+    return isIndex(point.block) && isIndex(point.offset);
+}
+
+function isIndex(value: unknown): value is number {
+    return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+}
+
+function mapPointThroughOperation(
+    point: EditingPoint,
+    operation: EditingOperation,
+    affinity: EditingPointAffinity,
+): EditingPoint {
+    switch (operation.kind) {
+        case 'replace-text': {
+            if (point.block !== operation.block) {
+                return point;
+            }
+            if (point.offset < operation.from) {
+                return point;
+            }
+            if (point.offset > operation.to) {
+                return Object.freeze({
+                    block: point.block,
+                    offset:
+                        point.offset +
+                        operation.insertedLength -
+                        (operation.to - operation.from),
+                });
+            }
+            return Object.freeze({
+                block: point.block,
+                offset:
+                    operation.from +
+                    (affinity === 'forward' ? operation.insertedLength : 0),
+            });
+        }
+        case 'split-block':
+            if (point.block < operation.point.block) {
+                return point;
+            }
+            if (point.block > operation.point.block) {
+                return Object.freeze({
+                    block: point.block + 1,
+                    offset: point.offset,
+                });
+            }
+            if (
+                point.offset < operation.point.offset ||
+                (point.offset === operation.point.offset &&
+                    affinity === 'backward')
+            ) {
+                return point;
+            }
+            return Object.freeze({
+                block: point.block + 1,
+                offset: point.offset - operation.point.offset,
+            });
+        case 'join-blocks':
+            if (point.block <= operation.block) {
+                return point;
+            }
+            if (point.block === operation.block + 1) {
+                return Object.freeze({
+                    block: operation.block,
+                    offset: operation.leftLength + point.offset,
+                });
+            }
+            return Object.freeze({
+                block: point.block - 1,
+                offset: point.offset,
+            });
+        case 'replace-range': {
+            if (comparePoints(point, operation.from) < 0) {
+                return point;
+            }
+            if (
+                point.block === operation.to.block &&
+                point.offset > operation.to.offset
+            ) {
+                return Object.freeze({
+                    block: operation.insertedEnd.block,
+                    offset:
+                        operation.insertedEnd.offset +
+                        point.offset -
+                        operation.to.offset,
+                });
+            }
+            if (point.block > operation.to.block) {
+                return Object.freeze({
+                    block:
+                        point.block +
+                        operation.insertedEnd.block -
+                        operation.to.block,
+                    offset: point.offset,
+                });
+            }
+            return affinity === 'forward'
+                ? operation.insertedEnd
+                : operation.from;
+        }
+        case 'format-blocks':
+        case 'format-inline':
+            return point;
+    }
 }

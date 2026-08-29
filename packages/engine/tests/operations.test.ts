@@ -1,3 +1,4 @@
+import { Editor } from '@soeditor/core';
 import { parseHtmlFragment, serializeHtmlFragment } from '@soeditor/html';
 
 import {
@@ -17,7 +18,10 @@ import {
     isLinkActive,
     isListActive,
     isTextMarkActive,
+    mapEditingPoint,
+    readEditingOperations,
     setBlockTag,
+    setEditingOperations,
     setLink,
     toggleMark,
     toggleList,
@@ -188,6 +192,80 @@ describe('editing operations', () => {
         expect(toHtml(deleteForward(forward, collapsed(0, 1)).model)).toBe(
             '<p>A</p><p data-id="second">B</p>',
         );
+    });
+
+    it('emits immutable granular operations and maps positions deterministically', () => {
+        const typed = insertText(fromHtml('<p>AB</p>'), collapsed(0, 1), 'xy');
+        expect(typed.operations).toEqual([
+            {
+                block: 0,
+                from: 1,
+                insertedLength: 2,
+                kind: 'replace-text',
+                to: 1,
+            },
+        ]);
+        expect(
+            mapEditingPoint({ block: 0, offset: 2 }, typed.operations),
+        ).toEqual({ block: 0, offset: 4 });
+        expect(Object.isFrozen(typed.operations)).toBe(true);
+        expect(Object.isFrozen(typed.operations[0])).toBe(true);
+
+        const split = insertParagraph(typed.model, collapsed(0, 2));
+        expect(
+            mapEditingPoint({ block: 0, offset: 4 }, split.operations),
+        ).toEqual({ block: 1, offset: 2 });
+        expect(
+            mapEditingPoint(
+                { block: 0, offset: 2 },
+                split.operations,
+                'backward',
+            ),
+        ).toEqual({ block: 0, offset: 2 });
+
+        const joined = deleteBackward(
+            fromHtml('<p>One</p><p>Two</p>'),
+            collapsed(1, 0),
+        );
+        expect(
+            mapEditingPoint({ block: 1, offset: 2 }, joined.operations),
+        ).toEqual({ block: 0, offset: 5 });
+
+        const across = deleteSelection(
+            fromHtml('<p>One</p><p>Two</p><p>Three</p><p>Four</p>'),
+            range(0, 1, 2, 2),
+        );
+        expect(
+            mapEditingPoint({ block: 3, offset: 2 }, across.operations),
+        ).toEqual({ block: 1, offset: 2 });
+        expect(
+            mapEditingPoint({ block: 0, offset: 0 }, across.operations),
+        ).toEqual({ block: 0, offset: 0 });
+        expect(
+            mapEditingPoint({ block: 2, offset: 4 }, across.operations),
+        ).toEqual({ block: 0, offset: 3 });
+    });
+
+    it('publishes validated operation metadata without exposing mutable values', async () => {
+        const editor = await Editor.create();
+        const transaction = editor.createTransaction({ origin: 'user' });
+        const operations = insertText(
+            fromHtml('<p>A</p>'),
+            collapsed(0, 1),
+            'B',
+        ).operations;
+        setEditingOperations(transaction, operations);
+
+        const read = readEditingOperations(transaction);
+        expect(read).toEqual(operations);
+        expect(Object.isFrozen(read)).toBe(true);
+        expect(Object.isFrozen(read?.[0])).toBe(true);
+
+        transaction.setMeta('soeditor.engine.editingOperations', [
+            { kind: 'replace-text', block: -1 },
+        ]);
+        expect(readEditingOperations(transaction)).toBeUndefined();
+        await editor.destroy();
     });
 
     it('rejects partial cross-paragraph deletion that would lose attributes', () => {

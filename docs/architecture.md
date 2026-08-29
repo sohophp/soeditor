@@ -233,6 +233,39 @@ narrow Core/SDK/minimal-preset production consumer proves that unused Source,
 Markdown, Preview, layout DOM, and CSS families remain removable. Packed
 NodeNext, native ESM, and Vite consumers exercise only public export maps.
 
+## Phase 23 extensible structured editing foundation
+
+Phase 23 retains canonical HTML source while opening the former fixed visual
+schema through a per-editor registry owned by `StructuredEditingPlugin`:
+
+```text
+feature plugin
+    ↓ registerBlock(source conversion)
+StructuredEditingRegistry — sealed when Visual attaches
+    ↓ immutable schema snapshot
+HTML tree ⇄ structured editing model ⇄ controlled inert DOM projection
+    ↓
+canonical Core source transaction
+```
+
+A contribution has unique contribution and node-type identities, deterministic
+HTML matching, explicit parse/serialize functions, and `atomic` or `readonly`
+behavior. Ambiguous matches and attempts to replace built-in editable blocks
+fail rather than depending on registration order. The initial public contract
+is block-only and passes SoEditor HTML values—not DOM or engine internals—to
+callbacks.
+
+Editable paragraphs, plugin-recognized structured blocks, and unmatched opaque
+content remain distinct model states. Structured blocks are inert in Phase 23;
+public node views and nested editables belong to Phase 24. Load, paste,
+insertion, external replacement, history replay, and serialization use the same
+sealed schema snapshot. Current editing results also expose immutable granular
+operation descriptions and deterministic point mapping. Visual document
+transactions carry validated operation metadata readable through
+`readEditingOperations()`; exact Source replacements and history replay remain
+observable as source-level replacements. Core transactions and bounded
+source-snapshot history remain authoritative.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing

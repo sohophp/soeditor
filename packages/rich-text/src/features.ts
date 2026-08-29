@@ -1,5 +1,6 @@
 import { Plugin, type CommandContext } from '@soeditor/core';
 import {
+    StructuredEditingPlugin,
     visualEditingServiceToken,
     type VisualBlockTag,
     type VisualEditingService,
@@ -22,6 +23,8 @@ export class RichTextArgumentError extends TypeError {
 }
 
 abstract class FeaturePlugin extends Plugin {
+    static readonly requires = [StructuredEditingPlugin];
+
     protected register(
         id: string,
         execute: (

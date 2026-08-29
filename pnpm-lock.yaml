@@ -217,6 +217,9 @@ importers:
       '@soeditor/core':
         specifier: workspace:*
         version: link:../core
+      '@soeditor/engine':
+        specifier: workspace:*
+        version: link:../engine
       '@soeditor/file-manager':
         specifier: workspace:*
         version: link:../file-manager

@@ -6,14 +6,19 @@ import {
     SplitViewPlugin as SdkSplitViewPlugin,
     UiPlugin as SdkUiPlugin,
     diagnosticsServiceToken as sdkDiagnosticsServiceToken,
+    mapEditingPoint,
     splitViewServiceToken as sdkSplitViewServiceToken,
+    StructuredEditingPlugin,
+    structuredEditingRegistryToken,
     uiRegistryServiceToken as sdkUiRegistryServiceToken,
     type DiagnosticProvider as SdkDiagnosticProvider,
     type DiagnosticsWorkflowConfig,
+    type EditingOperation,
     type ProjectionAdapter as SdkProjectionAdapter,
     type SplitViewAdapter as SdkSplitViewAdapter,
     type SplitViewPair as SdkSplitViewPair,
     type StatusItemFactory,
+    type StructuredBlockConversion,
 } from '@soeditor/plugin-sdk';
 import {
     classicPreset,
@@ -121,9 +126,14 @@ const ExampleServiceToken = createServiceToken<ExampleService>('example');
 
 class ConsumerPlugin extends Plugin {
     static readonly id = 'consumer';
-    static readonly requires = [SdkUiPlugin, SdkDiagnosticsPlugin];
+    static readonly requires = [
+        SdkUiPlugin,
+        SdkDiagnosticsPlugin,
+        StructuredEditingPlugin,
+    ];
     #disposeDiagnostic: (() => void) | undefined;
     #disposeStatus: (() => void) | undefined;
+    #disposeStructuredBlock: (() => void) | undefined;
 
     override init(): void {
         this.editor.commands.register({
@@ -165,9 +175,30 @@ class ConsumerPlugin extends Plugin {
         this.#disposeDiagnostic = this.editor.services
             .get(sdkDiagnosticsServiceToken)
             .register(provider);
+        const conversion: StructuredBlockConversion = {
+            behavior: 'atomic',
+            fromHtml: (node) => ({
+                attributes: node.attributes,
+                children: node.children,
+            }),
+            id: 'consumer.product-card',
+            matches: (node) => node.tagName === 'product-card',
+            toHtml: (block): HtmlElement => ({
+                attributes: block.attributes,
+                children: block.children,
+                namespace: 'html',
+                tagName: 'product-card',
+                type: 'element',
+            }),
+            type: 'consumer.product-card',
+        };
+        this.#disposeStructuredBlock = this.editor.services
+            .get(structuredEditingRegistryToken)
+            .registerBlock(conversion);
     }
 
     override destroy(): void {
+        this.#disposeStructuredBlock?.();
         this.#disposeDiagnostic?.();
         this.#disposeStatus?.();
     }
@@ -299,6 +330,19 @@ const visualSelection: EditingSelection = {
     anchor: { block: 0, offset: 0 },
     focus: { block: 0, offset: 0 },
 };
+const editingOperations: readonly EditingOperation[] = [
+    {
+        block: 0,
+        from: 0,
+        insertedLength: 1,
+        kind: 'replace-text',
+        to: 0,
+    },
+];
+const mappedVisualPoint = mapEditingPoint(
+    visualSelection.focus,
+    editingOperations,
+);
 
 if (
     htmlElement.tagName !== 'product-card' ||
@@ -309,6 +353,7 @@ if (
 
 void visualFactory;
 void visualSelection;
+void mappedVisualPoint;
 const linkOptions: LinkOptions = { href: '/relative' };
 void linkOptions;
 const sourceFactory: typeof createSourceEditingEngine =

@@ -67,6 +67,9 @@ palette actions invoke those same commands.
 - Implement an alternate split host adapter through `splitViewServiceToken`
   and `SplitViewAdapter`.
 - Supply a replaceable asset picker via `fileManagerServiceToken`.
+- Register an atomic or readonly structured HTML block through
+  `structuredEditingRegistryToken`. Require `StructuredEditingPlugin`, and keep
+  conversion callbacks DOM-free and deterministic.
 
 Register UI factories during plugin initialization, before calling
 `createEditorUi()`. An attached UI snapshots its mounted contributions; dispose
@@ -82,6 +85,72 @@ accessibility/SEO plugins and rule codes from `@soeditor/html-tools`; import the
 browser DOM split factory and its errors from `@soeditor/layout`. Registry
 implementations, layout DOM internals, and third-party parser/editor types are
 not extension APIs.
+
+## Structured HTML blocks
+
+The Phase 23 contribution boundary recognizes custom block elements without
+making their source executable or exposing visual-engine internals. Node-view
+DOM is intentionally deferred; a recognized block is inert until that later
+runtime is attached.
+
+```ts
+import type { HtmlElement } from '@soeditor/html';
+import {
+    Plugin,
+    StructuredEditingPlugin,
+    structuredEditingRegistryToken,
+    type StructuredBlockConversion,
+} from '@soeditor/plugin-sdk';
+
+const productCard: StructuredBlockConversion = {
+    id: 'example.product-card',
+    type: 'example.product-card',
+    behavior: 'atomic',
+    matches: (node) =>
+        node.namespace === 'html' && node.tagName === 'product-card',
+    fromHtml: (node) => ({
+        attributes: node.attributes,
+        children: node.children,
+    }),
+    toHtml: (block): HtmlElement => ({
+        type: 'element',
+        namespace: 'html',
+        tagName: 'product-card',
+        attributes: block.attributes,
+        children: block.children,
+    }),
+};
+
+export class ProductCardPlugin extends Plugin {
+    static readonly id = 'example.product-card-plugin';
+    static readonly requires = [StructuredEditingPlugin];
+    #dispose: (() => void) | undefined;
+
+    override init(): void {
+        this.#dispose = this.editor.services
+            .get(structuredEditingRegistryToken)
+            .registerBlock(productCard);
+    }
+
+    override destroy(): void {
+        this.#dispose?.();
+    }
+}
+```
+
+Contribution IDs and node types must be unique within one editor. The registry
+is sealed when a Visual engine attaches, so register during plugin `init()`.
+Two conversions that match the same source node are rejected, as is a custom
+conversion that claims a built-in editable paragraph/list shape. Unknown nodes
+that match no contribution continue to be preserved as opaque content.
+Disposers remain safe during editor teardown; after sealing they do not mutate
+the schema that a later reattachment would consume.
+
+Plugins that maintain position-based auxiliary data may inspect Visual-origin
+transactions with `readEditingOperations(transaction)` and map their own
+points with `mapEditingPoint()`. The reader returns `undefined` for exact Source
+replacement and history replay transactions; those boundaries must be handled
+as ambiguous source changes rather than guessed tree edits.
 
 ## Compatibility rules
 

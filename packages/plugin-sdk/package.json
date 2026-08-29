@@ -43,6 +43,7 @@
     },
     "peerDependencies": {
         "@soeditor/core": "workspace:*",
+        "@soeditor/engine": "workspace:*",
         "@soeditor/file-manager": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
         "@soeditor/layout": "workspace:*",
@@ -51,6 +52,7 @@
     },
     "devDependencies": {
         "@soeditor/core": "workspace:*",
+        "@soeditor/engine": "workspace:*",
         "@soeditor/file-manager": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
         "@soeditor/layout": "workspace:*",

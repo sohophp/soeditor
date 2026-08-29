@@ -1,5 +1,6 @@
 import { Editor, type PluginConstructor } from '@soeditor/core';
 import {
+    structuredEditingRegistryToken,
     visualEditingServiceToken,
     type VisualBlockTag,
     type VisualEditingService,
@@ -56,6 +57,8 @@ interface ServiceHarness {
 describe('rich-text feature plugins', () => {
     it('registers every feature as a stable command', async () => {
         const { editor } = await createHarness();
+
+        expect(editor.services.has(structuredEditingRegistryToken)).toBe(true);
 
         expect(
             [

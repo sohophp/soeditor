@@ -17,6 +17,10 @@ import {
     extractSelection,
     UnsupportedEditingSelectionError,
 } from './operations.js';
+import {
+    findStructuredBlockConversion,
+    type StructuredEditingSchema,
+} from './structured-editing.js';
 
 export interface ClipboardPayload {
     readonly html: string;
@@ -55,10 +59,11 @@ const BLOCK_ELEMENTS = new Set([
 export function createClipboardPayload(
     model: EditingModel,
     selection: EditingSelection,
+    schema?: StructuredEditingSchema,
 ): ClipboardPayload {
     const selected = extractSelection(model, selection);
     return Object.freeze({
-        html: serializeHtmlFragment(serializeEditingModel(selected)),
+        html: serializeHtmlFragment(serializeEditingModel(selected, schema)),
         text: modelToPlainText(selected),
     });
 }
@@ -66,6 +71,7 @@ export function createClipboardPayload(
 export function createPastedModel(
     html: string,
     plainText: string,
+    schema?: StructuredEditingSchema,
 ): EditingModel {
     if (html.length > 0) {
         if (/<!doctype\s|<\/?(?:html|head|body)(?:\s|>)/iu.test(html)) {
@@ -74,9 +80,9 @@ export function createPastedModel(
             );
         }
         const parsed = parseHtmlFragment(html).document;
-        const normalized = normalizePastedFragment(parsed);
+        const normalized = normalizePastedFragment(parsed, schema);
         if (normalized.children.length > 0) {
-            return createEditingModel(normalized);
+            return createEditingModel(normalized, schema);
         }
     }
 
@@ -107,6 +113,7 @@ function createPlainTextModel(source: string): EditingModel {
 
 function normalizePastedFragment(
     fragment: HtmlDocumentFragment,
+    schema?: StructuredEditingSchema,
 ): HtmlDocumentFragment {
     const children: HtmlChildNode[] = [];
     let inline: HtmlChildNode[] = [];
@@ -137,7 +144,7 @@ function normalizePastedFragment(
     };
 
     for (const child of fragment.children) {
-        if (isBlock(child)) {
+        if (isBlock(child, schema)) {
             flushInline();
             children.push(child);
         } else {
@@ -151,16 +158,21 @@ function normalizePastedFragment(
     });
 }
 
-function isBlock(node: HtmlChildNode): boolean {
+function isBlock(
+    node: HtmlChildNode,
+    schema?: StructuredEditingSchema,
+): boolean {
     return (
-        node.type === 'element' &&
-        node.namespace === 'html' &&
-        BLOCK_ELEMENTS.has(node.tagName)
+        (node.type === 'element' &&
+            node.namespace === 'html' &&
+            BLOCK_ELEMENTS.has(node.tagName)) ||
+        (schema !== undefined &&
+            findStructuredBlockConversion(schema, node) !== undefined)
     );
 }
 
 function blockText(block: EditingBlock): string {
-    if (block.kind === 'opaque-block') {
+    if (block.kind !== 'paragraph') {
         return '';
     }
 

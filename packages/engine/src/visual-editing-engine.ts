@@ -37,6 +37,7 @@ import {
     isListActive,
     isTextMarkActive,
     setBlockTag,
+    setEditingOperations,
     setLink,
     toggleMark,
     toggleList,
@@ -44,6 +45,12 @@ import {
     UnsupportedEditingSelectionError,
     validateSelection,
 } from './operations.js';
+import {
+    sealStructuredEditingRegistry,
+    snapshotStructuredEditingRegistry,
+    structuredEditingRegistryToken,
+    type StructuredEditingSchema,
+} from './structured-editing.js';
 import {
     visualEditingServiceToken,
     type VisualBlockTag,
@@ -91,6 +98,7 @@ export class VisualEditingEngine implements EditingEngine {
     readonly #previousHidden: boolean;
     readonly #projection: DomProjection;
     readonly #service: VisualEditingService;
+    readonly #schema: StructuredEditingSchema;
     readonly #activateOnFocus: boolean;
     #compositionSelection: EditingSelection | undefined;
     #destroyed = false;
@@ -132,7 +140,12 @@ export class VisualEditingEngine implements EditingEngine {
                 visualEditingServiceToken.id,
             );
         }
-        const initial = createVisualModel(this.editor.getData());
+        const structuredRegistry = this.editor.services.tryGet(
+            structuredEditingRegistryToken,
+        );
+        this.#schema = snapshotStructuredEditingRegistry(structuredRegistry);
+        const initial = createVisualModel(this.editor.getData(), this.#schema);
+        sealStructuredEditingRegistry(structuredRegistry);
         this.#model = initial.model;
         this.#lockedDocument = initial.locked;
         this.#lastValidModel = initial.valid ? initial.model : undefined;
@@ -479,6 +492,7 @@ export class VisualEditingEngine implements EditingEngine {
             const inserted = createPastedModel(
                 clipboard.getData('text/html'),
                 clipboard.getData('text/plain'),
+                this.#schema,
             );
             const result = insertModel(this.#model, selection, inserted);
             this.#commit(result, {
@@ -494,7 +508,7 @@ export class VisualEditingEngine implements EditingEngine {
 
     #commit(result: EditingResult, history: HistoryMetadata): void {
         const source = serializeHtmlFragment(
-            serializeEditingModel(result.model),
+            serializeEditingModel(result.model, this.#schema),
         );
         this.#pending = {
             model: result.model,
@@ -506,6 +520,7 @@ export class VisualEditingEngine implements EditingEngine {
             this.editor.update(
                 (transaction) => {
                     transaction.replaceDocument(source);
+                    setEditingOperations(transaction, result.operations);
                     setHistoryMetadata(transaction, history);
                 },
                 { origin: 'user' },
@@ -619,7 +634,11 @@ export class VisualEditingEngine implements EditingEngine {
 
     #insertHtml(html: string): void {
         this.#applyFeature((selection) =>
-            insertModel(this.#model, selection, createPastedModel(html, '')),
+            insertModel(
+                this.#model,
+                selection,
+                createPastedModel(html, '', this.#schema),
+            ),
         );
     }
 
@@ -631,7 +650,19 @@ export class VisualEditingEngine implements EditingEngine {
             return;
         }
 
-        const next = createVisualModel(source, this.#lastValidModel);
+        let next: ReturnType<typeof createVisualModel>;
+        try {
+            next = createVisualModel(
+                source,
+                this.#schema,
+                this.#lastValidModel,
+            );
+        } catch (error: unknown) {
+            this.#lockedDocument = true;
+            this.#updateEditableState();
+            this.#render(this.#model, readReplaySelection(transaction));
+            throw error;
+        }
         this.#model = next.model;
         this.#lockedDocument = next.locked;
         if (next.valid) {
@@ -669,7 +700,11 @@ export class VisualEditingEngine implements EditingEngine {
         }
 
         try {
-            const payload = createClipboardPayload(this.#model, selection);
+            const payload = createClipboardPayload(
+                this.#model,
+                selection,
+                this.#schema,
+            );
             clipboard.setData('text/plain', payload.text);
             clipboard.setData('text/html', payload.html);
             event.preventDefault();
@@ -740,6 +775,7 @@ function ensureEditableModel(model: EditingModel): EditingModel {
 
 function createVisualModel(
     source: string,
+    schema: StructuredEditingSchema,
     fallback?: EditingModel,
 ): {
     readonly locked: boolean;
@@ -789,7 +825,7 @@ function createVisualModel(
 
     return Object.freeze({
         locked: false,
-        model: ensureEditableModel(createEditingModel(parsed.document)),
+        model: ensureEditableModel(createEditingModel(parsed.document, schema)),
         valid: true,
     });
 }

@@ -39,7 +39,7 @@ and stabilization work.
 The current authorized roadmap phase is:
 
 ```text
-Phase 23 — Extensible Structured Editing Foundation (active)
+Phase 24 — Node Views and Widget Runtime (active)
 ```
 
 The repository owner authorized the SoEditor 0.6 through 1.0 development goal

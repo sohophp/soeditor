@@ -17,6 +17,27 @@ export type {
     TransactionOrigin,
 } from '@soeditor/core';
 export {
+    mapEditingPoint,
+    readEditingOperations,
+    StructuredEditingContributionAlreadyRegisteredError,
+    StructuredEditingContributionConflictError,
+    StructuredEditingPlugin,
+    StructuredEditingRegistrySealedError,
+    structuredEditingRegistryToken,
+} from '@soeditor/engine';
+export type {
+    EditingBlock,
+    EditingModel,
+    EditingOperation,
+    EditingPoint,
+    EditingPointAffinity,
+    EditingSelection,
+    EditingStructuredBlock,
+    StructuredBlockBehavior,
+    StructuredBlockConversion,
+    StructuredEditingRegistry,
+} from '@soeditor/engine';
+export {
     DiagnosticsPlugin,
     diagnosticsServiceToken,
 } from '@soeditor/html-tools';

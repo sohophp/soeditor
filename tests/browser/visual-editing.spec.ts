@@ -22,6 +22,59 @@ test('types text through beforeinput and restores the caret', async ({
     expect(await readSelection(page)).toEqual({ anchor: 6, focus: 6 });
 });
 
+test('publishes structured operations on visual document transactions', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await page.evaluate(() => {
+        const scope = window as Window & {
+            __capturedEditingOperations?: unknown;
+            __soeditor?: {
+                editor: {
+                    events: {
+                        on(
+                            id: string,
+                            listener: (event: { transaction: unknown }) => void,
+                        ): () => void;
+                    };
+                };
+                readEditingOperations(
+                    transaction: unknown,
+                ): readonly unknown[] | undefined;
+            };
+        };
+        const harness = scope.__soeditor;
+        if (harness === undefined) {
+            throw new Error('Playground editor was not exposed.');
+        }
+        harness.editor.events.on('document:change', ({ transaction }) => {
+            scope.__capturedEditingOperations =
+                harness.readEditingOperations(transaction);
+        });
+    });
+    await setSelection(page, 0, 5);
+    await page.keyboard.type('!');
+
+    expect(
+        await page.evaluate(
+            () =>
+                (
+                    window as Window & {
+                        __capturedEditingOperations?: unknown;
+                    }
+                ).__capturedEditingOperations,
+        ),
+    ).toEqual([
+        {
+            block: 0,
+            from: 5,
+            insertedLength: 1,
+            kind: 'replace-text',
+            to: 5,
+        },
+    ]);
+});
+
 test('replaces intermediate IME composition text instead of duplicating it', async ({
     page,
 }) => {

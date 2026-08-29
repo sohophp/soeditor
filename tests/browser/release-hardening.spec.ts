@@ -30,6 +30,11 @@ test('exposes the documented Classic, Developer, Markdown, and CMS examples', as
     await expect(page.locator('[data-testid="source"]')).toContainText(
         '<!--CMS:block:42-->',
     );
+    await expect(
+        page.locator(
+            '[data-soeditor-structured-block="playground.product-card"]',
+        ),
+    ).toHaveAttribute('contenteditable', 'false');
     await expect(page.getByRole('navigation')).toContainText('Classic editor');
 });
 

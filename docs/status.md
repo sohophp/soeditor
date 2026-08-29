@@ -10,10 +10,12 @@ owning engines or DOM. The local `0.6.0` release candidate is complete and
 awaiting an explicitly authorized publication.
 
 The evidence-derived 0.7–1.0 roadmap is now approved. Phase 23 — Extensible
-Structured Editing Foundation — is active; it will establish plugin-contributed
-schema/conversion and granular operation mapping before public node views,
-production tables/media, review workflows, framework adapters, or 1.0 API
-stabilization.
+Structured Editing Foundation — is complete. It provides an editor-owned
+structured-block conversion registry, atomic/readonly custom blocks, opaque
+fallback, validated transaction operation metadata, and immutable position
+mapping. Public and SDK packed consumers plus 96 Chromium scenarios pass; the
+final Phase 23 adversarial review found Critical 0 and High 0. Phase 24 — Node
+Views and Widget Runtime — is active.
 
 All 17 development package manifests are aligned at the `0.6.0` release
 candidate. The published stable reference remains `0.5.1` until an explicitly
@@ -67,6 +69,9 @@ deliberate and documented under SemVer principles.
   ESM/narrow preset imports are recommended for production-size evaluation.
 - Visual editing intentionally supports a bounded schema. Unknown HTML is
   preserved as opaque content; complete documents remain Source-oriented.
+  Phase 23 structured contributions are block-only and inert. Interactive
+  node views, atomic selection/deletion, drag/drop, and nested editables belong
+  to Phase 24.
 - HTML ↔ Markdown conversion is explicitly lossy. Canonical Markdown itself is
   exact in Markdown mode.
 - FileManager selects one existing asset. Upload, rename, delete,

@@ -5,6 +5,14 @@ import type {
     HtmlElement,
 } from '@soeditor/html';
 
+import {
+    findStructuredBlockConversion,
+    getStructuredBlockConversion,
+    StructuredEditingContributionConflictError,
+    type StructuredBlockBehavior,
+    type StructuredEditingSchema,
+} from './structured-editing.js';
+
 export type EditingBlockTag =
     'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'blockquote' | 'pre';
 
@@ -44,7 +52,17 @@ export interface EditingOpaqueBlock {
     readonly node: HtmlChildNode;
 }
 
-export type EditingBlock = EditingParagraph | EditingOpaqueBlock;
+/** A plugin-recognized block whose DOM behavior is supplied in a later phase. */
+export interface EditingStructuredBlock {
+    readonly kind: 'structured-block';
+    readonly type: string;
+    readonly behavior: StructuredBlockBehavior;
+    readonly attributes: readonly HtmlAttribute[];
+    readonly children: readonly HtmlChildNode[];
+}
+
+export type EditingBlock =
+    EditingParagraph | EditingStructuredBlock | EditingOpaqueBlock;
 
 export interface EditingModel {
     readonly blocks: readonly EditingBlock[];
@@ -62,14 +80,18 @@ export interface EditingSelection {
 
 export function createEditingModel(
     fragment: HtmlDocumentFragment,
+    schema?: StructuredEditingSchema,
 ): EditingModel {
     return freezeModel({
-        blocks: fragment.children.flatMap((node) => convertBlocks(node)),
+        blocks: fragment.children.flatMap((node) =>
+            convertBlocks(node, schema),
+        ),
     });
 }
 
 export function serializeEditingModel(
     model: EditingModel,
+    schema?: StructuredEditingSchema,
 ): HtmlDocumentFragment {
     const children: HtmlChildNode[] = [];
 
@@ -93,7 +115,7 @@ export function serializeEditingModel(
             index -= 1;
             children.push(serializeList(list, items));
         } else if (block !== undefined) {
-            children.push(serializeBlock(block));
+            children.push(serializeBlock(block, schema));
         }
     }
 
@@ -124,6 +146,18 @@ export function freezeModel(model: EditingModel): EditingModel {
             model.blocks.map((block) => {
                 if (block.kind === 'opaque-block') {
                     return Object.freeze({ ...block });
+                }
+
+                if (block.kind === 'structured-block') {
+                    return Object.freeze({
+                        ...block,
+                        attributes: freezeAttributes(block.attributes),
+                        children: Object.freeze(
+                            block.children.map((child) =>
+                                freezeHtmlChild(child),
+                            ),
+                        ),
+                    });
                 }
 
                 return Object.freeze({
@@ -186,7 +220,48 @@ export function normalizeInlines(
     return normalized;
 }
 
-function convertBlocks(node: HtmlChildNode): readonly EditingBlock[] {
+function convertBlocks(
+    node: HtmlChildNode,
+    schema?: StructuredEditingSchema,
+): readonly EditingBlock[] {
+    const conversion =
+        schema === undefined
+            ? undefined
+            : findStructuredBlockConversion(schema, node);
+    if (conversion !== undefined) {
+        if (node.type !== 'element') {
+            throw new Error(
+                'A structured block conversion matched a non-element node.',
+            );
+        }
+        if (isBuiltInBlock(node)) {
+            throw new StructuredEditingContributionConflictError([
+                `soeditor.builtin.${node.type === 'element' ? node.tagName : 'block'}`,
+                conversion.id,
+            ]);
+        }
+        const converted = conversion.fromHtml(node);
+        if (
+            typeof converted !== 'object' ||
+            converted === null ||
+            !Array.isArray(converted.attributes) ||
+            !Array.isArray(converted.children)
+        ) {
+            throw new TypeError(
+                `Structured editing contribution "${conversion.id}" returned invalid block data.`,
+            );
+        }
+        return [
+            {
+                attributes: converted.attributes,
+                behavior: conversion.behavior,
+                children: converted.children,
+                kind: 'structured-block',
+                type: conversion.type,
+            },
+        ];
+    }
+
     if (
         node.type === 'element' &&
         node.namespace === 'html' &&
@@ -293,9 +368,31 @@ function isPureMarkedContent(node: HtmlElement): boolean {
     });
 }
 
-function serializeBlock(block: EditingBlock): HtmlChildNode {
+function serializeBlock(
+    block: EditingBlock,
+    schema?: StructuredEditingSchema,
+): HtmlChildNode {
     if (block.kind === 'opaque-block') {
         return block.node;
+    }
+
+    if (block.kind === 'structured-block') {
+        const conversion =
+            schema === undefined
+                ? undefined
+                : getStructuredBlockConversion(schema, block.type);
+        if (conversion === undefined) {
+            throw new Error(
+                `Structured block type "${block.type}" has no registered source serializer.`,
+            );
+        }
+        const serialized = conversion.toHtml(block);
+        if (serialized.type !== 'element' || !conversion.matches(serialized)) {
+            throw new TypeError(
+                `Structured editing contribution "${conversion.id}" serialized a node it does not match.`,
+            );
+        }
+        return freezeHtmlChild(serialized);
     }
 
     return Object.freeze({
@@ -394,6 +491,17 @@ function isBlockTag(tagName: string): tagName is EditingBlockTag {
     );
 }
 
+function isBuiltInBlock(node: HtmlChildNode): boolean {
+    return (
+        node.type === 'element' &&
+        node.namespace === 'html' &&
+        (isBlockTag(node.tagName) ||
+            ((node.tagName === 'ol' || node.tagName === 'ul') &&
+                node.attributes.length === 0 &&
+                node.children.every(isSimpleListItem)))
+    );
+}
+
 function isTextMark(tagName: string): tagName is EditingTextMark {
     return (
         tagName === 'strong' ||
@@ -411,6 +519,27 @@ function isSimpleListItem(node: HtmlChildNode): boolean {
         node.tagName === 'li' &&
         node.attributes.length === 0
     );
+}
+
+function freezeAttributes(
+    attributes: readonly HtmlAttribute[],
+): readonly HtmlAttribute[] {
+    return Object.freeze(
+        attributes.map((attribute) => Object.freeze({ ...attribute })),
+    );
+}
+
+function freezeHtmlChild(node: HtmlChildNode): HtmlChildNode {
+    if (node.type !== 'element') {
+        return Object.freeze({ ...node });
+    }
+    return Object.freeze({
+        ...node,
+        attributes: freezeAttributes(node.attributes),
+        children: Object.freeze(
+            node.children.map((child) => freezeHtmlChild(child)),
+        ),
+    });
 }
 
 function serializeList(

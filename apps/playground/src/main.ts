@@ -4,7 +4,13 @@ import {
     createDeveloperToolsEngine,
     developerToolsServiceToken,
 } from '@soeditor/dev-tools';
-import { createVisualEditingEngine } from '@soeditor/engine';
+import {
+    createVisualEditingEngine,
+    readEditingOperations,
+    StructuredEditingPlugin,
+    structuredEditingRegistryToken,
+} from '@soeditor/engine';
+import type { HtmlElement } from '@soeditor/html';
 import {
     fileManagerServiceToken,
     type FileManager,
@@ -140,6 +146,42 @@ class DemoPlugin extends Plugin {
     }
 }
 
+class ProductCardSchemaPlugin extends Plugin {
+    static readonly id = 'playground-product-card-schema';
+    static readonly requires = [StructuredEditingPlugin];
+    #dispose: (() => void) | undefined;
+
+    override init(): void {
+        this.#dispose = this.editor.services
+            .get(structuredEditingRegistryToken)
+            .registerBlock({
+                behavior: 'atomic',
+                fromHtml: (node) => ({
+                    attributes: node.attributes,
+                    children: node.children,
+                }),
+                id: 'playground.product-card',
+                matches: (node) =>
+                    node.namespace === 'html' &&
+                    node.tagName === 'product-card',
+                toHtml: (block): HtmlElement =>
+                    Object.freeze({
+                        attributes: block.attributes,
+                        children: block.children,
+                        namespace: 'html',
+                        tagName: 'product-card',
+                        type: 'element',
+                    }),
+                type: 'playground.product-card',
+            });
+    }
+
+    override destroy(): void {
+        this.#dispose?.();
+        this.#dispose = undefined;
+    }
+}
+
 const stateOutput = document.querySelector<HTMLElement>('#state');
 const sourceOutput = document.querySelector<HTMLElement>('#source');
 const editingHost = document.querySelector<HTMLElement>('#editor');
@@ -184,6 +226,7 @@ const htmlPresetPlugins =
         : htmlPreset.plugins;
 const htmlPlugins = [
     DemoPlugin,
+    ...(cmsExample ? [ProductCardSchemaPlugin] : []),
     ...(!developerDocument && persistentProjections
         ? [ProjectionCoordinatorPlugin]
         : []),
@@ -399,6 +442,7 @@ const developerToolsEngine =
     previewEngine,
     previewServiceToken,
     projectionCoordinatorServiceToken,
+    readEditingOperations,
     sourceEngine,
     splitView,
     splitViewServiceToken,

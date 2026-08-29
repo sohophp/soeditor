@@ -7,6 +7,7 @@ export default defineConfig({
         rollupOptions: {
             external: [
                 '@soeditor/core',
+                '@soeditor/engine',
                 '@soeditor/file-manager',
                 '@soeditor/html-tools',
                 '@soeditor/layout',
