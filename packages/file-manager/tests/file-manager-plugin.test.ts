@@ -125,6 +125,7 @@ describe('FileManagerPlugin', () => {
 function registerVisualService(editor: Editor, inserted: string[]): void {
     editor.services.register(visualEditingServiceToken, {
         canEdit: () => true,
+        getSelection: () => undefined,
         getSelectedStructuredBlock: () => undefined,
         insertHtml: (html) => inserted.push(html),
         isBlockActive: () => false,
@@ -135,6 +136,7 @@ function registerVisualService(editor: Editor, inserted: string[]): void {
         replaceStructuredBlockContent: () => undefined,
         setBlock: () => undefined,
         setLink: () => undefined,
+        setSelection: () => false,
         setStructuredBlockAttributes: () => undefined,
         toggleList: () => undefined,
         toggleMark: () => undefined,

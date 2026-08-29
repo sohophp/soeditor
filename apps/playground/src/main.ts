@@ -1,4 +1,5 @@
 import { SoFinderAdapter } from '@soeditor/adapter-sofinder';
+import type { CommentThread } from '@soeditor/comments';
 import { Editor, Plugin } from '@soeditor/core';
 import {
     createDeveloperToolsEngine,
@@ -333,6 +334,25 @@ const developerDocument = parameters.get('preset') !== 'classic';
 const diagnosticsMode =
     parameters.get('diagnostics') === 'manual' ? 'manual' : 'debounced';
 const htmlPreset = developerDocument ? developerPreset : classicPreset;
+let commentThreads: readonly CommentThread[] = Object.freeze([]);
+let commentId = 0;
+const commentsModule = parameters.has('comments')
+    ? await import('@soeditor/comments')
+    : undefined;
+const CommentsPlugin = commentsModule?.createCommentsPlugin({
+    author: () => ({
+        id: 'playground-reviewer',
+        name: 'Playground Reviewer',
+    }),
+    createId: () => `playground-comment-${String(++commentId)}`,
+    permissions: { can: () => true },
+    storage: {
+        load: async () => commentThreads,
+        save: async (threads) => {
+            commentThreads = threads;
+        },
+    },
+});
 const htmlPresetPlugins =
     developerDocument && !persistentProjections
         ? htmlPreset.plugins.filter(
@@ -343,6 +363,7 @@ const htmlPresetPlugins =
         : htmlPreset.plugins;
 const htmlPlugins = [
     DemoPlugin,
+    ...(CommentsPlugin === undefined ? [] : [CommentsPlugin]),
     ...(cmsExample ? [ProductCardSchemaPlugin] : []),
     ...(!developerDocument && persistentProjections
         ? [ProjectionCoordinatorPlugin]
@@ -527,7 +548,9 @@ const ui = createEditorUi({
             : toolbarParameter === 'missing'
               ? { toolbar: ['missing'] }
               : {
-                    toolbar: htmlPreset.toolbar,
+                    toolbar: parameters.has('comments')
+                        ? [...htmlPreset.toolbar, '|', 'comments']
+                        : htmlPreset.toolbar,
                 }),
 });
 const developerToolsEngine =
@@ -548,6 +571,7 @@ const developerToolsEngine =
     createSourceEditingEngine,
     createVisualEditingEngine,
     editor,
+    commentsServiceToken: commentsModule?.commentsServiceToken,
     developerToolsEngine,
     developerToolsServiceToken,
     diagnosticsServiceToken,

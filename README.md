@@ -2,7 +2,7 @@
 
 Developer-first extensible content editor.
 
-**Status: 0.7 Structured Extensions release candidate.** SoEditor is suitable for
+**Status: 0.7 Structured Extensions candidate with Phase 27 review-workflow development complete.** SoEditor is suitable for
 evaluation and integration development, but is not yet a stable 1.0 release.
 The public registry reference remains 0.5.1 until authorized publication. The repository
 contains the framework-agnostic Core, HTML document layer, controlled visual
@@ -26,7 +26,9 @@ Phases 17–21 add configurable accessibility/SEO diagnostics, observable
 validation workflows, persistent single-writer projections, accessible split
 layouts, and a curated SDK/preset/distribution surface. Phases 23–26 add
 structured extension contracts, command-backed node views, bounded tables and
-media, and a packed third-party widget release gate.
+media, and a packed third-party widget release gate. Phase 27 adds host-owned,
+operation-mapped comments and non-canonical visual decorations; Phase 28 is
+active.
 
 ```ts
 import { SoEditor, minimalPreset } from '@soeditor/editor';
@@ -41,6 +43,8 @@ const editor = await SoEditor.create({
 ## Workspace
 
 - `@soeditor/core` — independent editor infrastructure with no DOM dependency.
+- `@soeditor/comments` — host-owned mapped annotations, comment commands, and
+  accessible review UI (private until the 0.8 release hardening phase).
 - `@soeditor/html` — HTML parsing, diagnostics, source locations, and semantic
   serialization with a SoEditor-owned public tree.
 - `@soeditor/engine` — controlled contenteditable projection, transaction
@@ -81,7 +85,8 @@ Start with [Getting started](docs/getting-started.md). See
 [Source editing](docs/source-editing.md), [Preview](docs/preview.md),
 [CMS/SoFinder integration](docs/cms-integration.md), the
 [Plugin Guide](docs/plugin-guide.md), [Release procedure](docs/releasing.md),
-the [public API policy](docs/public-api.md), and
+the [comments guide](docs/comments.md),
+[public API policy](docs/public-api.md), and
 [development status](docs/status.md).
 
 ## Development

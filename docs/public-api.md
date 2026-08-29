@@ -20,6 +20,11 @@ an export of every built-in feature. Third-party plugins declare aligned
 package. Generic contracts required by an extension belong in the SDK; feature
 configuration and concrete implementations remain with their owner.
 
+Phase 27 adds experimental visual-decoration contracts to the engine and SDK.
+The `@soeditor/comments` package remains private development surface until the
+0.8 review-workflow release gate; its documented contracts may still change
+during Phases 27–29.
+
 ## Structured extension boundary
 
 A third-party structured widget can register a DOM-free conversion and a node

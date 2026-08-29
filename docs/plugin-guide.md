@@ -70,6 +70,9 @@ palette actions invoke those same commands.
 - Register an atomic or readonly structured HTML block through
   `structuredEditingRegistryToken`. Require `StructuredEditingPlugin`, and keep
   conversion callbacks DOM-free and deterministic.
+- Publish non-canonical, bounded model-range markers through
+  `visualDecorationsServiceToken`. Decorations are presentation only; keep
+  persisted annotation data in a feature or host service.
 
 Register UI factories during plugin initialization, before calling
 `createEditorUi()`. An attached UI snapshots its mounted contributions; dispose

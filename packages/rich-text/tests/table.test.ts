@@ -161,6 +161,7 @@ async function createTableHarness(source: string): Promise<{
     );
     const service: VisualEditingService = {
         canEdit: () => true,
+        getSelection: () => undefined,
         getSelectedStructuredBlock: () => block,
         insertHtml: vi.fn(),
         isBlockActive: () => false,
@@ -172,6 +173,7 @@ async function createTableHarness(source: string): Promise<{
         replaceStructuredBlockContent: replace,
         setBlock: vi.fn(),
         setLink: vi.fn(),
+        setSelection: () => false,
         setStructuredBlockAttributes: vi.fn(),
         toggleList: vi.fn(),
         toggleMark: vi.fn(),

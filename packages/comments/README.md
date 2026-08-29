@@ -1,0 +1,14 @@
+# @soeditor/comments
+
+Host-owned mapped comments for SoEditor.
+
+Create a configured plugin with `createCommentsPlugin()`. The host supplies the
+current author, permission policy, unique IDs, clock, and atomic snapshot
+storage. Thread data never enters canonical HTML. Linked ranges map through
+Visual editing operations and become explicitly unlinked when a Source or
+history boundary cannot provide a precise mapping.
+
+Comments are limited to 500 threads and 100 messages per thread. Message bodies
+are rendered as plain text. Current ranges can cover paragraph text or one
+whole structured block; nested table-cell and widget-editable positions are
+not supported.

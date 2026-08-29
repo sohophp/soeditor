@@ -250,3 +250,60 @@
     position: fixed;
     z-index: 1000;
 }
+
+mark[data-soeditor-decoration] {
+    background: color-mix(in srgb, #ffd43b 42%, transparent);
+    color: inherit;
+}
+
+mark[data-soeditor-decoration-status='resolved'] {
+    background: color-mix(in srgb, var(--soeditor-muted) 22%, transparent);
+    text-decoration: underline dotted;
+}
+
+.soeditor-visual-decoration {
+    box-shadow: inset 0 0 0 2px #ffd43b;
+}
+
+.soeditor-visual-decoration--resolved {
+    box-shadow: inset 0 0 0 2px var(--soeditor-muted);
+}
+
+.soeditor-comments,
+.soeditor-comments__composer,
+.soeditor-comments__threads {
+    display: grid;
+    gap: 0.65rem;
+}
+
+.soeditor-comments__navigation,
+.soeditor-comments__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4rem;
+}
+
+.soeditor-comments textarea {
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    color: var(--soeditor-text);
+    font: inherit;
+    padding: 0.45rem;
+    resize: vertical;
+}
+
+.soeditor-comments__thread {
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    padding: 0.65rem;
+}
+
+.soeditor-comments__thread[aria-current='true'] {
+    border-color: var(--soeditor-accent);
+}
+
+.soeditor-comments__thread h3,
+.soeditor-comments__message p {
+    margin-block: 0 0.4rem;
+}

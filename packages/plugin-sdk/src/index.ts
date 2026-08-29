@@ -24,6 +24,8 @@ export {
     StructuredEditingPlugin,
     StructuredEditingRegistrySealedError,
     structuredEditingRegistryToken,
+    VisualDecorationsPlugin,
+    visualDecorationsServiceToken,
     visualEditingServiceToken,
 } from '@soeditor/engine';
 export type {
@@ -45,6 +47,9 @@ export type {
     StructuredNodeViewSelectionOptions,
     StructuredNodeViewState,
     VisualBlockTag,
+    VisualDecoration,
+    VisualDecorationsService,
+    VisualDecorationStatus,
     VisualEditingService,
     VisualLinkAttributes,
     VisualTextMark,

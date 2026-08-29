@@ -229,6 +229,7 @@ async function createHarness(options?: {
     const toggleMark = vi.fn();
     const service: VisualEditingService = {
         canEdit: () => options?.canEdit ?? true,
+        getSelection: () => undefined,
         getSelectedStructuredBlock: () => undefined,
         insertHtml,
         isBlockActive: (tagName) =>
@@ -242,6 +243,7 @@ async function createHarness(options?: {
         setLink: setLink as (
             attributes: VisualLinkAttributes | undefined,
         ) => void,
+        setSelection: () => false,
         setStructuredBlockAttributes: vi.fn(),
         toggleList,
         toggleMark,

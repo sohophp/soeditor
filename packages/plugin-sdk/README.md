@@ -14,3 +14,5 @@ Structured block conversion contracts, the editor-owned registry token, and
 operation/position mapping are re-exported from their `@soeditor/engine` owner.
 Conversion callbacks use only SoEditor HTML values and cannot create editing
 DOM; see the repository plugin guide for a complete custom-element example.
+The experimental visual-decoration plugin, token, and immutable range types are
+also exposed for non-canonical annotation providers.

@@ -20,7 +20,11 @@ Release Hardening — has aligned the curated SDK, packed third-party widget
 consumer, public API classification, migration, and release boundaries for the
 local `0.7.0` release candidate. Its full release and adversarial gates pass
 with Critical 0 and High 0. Phase 27 — Mapped Annotations and Comments — is
-active.
+complete. A private development `@soeditor/comments` package now provides
+host-owned immutable threads, deterministic operation mapping, safe unlinking,
+non-canonical decorations, command-driven review UI, and explicit permission
+and persistence boundaries. Its full gate passes with 112 Chromium scenarios,
+Critical 0, and High 0. Phase 28 — Revision History and Review Modes — is active.
 
 All 17 development package manifests are aligned at the `0.7.0` release
 candidate. The published stable reference remains `0.5.1` until an explicitly
@@ -55,13 +59,14 @@ deliberate and documented under SemVer principles.
   commit `f2e5478`; a clean public-registry consumer installed the scoped
   umbrella, completed a Vite production build, validated all package metadata,
   and passed the jsDelivr/Chromium lifecycle smoke test.
-- current global bundle guard: 1.29 MB raw / 415 kB gzip; measured 1,282.04 kB
-  raw / 412.66 kB gzip after bounded tables and media. The full Playground
-  chunk is guarded at 1.04 MB and measures 1,033.29 kB.
+- current global bundle guard: 1.29 MB raw / 415 kB gzip; measured 1,286.59 kB
+  raw / 413.91 kB gzip after the generic visual-decoration boundary. The full
+  Playground chunk is guarded at 1.04 MB and measures 1,002.23 kB; the private
+  comments example is loaded as a separate 16.22 kB chunk.
 - current minimal Vite consumer: approximately 27.9 kB raw / 8.74 kB gzip.
 - the Phase 21 narrow Core/SDK/minimal-preset packed consumer is approximately
   28.0 kB raw and proves unused Source, Markdown, Preview, split DOM, and CSS
-  families are absent; all 109 Chromium scenarios pass.
+  families are absent; all 112 Chromium scenarios pass.
 - the Phase 22 frozen candidate aligns all 17 packages at 0.6.0, passes strict
   typecheck, unit/consumer/distribution/release/Chromium/build/license/security
   gates, completes a 17-package npm dry run, and confirms read-only that every
@@ -74,9 +79,23 @@ deliberate and documented under SemVer principles.
   distribution/release tests, all 109 Chromium scenarios, build, MIT license
   verification, high-severity dependency audit, 17-package npm publication dry
   run, and a read-only check that all 17 `0.7.0` versions are unpublished.
+- Phase 27 adds seven focused unit tests and three Chromium workflows covering
+  mapped text and whole-block comments, source/history unlinking, safe text
+  rendering, clipboard isolation, readonly permissions, keyboard navigation,
+  storage failure/race behavior, accessibility, and cleanup. The comments
+  package remains private until the Phase 29 0.8 release gate.
 - final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
+
+- Comment ranges currently cover text or an entire structured block. Cell-local
+  and nested-widget comments are deferred. Source replacement and snapshot
+  history cannot supply granular operations, so affected comments become
+  explicitly unlinked instead of using fuzzy recovery.
+- Comment storage is optimistic and serialized per editor instance. Hosts must
+  observe `lastError` and provide retry/reconciliation; real-time concurrency
+  is deferred. Deleted tombstones retain their messages until Phase 29 defines
+  final privacy, export, and deletion semantics.
 
 - The self-contained global and full Developer Playground are large because
   CodeMirror, Prettier, Markdown, and developer tools are bundled together.

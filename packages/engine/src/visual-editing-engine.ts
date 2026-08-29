@@ -70,6 +70,10 @@ import {
     type VisualLinkAttributes,
     type VisualTextMark,
 } from './visual-editing-service.js';
+import {
+    visualDecorationsServiceToken,
+    type VisualDecorationsService,
+} from './visual-decorations.js';
 
 export interface VisualEditingEngineOptions {
     readonly activateOnFocus?: boolean;
@@ -111,6 +115,7 @@ export class VisualEditingEngine implements EditingEngine {
     readonly #projection: DomProjection;
     readonly #service: VisualEditingService;
     readonly #schema: StructuredEditingSchema;
+    readonly #visualDecorations: VisualDecorationsService | undefined;
     readonly #activateOnFocus: boolean;
     #compositionSelection: EditingSelection | undefined;
     #draggedStructuredBlock: number | undefined;
@@ -126,8 +131,10 @@ export class VisualEditingEngine implements EditingEngine {
           }
         | undefined;
     #disposeProjection: (() => void) | undefined;
+    #disposeVisualDecorations: (() => void) | undefined;
     #programmaticFocus = false;
     #projectionActivity: ProjectionActivity | undefined;
+    #retainedSelection: EditingSelection | undefined;
 
     constructor(options: VisualEditingEngineOptions) {
         this.editor = options.editor;
@@ -157,6 +164,9 @@ export class VisualEditingEngine implements EditingEngine {
             structuredEditingRegistryToken,
         );
         this.#schema = snapshotStructuredEditingRegistry(structuredRegistry);
+        this.#visualDecorations = this.editor.services.tryGet(
+            visualDecorationsServiceToken,
+        );
         const initial = createVisualModel(this.editor.getData(), this.#schema);
         sealStructuredEditingRegistry(structuredRegistry);
         this.#model = initial.model;
@@ -176,6 +186,7 @@ export class VisualEditingEngine implements EditingEngine {
         this.element.setAttribute('aria-label', ariaLabel);
         this.element.setAttribute('aria-multiline', 'true');
         this.#projection = new DomProjection(this.element, this.#model, {
+            decorations: () => this.#visualDecorations?.snapshot ?? [],
             executeCommand: (commandId, args) =>
                 this.editor.execute(commandId, ...args),
             readonly: this.#isReadonly() || this.#lockedDocument,
@@ -184,6 +195,18 @@ export class VisualEditingEngine implements EditingEngine {
         this.#projection.render(this.#model);
         const service: VisualEditingService = {
             canEdit: () => this.#canEdit(),
+            getSelection: () => {
+                this.#assertAlive();
+                const selection =
+                    this.#projection.readRetainedSelection() ??
+                    this.#retainedSelection;
+                if (selection !== undefined) {
+                    this.#retainedSelection = freezeSelection(selection);
+                }
+                return selection === undefined
+                    ? undefined
+                    : freezeSelection(selection);
+            },
             getSelectedStructuredBlock: (type) =>
                 this.#getSelectedStructuredBlock(type),
             insertHtml: (html) => this.#insertHtml(html),
@@ -197,6 +220,14 @@ export class VisualEditingEngine implements EditingEngine {
                 this.#replaceStructuredBlockContent(type, content),
             setBlock: (tagName) => this.#setBlock(tagName),
             setLink: (attributes) => this.#setLink(attributes),
+            setSelection: (selection, focus) => {
+                if (focus === true) this.focus();
+                const restored = this.setSelection(selection);
+                if (restored) {
+                    this.#retainedSelection = freezeSelection(selection);
+                }
+                return restored;
+            },
             setStructuredBlockAttributes: (type, attributes) =>
                 this.#setStructuredBlockAttributes(type, attributes),
             toggleList: (list) => this.#toggleList(list),
@@ -204,6 +235,9 @@ export class VisualEditingEngine implements EditingEngine {
         };
         this.#service = Object.freeze(service);
         this.editor.services.register(visualEditingServiceToken, this.#service);
+        this.#disposeVisualDecorations = this.#visualDecorations?.subscribe(
+            () => this.#render(this.#model, this.#retainedSelection),
+        );
 
         this.#mutationObserver = new view.MutationObserver((records) => {
             if (
@@ -329,6 +363,12 @@ export class VisualEditingEngine implements EditingEngine {
             errors.push(error);
         }
         this.#disposeProjection = undefined;
+        try {
+            this.#disposeVisualDecorations?.();
+        } catch (error: unknown) {
+            errors.push(error);
+        }
+        this.#disposeVisualDecorations = undefined;
         this.#disposeDocumentChange();
         this.#disposeEditorDestroy();
         this.#disposeModeChange();
@@ -982,6 +1022,8 @@ export class VisualEditingEngine implements EditingEngine {
     }
 
     #render(model: EditingModel, selection?: EditingSelection): void {
+        this.#retainedSelection =
+            selection === undefined ? undefined : freezeSelection(selection);
         this.#mutationObserver.disconnect();
         try {
             this.#projection.render(model);

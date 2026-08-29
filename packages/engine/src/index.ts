@@ -57,3 +57,12 @@ export type {
     VisualLinkAttributes,
     VisualTextMark,
 } from './visual-editing-service.js';
+export {
+    VisualDecorationsPlugin,
+    visualDecorationsServiceToken,
+} from './visual-decorations.js';
+export type {
+    VisualDecoration,
+    VisualDecorationsService,
+    VisualDecorationStatus,
+} from './visual-decorations.js';

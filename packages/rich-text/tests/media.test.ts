@@ -137,6 +137,7 @@ function visualService(
         typeof selected === 'function' ? selected() : selected;
     return {
         canEdit: () => true,
+        getSelection: () => undefined,
         getSelectedStructuredBlock: (type) => {
             const block = current();
             return type === undefined || block?.type === type
@@ -158,6 +159,7 @@ function visualService(
         replaceStructuredBlockContent: replace,
         setBlock: () => undefined,
         setLink: () => undefined,
+        setSelection: () => false,
         setStructuredBlockAttributes: () => undefined,
         toggleList: () => undefined,
         toggleMark: () => undefined,

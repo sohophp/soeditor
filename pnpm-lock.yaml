@@ -47,6 +47,9 @@ importers:
       '@soeditor/adapter-sofinder':
         specifier: workspace:*
         version: link:../../packages/adapter-sofinder
+      '@soeditor/comments':
+        specifier: workspace:*
+        version: link:../../packages/comments
       '@soeditor/core':
         specifier: workspace:*
         version: link:../../packages/core
@@ -95,6 +98,18 @@ importers:
       '@soeditor/file-manager':
         specifier: workspace:*
         version: link:../file-manager
+
+  packages/comments:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@soeditor/ui':
+        specifier: workspace:*
+        version: link:../ui
 
   packages/core:
     devDependencies:

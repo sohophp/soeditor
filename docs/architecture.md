@@ -344,6 +344,30 @@ accessibility, and complete teardown. This consumer is part of the release
 gate, so SDK declarations and actual packed runtime resolution are tested
 together rather than inferred from workspace source imports.
 
+## Phase 27 host-owned mapped comments
+
+Comments remain outside canonical HTML and Core state:
+
+```text
+host identity / permission / storage adapters
+                    ↓
+       immutable comment thread snapshot
+                    ↓
+Visual operations → range mapper → linked / unlinked state
+                    ↓
+     engine-owned non-canonical decorations
+                    ↓
+        accessible command-driven panel
+```
+
+`VisualDecorationsPlugin` owns a bounded dynamic registry. The visual engine
+validates its ranges against the current editing model and renders markers
+without serializing them. `@soeditor/comments` maps linked and resolved ranges
+through public operations; complete removal, Source replacement, and history
+replay unlink rather than guessing. Full-snapshot host writes are serialized,
+while optimistic state keeps decoration mapping synchronous with document
+changes. Adapter failures remain visible through the comments service.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing

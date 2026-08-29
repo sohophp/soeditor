@@ -33,3 +33,7 @@ block conversion. Phase 23 custom blocks are atomic or readonly and remain
 inert; interactive node views are an optional, separate runtime contribution. Visual
 transactions expose validated `EditingOperation` metadata through
 `readEditingOperations()` for position-aware plugins.
+
+`VisualDecorationsPlugin` accepts bounded, non-canonical editing-model ranges
+from annotation features. The projection validates and renders them without
+placing their data in HTML source or exposing DOM mapping internals.

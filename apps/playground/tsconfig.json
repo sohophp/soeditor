@@ -6,6 +6,7 @@
             "@soeditor/adapter-sofinder": [
                 "../../packages/adapter-sofinder/src/index.ts"
             ],
+            "@soeditor/comments": ["../../packages/comments/src/index.ts"],
             "@soeditor/core": ["../../packages/core/src/index.ts"],
             "@soeditor/dev-tools": ["../../packages/dev-tools/src/index.ts"],
             "@soeditor/engine": ["../../packages/engine/src/index.ts"],

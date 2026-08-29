@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@soeditor/adapter-sofinder": "workspace:*",
+        "@soeditor/comments": "workspace:*",
         "@soeditor/core": "workspace:*",
         "@soeditor/dev-tools": "workspace:*",
         "@soeditor/engine": "workspace:*",

@@ -25,7 +25,7 @@
         "test:consumer": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk build && node scripts/test-nodenext-consumer.mjs",
         "test:distribution": "node scripts/verify-distribution.mjs",
         "test:release": "pnpm --filter @soeditor/editor --filter @soeditor/playground build && node scripts/verify-release.mjs",
-        "test:unit": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk test",
+        "test:unit": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk --filter @soeditor/comments test",
         "test:coverage": "pnpm --filter @soeditor/core test:coverage",
         "typecheck": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk build && pnpm -r --if-present run typecheck"
     },

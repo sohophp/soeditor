@@ -1,5 +1,15 @@
 # Changelog
 
+## Unreleased
+
+- Added bounded, non-canonical visual decorations and a private development
+  `@soeditor/comments` package with immutable mapped ranges, host-owned atomic
+  storage, permission boundaries, command-driven review UI, and safe unlinking
+  when a document change cannot be mapped precisely.
+- Added unit and Chromium coverage for text and structured-block comments,
+  source/history behavior, clipboard isolation, readonly review permissions,
+  accessibility, adapter failures, serialized writes, and teardown.
+
 ## 0.7.0 — Structured Extensions candidate
 
 - Added deterministic structured block conversions, immutable editing models

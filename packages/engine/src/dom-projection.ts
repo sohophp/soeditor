@@ -9,6 +9,7 @@ import type {
 } from './model.js';
 import { paragraphLength } from './model.js';
 import { validateSelection } from './operations.js';
+import type { VisualDecoration } from './visual-decorations.js';
 import {
     getStructuredNodeViewFactory,
     type StructuredEditingSchema,
@@ -28,6 +29,7 @@ interface TextSpan extends DomSpan {
 }
 
 interface DomProjectionOptions {
+    readonly decorations: () => readonly VisualDecoration[];
     readonly executeCommand: (
         commandId: string,
         args: readonly unknown[],
@@ -74,6 +76,13 @@ export class DomProjection {
     }
 
     render(model: EditingModel): void {
+        const decorations = this.#options.decorations();
+        for (const decoration of decorations) {
+            validateSelection(model, {
+                anchor: decoration.from,
+                focus: decoration.to,
+            });
+        }
         const cleanupErrors = this.#releaseNodeViews();
         this.#model = model;
         this.#selectedStructuredBlock = undefined;
@@ -105,7 +114,7 @@ export class DomProjection {
                     index -= 1;
                     rendered.push(list);
                 } else if (block !== undefined) {
-                    rendered.push(this.#renderBlock(block, index));
+                    rendered.push(this.#renderBlock(block, index, decorations));
                 }
             }
         } catch (error: unknown) {
@@ -320,6 +329,12 @@ export class DomProjection {
         return { anchor, focus };
     }
 
+    readRetainedSelection(): EditingSelection | undefined {
+        return this.#selectedStructuredBlock === undefined
+            ? this.readSelection()
+            : structuredSelection(this.#selectedStructuredBlock);
+    }
+
     restoreSelection(selection: EditingSelection): boolean {
         validateSelection(this.#model, selection);
         const structured = selectedStructuredBlock(this.#model, selection);
@@ -349,7 +364,11 @@ export class DomProjection {
         return true;
     }
 
-    #renderBlock(block: EditingBlock, blockIndex: number): HTMLElement {
+    #renderBlock(
+        block: EditingBlock,
+        blockIndex: number,
+        decorations: readonly VisualDecoration[],
+    ): HTMLElement {
         if (block.kind === 'opaque-block') {
             const placeholder = this.#document.createElement('div');
             placeholder.dataset.soeditorOpaqueBlock = 'true';
@@ -360,14 +379,22 @@ export class DomProjection {
                 end: 1,
                 start: 0,
             });
+            this.#decorateElement(placeholder, blockIndex, decorations);
             return placeholder;
         }
 
         if (block.kind === 'structured-block') {
-            return this.#renderStructuredBlock(block, blockIndex);
+            const element = this.#renderStructuredBlock(block, blockIndex);
+            this.#decorateElement(element, blockIndex, decorations);
+            return element;
         }
 
-        return this.#renderParagraph(block, blockIndex, block.tagName);
+        return this.#renderParagraph(
+            block,
+            blockIndex,
+            block.tagName,
+            decorations,
+        );
     }
 
     #renderStructuredBlock(
@@ -520,6 +547,7 @@ export class DomProjection {
         block: Extract<EditingBlock, { readonly kind: 'paragraph' }>,
         blockIndex: number,
         tagName: string,
+        decorations: readonly VisualDecoration[] = this.#options.decorations(),
     ): HTMLElement {
         const paragraph = this.#document.createElement(tagName);
         paragraph.dataset.soeditorParagraph = 'true';
@@ -527,8 +555,13 @@ export class DomProjection {
         let position = 0;
 
         for (const inline of block.inlines) {
-            const rendered = this.#renderInline(inline, blockIndex, position);
-            paragraph.append(rendered.node);
+            const rendered = this.#renderInline(
+                inline,
+                blockIndex,
+                position,
+                decorations,
+            );
+            paragraph.append(...rendered.nodes);
             position = rendered.end;
         }
 
@@ -555,7 +588,8 @@ export class DomProjection {
         inline: EditingInline,
         block: number,
         start: number,
-    ): { readonly node: Node; readonly end: number } {
+        decorations: readonly VisualDecoration[],
+    ): { readonly nodes: readonly Node[]; readonly end: number } {
         if (inline.kind === 'opaque-inline') {
             const placeholder = this.#document.createElement('span');
             placeholder.dataset.soeditorOpaqueInline = 'true';
@@ -563,14 +597,71 @@ export class DomProjection {
             placeholder.textContent = describeOpaque(inline.node);
             const span = { block, end: start + 1, start };
             this.#spans.set(placeholder, span);
-            return { node: placeholder, end: span.end };
+            return {
+                end: span.end,
+                nodes: [
+                    this.#decorateNode(
+                        placeholder,
+                        span,
+                        decorations.filter((decoration) =>
+                            intersects(decoration, span),
+                        ),
+                    ),
+                ],
+            };
         }
 
-        const text = this.#document.createTextNode(inline.text);
         const end = start + inline.text.length;
-        const span = { block, end, node: text, start };
-        this.#spans.set(text, span);
-        this.#textSpans.push(span);
+        const boundaries = new Set([start, end]);
+        for (const decoration of decorations) {
+            if (decoration.from.block === block) {
+                boundaries.add(clamp(decoration.from.offset, start, end));
+            }
+            if (decoration.to.block === block) {
+                boundaries.add(clamp(decoration.to.offset, start, end));
+            }
+        }
+        const points = [...boundaries].sort((left, right) => left - right);
+        const nodes: Node[] = [];
+        for (let index = 0; index < points.length - 1; index += 1) {
+            const segmentStart = points[index];
+            const segmentEnd = points[index + 1];
+            if (segmentStart === undefined || segmentEnd === undefined) {
+                continue;
+            }
+            const text = inline.text.slice(
+                segmentStart - start,
+                segmentEnd - start,
+            );
+            if (text.length === 0) continue;
+            nodes.push(
+                this.#renderTextSegment(
+                    text,
+                    inline,
+                    { block, end: segmentEnd, start: segmentStart },
+                    decorations.filter((decoration) =>
+                        intersects(decoration, {
+                            block,
+                            end: segmentEnd,
+                            start: segmentStart,
+                        }),
+                    ),
+                ),
+            );
+        }
+        return { end, nodes };
+    }
+
+    #renderTextSegment(
+        value: string,
+        inline: Extract<EditingInline, { readonly kind: 'text' }>,
+        span: DomSpan,
+        decorations: readonly VisualDecoration[],
+    ): Node {
+        const text = this.#document.createTextNode(value);
+        const textSpan = { ...span, node: text };
+        this.#spans.set(text, textSpan);
+        this.#textSpans.push(textSpan);
         let rendered: Node = text;
 
         for (const mark of [...inline.marks].reverse()) {
@@ -582,11 +673,46 @@ export class DomProjection {
                 wrapper.setAttribute('aria-label', 'Link');
             }
             wrapper.append(rendered);
-            this.#spans.set(wrapper, { block, end, start });
+            this.#spans.set(wrapper, span);
             rendered = wrapper;
         }
+        return this.#decorateNode(rendered, span, decorations);
+    }
 
-        return { node: rendered, end };
+    #decorateNode(
+        node: Node,
+        span: DomSpan,
+        decorations: readonly VisualDecoration[],
+    ): Node {
+        let rendered = node;
+        for (const decoration of [...decorations].sort((left, right) =>
+            left.id.localeCompare(right.id),
+        )) {
+            const marker = this.#document.createElement('mark');
+            marker.dataset.soeditorDecoration = decoration.id;
+            marker.dataset.soeditorDecorationStatus = decoration.status;
+            marker.title = decoration.label;
+            marker.append(rendered);
+            this.#spans.set(marker, span);
+            rendered = marker;
+        }
+        return rendered;
+    }
+
+    #decorateElement(
+        element: HTMLElement,
+        block: number,
+        decorations: readonly VisualDecoration[],
+    ): void {
+        const matching = decorations.filter((decoration) =>
+            intersects(decoration, { block, end: 1, start: 0 }),
+        );
+        if (matching.length === 0) return;
+        element.dataset.soeditorDecorationCount = String(matching.length);
+        element.classList.add('soeditor-visual-decoration');
+        if (matching.some(({ status }) => status === 'resolved')) {
+            element.classList.add('soeditor-visual-decoration--resolved');
+        }
     }
 
     #readPoint(node: Node, offset: number): EditingPoint | undefined {
@@ -759,4 +885,27 @@ function selectedStructuredBlock(
         model.blocks[start.block]?.kind === 'structured-block'
         ? start.block
         : undefined;
+}
+
+function intersects(decoration: VisualDecoration, span: DomSpan): boolean {
+    return (
+        comparePoints(decoration.from, {
+            block: span.block,
+            offset: span.end,
+        }) < 0 &&
+        comparePoints(decoration.to, {
+            block: span.block,
+            offset: span.start,
+        }) > 0
+    );
+}
+
+function comparePoints(left: EditingPoint, right: EditingPoint): number {
+    return left.block === right.block
+        ? left.offset - right.offset
+        : left.block - right.block;
+}
+
+function clamp(value: number, minimum: number, maximum: number): number {
+    return Math.min(maximum, Math.max(minimum, value));
 }

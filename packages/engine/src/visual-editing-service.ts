@@ -1,6 +1,7 @@
 import { createServiceToken } from '@soeditor/core';
 import type { HtmlAttribute } from '@soeditor/html';
 import type {
+    EditingSelection,
     EditingStructuredBlock,
     EditingStructuredBlockContent,
 } from './model.js';
@@ -22,6 +23,8 @@ export interface VisualLinkAttributes {
 /** Narrow, transaction-backed editing capabilities exposed to feature plugins. */
 export interface VisualEditingService {
     canEdit(): boolean;
+    getSelection(): EditingSelection | undefined;
+    setSelection(selection: EditingSelection, focus?: boolean): boolean;
     toggleMark(mark: VisualTextMark): void;
     isMarkActive(mark: VisualTextMark): boolean;
     setBlock(tagName: VisualBlockTag): void;
