@@ -4,6 +4,7 @@ import {
     type EditorWorkspace,
     type WorkspaceAttachmentFactory,
     type WorkspaceChange,
+    type WorkspaceDiagnostic,
     type WorkspaceEditorContext,
     type WorkspaceRecoveryOptions,
     type WorkspaceSnapshot,
@@ -26,8 +27,10 @@ interface VueWorkspaceCommonOptions {
         context: WorkspaceEditorContext,
     ) => PromiseLike<Editor> | Editor;
     readonly onError?: (error: unknown) => void;
+    readonly onDiagnostic?: (diagnostic: WorkspaceDiagnostic) => void;
     readonly onReady?: (workspace: EditorWorkspace) => void;
     readonly readonly?: MaybeRefOrGetter<boolean>;
+    readonly previewIsolation?: 'isolated' | 'trusted';
     readonly recovery?: WorkspaceRecoveryOptions;
 }
 
@@ -78,6 +81,12 @@ export function useSoEditorWorkspace(
                     ? {}
                     : { attachments: options.attachments }),
                 createEditor: options.createEditor,
+                ...(options.onDiagnostic === undefined
+                    ? {}
+                    : { onDiagnostic: options.onDiagnostic }),
+                ...(options.previewIsolation === undefined
+                    ? {}
+                    : { previewIsolation: options.previewIsolation }),
                 ...(options.recovery === undefined
                     ? {}
                     : { recovery: options.recovery }),

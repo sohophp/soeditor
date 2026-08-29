@@ -1,8 +1,30 @@
 {
     "name": "@soeditor/react",
-    "version": "0.8.0",
-    "private": true,
+    "version": "0.9.0",
     "license": "MIT",
+    "description": "React lifecycle adapter for SoEditor Workspace.",
+    "keywords": [
+        "content-editor",
+        "react",
+        "typescript"
+    ],
+    "homepage": "https://github.com/sohophp/soeditor#readme",
+    "bugs": {
+        "url": "https://github.com/sohophp/soeditor/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sohophp/soeditor.git",
+        "directory": "packages/react"
+    },
+    "engines": {
+        "node": ">=22.14.0 <23"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true,
+        "registry": "https://registry.npmjs.org/"
+    },
     "type": "module",
     "sideEffects": false,
     "files": [
@@ -22,7 +44,7 @@
     "peerDependencies": {
         "@soeditor/core": "workspace:*",
         "@soeditor/workspace": "workspace:*",
-        "react": "^19.0.0"
+        "react": ">=18.2.0 <20"
     },
     "devDependencies": {
         "@soeditor/core": "workspace:*",

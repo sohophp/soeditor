@@ -5,7 +5,7 @@ file being present in a tarball does not make it public; `src`, `dist` file
 paths, concrete registries, DOM projection internals, and undocumented globals
 are internal and may change without migration support.
 
-## 0.8 classifications
+## 0.9 classifications
 
 | Classification          | Surface                                                                                                                                                                                                                                             | Compatibility expectation                                                             |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -37,19 +37,18 @@ undeclared subpaths remain internal. Review exports are bounded client views,
 not authoritative regulatory exports; data ownership and backend deletion
 remain host responsibilities.
 
-Phase 30's `@soeditor/workspace` package remains private while lifecycle,
-controlled-value, and recovery contracts are validated. It is intentionally
-absent from the 0.8 SDK and umbrella exports; public classification is deferred
-to the Phase 33 0.9 release gate.
+SoEditor 0.9 makes `@soeditor/workspace` application public and exports it from
+the framework-neutral umbrella. Its lifecycle, controlled/uncontrolled value,
+bounded recovery, attachment requirement, and diagnostic contracts receive
+0.x SemVer treatment; DOM hosts, persistence, error interception, and security
+policy remain application-owned.
 
-Phase 31's `@soeditor/react` and `@soeditor/vue` packages are likewise private
-validation surfaces. They are not 0.8 SDK or umbrella exports, and their React
-or Vue peers do not become dependencies of any existing public package.
-
-Phase 32's `@soeditor/plugin-tools` and new Workspace diagnostic contracts are
-private until the Phase 33 0.9 release audit. The checker does not define plugin
-runtime compatibility by itself; public SDK types and behavioral consumers
-remain authoritative.
+`@soeditor/react` and `@soeditor/vue` are public framework adapters with React
+or Vue peers only in their owning packages. They are deliberately absent from
+the umbrella. `@soeditor/plugin-tools` is a public Node-only CLI/API package and
+is also absent from the browser umbrella. Its checker does not define runtime
+compatibility by itself; public SDK types and behavioral consumers remain
+authoritative.
 
 ## Structured extension boundary
 

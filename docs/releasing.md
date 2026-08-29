@@ -1,4 +1,4 @@
-# Releasing SoEditor 0.8.x
+# Releasing SoEditor 0.9.x
 
 Publication is an owner-authorized operation. Local quality gates and dry runs
 do not grant permission to choose a license, publish packages, create a tag, or
@@ -8,11 +8,11 @@ use an npm identity.
 
 1. Choose and commit exactly one approved `LICENSE`, `LICENSE.md`, or
    `LICENSE.txt`. Add the same approved npm `license` expression to the root
-   manifest and all 19 public package manifests. Confirm it with
+   manifest and all 23 public package manifests. Confirm it with
    `pnpm release:check-license`.
 2. Create the npm organization named `soeditor` on the public-package plan,
    which creates the `@soeditor` scope, and confirm the publishing identity is
-   an owner or member allowed to publish all 19 packages in it.
+   an owner or member allowed to publish all 23 packages in it.
 3. Create the protected GitHub `npm` environment and require reviewer approval.
 4. Configure an environment-scoped `NPM_TOKEN` using a granular npm token with
    read/write package access and **Bypass 2FA** enabled. The bypass setting is
@@ -42,14 +42,14 @@ exchange warning does not replace the granular token requirement.
 
 ## Release-line policy
 
-The 0.8.0 candidate contains the approved Review Workflow capability set.
-The 0.8.x line accepts correctness, security, accessibility, compatibility,
+The 0.9.0 candidate contains the approved Integration capability set.
+The 0.9.x line accepts correctness, security, accessibility, compatibility,
 documentation, and measured performance fixes. New product capabilities belong
 in a separately approved roadmap. Although 0.x permits breaking SemVer changes,
 avoid them in patch releases; document an unavoidable break and use at least a
 minor version.
 
-All 19 public packages use an aligned version so consumers and support reports
+All 23 public packages use an aligned version so consumers and support reports
 can identify one tested release set. Add a Changeset for each user-visible
 patch, update `CHANGELOG.md`, and let the release change deliberately advance
 the package versions.
@@ -112,13 +112,13 @@ do not republish identical artifacts.
 After publication, or to recheck propagation:
 
 ```bash
-pnpm release:verify-registry 0.8.0
+pnpm release:verify-registry 0.9.0
 ```
 
 This creates a clean Vite consumer from the public npm registry and checks the
 version-pinned jsDelivr JavaScript, CSS, source map, immutable global facade,
 and basic editor lifecycle in Chromium.
 
-This command uses the current 19-package 0.8 release manifest and deliberately
+This command uses the current 23-package 0.9 release manifest and deliberately
 does not claim to re-verify the historical 15-package 0.5 release set or the
 unpublished 0.6/0.7 candidates.

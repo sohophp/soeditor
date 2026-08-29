@@ -1,6 +1,6 @@
 # Workspace lifecycle and recovery
 
-Phase 30 provides the private `@soeditor/workspace` application layer. It
+SoEditor 0.9 provides the public `@soeditor/workspace` application layer. It
 coordinates an Editor and explicit surface/service handles without owning DOM
 selection or introducing React, Vue, or another framework.
 

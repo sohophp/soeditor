@@ -1,6 +1,6 @@
 # @soeditor/workspace
 
-Private Phase 30 framework-neutral application lifecycle for SoEditor.
+Public 0.9 framework-neutral application lifecycle for SoEditor.
 
 `createEditorWorkspace()` receives an explicit editor creator and ordered
 attachment factories. It never discovers DOM, creates global registries, or

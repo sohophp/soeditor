@@ -48,6 +48,26 @@ import {
 } from '@soeditor/editor';
 import { SoFinderAdapter } from '@soeditor/adapter-sofinder';
 import { normalizeFileManagerResult } from '@soeditor/file-manager';
+import { createEditorWorkspace } from '@soeditor/workspace';
+import { useSoEditorWorkspace as useReactSoEditorWorkspace } from '@soeditor/react';
+import { useSoEditorWorkspace as useVueSoEditorWorkspace } from '@soeditor/vue';
+import { pluginTemplateVersion } from '@soeditor/plugin-tools';
+
+if (
+    typeof useReactSoEditorWorkspace !== 'function' ||
+    typeof useVueSoEditorWorkspace !== 'function' ||
+    pluginTemplateVersion !== 1
+) {
+    throw new Error('Packed 0.9 adapter or plugin-tool import failed.');
+}
+const integrationWorkspace = await createEditorWorkspace({
+    createEditor: ({ source }) => Editor.create({ data: source }),
+    value: { initialValue: '<p>Workspace runtime</p>', kind: 'uncontrolled' },
+});
+if (integrationWorkspace.editor.getData() !== '<p>Workspace runtime</p>') {
+    throw new Error('Packed Workspace runtime contract failed.');
+}
+await integrationWorkspace.destroy();
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';

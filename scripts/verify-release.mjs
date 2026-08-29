@@ -5,16 +5,16 @@ import { fileURLToPath, URL } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
-const workspaceManifest = JSON.parse(
+const rootManifest = JSON.parse(
     await readFile(join(repositoryRoot, 'package.json'), 'utf8'),
 );
-const releaseVersion = workspaceManifest.version;
-const releaseLicense = workspaceManifest.license;
+const releaseVersion = rootManifest.version;
+const releaseLicense = rootManifest.license;
 if (
     typeof releaseVersion !== 'string' ||
-    !/^0\.8\.\d+$/u.test(releaseVersion)
+    !/^0\.9\.\d+$/u.test(releaseVersion)
 ) {
-    throw new Error('The release audit only accepts an aligned 0.8.x version.');
+    throw new Error('The release audit only accepts an aligned 0.9.x version.');
 }
 const packagesRoot = join(repositoryRoot, 'packages');
 const publishable = [];
@@ -27,7 +27,7 @@ const [
 ] = await Promise.all([
     readFile(join(repositoryRoot, 'CHANGELOG.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/review-data-governance.md'), 'utf8'),
-    readFile(join(repositoryRoot, 'docs/migration-0.7-to-0.8.md'), 'utf8'),
+    readFile(join(repositoryRoot, 'docs/migration-0.8-to-0.9.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/releasing.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/status.md'), 'utf8'),
 ]);
@@ -106,9 +106,9 @@ for (const directory of await readdir(packagesRoot)) {
     }
 }
 
-if (publishable.length !== 19) {
+if (publishable.length !== 23) {
     throw new Error(
-        `Expected 19 publishable packages, found ${String(publishable.length)}.`,
+        `Expected 23 publishable packages, found ${String(publishable.length)}.`,
     );
 }
 if (new Set(publishable).size !== publishable.length) {
@@ -123,11 +123,53 @@ if (
     );
 }
 
+const [
+    umbrellaManifest,
+    workspaceManifest,
+    reactManifest,
+    vueManifest,
+    toolsManifest,
+] = await Promise.all(
+    ['soeditor', 'workspace', 'react', 'vue', 'plugin-tools'].map(
+        async (directory) =>
+            JSON.parse(
+                await readFile(
+                    join(packagesRoot, directory, 'package.json'),
+                    'utf8',
+                ),
+            ),
+    ),
+);
+if (
+    umbrellaManifest.dependencies?.['@soeditor/workspace'] !== 'workspace:*' ||
+    umbrellaManifest.dependencies?.react !== undefined ||
+    umbrellaManifest.dependencies?.vue !== undefined ||
+    umbrellaManifest.dependencies?.['@soeditor/plugin-tools'] !== undefined ||
+    workspaceManifest.peerDependencies?.['@soeditor/core'] !== 'workspace:*' ||
+    reactManifest.peerDependencies?.react !== '>=18.2.0 <20' ||
+    reactManifest.peerDependencies?.vue !== undefined ||
+    vueManifest.peerDependencies?.vue !== '^3.5.0' ||
+    vueManifest.peerDependencies?.react !== undefined ||
+    toolsManifest.bin?.['soeditor-plugin'] !== './dist/cli.js' ||
+    toolsManifest.dependencies !== undefined
+) {
+    throw new Error(
+        'The 0.9 Workspace, framework, tooling, or umbrella dependency boundary is invalid.',
+    );
+}
+
 const umbrellaDist = join(packagesRoot, 'soeditor', 'dist');
 const pluginSdkDeclarations = await readFile(
     join(packagesRoot, 'plugin-sdk', 'dist', 'index.d.ts'),
     'utf8',
 );
+const umbrellaDeclarations = await readFile(
+    join(umbrellaDist, 'index.d.ts'),
+    'utf8',
+);
+if (!umbrellaDeclarations.includes("export * from '@soeditor/workspace'")) {
+    throw new Error('The 0.9 umbrella is missing the public Workspace export.');
+}
 for (const contract of [
     'CommentDataExport',
     'CommentStorageAdapter',

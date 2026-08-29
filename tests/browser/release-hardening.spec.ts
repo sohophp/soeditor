@@ -280,6 +280,64 @@ test('survives repeated editor and surface lifecycles within the release budget'
     expect(result.duration).toBeLessThan(6_000);
 });
 
+test('keeps large-document projection and input within integration budgets', async ({
+    page,
+}) => {
+    await page.goto('/?preset=classic');
+    const result = await page.evaluate(() => {
+        const harness = (
+            window as Window & {
+                __soeditor?: {
+                    editor: {
+                        getData(): string;
+                        setData(source: string): void;
+                    };
+                };
+            }
+        ).__soeditor;
+        if (harness === undefined)
+            throw new Error('Release harness is missing.');
+        const source = Array.from(
+            { length: 1_000 },
+            (_, index) => `<p>Large row ${String(index)}</p>`,
+        ).join('');
+        const projectionStarted = performance.now();
+        harness.editor.setData(source);
+        const projectionDuration = performance.now() - projectionStarted;
+        const host = document.querySelector<HTMLElement>(
+            '[data-testid="editor"]',
+        );
+        const text = host?.querySelector('p')?.firstChild;
+        if (host === null || host === undefined || !(text instanceof Text)) {
+            throw new Error('Large document was not visually projected.');
+        }
+        host.focus();
+        document.getSelection()?.setBaseAndExtent(text, 0, text, 0);
+        const inputStarted = performance.now();
+        host.dispatchEvent(
+            new InputEvent('beforeinput', {
+                bubbles: true,
+                cancelable: true,
+                data: 'X',
+                inputType: 'insertText',
+            }),
+        );
+        return {
+            inputDuration: performance.now() - inputStarted,
+            paragraphCount: host.querySelectorAll('p').length,
+            projectedSource: harness.editor
+                .getData()
+                .startsWith('<p>XLarge row 0</p>'),
+            projectionDuration,
+        };
+    });
+
+    expect(result.paragraphCount).toBe(1_000);
+    expect(result.projectedSource).toBe(true);
+    expect(result.projectionDuration).toBeLessThan(4_000);
+    expect(result.inputDuration).toBeLessThan(1_000);
+});
+
 function monitorPageErrors(page: Page): string[] {
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));

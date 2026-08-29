@@ -16,3 +16,4 @@ export * from '@soeditor/revisions';
 export * from '@soeditor/rich-text';
 export * from '@soeditor/source';
 export * from '@soeditor/ui';
+export * from '@soeditor/workspace';

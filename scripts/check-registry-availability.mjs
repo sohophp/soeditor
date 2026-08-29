@@ -12,10 +12,10 @@ const releaseVersion = JSON.parse(
 
 if (
     typeof releaseVersion !== 'string' ||
-    !/^0\.8\.\d+$/u.test(releaseVersion)
+    !/^0\.9\.\d+$/u.test(releaseVersion)
 ) {
     throw new Error(
-        'Registry availability checks only accept a 0.8.x release version.',
+        'Registry availability checks only accept a 0.9.x release version.',
     );
 }
 
@@ -35,10 +35,10 @@ for (const directory of await readdir(packagesRoot)) {
 }
 
 if (
-    packageNames.length !== 19 ||
+    packageNames.length !== 23 ||
     packageNames.some((name) => typeof name !== 'string')
 ) {
-    throw new Error('Expected exactly 19 named public packages.');
+    throw new Error('Expected exactly 23 named public packages.');
 }
 if (
     !packageNames.includes('@soeditor/editor') ||

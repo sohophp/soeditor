@@ -161,16 +161,30 @@ test('preserves unsupported table source inertly and enforces readonly controls'
     await expect(readonlyButtons.first()).toBeDisabled();
 });
 
-test('renders a bounded 400-cell table without losing source structure', async ({
+test('renders a bounded 400-cell table within budget without losing source structure', async ({
     page,
 }) => {
     await page.keyboard.press('Control+z');
     await placeCaret(page);
-    await executeCommand(page, 'table.insert', { columns: 20, rows: 20 });
+    const duration = await page.evaluate(() => {
+        const harness = (
+            window as Window & {
+                __soeditor?: {
+                    editor: {
+                        execute(id: string, value: unknown): unknown;
+                    };
+                };
+            }
+        ).__soeditor;
+        const started = performance.now();
+        harness?.editor.execute('table.insert', { columns: 20, rows: 20 });
+        return performance.now() - started;
+    });
     await expect(
         page.locator(`${tableBoundary} .soeditor-table-cell`),
     ).toHaveCount(400);
     await expect(page.locator(source)).toContainText('<tbody>');
+    expect(duration).toBeLessThan(4_000);
 });
 
 async function placeCaret(page: Page): Promise<void> {

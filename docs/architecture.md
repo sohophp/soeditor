@@ -466,6 +466,20 @@ instance immediately before attachment. Rejected integrations and recovery
 failures become frozen, bounded, per-workspace diagnostics. No global catalog,
 telemetry, remote source loading, or runtime plugin discovery is introduced.
 
+## Phase 33 public 0.9 integration boundary
+
+The 0.9 line promotes Workspace through its package root and the framework-
+neutral umbrella. React and Vue remain separate peer-based packages, and
+plugin tooling remains a separate Node-only package; none becomes a Core,
+engine, feature, UI, preset, or SDK dependency. Packed consumers verify all 23
+aligned packages, public metadata, NodeNext types/runtime, framework SSR-safe
+imports, CLI execution, browser widgets, CMS preservation, and tree shaking.
+
+Large-integration regression budgets cover canonical input, projection
+notifications, mapped annotations, structured tables, startup/teardown,
+recovery, direct-browser/ESM/CSS bundles, and real Chromium Visual input. These
+are reproducible guards rather than device-independent performance claims.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing

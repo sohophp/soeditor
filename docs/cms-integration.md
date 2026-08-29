@@ -67,3 +67,46 @@ results are rejected before the shared `image.insert` command mutates content.
 Never read the visual DOM as saved content. Persist `editor.getData()` so custom
 elements, meaningful attributes, and CMS comments remain in the canonical
 source according to SoEditor's semantic-preservation policy.
+
+## 0.9 Workspace composition
+
+For a recoverable CMS field, move the same explicit resources into Workspace
+factories. Register host services in `createEditor`, declare attachment
+requirements, and keep durable saving outside Workspace:
+
+```ts
+const workspace = await createEditorWorkspace({
+    createEditor: async ({ source }) => {
+        const editor = await SoEditor.create({
+            data: source,
+            format: developerPreset.format,
+            plugins: developerPreset.plugins,
+        });
+        editor.services.register(fileManagerServiceToken, fileManager);
+        return editor;
+    },
+    attachments: [
+        {
+            id: 'visual',
+            requirements: {
+                formats: ['html'],
+                services: [
+                    { label: 'FileManager', token: fileManagerServiceToken },
+                ],
+            },
+            attach: ({ editor }) =>
+                createVisualEditingEngine({ editor, element: visualHost }),
+        },
+    ],
+    recovery: { maxRestarts: 3, windowMs: 60_000 },
+    value: {
+        initialValue: await cms.loadEntrySource(entryId),
+        kind: 'uncontrolled',
+        onChange: ({ source }) => cms.saveDraft(entryId, source),
+    },
+});
+```
+
+Recovery preserves the last canonical source in memory; it does not replace
+the CMS draft store, authentication, authorization, conflict handling, or
+durable revision history.

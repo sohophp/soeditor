@@ -4,6 +4,7 @@ import {
     type EditorWorkspace,
     type WorkspaceAttachmentFactory,
     type WorkspaceChange,
+    type WorkspaceDiagnostic,
     type WorkspaceEditorContext,
     type WorkspaceRecoveryOptions,
     type WorkspaceSnapshot,
@@ -18,8 +19,10 @@ interface ReactWorkspaceCommonOptions {
         context: WorkspaceEditorContext,
     ) => PromiseLike<Editor> | Editor;
     readonly onError?: (error: unknown) => void;
+    readonly onDiagnostic?: (diagnostic: WorkspaceDiagnostic) => void;
     readonly onReady?: (workspace: EditorWorkspace) => void;
     readonly readonly?: boolean;
+    readonly previewIsolation?: 'isolated' | 'trusted';
     readonly recovery?: WorkspaceRecoveryOptions;
     readonly throwOnError?: boolean;
 }
@@ -77,6 +80,13 @@ export function useSoEditorWorkspace(
                         ? {}
                         : { attachments: configuration.attachments }),
                     createEditor: configuration.createEditor,
+                    onDiagnostic: (diagnostic) =>
+                        latest.current.onDiagnostic?.(diagnostic),
+                    ...(configuration.previewIsolation === undefined
+                        ? {}
+                        : {
+                              previewIsolation: configuration.previewIsolation,
+                          }),
                     ...(configuration.recovery === undefined
                         ? {}
                         : { recovery: configuration.recovery }),

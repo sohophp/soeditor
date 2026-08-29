@@ -1,6 +1,6 @@
 # @soeditor/react
 
-Private Phase 31 React lifecycle adapter for `@soeditor/workspace`.
+Public 0.9 React lifecycle adapter for `@soeditor/workspace`.
 
 `useSoEditorWorkspace()` mounts after commit, serializes StrictMode cleanup and
 remount, applies controlled value and readonly prop updates without rebuilding,

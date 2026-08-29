@@ -1,13 +1,31 @@
 {
     "name": "@soeditor/plugin-tools",
-    "version": "0.8.0",
-    "private": true,
+    "version": "0.9.0",
     "license": "MIT",
+    "description": "Offline plugin scaffolding and package checks for SoEditor.",
+    "keywords": [
+        "content-editor",
+        "plugin",
+        "typescript"
+    ],
+    "homepage": "https://github.com/sohophp/soeditor#readme",
+    "bugs": {
+        "url": "https://github.com/sohophp/soeditor/issues"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sohophp/soeditor.git",
+        "directory": "packages/plugin-tools"
+    },
+    "publishConfig": {
+        "access": "public",
+        "provenance": true,
+        "registry": "https://registry.npmjs.org/"
+    },
     "type": "module",
     "sideEffects": false,
     "files": [
-        "dist",
-        "templates"
+        "dist"
     ],
     "bin": {
         "soeditor-plugin": "./dist/cli.js"

@@ -262,6 +262,24 @@ try {
         ],
         repositoryRoot,
     );
+    for (const packageName of [
+        '@soeditor/workspace',
+        '@soeditor/react',
+        '@soeditor/vue',
+        '@soeditor/plugin-tools',
+    ]) {
+        run(
+            'pnpm',
+            [
+                '--filter',
+                packageName,
+                'pack',
+                '--pack-destination',
+                packDirectory,
+            ],
+            repositoryRoot,
+        );
+    }
 
     const archives = (await readdir(packDirectory)).filter((name) =>
         name.endsWith('.tgz'),
@@ -322,14 +340,30 @@ try {
     const markdownArchive = archives.find((name) =>
         name.startsWith('soeditor-markdown-'),
     );
+    const workspaceArchive = archives.find((name) =>
+        name.startsWith('soeditor-workspace-'),
+    );
+    const reactArchive = archives.find((name) =>
+        name.startsWith('soeditor-react-'),
+    );
+    const vueArchive = archives.find((name) =>
+        name.startsWith('soeditor-vue-'),
+    );
+    const pluginToolsArchive = archives.find((name) =>
+        name.startsWith('soeditor-plugin-tools-'),
+    );
 
     if (
-        archives.length !== 19 ||
+        archives.length !== 23 ||
         coreArchive === undefined ||
         commentsArchive === undefined ||
-        revisionsArchive === undefined
+        revisionsArchive === undefined ||
+        workspaceArchive === undefined ||
+        reactArchive === undefined ||
+        vueArchive === undefined ||
+        pluginToolsArchive === undefined
     ) {
-        throw new Error('Expected all 19 packed @soeditor archives.');
+        throw new Error('Expected all 23 packed @soeditor archives.');
     }
 
     if (htmlArchive === undefined) {
@@ -475,6 +509,22 @@ try {
     packageData.dependencies['@soeditor/markdown'] = `file:${join(
         packDirectory,
         markdownArchive,
+    )}`;
+    packageData.dependencies['@soeditor/workspace'] = `file:${join(
+        packDirectory,
+        workspaceArchive,
+    )}`;
+    packageData.dependencies['@soeditor/react'] = `file:${join(
+        packDirectory,
+        reactArchive,
+    )}`;
+    packageData.dependencies['@soeditor/vue'] = `file:${join(
+        packDirectory,
+        vueArchive,
+    )}`;
+    packageData.dependencies['@soeditor/plugin-tools'] = `file:${join(
+        packDirectory,
+        pluginToolsArchive,
     )}`;
     await writeFile(packagePath, `${JSON.stringify(packageData, null, 4)}\n`);
     await writeOverrides(fixtureDirectory, packageData.dependencies);

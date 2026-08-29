@@ -40,9 +40,24 @@ import {
 } from '@soeditor/presets';
 import { minimalPreset as subpathMinimalPreset } from '@soeditor/presets/minimal';
 import {
+    createEditorWorkspace as createUmbrellaWorkspace,
     SoEditor,
     minimalPreset as umbrellaMinimalPreset,
 } from '@soeditor/editor';
+import {
+    createEditorWorkspace,
+    type WorkspaceAttachmentFactory,
+    type WorkspaceDiagnostic,
+} from '@soeditor/workspace';
+import {
+    useSoEditorWorkspace as useReactSoEditorWorkspace,
+    type ReactWorkspaceOptions,
+} from '@soeditor/react';
+import {
+    useSoEditorWorkspace as useVueSoEditorWorkspace,
+    type VueWorkspaceOptions,
+} from '@soeditor/vue';
+import { pluginTemplateVersion } from '@soeditor/plugin-tools';
 import {
     createDeveloperToolsEngine,
     createDocumentOutline,
@@ -524,6 +539,43 @@ const rejectInternalModel = (value: EditingModel): void => {
     void value;
 };
 void rejectInternalModel;
+
+const attachment: WorkspaceAttachmentFactory = {
+    id: 'consumer.attachment',
+    attach: () => ({ destroy: () => undefined }),
+    requirements: { formats: ['html'] },
+};
+const diagnostics: WorkspaceDiagnostic[] = [];
+const workspace = await createEditorWorkspace({
+    attachments: [attachment],
+    createEditor: ({ source }) => Editor.create({ data: source }),
+    onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+    value: { initialValue: '<p>Workspace</p>', kind: 'uncontrolled' },
+});
+await workspace.destroy();
+const reactOptions = {
+    attachments: [attachment],
+    createEditor: ({ source }) => Editor.create({ data: source }),
+    initialValue: '<p>React</p>',
+    onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+    previewIsolation: 'isolated',
+} satisfies ReactWorkspaceOptions;
+const vueOptions = {
+    attachments: [attachment],
+    createEditor: ({ source }) => Editor.create({ data: source }),
+    initialValue: '<p>Vue</p>',
+    onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
+    previewIsolation: 'isolated',
+} satisfies VueWorkspaceOptions;
+void [
+    createUmbrellaWorkspace,
+    diagnostics,
+    pluginTemplateVersion,
+    reactOptions,
+    useReactSoEditorWorkspace,
+    useVueSoEditorWorkspace,
+    vueOptions,
+];
 
 // @ts-expect-error Cleanup is owned by Editor.destroy().
 editor.commands.clear();

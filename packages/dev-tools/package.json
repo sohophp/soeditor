@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/dev-tools",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "license": "MIT",
     "description": "HTML developer workflows for SoEditor.",
     "keywords": [

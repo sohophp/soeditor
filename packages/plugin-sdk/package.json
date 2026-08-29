@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/plugin-sdk",
-    "version": "0.8.0",
+    "version": "0.9.0",
     "license": "MIT",
     "description": "Stable public extension contracts for SoEditor plugins.",
     "keywords": [

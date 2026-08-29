@@ -49,9 +49,13 @@ Preview integration before attachment while retaining bounded recovery
 diagnostics. The generated plugin/packed consumer, 23-directory distribution,
 19-public-package release, all 121 Chromium scenarios, and supply-chain gates
 pass with Critical 0 and High 0. Phase 33 — SoEditor 0.9 Integration Release —
-is active.
+is complete. The local `0.9.0` release candidate promotes Workspace, React,
+Vue, and Node-only plugin tooling as four independent public package roots.
+Its 23-package release, consumer, performance, browser, supply-chain, and
+adversarial gates pass with Critical 0 and High 0. Phase 34 — 1.0 Public API
+Stabilization — is active.
 
-All 19 public package manifests are aligned at the `0.8.0` release candidate.
+All 23 public package manifests are aligned at the `0.9.0` release candidate.
 The published stable reference remains `0.5.1` until an explicitly authorized
 npm publication and external registry/CDN verification complete.
 
@@ -150,6 +154,13 @@ deliberate and documented under SemVer principles.
   Chromium scenarios, 23-package-directory builds, MIT verification, zero
   known high-severity vulnerabilities, 19-package npm dry run, and unpublished
   registry preflight pass. Final adversarial review: Critical 0, High 0.
+- Phase 33 promotes Workspace, React, Vue, and Node-only plugin tooling as four
+  public roots in an aligned 23-package `0.9.0` candidate. Packed NodeNext,
+  native ESM, Vite, framework, SSR-import, CMS, and generated-plugin consumers
+  pass alongside deterministic Node performance budgets, all 122 Chromium
+  scenarios, accessibility, distribution/release, MIT license, zero known
+  high-severity vulnerability, 23-package npm dry-run, and unpublished registry
+  preflight gates. Final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
 
@@ -193,8 +204,8 @@ deliberate and documented under SemVer principles.
   packaging decision.
 - The Phase 32 plugin checker is a bounded static package-shape check, not a
   parser, behavioral test, malware scanner, signing service, or trust verdict.
-  Its template intentionally targets the pending 0.9 SDK and remains private
-  until Phase 33 aligns and audits the public integration release.
+  Its template targets the aligned 0.9 SDK; release qualification does not turn
+  static inspection into a security certification.
 - FileManager selects one existing asset. Upload, rename, delete,
   authentication, and a concrete SoFinder SDK remain host responsibilities.
 - Accessibility and SEO providers cover only bounded source-inferable rules;
@@ -223,6 +234,6 @@ wrappers, SSR DOM emulation, collaboration, spreadsheet behavior, office-paste
 parity, and arbitrary executable widgets remain post-0.7 candidates and are
 not implied by this preview.
 
-The candidate is not yet a public 0.8 release. npm publication, signed tag,
+The candidate is not yet a public 0.9 release. npm publication, signed tag,
 GitHub Release, and external npm/jsDelivr verification require explicit owner
 authorization and must refer to the exact reviewed commit.

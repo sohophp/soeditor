@@ -1223,7 +1223,7 @@ repository-owner-controlled operations.
 ## Status
 
 APPROVED from the repository owner's 2026-08-29 authorization to complete
-SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 33 is active.
+SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 34 is active.
 
 The sequence is justified in
 `docs/research/editor-landscape-2026.md`. Each release must pass its own
@@ -1573,7 +1573,7 @@ Reduce extension setup errors without introducing a hosted marketplace.
 
 ## Status
 
-ACTIVE.
+COMPLETE.
 
 ## Goal
 
@@ -1589,13 +1589,27 @@ large-document behavior as the final pre-1.0 integration line.
   adversarial reviews;
 - aligned package dry run and owner-controlled publication boundary.
 
+## Delivered
+
+- aligned 23-package `0.9.0` release candidate with public Workspace, React,
+  Vue, and Node-only plugin-tooling package roots;
+- packed NodeNext/native ESM/Vite/framework/CLI consumers, SSR-safe adapter
+  imports, declaration maps, and explicit peer/dependency boundary audits;
+- deterministic Node and real-Chromium large-document, projection, annotation,
+  table, recovery, startup, teardown, and bundle regression budgets;
+- synchronized migration, framework, CMS, performance, public API, release,
+  architecture, and ADR documentation;
+- full lint, strict typecheck, unit, consumer, distribution, release, 122-test
+  Chromium, accessibility, license, security, npm dry-run, and registry
+  preflight gates with Critical 0 / High 0.
+
 ---
 
 # Phase 34 — 1.0 Public API Stabilization
 
 ## Status
 
-PENDING.
+ACTIVE.
 
 ## Goal
 

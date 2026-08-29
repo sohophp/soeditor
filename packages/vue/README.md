@@ -1,6 +1,6 @@
 # @soeditor/vue
 
-Private Phase 31 Vue Composition API lifecycle adapter for
+Public 0.9 Vue Composition API lifecycle adapter for
 `@soeditor/workspace`.
 
 `useSoEditorWorkspace()` mounts in `onMounted()`, cleans up in `onUnmounted()`,

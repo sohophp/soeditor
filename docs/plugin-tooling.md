@@ -1,6 +1,6 @@
 # Plugin package tooling and integration diagnostics
 
-Phase 32 provides the private `@soeditor/plugin-tools` package. Template version
+SoEditor 0.9 provides the public Node-only `@soeditor/plugin-tools` package. Template version
 1 targets the SoEditor 0.9 public SDK and creates a strict ESM package without
 overwriting an existing directory.
 

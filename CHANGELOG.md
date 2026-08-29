@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+## 0.9.0 — Integration candidate
+
 - Added a private framework-neutral workspace controller with explicit ordered
   attachment factories, reverse teardown, controlled/uncontrolled value
   policies, observable lifecycle snapshots, and opt-in bounded recovery from
@@ -17,6 +19,15 @@
 - Added immutable Workspace attachment requirements and bounded per-instance
   diagnostics for incompatible formats, missing services, unsafe Preview
   policy, failed recreation, and crash-limit termination.
+- Promoted `@soeditor/workspace`, `@soeditor/react`, `@soeditor/vue`, and
+  `@soeditor/plugin-tools`; added Workspace to the framework-neutral umbrella
+  while keeping framework and Node-only dependencies in their owning packages.
+- Added 0.8-to-0.9 migration guidance, packed consumers for all 23 public
+  packages, framework/CMS/SSR verification, and measured integration budgets.
+
+This entry describes a verified local release candidate. npm publication, the
+`v0.9.0` tag, hosted release, and registry/CDN verification remain pending
+explicit owner authorization.
 
 ## 0.8.0 — Review Workflow candidate
 

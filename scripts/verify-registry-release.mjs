@@ -18,8 +18,8 @@ const workspaceManifest = JSON.parse(
     await readFile(new URL('../package.json', import.meta.url), 'utf8'),
 );
 const version = argv[2] ?? workspaceManifest.version;
-if (!/^0\.8\.\d+$/u.test(version)) {
-    throw new TypeError('Registry verification requires a 0.8.x version.');
+if (!/^0\.9\.\d+$/u.test(version)) {
+    throw new TypeError('Registry verification requires a 0.9.x version.');
 }
 
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'soeditor-registry-'));
@@ -143,8 +143,8 @@ async function verifyPublishedPackages(releaseVersion, releaseLicense) {
             expectedPackages.push({ directory, name: manifest.name });
         }
     }
-    if (expectedPackages.length !== 19) {
-        throw new Error('Registry verification expected 19 public packages.');
+    if (expectedPackages.length !== 23) {
+        throw new Error('Registry verification expected 23 public packages.');
     }
 
     await Promise.all(

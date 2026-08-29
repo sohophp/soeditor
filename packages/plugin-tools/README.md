@@ -1,6 +1,6 @@
 # @soeditor/plugin-tools
 
-Private Phase 32 offline plugin scaffolding and package audit tools.
+Public 0.9 offline plugin scaffolding and package audit tools.
 
 ```bash
 soeditor-plugin create ./my-plugin --name @example/my-plugin --id example.my-plugin

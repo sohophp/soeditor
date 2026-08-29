@@ -443,6 +443,9 @@ importers:
       '@soeditor/ui':
         specifier: workspace:*
         version: link:../ui
+      '@soeditor/workspace':
+        specifier: workspace:*
+        version: link:../workspace
     devDependencies:
       '@types/node':
         specifier: ^22.18.0

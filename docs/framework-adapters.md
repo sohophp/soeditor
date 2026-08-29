@@ -1,6 +1,6 @@
 # React and Vue adapters
 
-Phase 31 provides private `@soeditor/react` and `@soeditor/vue` packages over
+SoEditor 0.9 provides public `@soeditor/react` and `@soeditor/vue` packages over
 the framework-neutral Workspace controller. They do not move React or Vue into
 Core, engines, features, UI, SDK, or the umbrella package.
 
@@ -8,6 +8,12 @@ Both composables/hooks accept the same explicit Editor creator, ordered
 attachments, controlled `value` or uncontrolled `initialValue`, recovery
 policy, and runtime readonly policy. DOM elements remain application-owned and
 are normally captured by refs inside attachment closures.
+
+Both adapters also forward Workspace `previewIsolation` and `onDiagnostic`.
+Use them when an attachment declares an isolated Preview or service/format
+requirements; diagnostics remain scoped to that component's Workspace.
+React 18.2–19 and Vue 3.5 are the declared 0.9 peer ranges; the release suite
+uses React 19 and Vue 3.5.
 
 ## React
 

@@ -2,7 +2,7 @@
 
 Developer-first extensible content editor.
 
-**Status: 0.8 Review Workflow release candidate.** SoEditor is suitable for
+**Status: 0.9 Integration release candidate.** SoEditor is suitable for
 evaluation and integration development, but is not yet a stable 1.0 release.
 The public registry reference remains 0.5.1 until authorized publication. The
 repository contains the framework-agnostic Core, HTML document layer, controlled visual
@@ -32,9 +32,10 @@ host-owned revision history, semantic comparison, restore, and review policies.
 Phase 29 makes those packages public with explicit export/erasure governance
 and a 19-package release gate. Phase 30 adds a private, framework-neutral
 workspace controller for explicit application mounting, reverse teardown,
-controlled/uncontrolled values, and bounded in-process recovery. Phases 31–32
-add private React/Vue adapters, offline plugin tooling, and explicit Workspace
-integration diagnostics for the pending 0.9 line.
+controlled/uncontrolled values, and bounded in-process recovery. Phases 31–33
+add public React/Vue adapters, offline plugin tooling, explicit Workspace
+integration diagnostics, measured performance gates, and a 23-package 0.9
+release boundary.
 
 ```ts
 import { SoEditor, minimalPreset } from '@soeditor/editor';
@@ -85,11 +86,11 @@ const editor = await SoEditor.create({
   editor configurations.
 - `@soeditor/editor` — convenience ESM and direct-browser distribution over the public
   package roots.
-- `@soeditor/workspace` — private Phase 30 application lifecycle and bounded
-  recovery controller; public exposure is deferred to the 0.9 release gate.
-- `@soeditor/react` / `@soeditor/vue` — private Phase 31 lifecycle adapters over
+- `@soeditor/workspace` — public application lifecycle and bounded recovery
+  controller with explicit per-instance integration diagnostics.
+- `@soeditor/react` / `@soeditor/vue` — public lifecycle adapters over
   Workspace; framework dependencies remain isolated to their owning package.
-- `@soeditor/plugin-tools` — private Phase 32 offline plugin scaffold and
+- `@soeditor/plugin-tools` — public Node-only offline plugin scaffold and
   package checker targeting the 0.9 SDK.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
@@ -105,6 +106,8 @@ the [revisions guide](docs/revisions.md),
 [workspace lifecycle and recovery](docs/workspace.md),
 [React and Vue adapters](docs/framework-adapters.md),
 [plugin tooling and integration diagnostics](docs/plugin-tooling.md),
+[performance budgets](docs/performance.md),
+[0.8-to-0.9 migration](docs/migration-0.8-to-0.9.md),
 [public API policy](docs/public-api.md), and
 [development status](docs/status.md).
 
