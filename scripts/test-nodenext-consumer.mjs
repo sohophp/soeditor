@@ -34,6 +34,17 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/dev-tools',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/core',
             'pack',
             '--pack-destination',
@@ -137,6 +148,9 @@ try {
     const coreArchive = archives.find((name) =>
         name.startsWith('soeditor-core-'),
     );
+    const devToolsArchive = archives.find((name) =>
+        name.startsWith('soeditor-dev-tools-'),
+    );
     const htmlArchive = archives.find((name) =>
         name.startsWith('soeditor-html-'),
     );
@@ -160,7 +174,7 @@ try {
         name.startsWith('soeditor-markdown-'),
     );
 
-    if (archives.length !== 9 || coreArchive === undefined) {
+    if (archives.length !== 10 || coreArchive === undefined) {
         throw new Error('Expected one packed @soeditor/core archive.');
     }
 
@@ -196,11 +210,19 @@ try {
         throw new Error('Expected one packed @soeditor/markdown archive.');
     }
 
+    if (devToolsArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/dev-tools archive.');
+    }
+
     const packagePath = join(fixtureDirectory, 'package.json');
     const packageData = JSON.parse(await readFile(packagePath, 'utf8'));
     packageData.dependencies['@soeditor/core'] = `file:${join(
         packDirectory,
         coreArchive,
+    )}`;
+    packageData.dependencies['@soeditor/dev-tools'] = `file:${join(
+        packDirectory,
+        devToolsArchive,
     )}`;
     packageData.dependencies['@soeditor/html'] = `file:${join(
         packDirectory,

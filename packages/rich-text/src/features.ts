@@ -29,9 +29,11 @@ abstract class FeaturePlugin extends Plugin {
             args: readonly unknown[],
         ) => void,
         isActive?: (service: VisualEditingService) => boolean,
+        label?: string,
     ): void {
         this.editor.commands.register({
             id,
+            ...(label === undefined ? {} : { label }),
             canExecute: ({ editor }) =>
                 editor.services.tryGet(visualEditingServiceToken)?.canEdit() ??
                 false,
@@ -65,6 +67,7 @@ export class ParagraphPlugin extends FeaturePlugin {
                 service.setBlock('p');
             },
             (service) => service.isBlockActive('p'),
+            'Set paragraph',
         );
     }
 }
@@ -100,6 +103,7 @@ abstract class MarkPlugin extends FeaturePlugin {
                 service.toggleMark(mark);
             },
             (service) => service.isMarkActive(mark),
+            markLabel(mark),
         );
     }
 }
@@ -155,6 +159,9 @@ abstract class ToggleBlockPlugin extends FeaturePlugin {
                 );
             },
             (service) => service.isBlockActive(tagName),
+            tagName === 'blockquote'
+                ? 'Toggle blockquote'
+                : 'Toggle code block',
         );
     }
 }
@@ -184,6 +191,7 @@ abstract class ListPlugin extends FeaturePlugin {
                 service.toggleList(list);
             },
             (service) => service.isListActive(list),
+            list === 'ol' ? 'Toggle ordered list' : 'Toggle unordered list',
         );
     }
 }
@@ -224,7 +232,23 @@ export class LinkPlugin extends FeaturePlugin {
                 service.setLink(undefined);
             },
             (service) => service.isLinkActive(),
+            'Remove link',
         );
+    }
+}
+
+function markLabel(mark: VisualTextMark): string {
+    switch (mark) {
+        case 'strong':
+            return 'Toggle bold';
+        case 'em':
+            return 'Toggle italic';
+        case 'u':
+            return 'Toggle underline';
+        case 's':
+            return 'Toggle strikethrough';
+        case 'code':
+            return 'Toggle inline code';
     }
 }
 

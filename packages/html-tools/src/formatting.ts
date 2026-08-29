@@ -54,6 +54,7 @@ export class HtmlFormattingPlugin extends Plugin {
         this.editor.services.register(htmlFormattingServiceToken, service);
         this.editor.commands.register({
             id: 'document.format',
+            label: 'Format HTML',
             execute: async ({ editor }, ...args) => {
                 const options = readOptions(args);
                 const source = editor.getData();

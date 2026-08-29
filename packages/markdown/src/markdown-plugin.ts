@@ -7,6 +7,7 @@ export class MarkdownPlugin extends Plugin {
     override init(): void {
         this.editor.commands.register({
             id: 'editor.markdown',
+            label: 'Switch to Markdown editing',
             canExecute: ({ editor }) =>
                 editor.state.document.format === 'markdown' &&
                 editor.state.mode !== 'markdown',

@@ -81,6 +81,20 @@ export interface DialogService {
     open(options: DialogOptions): DialogHandle;
 }
 
+/** Options for one docked editor panel. */
+export interface PanelOptions {
+    readonly content?: UiContent;
+    readonly title: string;
+}
+
+/** Handle for the currently docked editor panel. */
+export type PanelHandle = DismissibleUiHandle;
+
+/** Generic single-panel capability owned by one editor UI. */
+export interface PanelService {
+    show(options: PanelOptions): PanelHandle;
+}
+
 /** Options for a simple anchored floating surface. */
 export interface BalloonOptions {
     readonly anchor: Element;
@@ -98,9 +112,14 @@ export interface EditorUi {
     readonly dialogs: DialogService;
     readonly element: HTMLElement;
     readonly notifications: NotificationService;
+    readonly panels: PanelService;
+    readonly statusElement: HTMLElement;
     readonly toolbarElement: HTMLElement;
     readonly theme: EditorUiTheme;
+    readonly destroyed: boolean;
     destroy(): void;
+    /** Re-evaluates mounted toolbar items and the status projection. */
+    refresh(): void;
     /** Restores the latest selection captured inside an owned editing surface. */
     restoreEditingSelection(): boolean;
     setStatus(message?: string): void;

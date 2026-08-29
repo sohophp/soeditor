@@ -15,6 +15,10 @@ export class SourceEditingPlugin extends Plugin {
     ): void {
         this.editor.commands.register({
             id,
+            label:
+                mode === 'source'
+                    ? 'Switch to HTML source'
+                    : 'Switch to visual editing',
             canExecute: ({ editor }) =>
                 editor.state.document.format === 'html' &&
                 editor.state.mode !== mode,

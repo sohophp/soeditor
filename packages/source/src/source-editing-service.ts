@@ -1,5 +1,5 @@
 import { createServiceToken } from '@soeditor/core';
-import type { HtmlParseDiagnostic } from '@soeditor/html';
+import type { HtmlParseDiagnostic, SourceRange } from '@soeditor/html';
 
 /** Narrow source-surface capabilities available to integrations. */
 export interface SourceEditingService {
@@ -7,6 +7,10 @@ export interface SourceEditingService {
     focus(): void;
     /** Returns immutable diagnostics for the exact current source. */
     getDiagnostics(): readonly HtmlParseDiagnostic[];
+    /** Opens CodeMirror Find/Replace, optionally primed with plain text. */
+    openSearchPanel(query?: string): void;
+    /** Reveals and selects a SoEditor-owned source range. */
+    reveal(range: SourceRange): void;
 }
 
 /** Per-editor token for an attached source editing surface. */

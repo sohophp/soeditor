@@ -5,6 +5,20 @@ import {
 } from '../src/index';
 
 describe('CommandRegistry', () => {
+    it('returns immutable command IDs in registration order', async () => {
+        const editor = await Editor.create();
+        editor.commands.register({
+            id: 'first',
+            label: 'First command',
+            execute: () => undefined,
+        });
+        editor.commands.register({ id: 'second', execute: () => undefined });
+
+        const ids = editor.commands.ids();
+        expect(ids).toEqual(['first', 'second']);
+        expect(Object.isFrozen(ids)).toBe(true);
+        expect(editor.commands.get('first').label).toBe('First command');
+    });
     it('registers, gets, executes, and unregisters commands', async () => {
         const editor = await Editor.create();
         const command = {

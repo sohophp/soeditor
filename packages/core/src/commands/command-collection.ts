@@ -10,6 +10,8 @@ export interface CommandCollection {
     has(id: string): boolean;
     /** Gets a command or throws when it is absent. */
     get(id: string): Command;
+    /** Returns an immutable insertion-ordered snapshot of command IDs. */
+    ids(): readonly string[];
     /** Reports whether a registered command can execute. */
     canExecute(id: string): boolean;
     /** Reports whether a registered command is active. */

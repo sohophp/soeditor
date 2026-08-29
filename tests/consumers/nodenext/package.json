@@ -6,6 +6,7 @@
     "packageManager": "pnpm@11.20.0",
     "dependencies": {
         "@soeditor/core": "0.0.0",
+        "@soeditor/dev-tools": "0.0.0",
         "@soeditor/engine": "0.0.0",
         "@soeditor/html": "0.0.0",
         "@soeditor/html-tools": "0.0.0",

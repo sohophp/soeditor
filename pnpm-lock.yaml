@@ -44,6 +44,9 @@ importers:
       '@soeditor/core':
         specifier: workspace:*
         version: link:../../packages/core
+      '@soeditor/dev-tools':
+        specifier: workspace:*
+        version: link:../../packages/dev-tools
       '@soeditor/engine':
         specifier: workspace:*
         version: link:../../packages/engine
@@ -74,6 +77,24 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^3.2.4
         version: 3.2.7(supports-color@7.1.0)(vitest@3.2.7(@types/debug@4.1.13)(@types/node@22.20.1)(supports-color@7.1.0))
+
+  packages/dev-tools:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/html':
+        specifier: workspace:*
+        version: link:../html
+      '@soeditor/html-tools':
+        specifier: workspace:*
+        version: link:../html-tools
+      '@soeditor/source':
+        specifier: workspace:*
+        version: link:../source
+      '@soeditor/ui':
+        specifier: workspace:*
+        version: link:../ui
 
   packages/engine:
     devDependencies:
@@ -163,6 +184,9 @@ importers:
       '@codemirror/lint':
         specifier: ^6.9.7
         version: 6.9.7
+      '@codemirror/search':
+        specifier: ^6.7.1
+        version: 6.7.1
       '@codemirror/state':
         specifier: ^6.7.1
         version: 6.7.1

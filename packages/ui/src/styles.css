@@ -123,6 +123,37 @@
     padding: 0.35rem 0.55rem;
 }
 
+.soeditor-ui__panel {
+    border-block-start: 1px solid var(--soeditor-border);
+    max-height: 18rem;
+    overflow: auto;
+}
+
+.soeditor-ui__panel-header {
+    align-items: center;
+    background: var(--soeditor-panel-bg);
+    display: flex;
+    justify-content: space-between;
+    padding: 0.45rem 0.65rem;
+}
+
+.soeditor-ui__panel-title {
+    font-size: 0.875rem;
+    margin: 0;
+}
+
+.soeditor-ui__panel-close {
+    background: transparent;
+    border: 0;
+    color: var(--soeditor-muted);
+    cursor: pointer;
+    font: inherit;
+}
+
+.soeditor-ui__panel-body {
+    padding: 0.65rem;
+}
+
 .soeditor-ui__notifications {
     inset-block-start: 0.5rem;
     inset-inline-end: 0.5rem;

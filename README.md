@@ -11,6 +11,8 @@ problems and explicit Prettier formatting. Phase 8 adds a configurable,
 framework-agnostic editor UI foundation. Phase 9 adds an isolated configurable
 preview environment. Phase 10 adds canonical Markdown source editing, isolated
 Markdown preview, raw HTML passthrough, and an explicitly lossy HTML bridge.
+Phase 11 adds docked HTML Problems, element path/Inspector, heading Outline,
+command palette, Find/Replace, and diagnostic-to-source navigation.
 
 ```ts
 import { Editor } from '@soeditor/core';
@@ -39,6 +41,8 @@ const editor = await Editor.create({
   context, CSS, a format renderer boundary, and a fixed execution policy.
 - `@soeditor/markdown` — exact CodeMirror Markdown editing, CommonMark
   rendering, Preview integration, and explicit HTML conversion losses.
+- `@soeditor/dev-tools` — HTML Problems, Inspector, Outline, command palette,
+  Find/Replace, and source-location navigation.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
 

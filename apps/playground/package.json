@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@soeditor/core": "workspace:*",
+        "@soeditor/dev-tools": "workspace:*",
         "@soeditor/engine": "workspace:*",
         "@soeditor/html": "workspace:*",
         "@soeditor/html-tools": "workspace:*",

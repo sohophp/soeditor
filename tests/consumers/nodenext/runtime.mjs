@@ -16,6 +16,10 @@ import {
     markdownToHtml,
     MarkdownPlugin,
 } from '@soeditor/markdown';
+import {
+    createDocumentOutline,
+    DeveloperToolsPlugin,
+} from '@soeditor/dev-tools';
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';
@@ -44,6 +48,7 @@ const editor = await Editor.create({
         HtmlFormattingPlugin,
         UiPlugin,
         PreviewPlugin,
+        DeveloperToolsPlugin,
     ],
 });
 
@@ -76,6 +81,16 @@ if (!import.meta.resolve('@soeditor/ui/styles.css').endsWith('/styles.css')) {
 
 if (!editor.commands.has('editor.preview')) {
     throw new Error('Packed preview plugin did not register its command.');
+}
+
+if (
+    !editor.commands.has('developer.find') ||
+    createDocumentOutline('<h2>Runtime outline</h2>')[0]?.label !==
+        'Runtime outline'
+) {
+    throw new Error(
+        'Packed developer-tools package failed its runtime smoke test.',
+    );
 }
 
 const markdownEditor = await Editor.create({

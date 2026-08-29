@@ -5,6 +5,14 @@ import {
     type Transaction,
 } from '@soeditor/core';
 import {
+    createDeveloperToolsEngine,
+    createDocumentOutline,
+    DeveloperToolsPlugin,
+    type DeveloperToolsEngineOptions,
+    type InspectorElement,
+    type OutlineItem,
+} from '@soeditor/dev-tools';
+import {
     parseHtmlFragment,
     serializeHtmlFragment,
     type HtmlElement,
@@ -179,6 +187,17 @@ void markdownRenderer;
 void markdownHtml;
 void convertedMarkdown;
 void MarkdownPlugin;
+const developerToolsFactory: typeof createDeveloperToolsEngine =
+    createDeveloperToolsEngine;
+const developerToolsOptions = undefined as
+    DeveloperToolsEngineOptions | undefined;
+const outline: readonly OutlineItem[] = createDocumentOutline('<h1>Title</h1>');
+const inspector = undefined as InspectorElement | undefined;
+void developerToolsFactory;
+void developerToolsOptions;
+void outline;
+void inspector;
+void DeveloperToolsPlugin;
 const rejectInternalModel = (value: EditingModel): void => {
     void value;
 };

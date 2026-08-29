@@ -1,4 +1,9 @@
 import { Editor, Plugin } from '@soeditor/core';
+import {
+    createDeveloperToolsEngine,
+    DeveloperToolsPlugin,
+    developerToolsServiceToken,
+} from '@soeditor/dev-tools';
 import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
 import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import {
@@ -32,7 +37,12 @@ import {
     createSourceEditingEngine,
     SourceEditingPlugin,
 } from '@soeditor/source';
-import { createEditorUi, UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
+import {
+    createEditorUi,
+    defaultToolbarConfiguration,
+    UiPlugin,
+    uiRegistryServiceToken,
+} from '@soeditor/ui';
 import '@soeditor/ui/styles.css';
 
 class DemoPlugin extends Plugin {
@@ -142,6 +152,7 @@ const htmlPlugins = [
     SourceEditingPlugin,
     DiagnosticsPlugin,
     HtmlFormattingPlugin,
+    DeveloperToolsPlugin,
     PreviewPlugin,
 ];
 const editor = await Editor.create(
@@ -203,16 +214,36 @@ const ui = createEditorUi({
             ? { toolbar: ['failing-update'] }
             : toolbarParameter === 'missing'
               ? { toolbar: ['missing'] }
-              : {}),
+              : {
+                    toolbar: [
+                        ...defaultToolbarConfiguration,
+                        '|',
+                        'problems',
+                        'inspector',
+                        'outline',
+                        'find-replace',
+                        'command-palette',
+                    ],
+                }),
 });
+const developerToolsEngine = markdownDocument
+    ? undefined
+    : createDeveloperToolsEngine({
+          editor,
+          ui,
+          visualElement: editingHost,
+      });
 (window as Window & { __soeditor?: unknown }).__soeditor = Object.freeze({
     Editor,
     createEditorUi,
+    createDeveloperToolsEngine,
     createMarkdownEditingEngine,
     createPreviewEngine,
     createSourceEditingEngine,
     createVisualEditingEngine,
     editor,
+    developerToolsEngine,
+    developerToolsServiceToken,
     markdownEditingServiceToken,
     markdownEngine,
     previewEngine,

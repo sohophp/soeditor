@@ -10,6 +10,8 @@ export interface CommandContext {
 export interface Command {
     /** Stable command identifier, conventionally in namespace.action form. */
     readonly id: string;
+    /** Human-readable label for a no-argument command offered to palettes. */
+    readonly label?: string;
     /** Executes the command with opaque caller arguments. */
     execute(
         context: CommandContext,

@@ -41,11 +41,13 @@ export class HistoryPlugin extends Plugin {
     override init(): void {
         this.editor.commands.register({
             id: 'editor.undo',
+            label: 'Undo',
             canExecute: () => this.canUndo,
             execute: () => this.#undo(),
         });
         this.editor.commands.register({
             id: 'editor.redo',
+            label: 'Redo',
             canExecute: () => this.canRedo,
             execute: () => this.#redo(),
         });

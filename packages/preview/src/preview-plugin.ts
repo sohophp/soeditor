@@ -10,6 +10,7 @@ export class PreviewPlugin extends Plugin {
     override init(): void {
         this.editor.commands.register({
             id: 'editor.preview',
+            label: 'Open preview',
             canExecute: ({ editor }) =>
                 editor.state.mode !== 'preview' &&
                 (editor.services.tryGet(previewServiceToken)?.canRender() ??
@@ -30,6 +31,7 @@ export class PreviewPlugin extends Plugin {
         });
         this.editor.commands.register({
             id: 'editor.preview.close',
+            label: 'Close preview',
             canExecute: ({ editor }) => editor.state.mode === 'preview',
             execute: ({ editor }, ...args) => {
                 assertNoArguments('editor.preview.close', args);
@@ -41,6 +43,7 @@ export class PreviewPlugin extends Plugin {
         });
         this.editor.commands.register({
             id: 'preview.refresh',
+            label: 'Refresh preview',
             canExecute: ({ editor }) =>
                 editor.services.has(previewServiceToken),
             execute: ({ editor }, ...args) => {

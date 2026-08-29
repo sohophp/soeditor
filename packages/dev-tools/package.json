@@ -1,7 +1,7 @@
 {
-    "name": "@soeditor/source",
+    "name": "@soeditor/dev-tools",
     "version": "0.0.0",
-    "description": "CodeMirror-powered HTML source editing for SoEditor.",
+    "description": "HTML developer workflows for SoEditor.",
     "type": "module",
     "sideEffects": false,
     "files": [
@@ -18,22 +18,18 @@
         "test": "vitest run",
         "typecheck": "tsc -p tsconfig.json"
     },
-    "dependencies": {
-        "@codemirror/lang-html": "^6.4.12",
-        "@codemirror/lint": "^6.9.7",
-        "@codemirror/search": "^6.7.1",
-        "@codemirror/state": "^6.7.1",
-        "@codemirror/view": "^6.43.9",
-        "codemirror": "^6.0.2"
-    },
     "peerDependencies": {
         "@soeditor/core": "workspace:*",
-        "@soeditor/engine": "workspace:*",
-        "@soeditor/html": "workspace:*"
+        "@soeditor/html": "workspace:*",
+        "@soeditor/html-tools": "workspace:*",
+        "@soeditor/source": "workspace:*",
+        "@soeditor/ui": "workspace:*"
     },
     "devDependencies": {
         "@soeditor/core": "workspace:*",
-        "@soeditor/engine": "workspace:*",
-        "@soeditor/html": "workspace:*"
+        "@soeditor/html": "workspace:*",
+        "@soeditor/html-tools": "workspace:*",
+        "@soeditor/source": "workspace:*",
+        "@soeditor/ui": "workspace:*"
     }
 }

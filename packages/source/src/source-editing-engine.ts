@@ -8,6 +8,7 @@ import {
     parseHtmlDocument,
     parseHtmlFragment,
     type HtmlParseDiagnostic,
+    type SourceRange,
 } from '@soeditor/html';
 import { html } from '@codemirror/lang-html';
 import {
@@ -15,6 +16,12 @@ import {
     linter,
     type Diagnostic as CodeMirrorDiagnostic,
 } from '@codemirror/lint';
+import {
+    findNext,
+    openSearchPanel,
+    SearchQuery,
+    setSearchQuery,
+} from '@codemirror/search';
 import {
     Compartment,
     EditorState,
@@ -126,6 +133,8 @@ export class SourceEditingEngine implements SourceEngine {
         const service: SourceEditingService = {
             focus: () => this.focus(),
             getDiagnostics: () => this.diagnostics,
+            openSearchPanel: (query) => this.openSearchPanel(query),
+            reveal: (range) => this.reveal(range),
         };
         this.#service = Object.freeze(service);
         this.editor.services.register(sourceEditingServiceToken, this.#service);
@@ -151,6 +160,34 @@ export class SourceEditingEngine implements SourceEngine {
 
     focus(): void {
         this.#assertAlive();
+        this.#view.focus();
+    }
+
+    openSearchPanel(query?: string): void {
+        this.#assertAlive();
+        if (query !== undefined && typeof query !== 'string') {
+            throw new TypeError('A source search query must be a string.');
+        }
+        openSearchPanel(this.#view);
+        if (query !== undefined) {
+            this.#view.dispatch({
+                effects: setSearchQuery.of(new SearchQuery({ search: query })),
+            });
+            if (query.length > 0) {
+                findNext(this.#view);
+            }
+        }
+    }
+
+    reveal(range: SourceRange): void {
+        this.#assertAlive();
+        const length = this.#view.state.doc.length;
+        const from = clampSourceOffset(range.start.offset, length);
+        const to = Math.max(from, clampSourceOffset(range.end.offset, length));
+        this.#view.dispatch({
+            effects: EditorView.scrollIntoView(from, { y: 'center' }),
+            selection: { anchor: from, head: to },
+        });
         this.#view.focus();
     }
 
@@ -296,6 +333,15 @@ function toCodeMirrorDiagnostics(
 
 function clamp(value: number, length: number): number {
     return Math.max(0, Math.min(value, length));
+}
+
+function clampSourceOffset(value: number, length: number): number {
+    if (!Number.isInteger(value) || value < 0) {
+        throw new TypeError(
+            'A source range offset must be a non-negative integer.',
+        );
+    }
+    return Math.min(value, length);
 }
 
 function isCompleteDocument(source: string): boolean {

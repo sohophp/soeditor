@@ -57,6 +57,7 @@ export class DiagnosticsPlugin extends Plugin {
         this.editor.services.register(diagnosticsServiceToken, service);
         this.editor.commands.register({
             id: 'document.validate',
+            label: 'Validate HTML',
             execute: (_context, ...args) => {
                 if (args.length !== 0) {
                     throw new TypeError(

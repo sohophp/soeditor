@@ -11,7 +11,7 @@ test.beforeEach(async ({ page }) => {
     );
 });
 
-test('renders the configurable default toolbar, groups, status, and theme', async ({
+test('renders the configured integrated toolbar, groups, status, and theme', async ({
     page,
 }) => {
     const items = await page
@@ -40,6 +40,12 @@ test('renders the configurable default toolbar, groups, status, and theme', asyn
         'source',
         'preview',
         'format',
+        '|',
+        'problems',
+        'inspector',
+        'outline',
+        'find-replace',
+        'command-palette',
     ]);
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
         'Visual · Saved',
@@ -112,7 +118,7 @@ test('uses the heading dropdown and mode button through shared commands', async 
     await expect(page.locator(source)).toHaveText('<h2>Hello</h2>');
     await page.locator('[data-toolbar-item="source"]').click();
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
-        'Visual · Unsaved',
+        'Visual · Unsaved · h2',
     );
 });
 
@@ -179,9 +185,9 @@ test('isolates toolbar update failures from editor state changes', async ({
     page,
 }) => {
     await page.goto('/?toolbar=failing');
-    await expect(page.locator('.soeditor-ui__notification')).toContainText(
-        'Example toolbar update failed.',
-    );
+    await expect(
+        page.locator('.soeditor-ui__notification').first(),
+    ).toContainText('Example toolbar update failed.');
     await page.click('#hello');
     await expect(page.locator(source)).toHaveText('<p>Hello</p>');
 });

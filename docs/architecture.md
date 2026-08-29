@@ -2,11 +2,11 @@
 
 ## Current implementation status
 
-Phases 1–10 are implemented. Runtime document formats are `html | markdown`
+Phases 1–11 are implemented. Runtime document formats are `html | markdown`
 and projections are `visual | source | markdown | preview`. HTML and Markdown
 remain canonical source formats for separate editor instances; projection
 changes never perform an implicit format conversion. Later sections that
-describe post-Phase-10 capabilities remain product direction rather than an
+describe post-Phase-11 capabilities remain product direction rather than an
 implementation claim.
 
 ### Phase 1.1 stabilization policies
@@ -365,6 +365,27 @@ remain raw HTML where practical. Document chrome, comments, attributes, and
 unsupported structures may be discarded or normalized, so no HTML/Markdown
 round-trip guarantee exists. GFM, MDX, frontmatter interpretation, Markdown
 diagnostics, and visual Markdown editing remain deferred.
+
+## Phase 11 developer tools
+
+Phase 11 adds browser-facing `@soeditor/dev-tools`. HTML analysis remains
+read-only and uses the public SoEditor HTML tree, diagnostics service, Source
+service, and generic UI capabilities. The package provides docked Problems,
+selection-derived element path and Inspector, a source-backed heading Outline,
+Find/Replace, a searchable command palette, and navigation from Problems or
+Outline entries to CodeMirror source ranges.
+
+Core remains UI- and DOM-independent. Commands may now publish an optional
+human-readable label to opt a no-argument action into palettes, while
+`editor.commands.ids()` returns an immutable registration-order snapshot. The
+mutable registry remains private. `@soeditor/ui` gains one generic accessible
+docked-panel service and does not depend on HTML or developer tooling.
+
+The HTML Source service owns range reveal and CodeMirror's built-in Find/Replace
+panel behind SoEditor-owned APIs. No CodeMirror types cross the package root.
+The Inspector reads the controlled visual selection as a non-authoritative
+projection and never mutates canonical source. Split views are deferred because
+the current architecture intentionally has one active projection at a time.
 
 ## 1. 项目定位
 

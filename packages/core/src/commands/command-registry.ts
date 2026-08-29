@@ -71,6 +71,12 @@ export class CommandRegistry implements CommandCollection {
         return command;
     }
 
+    ids(): readonly string[] {
+        const record = getRecord(this);
+        record.assertAvailable();
+        return Object.freeze([...record.commands.keys()]);
+    }
+
     canExecute(id: string): boolean {
         const record = getRecord(this);
         const command = this.get(id);

@@ -4,6 +4,7 @@ import {
 } from './defaults.js';
 import { EditorUiDestroyedError } from './errors.js';
 import { createOverlayServices } from './overlays.js';
+import { createPanelService } from './panels.js';
 import { matchesShortcut } from './shortcuts.js';
 import { getUiRegistryRecord, uiRegistryServiceToken } from './ui-plugin.js';
 import type {
@@ -52,19 +53,22 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
     status.className = 'soeditor-ui__status';
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
+    const panelLayer = document.createElement('div');
+    panelLayer.className = 'soeditor-ui__panels';
     const notificationRegion = document.createElement('div');
     notificationRegion.className = 'soeditor-ui__notifications';
     notificationRegion.setAttribute('aria-live', 'polite');
     notificationRegion.setAttribute('aria-label', 'Editor notifications');
     const overlayLayer = document.createElement('div');
     overlayLayer.className = 'soeditor-ui__overlays';
-    shell.append(toolbar, status, notificationRegion, overlayLayer);
+    shell.append(toolbar, panelLayer, status, notificationRegion, overlayLayer);
 
     const overlays = createOverlayServices(
         document,
         overlayLayer,
         notificationRegion,
     );
+    const panelService = createPanelService(document, panelLayer);
     const items: ToolbarItemInstance[] = [];
     let editingSelection: SelectionBookmark | undefined;
     let destroyed = false;
@@ -77,11 +81,17 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
         dialogs: overlays.dialogs,
         element: options.element,
         notifications: overlays.notifications,
+        panels: panelService.panels,
+        statusElement: status,
         toolbarElement: toolbar,
         get theme() {
             return theme;
         },
+        get destroyed() {
+            return destroyed;
+        },
         destroy: () => destroy(),
+        refresh: () => update(),
         restoreEditingSelection: () => restoreEditingSelection(),
         setStatus: (message?: string) => {
             assertAlive();
@@ -180,6 +190,7 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
         disposeDestroy();
         destroyToolbarItems(items);
         overlays.destroy();
+        panelService.destroy();
         shell.remove();
         if (!hadUiClass) {
             options.element.classList.remove('soeditor-ui');
