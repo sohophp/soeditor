@@ -6,9 +6,9 @@ Active roadmap.
 
 This roadmap begins from the current repository state.
 
-Phases 1–14 are complete.
+Phases 1–15 are complete.
 
-Phase 15 is the next implementation phase.
+The SoEditor 0.5 Developer Preview autonomous roadmap is complete.
 
 The target of this roadmap is **SoEditor 0.5 Developer Preview**.
 
@@ -730,6 +730,10 @@ A clean external project can install and run SoEditor through documented public 
 ---
 
 # Phase 15 — SoEditor 0.5 Release Hardening
+
+## Status
+
+COMPLETE.
 
 ## Goal
 

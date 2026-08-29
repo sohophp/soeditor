@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/plugin-sdk",
-    "version": "0.0.0",
+    "version": "0.5.0",
     "description": "Stable public extension contracts for SoEditor plugins.",
     "type": "module",
     "sideEffects": false,

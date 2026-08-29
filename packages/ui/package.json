@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/ui",
-    "version": "0.0.0",
+    "version": "0.5.0",
     "description": "Framework-agnostic configurable DOM UI for SoEditor.",
     "type": "module",
     "sideEffects": [

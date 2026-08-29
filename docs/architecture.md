@@ -1,12 +1,12 @@
-# SoEditor Architecture 0.1
+# SoEditor Architecture 0.5
 
 ## Current implementation status
 
-Phases 1–13 are implemented. Runtime document formats are `html | markdown`
+Phases 1–15 are implemented. Runtime document formats are `html | markdown`
 and projections are `visual | source | markdown | preview`. HTML and Markdown
 remain canonical source formats for separate editor instances; projection
 changes never perform an implicit format conversion. Later sections that
-describe post-Phase-13 capabilities remain product direction rather than an
+describe post-Phase-15 capabilities remain product direction rather than an
 implementation claim.
 
 ### Phase 1.1 stabilization policies
@@ -443,6 +443,20 @@ The direct-browser IIFE bundles the public API and assigns one frozen
 `globalThis.SoEditor` namespace. It delegates creation to Core, has no global
 plugin registry, and performs no automatic mounting. Standalone CSS and a
 JavaScript source map accompany it. See `docs/distribution.md` and ADR 0020.
+
+## Phase 15 release hardening
+
+The 0.5 release gate keeps the Phase 14 architecture unchanged and adds
+evidence around it. All 15 publishable packages share version 0.5.0. A release
+audit checks explicit export maps, mapped artifacts, and bundle budgets; packed
+NodeNext/native ESM/Vite consumers exercise actual tarballs.
+
+The Playground exposes Classic, Developer, Markdown, and CMS + injected
+SoFinder routes. Chromium release tests cover that matrix, an end-to-end CMS
+preservation/asset/Preview path, accessibility semantics, and repeated
+editor/UI/visual lifecycle cleanup under a generous regression budget.
+Operational and product limitations are recorded in `docs/status.md` rather
+than hidden behind speculative abstractions.
 
 ## 1. 项目定位
 

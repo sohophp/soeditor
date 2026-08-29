@@ -200,9 +200,7 @@ try {
     const coreArchive = archives.find((name) =>
         name.startsWith('soeditor-core-'),
     );
-    const soeditorArchive = archives.find((name) =>
-        name.startsWith('soeditor-0.0.0'),
-    );
+    const soeditorArchive = archives.find((name) => /^soeditor-\d/u.test(name));
     const pluginSdkArchive = archives.find((name) =>
         name.startsWith('soeditor-plugin-sdk-'),
     );

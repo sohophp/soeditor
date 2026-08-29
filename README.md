@@ -2,7 +2,8 @@
 
 Developer-first extensible content editor.
 
-**Status: early development.** SoEditor is not production ready. The repository
+**Status: 0.5 Developer Preview.** SoEditor is suitable for evaluation and
+integration development, but is not yet a stable 1.0 release. The repository
 contains the framework-agnostic Core, HTML document layer, controlled visual
 editing engine, transaction history/clipboard boundaries, and Phase 5
 command-driven rich-text feature plugins. Phase 6 adds exact CodeMirror-powered
@@ -22,10 +23,12 @@ direct-browser global, standalone CSS/maps, and clean NodeNext/Vite/CDN
 consumer verification.
 
 ```ts
-import { Editor } from '@soeditor/core';
+import { SoEditor, minimalPreset } from 'soeditor';
 
-const editor = await Editor.create({
+const editor = await SoEditor.create({
     data: '<p>Hello</p>',
+    format: minimalPreset.format,
+    plugins: minimalPreset.plugins,
 });
 ```
 
@@ -63,8 +66,11 @@ const editor = await Editor.create({
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
 
-See [Getting started and distribution](docs/distribution.md) and the
-[Plugin Guide](docs/plugin-guide.md) for application and extension usage.
+Start with [Getting started](docs/getting-started.md). See
+[Configuration](docs/configuration.md), [Distribution](docs/distribution.md),
+[Source editing](docs/source-editing.md), [Preview](docs/preview.md),
+[CMS/SoFinder integration](docs/cms-integration.md), the
+[Plugin Guide](docs/plugin-guide.md), and [0.5 status](docs/status.md).
 
 ## Development
 

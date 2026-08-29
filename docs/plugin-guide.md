@@ -4,6 +4,10 @@ SoEditor plugins are per-editor classes with explicit lifecycle hooks. Import
 authoring contracts from `@soeditor/plugin-sdk`; import feature plugins from
 their owning package only when declaring a concrete dependency.
 
+The 0.5 SDK is a curated facade, not a second runtime. Plugin packages should
+declare compatible `@soeditor/*` 0.5 peer dependencies and test against packed
+public package roots under strict NodeNext resolution.
+
 ```ts
 import { Plugin, UiPlugin, uiRegistryServiceToken } from '@soeditor/plugin-sdk';
 
@@ -87,6 +91,9 @@ features demonstrate a stable common contract.
 `@soeditor/presets` exports `minimalPreset`, `classicPreset`,
 `developerPreset`, and `markdownPreset`. Pass `format` and `plugins` into
 `Editor.create()`, and pass `toolbar` into `createEditorUi()`.
+
+Size-sensitive packages may import `@soeditor/presets/minimal`, `/classic`,
+`/developer`, or `/markdown` instead of evaluating the aggregate preset entry.
 
 ```ts
 import { Editor } from '@soeditor/core';

@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/preview",
-    "version": "0.0.0",
+    "version": "0.5.0",
     "description": "Sandboxed configurable HTML preview for SoEditor.",
     "type": "module",
     "sideEffects": false,

@@ -11,6 +11,14 @@
                 max-width: 60rem;
             }
 
+            nav ul {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+                list-style: none;
+                padding: 0;
+            }
+
             #editor {
                 border: 1px solid #8c959f;
                 min-height: 8rem;
@@ -55,9 +63,21 @@
         <main id="editor-ui">
             <h1>SoEditor Developer Preview</h1>
             <p>
-                This harness demonstrates the configurable command-driven editor
-                UI, controlled visual projection, and HTML source mode.
+                This executable harness demonstrates the release configurations
+                and their shared command-driven architecture.
             </p>
+            <nav aria-label="Playground examples">
+                <ul>
+                    <li><a href="/?preset=classic">Classic editor</a></li>
+                    <li><a href="/">Developer editor</a></li>
+                    <li><a href="/?format=markdown">Markdown editor</a></li>
+                    <li>
+                        <a href="/?example=cms&files=sofinder"
+                            >CMS + SoFinder adapter</a
+                        >
+                    </li>
+                </ul>
+            </nav>
             <p>
                 <button id="hello" type="button">Set Hello</button>
                 <button id="world" type="button">Set World</button>

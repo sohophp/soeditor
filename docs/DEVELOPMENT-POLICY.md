@@ -32,25 +32,19 @@ Apply the Stop Conditions in this document.
 
 # 2. Current Starting Point
 
-Phase 1 is complete.
+Phases 1–15 are complete and the SoEditor 0.5 Developer Preview release gate
+has passed.
 
-The next roadmap phase is:
-
-```text
-Phase 2 — HTML Document Layer
-```
-
-A detailed Phase 2 implementation specification already exists:
+The autonomous roadmap has no next implementation phase. Work listed under
+Post-0.5 Candidate Work requires a new roadmap decision and must not begin
+automatically.
 
 ```text
-docs/prompts/002-html-document-layer.md
+SoEditor 0.5 Developer Preview
 ```
 
-Use it.
-
-Do not regenerate a competing Phase 2 specification.
-
-After Phase 2, detailed phase execution plans may be generated autonomously according to this policy.
+Completed phase specifications remain implementation records under
+`docs/prompts/`.
 
 ---
 

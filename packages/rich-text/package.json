@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/rich-text",
-    "version": "0.0.0",
+    "version": "0.5.0",
     "description": "Command-driven rich-text feature plugins for SoEditor.",
     "type": "module",
     "sideEffects": false,

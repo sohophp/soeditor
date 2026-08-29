@@ -14,7 +14,12 @@ import {
     createMarkdownPreviewRenderer,
     markdownEditingServiceToken,
 } from '@soeditor/markdown';
-import { developerPreset, markdownPreset } from '@soeditor/presets';
+import {
+    classicPreset,
+    developerPreset,
+    markdownPreset,
+    minimalPreset,
+} from '@soeditor/presets';
 import { createPreviewEngine, previewServiceToken } from '@soeditor/preview';
 import { createSourceEditingEngine } from '@soeditor/source';
 import { createEditorUi, UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
@@ -143,7 +148,17 @@ if (
 
 const parameters = new URLSearchParams(window.location.search);
 const markdownDocument = parameters.get('format') === 'markdown';
-const htmlPlugins = [DemoPlugin, ...developerPreset.plugins];
+const cmsExample = parameters.get('example') === 'cms';
+const developerDocument = parameters.get('preset') !== 'classic';
+const htmlPreset = developerDocument ? developerPreset : classicPreset;
+const htmlPlugins = [DemoPlugin, ...htmlPreset.plugins];
+document.body.dataset.demo = markdownDocument
+    ? 'markdown'
+    : cmsExample
+      ? 'cms-sofinder'
+      : developerDocument
+        ? 'developer'
+        : 'classic';
 const editor = await Editor.create(
     markdownDocument
         ? {
@@ -153,7 +168,9 @@ const editor = await Editor.create(
               readonly: parameters.has('readonly'),
           }
         : {
-              data: '<p>Hello <strong>SoEditor</strong></p><product-card data-id="123"></product-card><!--CMS:block-->',
+              data: cmsExample
+                  ? '<!--CMS:block:42--><h1>CMS article</h1><p>Edit me safely.</p><product-card data-id="123"></product-card><!--CMS:end:42-->'
+                  : '<p>Hello <strong>SoEditor</strong></p><product-card data-id="123"></product-card><!--CMS:block-->',
               plugins: htmlPlugins,
               readonly: parameters.has('readonly'),
           },
@@ -167,7 +184,7 @@ if (!markdownDocument) {
         }),
     };
     const manager =
-        parameters.get('files') === 'sofinder'
+        parameters.get('files') === 'sofinder' || cmsExample
             ? new SoFinderAdapter({
                   pick: async () => ({
                       height: 480,
@@ -221,16 +238,17 @@ const ui = createEditorUi({
             : toolbarParameter === 'missing'
               ? { toolbar: ['missing'] }
               : {
-                    toolbar: developerPreset.toolbar,
+                    toolbar: htmlPreset.toolbar,
                 }),
 });
-const developerToolsEngine = markdownDocument
-    ? undefined
-    : createDeveloperToolsEngine({
-          editor,
-          ui,
-          visualElement: editingHost,
-      });
+const developerToolsEngine =
+    markdownDocument || !developerDocument
+        ? undefined
+        : createDeveloperToolsEngine({
+              editor,
+              ui,
+              visualElement: editingHost,
+          });
 (window as Window & { __soeditor?: unknown }).__soeditor = Object.freeze({
     Editor,
     createEditorUi,
@@ -245,6 +263,8 @@ const developerToolsEngine = markdownDocument
     fileManagerServiceToken,
     markdownEditingServiceToken,
     markdownEngine,
+    minimalPreset,
+    selectedDemo: document.body.dataset.demo,
     previewEngine,
     previewServiceToken,
     sourceEngine,

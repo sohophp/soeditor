@@ -1,6 +1,6 @@
 {
     "name": "soeditor-workspace",
-    "version": "0.0.0",
+    "version": "0.5.0",
     "private": true,
     "type": "module",
     "packageManager": "pnpm@11.20.0",
@@ -13,10 +13,11 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "lint": "eslint . && prettier --check .",
-        "test": "pnpm test:unit && pnpm test:consumer && pnpm test:distribution && pnpm test:browser",
+        "test": "pnpm test:unit && pnpm test:consumer && pnpm test:distribution && pnpm test:release && pnpm test:browser",
         "test:browser": "playwright test",
         "test:consumer": "pnpm --filter soeditor... --filter @soeditor/plugin-sdk build && node scripts/test-nodenext-consumer.mjs",
         "test:distribution": "node scripts/verify-distribution.mjs",
+        "test:release": "pnpm --filter soeditor --filter @soeditor/playground build && node scripts/verify-release.mjs",
         "test:unit": "pnpm --filter soeditor... --filter @soeditor/plugin-sdk test",
         "test:coverage": "pnpm --filter @soeditor/core test:coverage",
         "typecheck": "pnpm -r --if-present run typecheck"

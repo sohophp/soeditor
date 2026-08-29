@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/source",
-    "version": "0.0.0",
+    "version": "0.5.0",
     "description": "CodeMirror-powered HTML source editing for SoEditor.",
     "type": "module",
     "sideEffects": false,

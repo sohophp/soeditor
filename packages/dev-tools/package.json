@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/dev-tools",
-    "version": "0.0.0",
+    "version": "0.5.0",
     "description": "HTML developer workflows for SoEditor.",
     "type": "module",
     "sideEffects": false,
