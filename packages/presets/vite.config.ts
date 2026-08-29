@@ -15,7 +15,16 @@ const external = [
 
 export default defineConfig({
     build: {
-        lib: { entry: 'src/index.ts', fileName: 'index', formats: ['es'] },
+        lib: {
+            entry: {
+                classic: 'src/classic.ts',
+                developer: 'src/developer.ts',
+                index: 'src/index.ts',
+                markdown: 'src/markdown.ts',
+                minimal: 'src/minimal.ts',
+            },
+            formats: ['es'],
+        },
         minify: false,
         rollupOptions: { external },
         sourcemap: true,

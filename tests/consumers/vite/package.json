@@ -1,0 +1,16 @@
+{
+    "name": "soeditor-vite-consumer",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "packageManager": "pnpm@11.20.0",
+    "dependencies": {
+        "soeditor": "0.0.0"
+    },
+    "devDependencies": {
+        "vite": "7.3.6"
+    },
+    "scripts": {
+        "build": "vite build"
+    }
+}

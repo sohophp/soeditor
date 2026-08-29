@@ -30,6 +30,8 @@ import {
     extendPreset,
     minimalPreset,
 } from '@soeditor/presets';
+import { minimalPreset as subpathMinimalPreset } from '@soeditor/presets/minimal';
+import { SoEditor, minimalPreset as umbrellaMinimalPreset } from 'soeditor';
 import { SoFinderAdapter } from '@soeditor/adapter-sofinder';
 import { normalizeFileManagerResult } from '@soeditor/file-manager';
 
@@ -57,8 +59,17 @@ class RuntimeSdkPlugin extends SdkPlugin {
 const extendedRuntimePreset = extendPreset(minimalPreset, {
     plugins: [RuntimeSdkPlugin],
 });
+const umbrellaEditor = await SoEditor.create({
+    data: '<p>Umbrella runtime</p>',
+    plugins: umbrellaMinimalPreset.plugins,
+});
+if (umbrellaEditor.getData() !== '<p>Umbrella runtime</p>') {
+    throw new Error('Packed soeditor umbrella returned unexpected data.');
+}
+await umbrellaEditor.destroy();
 if (
     extendedRuntimePreset.plugins.at(-1) !== RuntimeSdkPlugin ||
+    subpathMinimalPreset !== minimalPreset ||
     !developerPreset.plugins.some((plugin) => plugin.id === 'developer-tools')
 ) {
     throw new Error(

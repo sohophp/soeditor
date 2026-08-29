@@ -6,6 +6,7 @@ import {
     readFile,
     readdir,
     rm,
+    stat,
     writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -15,9 +16,11 @@ import { fileURLToPath, URL } from 'node:url';
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
 const fixtureSource = join(repositoryRoot, 'tests/consumers/nodenext');
+const viteFixtureSource = join(repositoryRoot, 'tests/consumers/vite');
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'soeditor-nodenext-'));
 const packDirectory = join(temporaryRoot, 'package');
 const fixtureDirectory = join(temporaryRoot, 'consumer');
+const viteFixtureDirectory = join(temporaryRoot, 'vite-consumer');
 
 function run(command, args, cwd) {
     execFileSync(command, args, {
@@ -30,6 +33,11 @@ function run(command, args, cwd) {
 try {
     await cp(fixtureSource, fixtureDirectory, { recursive: true });
     await mkdir(packDirectory, { recursive: true });
+    run(
+        'pnpm',
+        ['--filter', 'soeditor', 'pack', '--pack-destination', packDirectory],
+        repositoryRoot,
+    );
     run(
         'pnpm',
         [
@@ -192,6 +200,9 @@ try {
     const coreArchive = archives.find((name) =>
         name.startsWith('soeditor-core-'),
     );
+    const soeditorArchive = archives.find((name) =>
+        name.startsWith('soeditor-0.0.0'),
+    );
     const pluginSdkArchive = archives.find((name) =>
         name.startsWith('soeditor-plugin-sdk-'),
     );
@@ -230,7 +241,7 @@ try {
         name.startsWith('soeditor-markdown-'),
     );
 
-    if (archives.length !== 14 || coreArchive === undefined) {
+    if (archives.length !== 15 || coreArchive === undefined) {
         throw new Error('Expected one packed @soeditor/core archive.');
     }
 
@@ -288,8 +299,16 @@ try {
         throw new Error('Expected one packed @soeditor/presets archive.');
     }
 
+    if (soeditorArchive === undefined) {
+        throw new Error('Expected one packed soeditor archive.');
+    }
+
     const packagePath = join(fixtureDirectory, 'package.json');
     const packageData = JSON.parse(await readFile(packagePath, 'utf8'));
+    packageData.dependencies.soeditor = `file:${join(
+        packDirectory,
+        soeditorArchive,
+    )}`;
     packageData.dependencies['@soeditor/adapter-sofinder'] = `file:${join(
         packDirectory,
         adapterSoFinderArchive,
@@ -347,12 +366,63 @@ try {
         markdownArchive,
     )}`;
     await writeFile(packagePath, `${JSON.stringify(packageData, null, 4)}\n`);
+    await writeOverrides(fixtureDirectory, packageData.dependencies);
 
-    run('pnpm', ['install', '--ignore-workspace'], fixtureDirectory);
+    run('pnpm', ['install'], fixtureDirectory);
     run('pnpm', ['exec', 'tsc', '-p', 'tsconfig.json'], fixtureDirectory);
     stdout.write('NodeNext packed-package consumer passed.\n');
     run('node', ['runtime.mjs'], fixtureDirectory);
     stdout.write('Node ESM packed-package runtime smoke test passed.\n');
+
+    await cp(viteFixtureSource, viteFixtureDirectory, { recursive: true });
+    const vitePackagePath = join(viteFixtureDirectory, 'package.json');
+    const vitePackageData = JSON.parse(await readFile(vitePackagePath, 'utf8'));
+    vitePackageData.dependencies = { ...packageData.dependencies };
+    await writeFile(
+        vitePackagePath,
+        `${JSON.stringify(vitePackageData, null, 4)}\n`,
+    );
+    await writeOverrides(viteFixtureDirectory, vitePackageData.dependencies);
+    run('pnpm', ['install'], viteFixtureDirectory);
+    run('pnpm', ['build'], viteFixtureDirectory);
+    const viteAssets = await readdir(join(viteFixtureDirectory, 'dist/assets'));
+    const viteJavaScript = viteAssets.find((name) => name.endsWith('.js'));
+    if (
+        viteJavaScript === undefined ||
+        !viteAssets.some((name) => name.endsWith('.js.map')) ||
+        !viteAssets.some((name) => name.endsWith('.css'))
+    ) {
+        throw new Error(
+            'Vite packed-package consumer did not emit JS, CSS, and source maps.',
+        );
+    }
+    const viteJavaScriptSize = (
+        await stat(join(viteFixtureDirectory, 'dist/assets', viteJavaScript))
+    ).size;
+    if (viteJavaScriptSize > 100_000) {
+        throw new Error(
+            `Minimal Vite consumer exceeds its 100 kB tree-shaking guard (${String(viteJavaScriptSize)} bytes).`,
+        );
+    }
+    stdout.write('Vite packed-package production build passed.\n');
 } finally {
     await rm(temporaryRoot, { force: true, recursive: true });
+}
+
+async function writeOverrides(directory, dependencies) {
+    const entries = Object.entries(dependencies).filter(([name]) =>
+        name.startsWith('@soeditor/'),
+    );
+    const yaml = [
+        'overrides:',
+        ...entries.map(
+            ([name, value]) =>
+                `  ${JSON.stringify(name)}: ${JSON.stringify(value)}`,
+        ),
+        '',
+        'allowBuilds:',
+        '  esbuild: true',
+        '',
+    ].join('\n');
+    await writeFile(join(directory, 'pnpm-workspace.yaml'), yaml);
 }

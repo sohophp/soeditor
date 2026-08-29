@@ -254,6 +254,61 @@ importers:
         specifier: workspace:*
         version: link:../html
 
+  packages/soeditor:
+    dependencies:
+      '@soeditor/adapter-sofinder':
+        specifier: workspace:*
+        version: link:../adapter-sofinder
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/dev-tools':
+        specifier: workspace:*
+        version: link:../dev-tools
+      '@soeditor/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@soeditor/file-manager':
+        specifier: workspace:*
+        version: link:../file-manager
+      '@soeditor/html':
+        specifier: workspace:*
+        version: link:../html
+      '@soeditor/html-tools':
+        specifier: workspace:*
+        version: link:../html-tools
+      '@soeditor/markdown':
+        specifier: workspace:*
+        version: link:../markdown
+      '@soeditor/presets':
+        specifier: workspace:*
+        version: link:../presets
+      '@soeditor/preview':
+        specifier: workspace:*
+        version: link:../preview
+      '@soeditor/rich-text':
+        specifier: workspace:*
+        version: link:../rich-text
+      '@soeditor/source':
+        specifier: workspace:*
+        version: link:../source
+      '@soeditor/ui':
+        specifier: workspace:*
+        version: link:../ui
+    devDependencies:
+      '@types/node':
+        specifier: ^22.18.0
+        version: 22.20.1
+      typescript:
+        specifier: ^5.9.2
+        version: 5.9.2
+      vite:
+        specifier: ^7.1.3
+        version: 7.3.6(@types/node@22.20.1)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/debug@4.1.13)(@types/node@22.20.1)(supports-color@7.1.0)
+
   packages/source:
     dependencies:
       '@codemirror/lang-html':

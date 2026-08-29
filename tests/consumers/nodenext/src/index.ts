@@ -16,6 +16,8 @@ import {
     minimalPreset,
     type EditorPreset,
 } from '@soeditor/presets';
+import { minimalPreset as subpathMinimalPreset } from '@soeditor/presets/minimal';
+import { SoEditor, minimalPreset as umbrellaMinimalPreset } from 'soeditor';
 import {
     createDeveloperToolsEngine,
     createDocumentOutline,
@@ -162,6 +164,11 @@ const editor = await Editor.create({
         PreviewPlugin,
     ],
 });
+const umbrellaEditor = await SoEditor.create({
+    data: '<p>Umbrella</p>',
+    plugins: umbrellaMinimalPreset.plugins,
+});
+await umbrellaEditor.destroy();
 
 editor.services.register(ExampleServiceToken, { value: 'available' });
 editor.execute('consumer.replace', '<p>Compiled</p>');
@@ -265,6 +272,7 @@ const presets: readonly EditorPreset[] = [
     developerPreset,
     markdownPreset,
 ];
+void subpathMinimalPreset;
 const extendedPreset = extendPreset(minimalPreset, {
     plugins: [ConsumerPlugin],
 });

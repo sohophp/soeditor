@@ -17,6 +17,9 @@ Phase 12 adds a replaceable FileManager capability, validated command-driven
 image selection, and a dependency-free SoFinder picker adapter.
 Phase 13 adds a public plugin-authoring facade, status contributions, immutable
 minimal/classic/developer/Markdown presets, and external-package verification.
+Phase 14 adds the `soeditor` ESM umbrella, narrow preset entries, a frozen
+direct-browser global, standalone CSS/maps, and clean NodeNext/Vite/CDN
+consumer verification.
 
 ```ts
 import { Editor } from '@soeditor/core';
@@ -55,10 +58,13 @@ const editor = await Editor.create({
   contracts for third-party plugin authors.
 - `@soeditor/presets` — immutable plugin and toolbar definitions for common
   editor configurations.
+- `soeditor` — convenience ESM and direct-browser distribution over the public
+  package roots.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
 
-See [Plugin Guide](docs/plugin-guide.md) for extension and preset usage.
+See [Getting started and distribution](docs/distribution.md) and the
+[Plugin Guide](docs/plugin-guide.md) for application and extension usage.
 
 ## Development
 

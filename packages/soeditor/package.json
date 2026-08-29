@@ -1,0 +1,46 @@
+{
+    "name": "soeditor",
+    "version": "0.0.0",
+    "description": "Developer-first, HTML-first extensible content editor.",
+    "type": "module",
+    "sideEffects": [
+        "*.css",
+        "./dist/soeditor.global.js"
+    ],
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        },
+        "./styles.css": "./dist/soeditor.css"
+    },
+    "scripts": {
+        "build": "vite build && vite build --config vite.global.config.ts && tsc -p tsconfig.build.json",
+        "test": "vitest run --passWithNoTests",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "dependencies": {
+        "@soeditor/adapter-sofinder": "workspace:*",
+        "@soeditor/core": "workspace:*",
+        "@soeditor/dev-tools": "workspace:*",
+        "@soeditor/engine": "workspace:*",
+        "@soeditor/file-manager": "workspace:*",
+        "@soeditor/html": "workspace:*",
+        "@soeditor/html-tools": "workspace:*",
+        "@soeditor/markdown": "workspace:*",
+        "@soeditor/presets": "workspace:*",
+        "@soeditor/preview": "workspace:*",
+        "@soeditor/rich-text": "workspace:*",
+        "@soeditor/source": "workspace:*",
+        "@soeditor/ui": "workspace:*"
+    },
+    "devDependencies": {
+        "@types/node": "^22.18.0",
+        "typescript": "^5.9.2",
+        "vite": "^7.1.3",
+        "vitest": "^3.2.4"
+    }
+}

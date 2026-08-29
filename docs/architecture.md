@@ -428,6 +428,22 @@ configuration. Surface attachment, Preview policy, and FileManager
 implementations remain explicit application responsibilities. Composition
 returns a new frozen preset and rejects duplicate plugin IDs.
 
+## Phase 14 distribution and integration
+
+Phase 14 adds the thin `soeditor` umbrella as a convenience projection over
+intentionally public package roots. `Editor` is also exported as `SoEditor`;
+the scoped packages remain the ownership and tree-shaking boundaries. The ESM
+build externalizes scoped packages and publishes declarations plus source maps.
+
+`@soeditor/presets` now has independent minimal, classic, developer, and
+Markdown subpath entries. A clean Vite consumer proves that importing the
+umbrella with the minimal preset removes unrelated feature families.
+
+The direct-browser IIFE bundles the public API and assigns one frozen
+`globalThis.SoEditor` namespace. It delegates creation to Core, has no global
+plugin registry, and performs no automatic mounting. Standalone CSS and a
+JavaScript source map accompany it. See `docs/distribution.md` and ADR 0020.
+
 ## 1. 项目定位
 
 SoEditor 是一个面向开发者、CMS 和内容系统的现代可扩展内容编辑器。
@@ -1921,27 +1937,18 @@ pnpm add soeditor
 使用：
 
 ```ts
-import {
-    SoEditor
-} from 'soeditor'
+import { SoEditor, minimalPreset } from 'soeditor';
+import 'soeditor/styles.css';
 
-import {
-    Image
-} from '@soeditor/plugin-image'
+const editor = await SoEditor.create({
+    data: '<p>Hello</p>',
+    format: minimalPreset.format,
+    plugins: minimalPreset.plugins,
+});
 ```
 
-创建：
-
-```ts
-const editor = await SoEditor.create(
-    '#editor',
-    {
-        plugins: [
-            Image
-        ]
-    }
-)
-```
+Visual 和 UI surface 由应用显式创建并管理生命周期。需要更细粒度的依赖
+边界时，直接使用 `@soeditor/*` 包及 `@soeditor/presets/minimal` 等窄入口。
 
 ---
 
@@ -1950,11 +1957,11 @@ const editor = await SoEditor.create(
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/soeditor/dist/soeditor.css"
+    href="https://cdn.jsdelivr.net/npm/soeditor@0.5.0/dist/soeditor.css"
 >
 
 <script
-    src="https://cdn.jsdelivr.net/npm/soeditor/dist/soeditor.umd.js"
+    src="https://cdn.jsdelivr.net/npm/soeditor@0.5.0/dist/soeditor.global.js"
 ></script>
 ```
 
@@ -1962,27 +1969,16 @@ const editor = await SoEditor.create(
 
 ```html
 <script>
-SoEditor.create(
-    '#editor',
-    {
-        preset: 'classic'
-    }
-)
+const editor = await SoEditor.create({
+    data: '<p>Hello</p>',
+    format: SoEditor.classicPreset.format,
+    plugins: SoEditor.classicPreset.plugins,
+});
 </script>
 ```
 
-Plugin：
-
-```html
-<script src="soeditor.js"></script>
-<script src="soeditor-plugin-table.js"></script>
-```
-
-插件自动注册：
-
-```text
-SoEditor.plugins.register(...)
-```
+`globalThis.SoEditor` 是冻结的显式 API facade，不提供全局可变插件注册表，
+也不会自动创建或挂载编辑器。浏览器全局不是架构事实来源。
 
 ---
 

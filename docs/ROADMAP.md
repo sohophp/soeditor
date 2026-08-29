@@ -6,9 +6,9 @@ Active roadmap.
 
 This roadmap begins from the current repository state.
 
-Phases 1–13 are complete.
+Phases 1–14 are complete.
 
-Phase 14 is the next implementation phase.
+Phase 15 is the next implementation phase.
 
 The target of this roadmap is **SoEditor 0.5 Developer Preview**.
 
@@ -681,6 +681,10 @@ High = 0.
 ---
 
 # Phase 14 — Distribution and Integration Hardening
+
+## Status
+
+COMPLETE.
 
 ## Goal
 

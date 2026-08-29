@@ -8,6 +8,7 @@ import {
     markdownPreset,
     minimalPreset,
 } from '../src/index.js';
+import { minimalPreset as narrowMinimalPreset } from '../src/minimal.js';
 
 describe('editor presets', () => {
     it('publishes four immutable, duplicate-free definitions', () => {
@@ -25,6 +26,7 @@ describe('editor presets', () => {
             ).toBe(preset.plugins.length);
         }
         expect(markdownPreset.format).toBe('markdown');
+        expect(narrowMinimalPreset).toBe(minimalPreset);
         expect(developerPreset.plugins.map((plugin) => plugin.id)).toContain(
             'developer-tools',
         );

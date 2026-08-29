@@ -11,6 +11,22 @@
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/index.js"
+        },
+        "./classic": {
+            "types": "./dist/classic.d.ts",
+            "import": "./dist/classic.js"
+        },
+        "./developer": {
+            "types": "./dist/developer.d.ts",
+            "import": "./dist/developer.js"
+        },
+        "./markdown": {
+            "types": "./dist/markdown.d.ts",
+            "import": "./dist/markdown.js"
+        },
+        "./minimal": {
+            "types": "./dist/minimal.d.ts",
+            "import": "./dist/minimal.js"
         }
     },
     "scripts": {

@@ -1,5 +1,5 @@
 {
-    "name": "soeditor",
+    "name": "soeditor-workspace",
     "version": "0.0.0",
     "private": true,
     "type": "module",
@@ -13,10 +13,11 @@
         "format": "prettier --write .",
         "format:check": "prettier --check .",
         "lint": "eslint . && prettier --check .",
-        "test": "pnpm test:unit && pnpm test:consumer && pnpm test:browser",
+        "test": "pnpm test:unit && pnpm test:consumer && pnpm test:distribution && pnpm test:browser",
         "test:browser": "playwright test",
-        "test:consumer": "pnpm --filter @soeditor/core --filter @soeditor/html --filter @soeditor/engine --filter @soeditor/rich-text --filter @soeditor/source --filter @soeditor/html-tools --filter @soeditor/ui --filter @soeditor/preview --filter @soeditor/markdown --filter @soeditor/dev-tools --filter @soeditor/file-manager --filter @soeditor/adapter-sofinder --filter @soeditor/plugin-sdk --filter @soeditor/presets build && node scripts/test-nodenext-consumer.mjs",
-        "test:unit": "pnpm --filter @soeditor/core --filter @soeditor/html --filter @soeditor/engine --filter @soeditor/rich-text --filter @soeditor/source --filter @soeditor/html-tools --filter @soeditor/ui --filter @soeditor/preview --filter @soeditor/markdown --filter @soeditor/dev-tools --filter @soeditor/file-manager --filter @soeditor/adapter-sofinder --filter @soeditor/plugin-sdk --filter @soeditor/presets test",
+        "test:consumer": "pnpm --filter soeditor... --filter @soeditor/plugin-sdk build && node scripts/test-nodenext-consumer.mjs",
+        "test:distribution": "node scripts/verify-distribution.mjs",
+        "test:unit": "pnpm --filter soeditor... --filter @soeditor/plugin-sdk test",
         "test:coverage": "pnpm --filter @soeditor/core test:coverage",
         "typecheck": "pnpm -r --if-present run typecheck"
     },
