@@ -8,6 +8,9 @@ export default defineConfig({
             formats: ['es'],
         },
         minify: false,
+        rollupOptions: {
+            external: ['@soeditor/core', '@soeditor/html'],
+        },
         sourcemap: true,
     },
 });

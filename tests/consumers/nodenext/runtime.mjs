@@ -5,6 +5,7 @@ import {
     Plugin,
 } from '@soeditor/core';
 import { parseHtmlFragment, serializeHtmlFragment } from '@soeditor/html';
+import { createVisualEditingEngine } from '@soeditor/engine';
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';
@@ -35,6 +36,10 @@ const html = parseHtmlFragment(
     '<!--marker--><product-card data-id="123">Runtime</product-card>',
 );
 const serialized = serializeHtmlFragment(html.document);
+
+if (typeof createVisualEditingEngine !== 'function') {
+    throw new Error('Packed visual engine module could not load in Node ESM.');
+}
 
 if (
     !serialized.includes('<!--marker-->') ||

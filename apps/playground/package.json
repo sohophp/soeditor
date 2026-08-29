@@ -9,6 +9,7 @@
         "typecheck": "tsc -p tsconfig.json"
     },
     "dependencies": {
-        "@soeditor/core": "workspace:*"
+        "@soeditor/core": "workspace:*",
+        "@soeditor/engine": "workspace:*"
     }
 }

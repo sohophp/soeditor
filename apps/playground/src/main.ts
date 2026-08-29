@@ -1,4 +1,5 @@
 import { Editor, Plugin } from '@soeditor/core';
+import { createVisualEditingEngine } from '@soeditor/engine';
 
 class DemoPlugin extends Plugin {
     static readonly id = 'demo';
@@ -21,18 +22,26 @@ class DemoPlugin extends Plugin {
 }
 
 const stateOutput = document.querySelector<HTMLElement>('#state');
+const sourceOutput = document.querySelector<HTMLElement>('#source');
+const editingHost = document.querySelector<HTMLElement>('#editor');
 
-if (stateOutput === null) {
-    throw new Error('Playground state output was not found.');
+if (stateOutput === null || sourceOutput === null || editingHost === null) {
+    throw new Error('Playground output or editing host was not found.');
 }
 
 const editor = await Editor.create({
-    data: '<p>Hello</p>',
+    data: '<p>Hello <strong>SoEditor</strong></p><product-card data-id="123"></product-card><!--CMS:block-->',
     plugins: [DemoPlugin],
+    readonly: new URLSearchParams(window.location.search).has('readonly'),
+});
+const visualEngine = createVisualEditingEngine({
+    editor,
+    element: editingHost,
 });
 
 const render = (): void => {
     stateOutput.textContent = JSON.stringify(editor.state, null, 4);
+    sourceOutput.textContent = editor.getData();
 };
 
 const bind = (id: string, callback: () => void): void => {
@@ -61,5 +70,22 @@ bind('mode', () => {
 bind('clean', () => editor.markClean());
 bind('uppercase', () => {
     editor.execute('demo.uppercase');
+});
+bind('unsafe', () => {
+    editor.setData(
+        '<p>Safe text</p><img src="invalid:" onerror="window.__soeditorExecuted = true"><script>window.__soeditorExecuted = true</script>',
+    );
+});
+bind('document', () => {
+    editor.setData(
+        '<!doctype html><html><head><title>Document</title></head><body><p>Preserved</p></body></html>',
+    );
+});
+bind('inline-opaque', () => {
+    editor.setData('<p>A<product-card data-id="1"></product-card>B</p>');
+});
+bind('destroy-engine', () => visualEngine.destroy());
+bind('destroy-editor', () => {
+    void editor.destroy();
 });
 render();

@@ -9,6 +9,12 @@ import {
     serializeHtmlFragment,
     type HtmlElement,
 } from '@soeditor/html';
+import {
+    createVisualEditingEngine,
+    type EditingSelection,
+} from '@soeditor/engine';
+// @ts-expect-error Editing-model internals are not a package subpath API.
+import type { EditingModel } from '@soeditor/engine/model';
 
 interface ExampleService {
     readonly value: string;
@@ -59,6 +65,12 @@ if (firstHtmlNode?.type !== 'element') {
 
 const htmlElement: HtmlElement = firstHtmlNode;
 const serializedHtml: string = serializeHtmlFragment(htmlResult.document);
+const visualFactory: typeof createVisualEditingEngine =
+    createVisualEditingEngine;
+const visualSelection: EditingSelection = {
+    anchor: { block: 0, offset: 0 },
+    focus: { block: 0, offset: 0 },
+};
 
 if (
     htmlElement.tagName !== 'product-card' ||
@@ -66,6 +78,13 @@ if (
 ) {
     throw new Error('Packed HTML package failed semantic preservation.');
 }
+
+void visualFactory;
+void visualSelection;
+const rejectInternalModel = (value: EditingModel): void => {
+    void value;
+};
+void rejectInternalModel;
 
 // @ts-expect-error Cleanup is owned by Editor.destroy().
 editor.commands.clear();

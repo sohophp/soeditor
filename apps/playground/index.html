@@ -3,14 +3,40 @@
     <head>
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>SoEditor Core Playground</title>
+        <title>SoEditor Visual Engine Playground</title>
+        <style>
+            body {
+                font-family: system-ui, sans-serif;
+                margin: 2rem auto;
+                max-width: 60rem;
+            }
+
+            #editor {
+                border: 1px solid #8c959f;
+                min-height: 8rem;
+                padding: 1rem;
+            }
+
+            [data-soeditor-opaque-block],
+            [data-soeditor-opaque-inline] {
+                background: #f0f3f6;
+                border: 1px dashed #8c959f;
+                color: #57606a;
+                padding: 0.15rem 0.35rem;
+            }
+
+            pre {
+                overflow-wrap: anywhere;
+                white-space: pre-wrap;
+            }
+        </style>
     </head>
     <body>
         <main>
-            <h1>SoEditor Core Playground</h1>
+            <h1>SoEditor Minimal Visual Engine</h1>
             <p>
-                This page exercises Phase 1 state and commands. It is not an
-                editor UI.
+                This Phase 3 harness demonstrates the controlled contenteditable
+                projection. It is not the configurable editor UI.
             </p>
             <p>
                 <button id="hello" type="button">Set Hello</button>
@@ -20,7 +46,24 @@
                 <button id="uppercase" type="button">
                     Execute Demo Command
                 </button>
+                <button id="unsafe" type="button">Load Unsafe Markup</button>
+                <button id="document" type="button">
+                    Load Complete Document
+                </button>
+                <button id="inline-opaque" type="button">
+                    Load Inline Opaque HTML
+                </button>
+                <button id="destroy-engine" type="button">
+                    Destroy Visual Engine
+                </button>
+                <button id="destroy-editor" type="button">
+                    Destroy Core Editor
+                </button>
             </p>
+            <h2>Visual Surface</h2>
+            <div id="editor" data-testid="editor"></div>
+            <h2>Canonical HTML</h2>
+            <pre id="source" data-testid="source"></pre>
             <h2>Current State</h2>
             <pre id="state"></pre>
         </main>

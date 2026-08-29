@@ -45,6 +45,17 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/engine',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/html',
             'pack',
             '--pack-destination',
@@ -63,13 +74,20 @@ try {
     const htmlArchive = archives.find((name) =>
         name.startsWith('soeditor-html-'),
     );
+    const engineArchive = archives.find((name) =>
+        name.startsWith('soeditor-engine-'),
+    );
 
-    if (archives.length !== 2 || coreArchive === undefined) {
+    if (archives.length !== 3 || coreArchive === undefined) {
         throw new Error('Expected one packed @soeditor/core archive.');
     }
 
     if (htmlArchive === undefined) {
         throw new Error('Expected one packed @soeditor/html archive.');
+    }
+
+    if (engineArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/engine archive.');
     }
 
     const packagePath = join(fixtureDirectory, 'package.json');
@@ -81,6 +99,10 @@ try {
     packageData.dependencies['@soeditor/html'] = `file:${join(
         packDirectory,
         htmlArchive,
+    )}`;
+    packageData.dependencies['@soeditor/engine'] = `file:${join(
+        packDirectory,
+        engineArchive,
     )}`;
     await writeFile(packagePath, `${JSON.stringify(packageData, null, 4)}\n`);
 

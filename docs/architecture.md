@@ -106,6 +106,43 @@ security layers independently decide whether they may execute. Phase 2 adds no
 DOM, visual editing, selection, history, source editor, preview, or formatting
 behavior.
 
+## Phase 3 minimal visual editing engine
+
+Phase 3 turns `@soeditor/engine` into the first browser-dependent editing
+package. Dependency direction remains one way:
+
+```text
+@soeditor/core      @soeditor/html
+        \              /
+         @soeditor/engine
+                 ↓
+      controlled contenteditable DOM
+```
+
+The engine derives a short-lived immutable editing model from an HTML fragment.
+Paragraphs contain text runs marked with `strong` and/or `em`; unsupported
+elements and comments remain opaque `@soeditor/html` tree values. Complete HTML
+documents remain source-preserved and display a locked placeholder in this
+minimal engine.
+
+The live DOM is only a projection and selection bridge. Supported values are
+rendered with explicit DOM construction. Unsupported values render as inert,
+non-editable labels, so preserved scripts, event attributes, embeds, and custom
+markup are not injected or executed. A mutation observer restores the model
+projection after an out-of-band DOM mutation.
+
+Handled `beforeinput` events are prevented, converted to editing-model
+operations, semantically serialized by `@soeditor/html`, and committed through
+a Core transaction with `origin: 'user'`. The initial operations cover text and
+IME composition insertion, basic selection replacement, paragraph splitting
+and merging, backward/forward deletion, and strong/emphasis range marks.
+Unhandled mutating input is prevented until a controlled implementation exists.
+
+Selection uses engine-owned block/UTF-16-offset points. The DOM bridge reads and
+restores native selections after controlled rendering. History, clipboard,
+advanced selection semantics, rich-text plugins, and incremental rendering are
+not part of Phase 3.
+
 ## 1. 项目定位
 
 SoEditor 是一个面向开发者、CMS 和内容系统的现代可扩展内容编辑器。
