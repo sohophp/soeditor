@@ -129,6 +129,182 @@ test('replaces a basic selection and represents strong and emphasis', async ({
     );
 });
 
+test('executes all inline feature commands and restores them with history', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 1, 4);
+
+    for (const command of [
+        'format.bold',
+        'format.italic',
+        'format.underline',
+        'format.strike',
+        'format.inlineCode',
+    ]) {
+        await executeCommand(page, command);
+    }
+
+    await expect(page.locator(source)).toContainText('ell');
+    await expect(page.locator(`${editor} strong em u s code`)).toHaveText(
+        'ell',
+    );
+    expect(await commandActive(page, 'format.bold')).toBe(true);
+
+    await page.keyboard.press('Control+z');
+    await expect(page.locator(`${editor} code`)).toHaveCount(0);
+    await page.keyboard.press('Control+Shift+z');
+    await expect(page.locator(`${editor} code`)).toHaveText('ell');
+});
+
+test('changes paragraph structures and minimal lists through commands', async ({
+    page,
+}) => {
+    await setEditorData(page, '<p>One</p><p>Two</p>');
+    await setSelection(page, 0, 0, 3);
+    await executeCommand(page, 'paragraph.heading', 2);
+    await expect(page.locator(source)).toHaveText('<h2>One</h2><p>Two</p>');
+    expect(await commandActive(page, 'paragraph.set')).toBe(false);
+
+    await executeCommand(page, 'blockquote.toggle');
+    await expect(page.locator(source)).toHaveText(
+        '<blockquote>One</blockquote><p>Two</p>',
+    );
+    await executeCommand(page, 'codeBlock.toggle');
+    await expect(page.locator(source)).toHaveText('<pre>One</pre><p>Two</p>');
+
+    await setEditorData(page, '<p>One</p><p>Two</p>');
+    await setSelectionAcrossParagraphs(page, 0, 0, 1, 3);
+    await executeCommand(page, 'list.ordered');
+    await expect(page.locator(source)).toHaveText(
+        '<ol><li>One</li><li>Two</li></ol>',
+    );
+    await expect(page.locator(`${editor} > ol`)).toHaveCount(1);
+    await expect(page.locator(`${editor} > ol > li`)).toHaveCount(2);
+    expect(await commandActive(page, 'list.ordered')).toBe(true);
+    await executeCommand(page, 'list.ordered');
+    await expect(page.locator(source)).toHaveText('<p>One</p><p>Two</p>');
+    await executeCommand(page, 'list.unordered');
+    await expect(page.locator(source)).toHaveText(
+        '<ul><li>One</li><li>Two</li></ul>',
+    );
+});
+
+test('preserves unsafe link source without exposing an executable anchor', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 1, 4);
+    await executeCommand(page, 'link.set', {
+        href: 'javascript:window.__linkExecuted=true',
+        rel: 'nofollow',
+        title: 'preserved',
+    });
+
+    await expect(page.locator(source)).toContainText(
+        'href="javascript:window.__linkExecuted=true"',
+    );
+    await expect(page.locator(`${editor} a`)).not.toHaveAttribute('href');
+    expect(await commandActive(page, 'link.set')).toBe(true);
+    await page.locator(`${editor} a`).click();
+    expect(
+        await page.evaluate(
+            () =>
+                (window as Window & { __linkExecuted?: boolean })
+                    .__linkExecuted,
+        ),
+    ).toBeUndefined();
+
+    await setSelection(page, 0, 1, 4);
+    await executeCommand(page, 'link.remove');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+});
+
+test('inserts inert semantic images and tables and supports undo', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 2);
+    await executeCommand(page, 'image.insert', {
+        alt: 'A & B',
+        src: 'x" onerror="window.__imageExecuted=true',
+        width: 80,
+    });
+
+    await expect(page.locator(source)).toContainText('<img');
+    await expect(page.locator('[data-soeditor-opaque-inline]')).toHaveCount(1);
+    await expect(page.locator(`${editor} img`)).toHaveCount(0);
+    expect(
+        await page.evaluate(
+            () =>
+                (window as Window & { __imageExecuted?: boolean })
+                    .__imageExecuted,
+        ),
+    ).toBeUndefined();
+
+    await page.keyboard.press('Control+z');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+    await setSelection(page, 0, 2);
+    await executeCommand(page, 'table.insert', { columns: 2, rows: 2 });
+    await expect(page.locator(source)).toContainText('<table><tbody><tr><td>');
+    await expect(page.locator('[data-soeditor-opaque-block]')).toHaveCount(1);
+    await expect(page.locator(`${editor} table`)).toHaveCount(0);
+});
+
+test('unregisters visual feature capability when the engine is destroyed', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 1, 4);
+    expect(await commandCanExecute(page, 'format.bold')).toBe(true);
+
+    await page.click('#destroy-engine');
+    expect(await commandCanExecute(page, 'format.bold')).toBe(false);
+});
+
+test('rejects a duplicate visual service before mutating another host', async ({
+    page,
+}) => {
+    const result = await page.evaluate(() => {
+        const harness = (
+            window as Window & {
+                __soeditor?: {
+                    createVisualEditingEngine(options: {
+                        editor: unknown;
+                        element: HTMLElement;
+                    }): unknown;
+                    editor: unknown;
+                };
+            }
+        ).__soeditor;
+        if (harness === undefined) {
+            throw new Error('Playground editor was not exposed.');
+        }
+        const second = document.createElement('div');
+        document.body.append(second);
+        let errorName = '';
+        try {
+            harness.createVisualEditingEngine({
+                editor: harness.editor,
+                element: second,
+            });
+        } catch (error: unknown) {
+            errorName = error instanceof Error ? error.name : 'unknown';
+        }
+        return {
+            childCount: second.childNodes.length,
+            errorName,
+            role: second.getAttribute('role'),
+        };
+    });
+
+    expect(result).toEqual({
+        childCount: 0,
+        errorName: 'ServiceAlreadyRegisteredError',
+        role: null,
+    });
+});
+
 test('synchronizes external canonical source changes', async ({ page }) => {
     await page.click('#world');
 
@@ -399,6 +575,108 @@ async function setSelection(
         },
         { anchor, focus, paragraphIndex },
     );
+}
+
+async function setSelectionAcrossParagraphs(
+    page: Page,
+    anchorBlock: number,
+    anchorOffset: number,
+    focusBlock: number,
+    focusOffset: number,
+): Promise<void> {
+    await page.locator(editor).evaluate(
+        (host, values) => {
+            const paragraphs = host.querySelectorAll('p');
+            const anchor = paragraphs[values.anchorBlock]?.firstChild;
+            const focus = paragraphs[values.focusBlock]?.firstChild;
+            if (
+                anchor === undefined ||
+                anchor === null ||
+                focus === undefined ||
+                focus === null
+            ) {
+                throw new Error('Selection endpoints were not found.');
+            }
+            document
+                .getSelection()
+                ?.setBaseAndExtent(
+                    anchor,
+                    values.anchorOffset,
+                    focus,
+                    values.focusOffset,
+                );
+            (host as HTMLElement).focus();
+        },
+        { anchorBlock, anchorOffset, focusBlock, focusOffset },
+    );
+}
+
+async function executeCommand(
+    page: Page,
+    id: string,
+    ...args: readonly unknown[]
+): Promise<void> {
+    await page.evaluate(
+        ({ args: commandArgs, id: commandId }) => {
+            const harness = (
+                window as Window & {
+                    __soeditor?: {
+                        editor: {
+                            execute(
+                                id: string,
+                                ...args: readonly unknown[]
+                            ): unknown;
+                        };
+                    };
+                }
+            ).__soeditor;
+            if (harness === undefined) {
+                throw new Error('Playground editor was not exposed.');
+            }
+            harness.editor.execute(commandId, ...commandArgs);
+        },
+        { args, id },
+    );
+}
+
+async function commandActive(page: Page, id: string): Promise<boolean> {
+    return page.evaluate((commandId) => {
+        const harness = (
+            window as Window & {
+                __soeditor?: {
+                    editor: { commands: { isActive(id: string): boolean } };
+                };
+            }
+        ).__soeditor;
+        return harness?.editor.commands.isActive(commandId) ?? false;
+    }, id);
+}
+
+async function commandCanExecute(page: Page, id: string): Promise<boolean> {
+    return page.evaluate((commandId) => {
+        const harness = (
+            window as Window & {
+                __soeditor?: {
+                    editor: { commands: { canExecute(id: string): boolean } };
+                };
+            }
+        ).__soeditor;
+        return harness?.editor.commands.canExecute(commandId) ?? false;
+    }, id);
+}
+
+async function setEditorData(page: Page, data: string): Promise<void> {
+    await page.evaluate((sourceData) => {
+        const harness = (
+            window as Window & {
+                __soeditor?: { editor: { setData(data: string): void } };
+            }
+        ).__soeditor;
+        if (harness === undefined) {
+            throw new Error('Playground editor was not exposed.');
+        }
+        harness.editor.setData(sourceData);
+    }, data);
 }
 
 async function readSelection(

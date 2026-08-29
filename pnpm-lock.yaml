@@ -47,6 +47,12 @@ importers:
       '@soeditor/engine':
         specifier: workspace:*
         version: link:../../packages/engine
+      '@soeditor/html':
+        specifier: workspace:*
+        version: link:../../packages/html
+      '@soeditor/rich-text':
+        specifier: workspace:*
+        version: link:../../packages/rich-text
 
   packages/core:
     devDependencies:
@@ -68,6 +74,18 @@ importers:
       parse5:
         specifier: ^8.0.0
         version: 8.0.1
+
+  packages/rich-text:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@soeditor/html':
+        specifier: workspace:*
+        version: link:../html
 
 packages:
 

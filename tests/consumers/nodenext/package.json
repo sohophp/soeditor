@@ -7,7 +7,8 @@
     "dependencies": {
         "@soeditor/core": "0.0.0",
         "@soeditor/engine": "0.0.0",
-        "@soeditor/html": "0.0.0"
+        "@soeditor/html": "0.0.0",
+        "@soeditor/rich-text": "0.0.0"
     },
     "devDependencies": {
         "typescript": "5.9.2"

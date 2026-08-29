@@ -11,8 +11,16 @@ import {
     deleteForward,
     deleteSelection,
     insertParagraph,
+    insertModel,
     insertText,
+    isBlockTagActive,
+    isLinkActive,
+    isListActive,
+    isTextMarkActive,
+    setBlockTag,
+    setLink,
     toggleMark,
+    toggleList,
     UnsupportedEditingSelectionError,
 } from '../src/operations.js';
 
@@ -83,6 +91,65 @@ describe('editing operations', () => {
             '<p>E<strong>x</strong><strong><em>amp</em></strong><strong>l</strong>e</p>',
         );
         expect(toHtml(unstrong.model)).toBe('<p>Ex<em>amp</em>le</p>');
+    });
+
+    it('sets blocks and toggles lists across forward or backward selections', () => {
+        const model = fromHtml('<p>One</p><p>Two</p>');
+        const selection = range(1, 3, 0, 0);
+        const heading = setBlockTag(model, selection, 'h2');
+        const listed = toggleList(heading.model, selection, 'ol');
+
+        expect(toHtml(heading.model)).toBe('<h2>One</h2><h2>Two</h2>');
+        expect(isBlockTagActive(heading.model, selection, 'h2')).toBe(true);
+        expect(toHtml(listed.model)).toBe('<ol><li>One</li><li>Two</li></ol>');
+        expect(isListActive(listed.model, selection, 'ol')).toBe(true);
+        expect(toHtml(toggleList(listed.model, selection, 'ol').model)).toBe(
+            '<p>One</p><p>Two</p>',
+        );
+    });
+
+    it('keeps inserted list blocks structural instead of flattening them', () => {
+        const model = fromHtml('<p>BeforeAfter</p>');
+        const inserted = fromHtml('<ul><li>Item</li></ul>');
+        const result = insertModel(model, collapsed(0, 6), inserted);
+
+        expect(toHtml(result.model)).toBe(
+            '<p>Before</p><ul><li>Item</li></ul><p>After</p>',
+        );
+    });
+
+    it('sets, detects, and removes links without interpreting their URL', () => {
+        const model = fromHtml('<p>Example</p>');
+        const selection = range(0, 1, 0, 6);
+        const linked = setLink(model, selection, [
+            { name: 'href', value: 'javascript:alert(1)' },
+            { name: 'data-cms', value: 'kept' },
+        ]);
+
+        expect(toHtml(linked.model)).toBe(
+            '<p>E<a href="javascript:alert(1)" data-cms="kept">xampl</a>e</p>',
+        );
+        expect(isLinkActive(linked.model, selection)).toBe(true);
+        expect(toHtml(setLink(linked.model, selection, undefined).model)).toBe(
+            '<p>Example</p>',
+        );
+    });
+
+    it('queries all supported text marks', () => {
+        const model = fromHtml(
+            '<p><strong><em><u><s><code>X</code></s></u></em></strong></p>',
+        );
+        const selection = range(0, 0, 0, 1);
+
+        expect(
+            ['strong', 'em', 'u', 's', 'code'].every((mark) =>
+                isTextMarkActive(
+                    model,
+                    selection,
+                    mark as 'strong' | 'em' | 'u' | 's' | 'code',
+                ),
+            ),
+        ).toBe(true);
     });
 
     it('refuses edits that would delete opaque custom HTML', () => {

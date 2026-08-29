@@ -25,6 +25,7 @@ describe('controlled editing model', () => {
                     { kind: 'text', marks: [], text: 'D' },
                 ],
                 kind: 'paragraph',
+                tagName: 'p',
             },
         ]);
     });
@@ -39,6 +40,54 @@ describe('controlled editing model', () => {
         expect(second).toEqual(first);
         expect(source).toBe(
             '<p>A<strong>B</strong><strong><em>C</em></strong>D</p>',
+        );
+    });
+
+    it('supports semantic text blocks, rich marks, links, and simple lists', () => {
+        const source =
+            '<h2>Title</h2><blockquote><u>Quote</u></blockquote><pre><code>const x = 1;</code></pre><p><a href="javascript:alert(1)" data-cms="x"><s>linked</s></a></p><ul><li>One</li><li><em>Two</em></li></ul>';
+        const model = createEditingModel(parseHtmlFragment(source).document);
+
+        expect(
+            model.blocks.map((block) =>
+                block.kind === 'paragraph'
+                    ? [block.tagName, block.list]
+                    : block.kind,
+            ),
+        ).toEqual([
+            ['h2', undefined],
+            ['blockquote', undefined],
+            ['pre', undefined],
+            ['p', undefined],
+            ['p', 'ul'],
+            ['p', 'ul'],
+        ]);
+        expect(serializeHtmlFragment(serializeEditingModel(model))).toBe(
+            source,
+        );
+    });
+
+    it('keeps attributed and structurally unsupported lists opaque', () => {
+        const source =
+            '<ol start="3"><li>Three</li></ol><ul><li data-id="x">Item</li></ul><ul><li><p>Nested block</p></li></ul>';
+        const model = createEditingModel(parseHtmlFragment(source).document);
+
+        expect(model.blocks.map((block) => block.kind)).toEqual([
+            'opaque-block',
+            'opaque-block',
+            'paragraph',
+        ]);
+        expect(serializeHtmlFragment(serializeEditingModel(model))).toBe(
+            source,
+        );
+    });
+
+    it('preserves boundaries between adjacent lists of the same kind', () => {
+        const source = '<ul><li>First</li></ul><ul><li>Second</li></ul>';
+        const model = createEditingModel(parseHtmlFragment(source).document);
+
+        expect(serializeHtmlFragment(serializeEditingModel(model))).toBe(
+            source,
         );
     });
 

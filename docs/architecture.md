@@ -181,6 +181,41 @@ History currently uses a bounded source-snapshot strategy. Operation inversion,
 advanced selection, platform word deletion, table/widget clipboard behavior,
 and office-grade paste cleanup remain deferred.
 
+## Phase 5 rich-text feature boundary
+
+Phase 5 adds `@soeditor/rich-text`, a framework-neutral package of individual
+feature plugins. Paragraph, heading, five inline formats, links, ordered and
+unordered lists, blockquote, code block, image, and basic table behavior are
+registered as commands. No feature method is added to `Editor`.
+
+```text
+future UI / shortcut / consumer
+              ↓
+   @soeditor/rich-text command
+              ↓
+ typed VisualEditingService token
+              ↓
+ controlled model operation
+              ↓
+ Core transaction + history metadata
+              ↓
+ canonical semantic HTML
+```
+
+The engine registers the visual service per editor and removes it when the
+surface is independently destroyed. Its public contract contains only editing
+actions and state queries; plugins cannot access the DOM projection or mutable
+editing representation.
+
+The controlled subset now recognizes `p`, headings, minimal `blockquote` and
+`pre` blocks; `strong`, `em`, `u`, `s`, `code`, and link marks; and simple
+attribute-free ordered/unordered lists. Existing link source attributes are
+retained, while the editing DOM intentionally omits executable link URL
+attributes. Complex lists and unsupported structures remain opaque. Inserted
+images and tables are semantic source structures but inert placeholders in the
+visual surface. Advanced widgets, nested lists, pending collapsed-caret marks,
+and configurable schemas remain deferred.
+
 ## 1. 项目定位
 
 SoEditor 是一个面向开发者、CMS 和内容系统的现代可扩展内容编辑器。

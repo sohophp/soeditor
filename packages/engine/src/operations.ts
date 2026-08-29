@@ -1,3 +1,5 @@
+import type { HtmlAttribute } from '@soeditor/html';
+
 import {
     freezeModel,
     freezeSelection,
@@ -11,6 +13,8 @@ import {
     type EditingPoint,
     type EditingSelection,
     type EditingTextRun,
+    type EditingTextMark,
+    type EditingBlockTag,
 } from './model.js';
 
 export interface EditingResult {
@@ -65,7 +69,13 @@ export function insertParagraph(
         point.block,
         1,
         { ...paragraph, inlines: before },
-        { attributes: [], inlines: after, kind: 'paragraph' },
+        {
+            ...paragraph,
+            attributes: [],
+            inlines: after,
+            kind: 'paragraph',
+            ...(paragraph.list === undefined ? {} : { listStart: false }),
+        },
     );
     const nextPoint = { block: point.block + 1, offset: 0 };
 
@@ -154,7 +164,7 @@ export function deleteForward(
 export function toggleMark(
     model: EditingModel,
     selection: EditingSelection,
-    mark: EditingMark,
+    mark: EditingTextMark,
 ): EditingResult {
     const ordered = orderSelection(selection);
 
@@ -314,12 +324,16 @@ export function extractSelection(
         const [, remainder] = splitInlines(block.inlines, from);
         const [selected] = splitInlines(remainder, to - from);
         blocks.push({
+            ...block,
             attributes:
                 from === 0 && to === paragraphLength(block)
                     ? block.attributes
                     : [],
             inlines: selected,
             kind: 'paragraph',
+            ...(block.list === undefined
+                ? {}
+                : { listStart: index === ordered.start.block }),
         });
     }
 
@@ -344,7 +358,8 @@ export function insertModel(
     if (
         insertedBlocks.length === 1 &&
         insertedBlocks[0]?.kind === 'paragraph' &&
-        insertedBlocks[0].attributes.length === 0
+        insertedBlocks[0].attributes.length === 0 &&
+        isPlainParagraph(insertedBlocks[0])
     ) {
         const pastedLength = paragraphLength(insertedBlocks[0]);
         return replaceParagraph(
@@ -360,7 +375,11 @@ export function insertModel(
 
     const replacement: EditingBlock[] = [];
     const first = insertedBlocks[0];
-    if (first?.kind === 'paragraph' && first.attributes.length === 0) {
+    if (
+        first?.kind === 'paragraph' &&
+        first.attributes.length === 0 &&
+        isPlainParagraph(first)
+    ) {
         replacement.push({
             ...paragraph,
             inlines: [...before, ...first.inlines],
@@ -374,7 +393,11 @@ export function insertModel(
     const last = replacement.at(-1);
     let caretBlock = point.block + replacement.length;
     let caretOffset = 0;
-    if (last?.kind === 'paragraph' && last.attributes.length === 0) {
+    if (
+        last?.kind === 'paragraph' &&
+        last.attributes.length === 0 &&
+        isPlainParagraph(last)
+    ) {
         caretBlock -= 1;
         caretOffset = paragraphLength(last);
         replacement[replacement.length - 1] = {
@@ -382,7 +405,12 @@ export function insertModel(
             inlines: [...last.inlines, ...after],
         };
     } else {
-        replacement.push({ attributes: [], inlines: after, kind: 'paragraph' });
+        replacement.push({
+            attributes: [],
+            inlines: after,
+            kind: 'paragraph',
+            tagName: 'p',
+        });
     }
 
     const blocks = [...deleted.model.blocks];
@@ -390,6 +418,197 @@ export function insertModel(
     return result(
         { blocks },
         collapsed({ block: caretBlock, offset: caretOffset }),
+    );
+}
+
+export function setBlockTag(
+    model: EditingModel,
+    selection: EditingSelection,
+    tagName: EditingBlockTag,
+): EditingResult {
+    const range = orderSelection(selection);
+    const blocks = [...model.blocks];
+
+    for (let index = range.start.block; index <= range.end.block; index += 1) {
+        const block = blocks[index];
+        if (block?.kind !== 'paragraph') {
+            throw new UnsupportedEditingSelectionError();
+        }
+        blocks[index] = {
+            attributes: block.attributes,
+            inlines: block.inlines,
+            kind: 'paragraph',
+            tagName,
+        };
+    }
+
+    return result({ blocks }, selection);
+}
+
+export function toggleList(
+    model: EditingModel,
+    selection: EditingSelection,
+    list: 'ol' | 'ul',
+): EditingResult {
+    const range = orderSelection(selection);
+    const blocks = [...model.blocks];
+    const remove = blocks
+        .slice(range.start.block, range.end.block + 1)
+        .every((block) => block?.kind === 'paragraph' && block.list === list);
+
+    for (let index = range.start.block; index <= range.end.block; index += 1) {
+        const block = blocks[index];
+        if (block?.kind !== 'paragraph') {
+            throw new UnsupportedEditingSelectionError();
+        }
+        blocks[index] = remove
+            ? {
+                  attributes: block.attributes,
+                  inlines: block.inlines,
+                  kind: 'paragraph',
+                  tagName: 'p',
+              }
+            : {
+                  attributes: block.attributes,
+                  inlines: block.inlines,
+                  kind: 'paragraph',
+                  list,
+                  listStart: index === range.start.block,
+                  tagName: 'p',
+              };
+    }
+
+    return result({ blocks }, selection);
+}
+
+export function setLink(
+    model: EditingModel,
+    selection: EditingSelection,
+    attributes: readonly HtmlAttribute[] | undefined,
+): EditingResult {
+    const range = orderSelection(selection);
+    if (
+        comparePoints(range.start, range.end) === 0 ||
+        range.start.block !== range.end.block
+    ) {
+        return unchanged(model, selection);
+    }
+
+    const paragraph = getParagraph(model, range.start);
+    assertPoint(paragraph, range.end);
+    assertEditableRange(paragraph, range.start.offset, range.end.offset);
+    const [before, remainder] = splitInlines(
+        paragraph.inlines,
+        range.start.offset,
+    );
+    const [middle, after] = splitInlines(
+        remainder,
+        range.end.offset - range.start.offset,
+    );
+    const linked = middle.map((inline): EditingInline => {
+        if (inline.kind !== 'text') {
+            return inline;
+        }
+        const marks = inline.marks.filter(
+            (mark) => typeof mark === 'string' || mark.kind !== 'link',
+        );
+        return attributes === undefined
+            ? { ...inline, marks }
+            : {
+                  ...inline,
+                  marks: [{ attributes, kind: 'link' }, ...marks],
+              };
+    });
+
+    return replaceParagraph(
+        model,
+        range.start.block,
+        { ...paragraph, inlines: [...before, ...linked, ...after] },
+        selection.focus,
+        selection,
+    );
+}
+
+export function isTextMarkActive(
+    model: EditingModel,
+    selection: EditingSelection,
+    mark: EditingTextMark,
+): boolean {
+    const range = orderSelection(selection);
+    const paragraph = getParagraph(model, range.start);
+    if (comparePoints(range.start, range.end) === 0) {
+        return marksAtPoint(paragraph, range.start.offset).includes(mark);
+    }
+    if (range.start.block !== range.end.block) {
+        return false;
+    }
+    const [, remainder] = splitInlines(paragraph.inlines, range.start.offset);
+    const [middle] = splitInlines(
+        remainder,
+        range.end.offset - range.start.offset,
+    );
+    const runs = middle.filter(
+        (inline): inline is EditingTextRun => inline.kind === 'text',
+    );
+    return runs.length > 0 && runs.every((run) => run.marks.includes(mark));
+}
+
+export function isBlockTagActive(
+    model: EditingModel,
+    selection: EditingSelection,
+    tagName: EditingBlockTag,
+): boolean {
+    const range = orderSelection(selection);
+    return model.blocks
+        .slice(range.start.block, range.end.block + 1)
+        .every(
+            (block) =>
+                block?.kind === 'paragraph' &&
+                block.list === undefined &&
+                block.tagName === tagName,
+        );
+}
+
+export function isListActive(
+    model: EditingModel,
+    selection: EditingSelection,
+    list: 'ol' | 'ul',
+): boolean {
+    const range = orderSelection(selection);
+    return model.blocks
+        .slice(range.start.block, range.end.block + 1)
+        .every((block) => block?.kind === 'paragraph' && block.list === list);
+}
+
+export function isLinkActive(
+    model: EditingModel,
+    selection: EditingSelection,
+): boolean {
+    const range = orderSelection(selection);
+    const paragraph = getParagraph(model, range.start);
+    if (comparePoints(range.start, range.end) === 0) {
+        return marksAtPoint(paragraph, range.start.offset).some(
+            (mark) => typeof mark !== 'string' && mark.kind === 'link',
+        );
+    }
+    if (range.start.block !== range.end.block) {
+        return false;
+    }
+    const [, remainder] = splitInlines(paragraph.inlines, range.start.offset);
+    const [middle] = splitInlines(
+        remainder,
+        range.end.offset - range.start.offset,
+    );
+    const runs = middle.filter(
+        (inline): inline is EditingTextRun => inline.kind === 'text',
+    );
+    return (
+        runs.length > 0 &&
+        runs.every((run) =>
+            run.marks.some(
+                (mark) => typeof mark !== 'string' && mark.kind === 'link',
+            ),
+        )
     );
 }
 
@@ -403,6 +622,10 @@ function replaceParagraph(
     const blocks = [...model.blocks];
     blocks[index] = paragraph;
     return result({ blocks }, selection);
+}
+
+function isPlainParagraph(paragraph: EditingParagraph): boolean {
+    return paragraph.tagName === 'p' && paragraph.list === undefined;
 }
 
 function splitInlines(

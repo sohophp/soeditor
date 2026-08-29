@@ -38,11 +38,34 @@ export class DomProjection {
         this.#model = model;
         this.#paragraphs.clear();
         this.#textSpans.length = 0;
-        this.#host.replaceChildren(
-            ...model.blocks.map((block, index) =>
-                this.#renderBlock(block, index),
-            ),
-        );
+        const rendered: Node[] = [];
+
+        for (let index = 0; index < model.blocks.length; index += 1) {
+            const block = model.blocks[index];
+            if (block?.kind === 'paragraph' && block.list !== undefined) {
+                const list = this.#document.createElement(block.list);
+                list.dataset.soeditorList = block.list;
+                const listType = block.list;
+                while (index < model.blocks.length) {
+                    const item = model.blocks[index];
+                    if (
+                        item?.kind !== 'paragraph' ||
+                        item.list !== listType ||
+                        (list.childNodes.length > 0 && item.listStart === true)
+                    ) {
+                        break;
+                    }
+                    list.append(this.#renderParagraph(item, index, 'li'));
+                    index += 1;
+                }
+                index -= 1;
+                rendered.push(list);
+            } else if (block !== undefined) {
+                rendered.push(this.#renderBlock(block, index));
+            }
+        }
+
+        this.#host.replaceChildren(...rendered);
     }
 
     readSelection(): EditingSelection | undefined {
@@ -109,7 +132,15 @@ export class DomProjection {
             return placeholder;
         }
 
-        const paragraph = this.#document.createElement('p');
+        return this.#renderParagraph(block, blockIndex, block.tagName);
+    }
+
+    #renderParagraph(
+        block: Extract<EditingBlock, { readonly kind: 'paragraph' }>,
+        blockIndex: number,
+        tagName: string,
+    ): HTMLElement {
+        const paragraph = this.#document.createElement(tagName);
         paragraph.dataset.soeditorParagraph = 'true';
         this.#paragraphs.set(blockIndex, paragraph);
         let position = 0;
@@ -162,7 +193,13 @@ export class DomProjection {
         let rendered: Node = text;
 
         for (const mark of [...inline.marks].reverse()) {
-            const wrapper = this.#document.createElement(mark);
+            const wrapper = this.#document.createElement(
+                typeof mark === 'string' ? mark : 'a',
+            );
+            if (typeof mark !== 'string') {
+                wrapper.dataset.soeditorLink = 'true';
+                wrapper.setAttribute('aria-label', 'Link');
+            }
             wrapper.append(rendered);
             this.#spans.set(wrapper, { block, end, start });
             rendered = wrapper;
@@ -201,6 +238,21 @@ export class DomProjection {
                     ? { block: span.block, offset: paragraphLength(block) }
                     : undefined;
             }
+        }
+
+        if (
+            node.nodeType === 1 &&
+            (node as HTMLElement).dataset.soeditorList !== undefined
+        ) {
+            const child = node.childNodes[offset === 0 ? 0 : offset - 1];
+            const span =
+                child === undefined ? undefined : this.#findSpan(child);
+            return span === undefined
+                ? undefined
+                : {
+                      block: span.block,
+                      offset: offset === 0 ? span.start : span.end,
+                  };
         }
 
         const span = this.#findSpan(node);

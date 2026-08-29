@@ -1,0 +1,31 @@
+{
+    "name": "@soeditor/rich-text",
+    "version": "0.0.0",
+    "description": "Command-driven rich-text feature plugins for SoEditor.",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "test": "vitest run",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "peerDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/engine": "workspace:*",
+        "@soeditor/html": "workspace:*"
+    },
+    "devDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/engine": "workspace:*",
+        "@soeditor/html": "workspace:*"
+    }
+}

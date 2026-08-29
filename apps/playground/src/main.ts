@@ -1,5 +1,21 @@
 import { Editor, Plugin } from '@soeditor/core';
 import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
+import {
+    BlockquotePlugin,
+    BoldPlugin,
+    CodeBlockPlugin,
+    HeadingPlugin,
+    ImagePlugin,
+    InlineCodePlugin,
+    ItalicPlugin,
+    LinkPlugin,
+    OrderedListPlugin,
+    ParagraphPlugin,
+    StrikePlugin,
+    TablePlugin,
+    UnderlinePlugin,
+    UnorderedListPlugin,
+} from '@soeditor/rich-text';
 
 class DemoPlugin extends Plugin {
     static readonly id = 'demo';
@@ -31,12 +47,34 @@ if (stateOutput === null || sourceOutput === null || editingHost === null) {
 
 const editor = await Editor.create({
     data: '<p>Hello <strong>SoEditor</strong></p><product-card data-id="123"></product-card><!--CMS:block-->',
-    plugins: [DemoPlugin, HistoryPlugin],
+    plugins: [
+        DemoPlugin,
+        HistoryPlugin,
+        ParagraphPlugin,
+        HeadingPlugin,
+        BoldPlugin,
+        ItalicPlugin,
+        UnderlinePlugin,
+        StrikePlugin,
+        LinkPlugin,
+        OrderedListPlugin,
+        UnorderedListPlugin,
+        BlockquotePlugin,
+        InlineCodePlugin,
+        CodeBlockPlugin,
+        ImagePlugin,
+        TablePlugin,
+    ],
     readonly: new URLSearchParams(window.location.search).has('readonly'),
 });
 const visualEngine = createVisualEditingEngine({
     editor,
     element: editingHost,
+});
+(window as Window & { __soeditor?: unknown }).__soeditor = Object.freeze({
+    createVisualEditingEngine,
+    editor,
+    visualEngine,
 });
 
 const render = (): void => {

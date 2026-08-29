@@ -6,6 +6,7 @@ import {
 } from '@soeditor/core';
 import { parseHtmlFragment, serializeHtmlFragment } from '@soeditor/html';
 import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
+import { BoldPlugin } from '@soeditor/rich-text';
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';
@@ -26,11 +27,15 @@ try {
 
 const editor = await Editor.create({
     data: '<p>Runtime</p>',
-    plugins: [HistoryPlugin],
+    plugins: [HistoryPlugin, BoldPlugin],
 });
 
 if (editor.getData() !== '<p>Runtime</p>') {
     throw new Error('Packed editor returned unexpected document data.');
+}
+
+if (!editor.commands.has('format.bold')) {
+    throw new Error('Packed rich-text plugin did not register its command.');
 }
 
 editor.setData('<p>Changed</p>');

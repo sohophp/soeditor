@@ -100,6 +100,7 @@ function createPlainTextModel(source: string): EditingModel {
                     ? []
                     : [{ kind: 'text', marks: [], text: line }],
             kind: 'paragraph',
+            tagName: 'p',
         })),
     });
 }

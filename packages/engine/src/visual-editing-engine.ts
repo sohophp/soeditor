@@ -1,4 +1,9 @@
-import type { Editor, Transaction } from '@soeditor/core';
+import {
+    EditorDestroyedError,
+    ServiceAlreadyRegisteredError,
+    type Editor,
+    type Transaction,
+} from '@soeditor/core';
 import { parseHtmlFragment, serializeHtmlFragment } from '@soeditor/html';
 
 import { DomProjection } from './dom-projection.js';
@@ -23,11 +28,25 @@ import {
     insertModel,
     insertParagraph,
     insertText,
+    isBlockTagActive,
+    isLinkActive,
+    isListActive,
+    isTextMarkActive,
+    setBlockTag,
+    setLink,
     toggleMark,
+    toggleList,
     type EditingResult,
     UnsupportedEditingSelectionError,
     validateSelection,
 } from './operations.js';
+import {
+    visualEditingServiceToken,
+    type VisualBlockTag,
+    type VisualEditingService,
+    type VisualLinkAttributes,
+    type VisualTextMark,
+} from './visual-editing-service.js';
 
 export interface VisualEditingEngineOptions {
     readonly editor: Editor;
@@ -53,6 +72,7 @@ export class VisualEditingEngine implements EditingEngine {
     readonly #mutationObserver: MutationObserver;
     readonly #previousAttributes: ReadonlyMap<string, string | null>;
     readonly #projection: DomProjection;
+    readonly #service: VisualEditingService;
     #compositionSelection: EditingSelection | undefined;
     #destroyed = false;
     #lockedDocument = false;
@@ -68,6 +88,17 @@ export class VisualEditingEngine implements EditingEngine {
     constructor(options: VisualEditingEngineOptions) {
         this.editor = options.editor;
         this.element = options.element;
+        const view = this.element.ownerDocument.defaultView;
+        if (view === null) {
+            throw new Error(
+                'The visual editing host is not attached to a window.',
+            );
+        }
+        if (this.editor.services.has(visualEditingServiceToken)) {
+            throw new ServiceAlreadyRegisteredError(
+                visualEditingServiceToken.id,
+            );
+        }
         const initial = createVisualModel(this.editor.getData());
         this.#model = initial.model;
         this.#lockedDocument = initial.locked;
@@ -81,13 +112,21 @@ export class VisualEditingEngine implements EditingEngine {
         this.element.setAttribute('aria-multiline', 'true');
         this.#projection = new DomProjection(this.element, this.#model);
         this.#projection.render(this.#model);
+        const service: VisualEditingService = {
+            canEdit: () => this.#canEdit(),
+            insertHtml: (html) => this.#insertHtml(html),
+            isBlockActive: (tagName) => this.#isBlockActive(tagName),
+            isLinkActive: () => this.#isLinkActive(),
+            isListActive: (list) => this.#isListActive(list),
+            isMarkActive: (mark) => this.#isMarkActive(mark),
+            setBlock: (tagName) => this.#setBlock(tagName),
+            setLink: (attributes) => this.#setLink(attributes),
+            toggleList: (list) => this.#toggleList(list),
+            toggleMark: (mark) => this.#toggleMark(mark),
+        };
+        this.#service = Object.freeze(service);
+        this.editor.services.register(visualEditingServiceToken, this.#service);
 
-        const view = this.element.ownerDocument.defaultView;
-        if (view === null) {
-            throw new Error(
-                'The visual editing host is not attached to a window.',
-            );
-        }
         this.#mutationObserver = new view.MutationObserver(() => {
             if (!this.#destroyed) {
                 this.#render(this.#model);
@@ -160,6 +199,18 @@ export class VisualEditingEngine implements EditingEngine {
         this.element.removeEventListener('paste', this.#handlePaste);
         this.#disposeDocumentChange();
         this.#disposeEditorDestroy();
+        try {
+            if (
+                this.editor.services.tryGet(visualEditingServiceToken) ===
+                this.#service
+            ) {
+                this.editor.services.unregister(visualEditingServiceToken);
+            }
+        } catch (error: unknown) {
+            if (!(error instanceof EditorDestroyedError)) {
+                throw error;
+            }
+        }
         this.element.replaceChildren();
         for (const [name, value] of this.#previousAttributes) {
             if (value === null) {
@@ -368,6 +419,109 @@ export class VisualEditingEngine implements EditingEngine {
         }
     }
 
+    #canEdit(): boolean {
+        return (
+            !this.#destroyed &&
+            !this.editor.state.readonly &&
+            !this.#lockedDocument &&
+            this.#projection.readSelection() !== undefined
+        );
+    }
+
+    #selection(): EditingSelection {
+        this.#assertAlive();
+        const selection = this.#projection.readSelection();
+        if (
+            selection === undefined ||
+            this.editor.state.readonly ||
+            this.#lockedDocument
+        ) {
+            throw new UnsupportedEditingSelectionError(
+                'A compatible editable selection is required.',
+            );
+        }
+        return selection;
+    }
+
+    #applyFeature(
+        transform: (selection: EditingSelection) => EditingResult,
+    ): void {
+        const selection = this.#selection();
+        const result = transform(selection);
+        this.#commit(result, {
+            afterSelection: result.selection,
+            beforeSelection: selection,
+        });
+    }
+
+    #toggleMark(mark: VisualTextMark): void {
+        this.#applyFeature((selection) =>
+            toggleMark(this.#model, selection, mark),
+        );
+    }
+
+    #isMarkActive(mark: VisualTextMark): boolean {
+        const selection = this.#projection.readSelection();
+        return selection === undefined
+            ? false
+            : isTextMarkActive(this.#model, selection, mark);
+    }
+
+    #setBlock(tagName: VisualBlockTag): void {
+        this.#applyFeature((selection) =>
+            setBlockTag(this.#model, selection, tagName),
+        );
+    }
+
+    #isBlockActive(tagName: VisualBlockTag): boolean {
+        const selection = this.#projection.readSelection();
+        return selection === undefined
+            ? false
+            : isBlockTagActive(this.#model, selection, tagName);
+    }
+
+    #toggleList(list: 'ol' | 'ul'): void {
+        this.#applyFeature((selection) =>
+            toggleList(this.#model, selection, list),
+        );
+    }
+
+    #isListActive(list: 'ol' | 'ul'): boolean {
+        const selection = this.#projection.readSelection();
+        return selection === undefined
+            ? false
+            : isListActive(this.#model, selection, list);
+    }
+
+    #setLink(attributes: VisualLinkAttributes | undefined): void {
+        const htmlAttributes =
+            attributes === undefined
+                ? undefined
+                : Object.freeze(
+                      Object.entries(attributes).flatMap(([name, value]) =>
+                          value === undefined
+                              ? []
+                              : [Object.freeze({ name, value })],
+                      ),
+                  );
+        this.#applyFeature((selection) =>
+            setLink(this.#model, selection, htmlAttributes),
+        );
+    }
+
+    #isLinkActive(): boolean {
+        const selection = this.#projection.readSelection();
+        return selection === undefined
+            ? false
+            : isLinkActive(this.#model, selection);
+    }
+
+    #insertHtml(html: string): void {
+        this.#applyFeature((selection) =>
+            insertModel(this.#model, selection, createPastedModel(html, '')),
+        );
+    }
+
     #handleDocumentChange(source: string, transaction: Transaction): void {
         const pending = this.#pending;
         if (pending !== undefined && pending.source === source) {
@@ -462,6 +616,7 @@ function ensureEditableModel(model: EditingModel): EditingModel {
                       attributes: [],
                       inlines: [],
                       kind: 'paragraph',
+                      tagName: 'p',
                   },
               ],
           })

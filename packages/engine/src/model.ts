@@ -5,7 +5,17 @@ import type {
     HtmlElement,
 } from '@soeditor/html';
 
-export type EditingMark = 'strong' | 'em';
+export type EditingBlockTag =
+    'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'blockquote' | 'pre';
+
+export type EditingTextMark = 'strong' | 'em' | 'u' | 's' | 'code';
+
+export interface EditingLinkMark {
+    readonly kind: 'link';
+    readonly attributes: readonly HtmlAttribute[];
+}
+
+export type EditingMark = EditingTextMark | EditingLinkMark;
 
 export interface EditingTextRun {
     readonly kind: 'text';
@@ -22,8 +32,11 @@ export type EditingInline = EditingTextRun | EditingOpaqueInline;
 
 export interface EditingParagraph {
     readonly kind: 'paragraph';
+    readonly tagName: EditingBlockTag;
     readonly attributes: readonly HtmlAttribute[];
     readonly inlines: readonly EditingInline[];
+    readonly list?: 'ol' | 'ul';
+    readonly listStart?: boolean;
 }
 
 export interface EditingOpaqueBlock {
@@ -51,18 +64,42 @@ export function createEditingModel(
     fragment: HtmlDocumentFragment,
 ): EditingModel {
     return freezeModel({
-        blocks: fragment.children.map((node) => convertBlock(node)),
+        blocks: fragment.children.flatMap((node) => convertBlocks(node)),
     });
 }
 
 export function serializeEditingModel(
     model: EditingModel,
 ): HtmlDocumentFragment {
+    const children: HtmlChildNode[] = [];
+
+    for (let index = 0; index < model.blocks.length; index += 1) {
+        const block = model.blocks[index];
+        if (block?.kind === 'paragraph' && block.list !== undefined) {
+            const items: EditingParagraph[] = [];
+            const list = block.list;
+            while (index < model.blocks.length) {
+                const item = model.blocks[index];
+                if (
+                    item?.kind !== 'paragraph' ||
+                    item.list !== list ||
+                    (items.length > 0 && item.listStart === true)
+                ) {
+                    break;
+                }
+                items.push(item);
+                index += 1;
+            }
+            index -= 1;
+            children.push(serializeList(list, items));
+        } else if (block !== undefined) {
+            children.push(serializeBlock(block));
+        }
+    }
+
     return Object.freeze({
         type: 'document-fragment',
-        children: Object.freeze(
-            model.blocks.map((block) => serializeBlock(block)),
-        ),
+        children: Object.freeze(children),
     });
 }
 
@@ -97,7 +134,19 @@ export function freezeModel(model: EditingModel): EditingModel {
                             inline.kind === 'text'
                                 ? Object.freeze({
                                       ...inline,
-                                      marks: Object.freeze([...inline.marks]),
+                                      marks: Object.freeze(
+                                          inline.marks.map((mark) =>
+                                              typeof mark === 'string'
+                                                  ? mark
+                                                  : Object.freeze({
+                                                        ...mark,
+                                                        attributes:
+                                                            Object.freeze([
+                                                                ...mark.attributes,
+                                                            ]),
+                                                    }),
+                                          ),
+                                      ),
                                   })
                                 : Object.freeze({ ...inline }),
                         ),
@@ -137,11 +186,11 @@ export function normalizeInlines(
     return normalized;
 }
 
-function convertBlock(node: HtmlChildNode): EditingBlock {
+function convertBlocks(node: HtmlChildNode): readonly EditingBlock[] {
     if (
         node.type === 'element' &&
         node.namespace === 'html' &&
-        node.tagName === 'p'
+        isBlockTag(node.tagName)
     ) {
         const inlines: EditingInline[] = [];
 
@@ -149,14 +198,44 @@ function convertBlock(node: HtmlChildNode): EditingBlock {
             appendInline(inlines, child, []);
         }
 
-        return {
-            attributes: node.attributes,
-            inlines,
-            kind: 'paragraph',
-        };
+        return [
+            {
+                attributes: node.attributes,
+                inlines,
+                kind: 'paragraph',
+                tagName: node.tagName,
+            },
+        ];
     }
 
-    return { kind: 'opaque-block', node };
+    if (
+        node.type === 'element' &&
+        node.namespace === 'html' &&
+        (node.tagName === 'ol' || node.tagName === 'ul') &&
+        node.attributes.length === 0 &&
+        node.children.every(isSimpleListItem)
+    ) {
+        const list: 'ol' | 'ul' = node.tagName;
+        return node.children.map((item, itemIndex) => {
+            if (item.type !== 'element') {
+                throw new Error('Expected a validated list item.');
+            }
+            const inlines: EditingInline[] = [];
+            for (const child of item.children) {
+                appendInline(inlines, child, []);
+            }
+            return {
+                attributes: item.attributes,
+                inlines,
+                kind: 'paragraph',
+                list,
+                listStart: itemIndex === 0,
+                tagName: 'p',
+            };
+        });
+    }
+
+    return [{ kind: 'opaque-block', node }];
 }
 
 function appendInline(
@@ -183,15 +262,15 @@ function appendInline(
 }
 
 function supportedMark(node: HtmlChildNode): EditingMark | undefined {
-    if (
-        node.type !== 'element' ||
-        node.namespace !== 'html' ||
-        node.attributes.length !== 0
-    ) {
+    if (node.type !== 'element' || node.namespace !== 'html') {
         return undefined;
     }
 
-    return node.tagName === 'strong' || node.tagName === 'em'
+    if (node.tagName === 'a') {
+        return { attributes: node.attributes, kind: 'link' };
+    }
+
+    return node.attributes.length === 0 && isTextMark(node.tagName)
         ? node.tagName
         : undefined;
 }
@@ -221,7 +300,7 @@ function serializeBlock(block: EditingBlock): HtmlChildNode {
 
     return Object.freeze({
         type: 'element',
-        tagName: 'p',
+        tagName: block.tagName,
         namespace: 'html',
         attributes: block.attributes,
         children: Object.freeze(
@@ -243,9 +322,10 @@ function serializeInline(inline: EditingInline): HtmlChildNode {
     for (const mark of [...inline.marks].reverse()) {
         node = Object.freeze({
             type: 'element',
-            tagName: mark,
+            tagName: typeof mark === 'string' ? mark : 'a',
             namespace: 'html',
-            attributes: Object.freeze([]),
+            attributes:
+                typeof mark === 'string' ? Object.freeze([]) : mark.attributes,
             children: Object.freeze([node]),
         });
     }
@@ -257,7 +337,7 @@ function addMark(
     marks: readonly EditingMark[],
     mark: EditingMark,
 ): readonly EditingMark[] {
-    if (marks.includes(mark)) {
+    if (marks.some((candidate) => marksEqual(candidate, mark))) {
         return marks;
     }
 
@@ -267,7 +347,10 @@ function addMark(
 }
 
 function markOrder(mark: EditingMark): number {
-    return mark === 'strong' ? 0 : 1;
+    if (typeof mark !== 'string') {
+        return 0;
+    }
+    return ['strong', 'em', 'u', 's', 'code'].indexOf(mark) + 1;
 }
 
 function sameMarks(
@@ -276,6 +359,81 @@ function sameMarks(
 ): boolean {
     return (
         left.length === right.length &&
-        left.every((mark, index) => mark === right[index])
+        left.every((mark, index) => {
+            const candidate = right[index];
+            return candidate !== undefined && marksEqual(mark, candidate);
+        })
     );
+}
+
+function marksEqual(left: EditingMark, right: EditingMark): boolean {
+    if (typeof left === 'string' || typeof right === 'string') {
+        return left === right;
+    }
+    return (
+        left.attributes.length === right.attributes.length &&
+        left.attributes.every((attribute, index) => {
+            const candidate = right.attributes[index];
+            return (
+                candidate !== undefined &&
+                attribute.name === candidate.name &&
+                attribute.value === candidate.value &&
+                attribute.namespace === candidate.namespace &&
+                attribute.prefix === candidate.prefix
+            );
+        })
+    );
+}
+
+function isBlockTag(tagName: string): tagName is EditingBlockTag {
+    return (
+        tagName === 'p' ||
+        tagName === 'blockquote' ||
+        tagName === 'pre' ||
+        /^h[1-6]$/u.test(tagName)
+    );
+}
+
+function isTextMark(tagName: string): tagName is EditingTextMark {
+    return (
+        tagName === 'strong' ||
+        tagName === 'em' ||
+        tagName === 'u' ||
+        tagName === 's' ||
+        tagName === 'code'
+    );
+}
+
+function isSimpleListItem(node: HtmlChildNode): boolean {
+    return (
+        node.type === 'element' &&
+        node.namespace === 'html' &&
+        node.tagName === 'li' &&
+        node.attributes.length === 0
+    );
+}
+
+function serializeList(
+    tagName: 'ol' | 'ul',
+    items: readonly EditingParagraph[],
+): HtmlChildNode {
+    return Object.freeze({
+        type: 'element',
+        tagName,
+        namespace: 'html',
+        attributes: Object.freeze([]),
+        children: Object.freeze(
+            items.map((item) =>
+                Object.freeze({
+                    type: 'element',
+                    tagName: 'li',
+                    namespace: 'html',
+                    attributes: item.attributes,
+                    children: Object.freeze(
+                        item.inlines.map((inline) => serializeInline(inline)),
+                    ),
+                }),
+            ),
+        ),
+    });
 }
