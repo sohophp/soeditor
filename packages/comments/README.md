@@ -16,3 +16,9 @@ not supported.
 An optional `reviewPolicy` callback distinguishes host-authorized
 `comments-only` access from a fully `readonly` review. Content readonly state
 alone does not grant or revoke comment permission.
+
+`exportData()` returns a versioned immutable archive including tombstones.
+`delete()` is a reversible tombstone; `erase()` permanently removes a thread
+through the adapter's full-collection replacement contract. Both governance
+actions require explicit host permission. See
+[`docs/review-data-governance.md`](../../docs/review-data-governance.md).

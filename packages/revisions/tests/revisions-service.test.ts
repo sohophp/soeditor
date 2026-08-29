@@ -24,6 +24,10 @@ describe('RevisionsController', () => {
         const revisions: RevisionSnapshot[] = [oldRevision];
         let sequence = 2;
         const storage: RevisionStorage = {
+            erase: async (id) => {
+                const index = revisions.findIndex((item) => item.id === id);
+                if (index >= 0) revisions.splice(index, 1);
+            },
             list: async () => revisions,
             load: async (id) => revisions.find((item) => item.id === id)!,
             save: async (input) => {
@@ -53,6 +57,14 @@ describe('RevisionsController', () => {
         const saved = await service.save('draft', 'Autosave');
         expect(saved.kind).toBe('draft');
         expect(service.snapshot.revisions[0]?.id).toBe(saved.id);
+        const exported = await service.exportData();
+        expect(exported.schema).toBe('soeditor.revisions');
+        expect(exported.version).toBe(1);
+        expect(exported.revisions).toHaveLength(2);
+        expect(Object.isFrozen(exported.revisions)).toBe(true);
+        await service.erase(saved.id);
+        expect(service.snapshot.revisions).toHaveLength(1);
+        expect(revisions).toHaveLength(1);
 
         let restoreMetadata: unknown;
         editor.events.on('document:change', ({ transaction }) => {
@@ -204,6 +216,82 @@ describe('RevisionsController', () => {
         );
         expect(controller.service.snapshot.policy).toBe('readonly');
         expect(editor.state.readonly).toBe(true);
+        controller.destroy();
+        await editor.destroy();
+    });
+
+    it('requires erasure support and keeps governance failures observable', async () => {
+        const editor = await Editor.create({ data: '<p>Current</p>' });
+        const failure = new Error('erase failed');
+        const controller = new RevisionsController(editor, {
+            author: () => ({ id: 'owner', name: 'Owner' }),
+            permissions: { can: () => true },
+            provider: provider([oldRevision]),
+            storage: {
+                ...provider([oldRevision]),
+                erase: async () => {
+                    throw failure;
+                },
+                save: async () => oldRevision,
+            },
+        });
+        await controller.init();
+
+        await expect(controller.service.erase('revision-1')).rejects.toBe(
+            failure,
+        );
+        expect(controller.service.snapshot.error).toBe(failure);
+        expect(controller.service.snapshot.revisions).toHaveLength(1);
+        controller.destroy();
+        await editor.destroy();
+
+        const secondEditor = await Editor.create({ data: '<p>Current</p>' });
+        const withoutErasure = new RevisionsController(secondEditor, {
+            author: () => ({ id: 'owner', name: 'Owner' }),
+            permissions: { can: () => true },
+            provider: provider([oldRevision]),
+        });
+        await withoutErasure.init();
+        expect(withoutErasure.service.can('erase', 'revision-1')).toBe(false);
+        withoutErasure.destroy();
+        await secondEditor.destroy();
+    });
+
+    it('does not resurrect erased metadata from an older refresh', async () => {
+        const editor = await Editor.create({ data: '<p>Current</p>' });
+        let resolveRefresh:
+            ((value: readonly RevisionMetadata[]) => void) | undefined;
+        let listCount = 0;
+        const revisions = [oldRevision];
+        const controller = new RevisionsController(editor, {
+            author: () => ({ id: 'owner', name: 'Owner' }),
+            permissions: { can: () => true },
+            provider: {
+                list: () => {
+                    listCount += 1;
+                    return listCount === 1
+                        ? Promise.resolve(revisions)
+                        : new Promise((resolve) => {
+                              resolveRefresh = resolve;
+                          });
+                },
+                load: async () => oldRevision,
+            },
+            storage: {
+                erase: async () => undefined,
+                list: async () => revisions,
+                load: async () => oldRevision,
+                save: async () => oldRevision,
+            },
+        });
+        await controller.init();
+
+        const staleRefresh = controller.service.refresh();
+        await controller.service.erase('revision-1');
+        resolveRefresh?.([oldRevision]);
+        await staleRefresh;
+        expect(controller.service.snapshot.revisions).toEqual([]);
+
         controller.destroy();
         await editor.destroy();
     });

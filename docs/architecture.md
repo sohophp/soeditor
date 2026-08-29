@@ -397,6 +397,21 @@ revision service maps `edit`, `comments-only`, and `readonly` onto that content
 policy, while an optional comments callback distinguishes whether review
 actions remain available.
 
+## Phase 29 public review and data-governance boundary
+
+The 0.8 release promotes the comments and revisions package roots without
+moving their data into Core. Their plugin factories, immutable values, service
+tokens, permission/storage contracts, and bounded exports are curated through
+the SDK. Concrete controllers, panel renderers, and mapping internals remain
+unexported.
+
+Comment `delete` is a retained workflow tombstone. Permanent comment `erase`
+uses the adapter's atomic full-collection replacement; revision `erase` is
+enabled only by an optional host adapter method and updates local state after
+host confirmation. Both packages require explicit permission for export and
+erasure. These client boundaries do not claim ownership of backend retention,
+backups, replicas, legal holds, identity, audit, or concurrency.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing
@@ -745,8 +760,8 @@ JavaScript source map accompany it. See `docs/distribution.md` and ADR 0020.
 
 The 0.5 release gate kept the Phase 14 architecture unchanged and added
 evidence around it. The 15 packages published for 0.5 share one aligned 0.5.x
-version; the 0.6 candidate adds `@soeditor/projections` and `@soeditor/layout`
-for 17 aligned publishable boundaries. A release audit checks explicit export
+version; the 0.6/0.7 candidates use 17 aligned boundaries, and 0.8 promotes
+`@soeditor/comments` and `@soeditor/revisions` for 19. A release audit checks explicit export
 maps, mapped artifacts, and bundle budgets; packed
 NodeNext/native ESM/Vite consumers exercise actual tarballs.
 
@@ -793,7 +808,6 @@ SoEditor 的核心目标：
 SoEditor 0.x 不实现：
 
 - 实时多人协作
-- Comments
 - Track Changes
 - Office 文档兼容
 - Word 分页排版

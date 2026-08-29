@@ -17,4 +17,6 @@ const editor = await SoEditor.create({
 ```
 
 The repository distribution guide contains visual-surface and direct-browser
-examples.
+examples. The 0.8 umbrella also exports the public comments and revisions
+packages; applications still supply identity, permissions, persistence,
+retention, and audit behavior.

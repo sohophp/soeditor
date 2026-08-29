@@ -20,20 +20,25 @@ Release Hardening — has aligned the curated SDK, packed third-party widget
 consumer, public API classification, migration, and release boundaries for the
 local `0.7.0` release candidate. Its full release and adversarial gates pass
 with Critical 0 and High 0. Phase 27 — Mapped Annotations and Comments — is
-complete. A private development `@soeditor/comments` package now provides
+complete. It introduced the then-private `@soeditor/comments` package with
 host-owned immutable threads, deterministic operation mapping, safe unlinking,
 non-canonical decorations, command-driven review UI, and explicit permission
 and persistence boundaries. Its full gate passes with 112 Chromium scenarios,
 Critical 0, and High 0. Phase 28 — Revision History and Review Modes — is
-complete. The private `@soeditor/revisions` package provides host-owned
+complete. It introduced the then-private `@soeditor/revisions` package with
 draft/saved snapshots, bounded semantic comparison, non-canonical historical
 viewing, explicit transaction restore, permission-checked review policy, and
 deterministic comment behavior. All 117 Chromium scenarios pass with Critical
-0 and High 0. Phase 29 — SoEditor 0.8 Review Workflow Release — is active.
+0 and High 0. Phase 29 — SoEditor 0.8 Review Workflow Release — is complete. It
+promoted both review packages to public SDK/umbrella surfaces, added
+permission-checked versioned export and permanent erasure contracts, and
+aligned the local
+`0.8.0` release candidate. All release gates pass with Critical 0 and High 0.
+Phase 30 — Framework-neutral Workspace and Recovery — is active.
 
-All 17 development package manifests are aligned at the `0.7.0` release
-candidate. The published stable reference remains `0.5.1` until an explicitly
-authorized npm publication and external registry/CDN verification complete.
+All 19 public package manifests are aligned at the `0.8.0` release candidate.
+The published stable reference remains `0.5.1` until an explicitly authorized
+npm publication and external registry/CDN verification complete.
 
 ## Published 0.5 release scope
 
@@ -95,6 +100,18 @@ deliberate and documented under SemVer principles.
   comments, dynamic Visual/Source/Markdown policy, accessibility, security,
   and terminal cleanup. Distribution audits cover 19 package directories while
   the frozen public 0.7 release audit remains exactly 17 packages.
+- Phase 29 adds public comments/revisions package roots, curated SDK and
+  umbrella exports, immutable versioned data archives, permission-checked
+  governance operations, a full-replacement comment erasure path, and optional
+  host-confirmed revision erasure. A clean packed 19-package consumer verifies
+  strict TypeScript, NodeNext/native ESM, real adapters, Vite, Chromium,
+  accessibility, security, and teardown.
+- the aligned 0.8 candidate passes lint, strict typecheck, all unit/consumer/
+  distribution/release tests, 117 Chromium scenarios, build, MIT license
+  verification, high-severity dependency audit, a 19-package npm dry run, and
+  a read-only check that every `0.8.0` package version is unpublished. The
+  final adversarial review also fixed stale refresh resurrection after revision
+  erasure.
 - final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
@@ -116,8 +133,9 @@ deliberate and documented under SemVer principles.
   explicitly unlinked instead of using fuzzy recovery.
 - Comment storage is optimistic and serialized per editor instance. Hosts must
   observe `lastError` and provide retry/reconciliation; real-time concurrency
-  is deferred. Deleted tombstones retain their messages until Phase 29 defines
-  final privacy, export, and deletion semantics.
+  is deferred. `delete` tombstones retain messages, while `erase` removes the
+  active full snapshot. Backups, replicas, legal holds, audit records, and
+  authoritative regulatory export/deletion remain host responsibilities.
 
 - The self-contained global and full Developer Playground are large because
   CodeMirror, Prettier, Markdown, and developer tools are bundled together.
@@ -164,6 +182,6 @@ wrappers, SSR DOM emulation, collaboration, spreadsheet behavior, office-paste
 parity, and arbitrary executable widgets remain post-0.7 candidates and are
 not implied by this preview.
 
-The candidate is not yet a public 0.7 release. npm publication, signed tag,
+The candidate is not yet a public 0.8 release. npm publication, signed tag,
 GitHub Release, and external npm/jsDelivr verification require explicit owner
 authorization and must refer to the exact reviewed commit.

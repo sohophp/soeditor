@@ -37,7 +37,15 @@ export interface RevisionProvider {
 }
 
 export interface RevisionStorage extends RevisionProvider {
+    /** Permanently removes one host-owned revision. */
+    erase?(id: string): PromiseLike<void>;
     save(input: RevisionSaveInput): PromiseLike<RevisionSnapshot>;
+}
+
+export interface RevisionDataExport {
+    readonly revisions: readonly RevisionSnapshot[];
+    readonly schema: 'soeditor.revisions';
+    readonly version: 1;
 }
 
 export function freezeRevisionMetadata(

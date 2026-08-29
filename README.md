@@ -2,7 +2,7 @@
 
 Developer-first extensible content editor.
 
-**Status: 0.7 Structured Extensions candidate with Phase 28 review workflows complete.** SoEditor is suitable for
+**Status: 0.8 Review Workflow release candidate.** SoEditor is suitable for
 evaluation and integration development, but is not yet a stable 1.0 release.
 The public registry reference remains 0.5.1 until authorized publication. The repository
 contains the framework-agnostic Core, HTML document layer, controlled visual
@@ -27,9 +27,10 @@ validation workflows, persistent single-writer projections, accessible split
 layouts, and a curated SDK/preset/distribution surface. Phases 23–26 add
 structured extension contracts, command-backed node views, bounded tables and
 media, and a packed third-party widget release gate. Phase 27 adds host-owned,
-operation-mapped comments and non-canonical visual decorations; Phase 28 is
-complete with host-owned revision history, semantic comparison, restore, and
-review policies. Phase 29 release hardening is active.
+operation-mapped comments and non-canonical visual decorations; Phase 28 adds
+host-owned revision history, semantic comparison, restore, and review policies.
+Phase 29 makes those packages public with explicit export/erasure governance
+and a 19-package release gate.
 
 ```ts
 import { SoEditor, minimalPreset } from '@soeditor/editor';
@@ -45,7 +46,7 @@ const editor = await SoEditor.create({
 
 - `@soeditor/core` — independent editor infrastructure with no DOM dependency.
 - `@soeditor/comments` — host-owned mapped annotations, comment commands, and
-  accessible review UI (private until the 0.8 release hardening phase).
+  accessible review UI with explicit export and permanent erasure.
 - `@soeditor/html` — HTML parsing, diagnostics, source locations, and semantic
   serialization with a SoEditor-owned public tree.
 - `@soeditor/engine` — controlled contenteditable projection, transaction
@@ -73,7 +74,7 @@ const editor = await SoEditor.create({
 - `@soeditor/projections` — DOM-free persistent projection activity and writer
   coordination.
 - `@soeditor/revisions` — host-owned revisions, bounded comparison, explicit
-  restore, and review policies (private until Phase 29 hardening).
+  restore, review policies, portable export, and optional permanent erasure.
 - `@soeditor/layout` — application-attached accessible two-pane projection
   layouts.
 - `@soeditor/presets` — immutable plugin and toolbar definitions for common
@@ -90,6 +91,7 @@ Start with [Getting started](docs/getting-started.md). See
 [Plugin Guide](docs/plugin-guide.md), [Release procedure](docs/releasing.md),
 the [comments guide](docs/comments.md),
 the [revisions guide](docs/revisions.md),
+[review data governance](docs/review-data-governance.md),
 [public API policy](docs/public-api.md), and
 [development status](docs/status.md).
 

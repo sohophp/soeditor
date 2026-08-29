@@ -16,3 +16,8 @@ Conversion callbacks use only SoEditor HTML values and cannot create editing
 DOM; see the repository plugin guide for a complete custom-element example.
 The experimental visual-decoration plugin, token, and immutable range types are
 also exposed for non-canonical annotation providers.
+
+The 0.8 SDK also curates the comments/revisions plugin factories, service
+tokens, immutable models, storage and permission contracts, review policy, and
+versioned export types. Concrete controllers, rendering internals, and adapter
+implementations remain in their owning packages.

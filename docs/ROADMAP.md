@@ -2,9 +2,9 @@
 
 ## Status
 
-Complete through Phase 28. The verified 0.7.0 candidate is awaiting
+Complete through Phase 29. The verified 0.8.0 candidate is awaiting
 owner-authorized publication. The evidence-derived 0.7–1.0 roadmap is approved
-and Phase 29 is active.
+and Phase 30 is active.
 
 This roadmap begins from the current repository state.
 
@@ -13,9 +13,9 @@ Phases 1–15 are complete.
 The SoEditor 0.5 Developer Preview roadmap is complete. Phase 16 was authorized
 after that checkpoint to prepare and stabilize the public 0.5.x release line.
 
-The completed target is **SoEditor 0.5 Developer Preview** and its stabilized
-public `0.5.1` release. The active target is **SoEditor 0.6 Developer
-Workflow**.
+The completed public target is **SoEditor 0.5 Developer Preview** and its
+stabilized `0.5.1` release. The active development target is **SoEditor 0.9
+Integration Release**.
 
 ---
 
@@ -1437,7 +1437,7 @@ without turning snapshots into the live editing model.
 
 ## Status
 
-ACTIVE.
+COMPLETE.
 
 ## Goal
 
@@ -1451,13 +1451,25 @@ Harden the mapped-annotation and asynchronous review platform as 0.8.
 - aligned packages, release dry run, adversarial review, and owner-controlled
   publication boundary.
 
+## Delivered
+
+- public comments/revisions package roots and curated SDK/umbrella exports;
+- immutable versioned review-data exports, explicit tombstone semantics,
+  permission-checked permanent comment erasure, and optional host-confirmed
+  revision erasure;
+- packed 19-package storage-adapter consumers, migration/privacy/security
+  guidance, lifecycle/accessibility regression, and latest-wins revision list
+  consistency;
+- aligned `0.8.0` artifacts, full release gates, npm dry run, unpublished
+  registry preflight, and Critical 0 / High 0 adversarial review.
+
 ---
 
 # Phase 30 — Framework-neutral Workspace and Recovery
 
 ## Status
 
-PENDING.
+ACTIVE.
 
 ## Goal
 

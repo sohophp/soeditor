@@ -123,6 +123,28 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/comments',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
+            '@soeditor/revisions',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/core',
             'pack',
             '--pack-destination',
@@ -248,6 +270,12 @@ try {
     const coreArchive = archives.find((name) =>
         name.startsWith('soeditor-core-'),
     );
+    const commentsArchive = archives.find((name) =>
+        name.startsWith('soeditor-comments-'),
+    );
+    const revisionsArchive = archives.find((name) =>
+        name.startsWith('soeditor-revisions-'),
+    );
     const soeditorArchive = archives.find((name) =>
         name.startsWith('soeditor-editor-'),
     );
@@ -295,8 +323,13 @@ try {
         name.startsWith('soeditor-markdown-'),
     );
 
-    if (archives.length !== 17 || coreArchive === undefined) {
-        throw new Error('Expected one packed @soeditor/core archive.');
+    if (
+        archives.length !== 19 ||
+        coreArchive === undefined ||
+        commentsArchive === undefined ||
+        revisionsArchive === undefined
+    ) {
+        throw new Error('Expected all 19 packed @soeditor archives.');
     }
 
     if (htmlArchive === undefined) {
@@ -386,6 +419,14 @@ try {
     packageData.dependencies['@soeditor/core'] = `file:${join(
         packDirectory,
         coreArchive,
+    )}`;
+    packageData.dependencies['@soeditor/comments'] = `file:${join(
+        packDirectory,
+        commentsArchive,
+    )}`;
+    packageData.dependencies['@soeditor/revisions'] = `file:${join(
+        packDirectory,
+        revisionsArchive,
     )}`;
     packageData.dependencies['@soeditor/dev-tools'] = `file:${join(
         packDirectory,

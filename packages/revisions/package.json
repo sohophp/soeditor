@@ -1,7 +1,6 @@
 {
     "name": "@soeditor/revisions",
-    "version": "0.7.0",
-    "private": true,
+    "version": "0.8.0",
     "license": "MIT",
     "description": "Host-owned revision history and review policies for SoEditor.",
     "keywords": [

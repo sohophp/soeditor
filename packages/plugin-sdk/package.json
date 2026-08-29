@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/plugin-sdk",
-    "version": "0.7.0",
+    "version": "0.8.0",
     "license": "MIT",
     "description": "Stable public extension contracts for SoEditor plugins.",
     "keywords": [
@@ -42,21 +42,25 @@
         "typecheck": "tsc -p tsconfig.json"
     },
     "peerDependencies": {
+        "@soeditor/comments": "workspace:*",
         "@soeditor/core": "workspace:*",
         "@soeditor/engine": "workspace:*",
         "@soeditor/file-manager": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
         "@soeditor/layout": "workspace:*",
         "@soeditor/projections": "workspace:*",
+        "@soeditor/revisions": "workspace:*",
         "@soeditor/ui": "workspace:*"
     },
     "devDependencies": {
+        "@soeditor/comments": "workspace:*",
         "@soeditor/core": "workspace:*",
         "@soeditor/engine": "workspace:*",
         "@soeditor/file-manager": "workspace:*",
         "@soeditor/html-tools": "workspace:*",
         "@soeditor/layout": "workspace:*",
         "@soeditor/projections": "workspace:*",
+        "@soeditor/revisions": "workspace:*",
         "@soeditor/ui": "workspace:*"
     }
 }

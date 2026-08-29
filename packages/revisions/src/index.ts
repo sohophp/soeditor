@@ -25,6 +25,7 @@ export type {
 export type {
     ReviewPolicy,
     RevisionAuthor,
+    RevisionDataExport,
     RevisionKind,
     RevisionMetadata,
     RevisionProvider,

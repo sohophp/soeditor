@@ -5,7 +5,7 @@ file being present in a tarball does not make it public; `src`, `dist` file
 paths, concrete registries, DOM projection internals, and undocumented globals
 are internal and may change without migration support.
 
-## 0.7 classifications
+## 0.8 classifications
 
 | Classification          | Surface                                                                                                                                                                                                                                             | Compatibility expectation                                                             |
 | ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
@@ -21,15 +21,21 @@ package. Generic contracts required by an extension belong in the SDK; feature
 configuration and concrete implementations remain with their owner.
 
 Phase 27 adds experimental visual-decoration contracts to the engine and SDK.
-The `@soeditor/comments` package remains private development surface until the
-0.8 review-workflow release gate; its documented contracts may still change
-during Phases 27–29.
+Phase 29 makes `@soeditor/comments` public. Its immutable models, plugin
+factory, service token, storage/permission contracts, mapped ranges, versioned
+export, tombstone deletion, and permanent erasure are application public.
 
 Phase 28 adds the general application-level `Editor.setReadonly()` transition;
-attached editor surfaces must honor it dynamically. The revision provider,
-comparison, review-policy, command, and UI contracts in `@soeditor/revisions`
-remain private development surface until Phase 29. They are intentionally not
-added to the frozen 0.7 SDK or umbrella package.
+attached editor surfaces must honor it dynamically. Phase 29 makes the
+revision provider/storage, comparison, review-policy, plugin, service,
+versioned export, and optional erasure contracts in `@soeditor/revisions`
+application public. Both review families are curated through the 0.8 SDK and
+umbrella package.
+
+Concrete comment/revision controllers, panel renderers, mapping internals, and
+undeclared subpaths remain internal. Review exports are bounded client views,
+not authoritative regulatory exports; data ownership and backend deletion
+remain host responsibilities.
 
 ## Structured extension boundary
 

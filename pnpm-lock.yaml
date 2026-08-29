@@ -232,6 +232,9 @@ importers:
 
   packages/plugin-sdk:
     devDependencies:
+      '@soeditor/comments':
+        specifier: workspace:*
+        version: link:../comments
       '@soeditor/core':
         specifier: workspace:*
         version: link:../core
@@ -250,6 +253,9 @@ importers:
       '@soeditor/projections':
         specifier: workspace:*
         version: link:../projections
+      '@soeditor/revisions':
+        specifier: workspace:*
+        version: link:../revisions
       '@soeditor/ui':
         specifier: workspace:*
         version: link:../ui
@@ -337,6 +343,9 @@ importers:
       '@soeditor/adapter-sofinder':
         specifier: workspace:*
         version: link:../adapter-sofinder
+      '@soeditor/comments':
+        specifier: workspace:*
+        version: link:../comments
       '@soeditor/core':
         specifier: workspace:*
         version: link:../core
@@ -370,6 +379,9 @@ importers:
       '@soeditor/projections':
         specifier: workspace:*
         version: link:../projections
+      '@soeditor/revisions':
+        specifier: workspace:*
+        version: link:../revisions
       '@soeditor/rich-text':
         specifier: workspace:*
         version: link:../rich-text

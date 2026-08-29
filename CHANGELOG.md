@@ -2,17 +2,29 @@
 
 ## Unreleased
 
-- Added bounded, non-canonical visual decorations and a private development
+## 0.8.0 — Review Workflow candidate
+
+- Added bounded, non-canonical visual decorations and the public
   `@soeditor/comments` package with immutable mapped ranges, host-owned atomic
   storage, permission boundaries, command-driven review UI, and safe unlinking
   when a document change cannot be mapped precisely.
 - Added unit and Chromium coverage for text and structured-block comments,
   source/history behavior, clipboard isolation, readonly review permissions,
   accessibility, adapter failures, serialized writes, and teardown.
-- Added private host-owned revision history with bounded HTML/Markdown
+- Added public host-owned revision history with bounded HTML/Markdown
   comparison, explicit transaction restore, dynamic edit/comments-only/
   readonly policy across editing projections, and deterministic comment
   behavior across viewing and restoration.
+- Added immutable, versioned review-data exports; distinguished reversible
+  comment tombstones from permission-checked permanent erasure; and added
+  optional host-confirmed revision erasure.
+- Added curated SDK and umbrella exports, a packed NodeNext/native ESM storage
+  adapter consumer, 0.7-to-0.8 migration and privacy guidance, and aligned all
+  19 MIT-licensed public packages at `0.8.0`.
+
+This entry describes a verified local release candidate. npm publication, the
+`v0.8.0` tag, hosted release, and registry/CDN verification remain pending
+explicit owner authorization.
 
 ## 0.7.0 — Structured Extensions candidate
 

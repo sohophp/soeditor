@@ -6,12 +6,14 @@ export default defineConfig({
         minify: false,
         rollupOptions: {
             external: [
+                '@soeditor/comments',
                 '@soeditor/core',
                 '@soeditor/engine',
                 '@soeditor/file-manager',
                 '@soeditor/html-tools',
                 '@soeditor/layout',
                 '@soeditor/projections',
+                '@soeditor/revisions',
                 '@soeditor/ui',
             ],
         },

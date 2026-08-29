@@ -12,21 +12,28 @@ const releaseVersion = workspaceManifest.version;
 const releaseLicense = workspaceManifest.license;
 if (
     typeof releaseVersion !== 'string' ||
-    !/^0\.7\.\d+$/u.test(releaseVersion)
+    !/^0\.8\.\d+$/u.test(releaseVersion)
 ) {
-    throw new Error('The release audit only accepts an aligned 0.7.x version.');
+    throw new Error('The release audit only accepts an aligned 0.8.x version.');
 }
 const packagesRoot = join(repositoryRoot, 'packages');
 const publishable = [];
-const [changelog, migrationGuide, releaseGuide, statusDocument] =
-    await Promise.all([
-        readFile(join(repositoryRoot, 'CHANGELOG.md'), 'utf8'),
-        readFile(join(repositoryRoot, 'docs/migration-0.6-to-0.7.md'), 'utf8'),
-        readFile(join(repositoryRoot, 'docs/releasing.md'), 'utf8'),
-        readFile(join(repositoryRoot, 'docs/status.md'), 'utf8'),
-    ]);
+const [
+    changelog,
+    dataGovernanceGuide,
+    migrationGuide,
+    releaseGuide,
+    statusDocument,
+] = await Promise.all([
+    readFile(join(repositoryRoot, 'CHANGELOG.md'), 'utf8'),
+    readFile(join(repositoryRoot, 'docs/review-data-governance.md'), 'utf8'),
+    readFile(join(repositoryRoot, 'docs/migration-0.7-to-0.8.md'), 'utf8'),
+    readFile(join(repositoryRoot, 'docs/releasing.md'), 'utf8'),
+    readFile(join(repositoryRoot, 'docs/status.md'), 'utf8'),
+]);
 for (const [label, source, marker] of [
     ['changelog', changelog, `## ${releaseVersion}`],
+    ['data governance guide', dataGovernanceGuide, '`comments.erase(id)`'],
     ['migration guide', migrationGuide, `\`${releaseVersion}\``],
     [
         'release guide',
@@ -99,9 +106,9 @@ for (const directory of await readdir(packagesRoot)) {
     }
 }
 
-if (publishable.length !== 17) {
+if (publishable.length !== 19) {
     throw new Error(
-        `Expected 17 publishable packages, found ${String(publishable.length)}.`,
+        `Expected 19 publishable packages, found ${String(publishable.length)}.`,
     );
 }
 if (new Set(publishable).size !== publishable.length) {
@@ -122,9 +129,15 @@ const pluginSdkDeclarations = await readFile(
     'utf8',
 );
 for (const contract of [
+    'CommentDataExport',
+    'CommentStorageAdapter',
+    'RevisionDataExport',
+    'RevisionStorage',
     'StructuredBlockConversion',
     'StructuredNodeViewFactory',
     'VisualEditingService',
+    'commentsServiceToken',
+    'revisionsServiceToken',
     'visualEditingServiceToken',
 ]) {
     if (!pluginSdkDeclarations.includes(contract)) {
@@ -143,8 +156,8 @@ const globalGzip = gzipSync(globalSource).length;
 const cssRaw = (await stat(cssPath)).size;
 const esmRaw = (await stat(esmPath)).size;
 
-assertBudget('CDN global raw', globalRaw, 1_290_000);
-assertBudget('CDN global gzip', globalGzip, 415_000);
+assertBudget('CDN global raw', globalRaw, 1_350_000);
+assertBudget('CDN global gzip', globalGzip, 430_000);
 assertBudget('standalone CSS', cssRaw, 10_000);
 assertBudget('umbrella ESM facade', esmRaw, 2_000);
 for (const requiredSelector of ['.soeditor-split-view', '.soeditor-ui']) {

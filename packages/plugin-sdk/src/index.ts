@@ -1,3 +1,17 @@
+export { commentsServiceToken, createCommentsPlugin } from '@soeditor/comments';
+export type {
+    CommentAction,
+    CommentAuthor,
+    CommentDataExport,
+    CommentMessage,
+    CommentPermissionContext,
+    CommentPermissionProvider,
+    CommentRange,
+    CommentsPluginOptions,
+    CommentsService,
+    CommentStorageAdapter,
+    CommentThread,
+} from '@soeditor/comments';
 export { Plugin, createServiceToken } from '@soeditor/core';
 export type {
     Command,
@@ -93,6 +107,26 @@ export type {
     ProjectionId,
     ProjectionSnapshot,
 } from '@soeditor/projections';
+export {
+    createRevisionsPlugin,
+    revisionsServiceToken,
+} from '@soeditor/revisions';
+export type {
+    ReviewPolicy,
+    RevisionAction,
+    RevisionAuthor,
+    RevisionDataExport,
+    RevisionKind,
+    RevisionMetadata,
+    RevisionPermissionContext,
+    RevisionPermissionProvider,
+    RevisionProvider,
+    RevisionsPluginOptions,
+    RevisionsService,
+    RevisionsSnapshot,
+    RevisionSnapshot,
+    RevisionStorage,
+} from '@soeditor/revisions';
 export { fileManagerServiceToken } from '@soeditor/file-manager';
 export type {
     FileManager,

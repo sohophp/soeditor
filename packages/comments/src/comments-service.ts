@@ -26,7 +26,7 @@ const MAX_MESSAGES_PER_THREAD = 100;
 const DECORATION_OWNER = 'soeditor.comments';
 
 export type CommentAction =
-    'create' | 'delete' | 'reopen' | 'reply' | 'resolve';
+    'create' | 'delete' | 'erase' | 'export' | 'reopen' | 'reply' | 'resolve';
 
 export interface CommentPermissionContext {
     readonly action: CommentAction;
@@ -41,7 +41,14 @@ export interface CommentPermissionProvider {
 
 export interface CommentStorageAdapter {
     load(): PromiseLike<readonly CommentThread[]>;
+    /** Replaces the complete host-owned thread collection. */
     save(threads: readonly CommentThread[]): PromiseLike<void>;
+}
+
+export interface CommentDataExport {
+    readonly schema: 'soeditor.comments';
+    readonly threads: readonly CommentThread[];
+    readonly version: 1;
 }
 
 export interface CommentsPluginOptions {
@@ -61,6 +68,8 @@ export interface CommentsService {
     can(action: CommentAction, threadId?: string): boolean;
     create(body: string): Promise<void>;
     delete(threadId: string): Promise<void>;
+    erase(threadId: string): Promise<void>;
+    exportData(): CommentDataExport;
     next(): boolean;
     open(threadId: string): boolean;
     previous(): boolean;
@@ -117,6 +126,8 @@ export class CommentsController {
                 this.can(action, threadId),
             create: (body: string) => this.create(body),
             delete: (threadId: string) => this.delete(threadId),
+            erase: (threadId: string) => this.erase(threadId),
+            exportData: () => this.exportData(),
             next: () => this.navigate(1),
             open: (threadId: string) => this.open(threadId),
             previous: () => this.navigate(-1),
@@ -167,6 +178,17 @@ export class CommentsController {
 
     can(action: CommentAction, threadId?: string): boolean {
         this.#assertAlive();
+        if (
+            action !== 'create' &&
+            action !== 'delete' &&
+            action !== 'erase' &&
+            action !== 'export' &&
+            action !== 'reopen' &&
+            action !== 'reply' &&
+            action !== 'resolve'
+        ) {
+            throw new TypeError('A comment action is invalid.');
+        }
         const reviewPolicy = this.#options.reviewPolicy?.();
         if (
             reviewPolicy !== undefined &&
@@ -176,11 +198,23 @@ export class CommentsController {
         ) {
             throw new TypeError('The host returned an invalid review policy.');
         }
-        if (reviewPolicy === 'readonly') return false;
+        if (
+            reviewPolicy === 'readonly' &&
+            action !== 'erase' &&
+            action !== 'export'
+        ) {
+            return false;
+        }
         const thread =
             threadId === undefined ? undefined : this.#findThread(threadId);
-        if (action !== 'create' && thread === undefined) return false;
-        if (thread?.state === 'deleted') return false;
+        if (
+            action !== 'create' &&
+            action !== 'export' &&
+            thread === undefined
+        ) {
+            return false;
+        }
+        if (thread?.state === 'deleted' && action !== 'erase') return false;
         if (action === 'resolve' && thread?.state !== 'linked') return false;
         if (action === 'reopen' && thread?.state !== 'resolved') return false;
         if (
@@ -327,6 +361,26 @@ export class CommentsController {
             this.#activeThreadId = undefined;
             this.#notify();
         }
+    }
+
+    async erase(threadId: string): Promise<void> {
+        if (!this.can('erase', threadId)) throw permissionError('erase');
+        await this.#enqueue((threads) =>
+            threads.filter(({ id }) => id !== threadId),
+        );
+        if (this.#activeThreadId === threadId) {
+            this.#activeThreadId = undefined;
+            this.#notify();
+        }
+    }
+
+    exportData(): CommentDataExport {
+        if (!this.can('export')) throw permissionError('export');
+        return Object.freeze({
+            schema: 'soeditor.comments',
+            threads: this.#threads,
+            version: 1,
+        });
     }
 
     open(threadId: string): boolean {

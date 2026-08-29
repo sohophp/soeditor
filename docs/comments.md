@@ -1,8 +1,7 @@
 # Comments and mapped annotations
 
-Phase 27 provides the private development package `@soeditor/comments`. It is
-scheduled for public SDK/release hardening in Phase 29; it is not part of the
-published 0.5.1 set or the frozen 0.7 candidate.
+`@soeditor/comments` is a public 0.8 package. It is not part of the published
+0.5.1 set or the unpublished 0.7 candidate.
 
 Comments are host data, not HTML. The host supplies identity, authorization,
 unique IDs, a clock, and atomic full-snapshot storage:
@@ -47,12 +46,11 @@ without granular operations also unlinks it with
 Paragraph text and an entire structured table/widget (`0..1`) are supported.
 Table-cell and nested widget positions are not represented by the current
 editing model. Comments are absent from HTML copy, paste, source, preview, and
-export. Pasting annotated content does not clone threads.
+document export. Pasting annotated content does not clone threads.
 
-Comment bodies and author names render through `textContent`. A host must still
-apply its own authentication, authorization, retention, privacy, export, and
-deletion policy. SoEditor limits one editor to 500 threads, 100 messages per
-thread, and 10,000 characters per message.
+Comment bodies and author names render through `textContent`. SoEditor limits
+one editor to 500 threads, 100 messages per thread, and 10,000 characters per
+message.
 
 Readonly content does not automatically forbid review actions. The supplied
 permission provider decides whether a reviewer can create, reply, resolve,
@@ -60,4 +58,15 @@ reopen, or delete; content mutation remains independently readonly.
 
 When Phase 28 review modes are enabled, pass `reviewPolicy` from the revisions
 service. `comments-only` continues to consult the permission provider, while
-`readonly` disables every comment action before host permissions are called.
+`readonly` disables editor-facing comment actions before host permissions are
+called. Explicitly authorized `export` and `erase` governance actions remain
+available independently of document edit policy.
+
+## Export and deletion
+
+`service.exportData()` returns an immutable versioned envelope containing all
+loaded threads, including deleted tombstones. `service.delete(id)` is a
+reversible workflow tombstone and retains message content. `service.erase(id)`
+permanently removes the thread through the adapter's full-snapshot `save()`
+contract. See [review data governance](review-data-governance.md) for adapter,
+authorization, privacy, and backend-retention requirements.

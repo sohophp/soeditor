@@ -1,8 +1,7 @@
 # Revisions and review policy
 
-Phase 28 provides the private development package `@soeditor/revisions`. It is
-scheduled for public review-workflow hardening in Phase 29 and is not part of
-the frozen 0.7 release candidate.
+`@soeditor/revisions` is a public 0.8 package. It is not part of the unpublished
+0.7 release candidate.
 
 The host owns revision persistence and identity:
 
@@ -25,7 +24,8 @@ const RevisionsPlugin = createRevisionsPlugin({
 
 The provider lists metadata and loads a complete immutable snapshot. Optional
 storage accepts the current format/source plus `draft` or `saved` kind and must
-return the stored snapshot. SoEditor bounds a list to 200 revisions and each
+return the stored snapshot. Its optional `erase(id)` method enables permanent
+host-confirmed erasure. SoEditor bounds a list to 200 revisions and each
 source to 5,000,000 characters. Hosts remain responsible for authorization,
 retention, audit records, concurrency, and conflicts.
 
@@ -62,3 +62,13 @@ Add both plugin constructors to the editor and add `revisions`/`comments` to
 the toolbar. The Playground route
 `/?comments=1&revisions=1&policy=comments-only` is an executable in-memory CMS
 example.
+
+## Export and erasure
+
+`service.exportData()` loads every revision in the bounded current list and
+returns an immutable versioned envelope. `service.erase(id)` is enabled only
+when the storage adapter provides `erase`; it updates local state after the
+adapter resolves. Both actions require explicit permission. Raw source in
+exports must remain untrusted, and hosts must govern backups, replicas,
+retention, and audit records as described in
+[review data governance](review-data-governance.md).

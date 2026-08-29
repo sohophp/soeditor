@@ -6,16 +6,24 @@ import {
     SplitViewPlugin as SdkSplitViewPlugin,
     UiPlugin as SdkUiPlugin,
     diagnosticsServiceToken as sdkDiagnosticsServiceToken,
+    commentsServiceToken,
+    createCommentsPlugin,
+    createRevisionsPlugin,
     mapEditingPoint,
+    revisionsServiceToken,
     splitViewServiceToken as sdkSplitViewServiceToken,
     StructuredEditingPlugin,
     structuredEditingRegistryToken,
     uiRegistryServiceToken as sdkUiRegistryServiceToken,
     type DiagnosticProvider as SdkDiagnosticProvider,
+    type CommentStorageAdapter,
+    type CommentThread,
     type DiagnosticsWorkflowConfig,
     type EditingOperation,
     type EditingStructuredBlockContent,
     type ProjectionAdapter as SdkProjectionAdapter,
+    type RevisionSnapshot,
+    type RevisionStorage,
     type SplitViewAdapter as SdkSplitViewAdapter,
     type SplitViewPair as SdkSplitViewPair,
     type StatusItemFactory,
@@ -130,6 +138,35 @@ import type { EditingModel } from '@soeditor/engine/model';
 interface ExampleService {
     readonly value: string;
 }
+
+const typedThreads: readonly CommentThread[] = [];
+const typedCommentStorage: CommentStorageAdapter = {
+    load: async () => typedThreads,
+    save: async () => undefined,
+};
+const typedRevisions: RevisionSnapshot[] = [];
+const typedRevisionStorage: RevisionStorage = {
+    erase: async () => undefined,
+    list: async () => typedRevisions,
+    load: async (id) => {
+        const revision = typedRevisions.find((item) => item.id === id);
+        if (revision === undefined) throw new Error(`Missing revision ${id}.`);
+        return revision;
+    },
+    save: async (input) => ({
+        ...input,
+        createdAt: 1,
+        id: 'revision-1',
+    }),
+};
+void [
+    commentsServiceToken,
+    createCommentsPlugin,
+    createRevisionsPlugin,
+    revisionsServiceToken,
+    typedCommentStorage,
+    typedRevisionStorage,
+];
 
 const ExampleServiceToken = createServiceToken<ExampleService>('example');
 const mediaOptions: MediaInsertOptions = { src: '/media.png', alt: 'Media' };

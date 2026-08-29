@@ -5,9 +5,9 @@
     "type": "module",
     "packageManager": "pnpm@11.20.0",
     "dependencies": {
-        "@soeditor/core": "0.7.0",
-        "@soeditor/engine": "0.7.0",
-        "@soeditor/plugin-sdk": "0.7.0"
+        "@soeditor/core": "0.8.0",
+        "@soeditor/engine": "0.8.0",
+        "@soeditor/plugin-sdk": "0.8.0"
     },
     "devDependencies": {
         "typescript": "5.9.2",

@@ -26,7 +26,11 @@ import {
     DeveloperToolsPlugin,
 } from '@soeditor/dev-tools';
 import {
+    commentsServiceToken,
+    createCommentsPlugin,
+    createRevisionsPlugin,
     Plugin as SdkPlugin,
+    revisionsServiceToken,
     SplitViewPlugin as SdkSplitViewPlugin,
     UiPlugin as SdkUiPlugin,
     splitViewServiceToken as sdkSplitViewServiceToken,
@@ -65,6 +69,96 @@ class RuntimeSdkPlugin extends SdkPlugin {
             }));
     }
 }
+
+let reviewThreads = [
+    {
+        createdAt: 1,
+        id: 'thread-1',
+        messages: [
+            {
+                author: { id: 'reviewer', name: 'Reviewer' },
+                body: 'Review this',
+                createdAt: 1,
+                id: 'message-1',
+            },
+        ],
+        range: {
+            from: { block: 0, offset: 0 },
+            to: { block: 0, offset: 6 },
+        },
+        state: 'linked',
+        updatedAt: 1,
+    },
+];
+const reviewRevisions = [
+    {
+        author: { id: 'author', name: 'Author' },
+        createdAt: 1,
+        format: 'html',
+        id: 'revision-1',
+        kind: 'saved',
+        label: 'Initial',
+        source: '<p>Review</p>',
+    },
+];
+const reviewEditor = await Editor.create({
+    data: '<p>Review</p>',
+    plugins: [
+        createCommentsPlugin({
+            author: () => ({ id: 'reviewer', name: 'Reviewer' }),
+            createId: () => 'unused',
+            permissions: { can: () => true },
+            storage: {
+                load: async () => reviewThreads,
+                save: async (threads) => {
+                    reviewThreads = threads;
+                },
+            },
+        }),
+        createRevisionsPlugin({
+            author: () => ({ id: 'reviewer', name: 'Reviewer' }),
+            permissions: { can: () => true },
+            provider: {
+                list: async () => reviewRevisions,
+                load: async (id) =>
+                    reviewRevisions.find((revision) => revision.id === id),
+            },
+            storage: {
+                erase: async (id) => {
+                    const index = reviewRevisions.findIndex(
+                        (revision) => revision.id === id,
+                    );
+                    if (index >= 0) reviewRevisions.splice(index, 1);
+                },
+                list: async () => reviewRevisions,
+                load: async (id) =>
+                    reviewRevisions.find((revision) => revision.id === id),
+                save: async () => {
+                    throw new Error('Unexpected review save.');
+                },
+            },
+        }),
+    ],
+});
+const packedComments = reviewEditor.services.get(commentsServiceToken);
+const packedRevisions = reviewEditor.services.get(revisionsServiceToken);
+if (
+    packedComments.exportData().threads.length !== 1 ||
+    (await packedRevisions.exportData()).revisions.length !== 1
+) {
+    throw new Error('Packed review data export contract failed.');
+}
+await packedComments.delete('thread-1');
+await packedComments.erase('thread-1');
+await packedRevisions.erase('revision-1');
+if (
+    reviewThreads.length !== 0 ||
+    reviewRevisions.length !== 0 ||
+    packedRevisions.snapshot.revisions.length !== 0
+) {
+    throw new Error('Packed review data erasure contract failed.');
+}
+await reviewEditor.destroy();
 
 const extendedRuntimePreset = extendPreset(minimalPreset, {
     plugins: [RuntimeSdkPlugin],

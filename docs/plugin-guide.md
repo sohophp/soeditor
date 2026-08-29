@@ -217,6 +217,12 @@ observe that transition. Feature-specific permissions remain owned by the
 feature: for example, comments accept a host `reviewPolicy` callback to
 distinguish comments-only access from a fully readonly review.
 
+Review integrations can import comments/revisions plugin factories, service
+tokens, and adapter types from the 0.8 SDK. Storage remains host-owned. Treat
+`delete` as a retained comment tombstone, gate `export`/`erase` independently,
+and implement backend authorization and retention as described in
+`review-data-governance.md`.
+
 ## Compatibility rules
 
 - Import package roots only; internal subpaths are unsupported.

@@ -1,5 +1,6 @@
 export { Editor as SoEditor } from '@soeditor/core';
 export * from '@soeditor/adapter-sofinder';
+export * from '@soeditor/comments';
 export * from '@soeditor/core';
 export * from '@soeditor/dev-tools';
 export * from '@soeditor/engine';
@@ -11,6 +12,7 @@ export * from '@soeditor/markdown';
 export * from '@soeditor/presets';
 export * from '@soeditor/preview';
 export * from '@soeditor/projections';
+export * from '@soeditor/revisions';
 export * from '@soeditor/rich-text';
 export * from '@soeditor/source';
 export * from '@soeditor/ui';

@@ -57,8 +57,17 @@ describe('CommentsController', () => {
         expect(comments.snapshot[0]?.state).toBe('linked');
         await comments.delete('thread-1');
         expect(comments.snapshot[0]?.state).toBe('deleted');
-        expect(save).toHaveBeenCalledTimes(4);
-        expect(stored[0]?.state).toBe('deleted');
+        const exported = comments.exportData();
+        expect(exported).toMatchObject({
+            schema: 'soeditor.comments',
+            threads: [{ id: 'thread-1', state: 'deleted' }],
+            version: 1,
+        });
+        expect(Object.isFrozen(exported)).toBe(true);
+        await comments.erase('thread-1');
+        expect(comments.snapshot).toEqual([]);
+        expect(save).toHaveBeenCalledTimes(5);
+        expect(stored).toEqual([]);
         await editor.destroy();
         expect(() => comments.next()).toThrow('destroyed');
     });
@@ -177,9 +186,39 @@ describe('CommentsController', () => {
         policy = 'readonly';
         expect(comments.can('reply', 'thread-1')).toBe(false);
         expect(comments.can('delete', 'thread-1')).toBe(false);
+        expect(comments.can('export')).toBe(true);
+        expect(comments.can('erase', 'thread-1')).toBe(true);
         await expect(comments.reply('thread-1', 'Blocked')).rejects.toThrow(
             'not permitted',
         );
+        await editor.destroy();
+    });
+
+    it('requires explicit host permission for export and permanent erasure', async () => {
+        const editor = await Editor.create({
+            data: '<p>Test</p>',
+            plugins: [
+                createCommentsPlugin({
+                    author: () => ({ id: 'reviewer', name: 'Reviewer' }),
+                    createId: () => 'unused',
+                    permissions: {
+                        can: ({ action }) =>
+                            action !== 'export' && action !== 'erase',
+                    },
+                    storage: {
+                        load: async () => [initial],
+                        save: async () => undefined,
+                    },
+                }),
+            ],
+        });
+        const comments = editor.services.get(commentsServiceToken);
+
+        expect(() => comments.exportData()).toThrow('not permitted');
+        await expect(comments.erase('thread-1')).rejects.toThrow(
+            'not permitted',
+        );
+        expect(comments.snapshot).toHaveLength(1);
         await editor.destroy();
     });
 });

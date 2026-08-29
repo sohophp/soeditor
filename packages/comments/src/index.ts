@@ -1,10 +1,8 @@
 export { createCommentsPlugin } from './comments-plugin.js';
-export {
-    CommentsController,
-    commentsServiceToken,
-} from './comments-service.js';
+export { commentsServiceToken } from './comments-service.js';
 export type {
     CommentAction,
+    CommentDataExport,
     CommentPermissionContext,
     CommentPermissionProvider,
     CommentsPluginOptions,

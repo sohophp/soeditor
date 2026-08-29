@@ -12,6 +12,7 @@ import {
     validateReviewPolicy,
     type ReviewPolicy,
     type RevisionAuthor,
+    type RevisionDataExport,
     type RevisionKind,
     type RevisionMetadata,
     type RevisionProvider,
@@ -22,7 +23,8 @@ import {
 const MAX_REVISIONS = 200;
 const RESTORE_META = 'soeditor.revisions.restore';
 
-export type RevisionAction = 'restore' | 'save' | 'set-policy' | 'view';
+export type RevisionAction =
+    'erase' | 'export' | 'restore' | 'save' | 'set-policy' | 'view';
 
 export interface RevisionPermissionContext {
     readonly action: RevisionAction;
@@ -61,6 +63,8 @@ export interface RevisionsService {
         nextPolicy?: ReviewPolicy,
     ): boolean;
     compare(id: string): Promise<void>;
+    erase(id: string): Promise<void>;
+    exportData(): Promise<RevisionDataExport>;
     refresh(): Promise<void>;
     restore(id: string): Promise<void>;
     save(kind: RevisionKind, label: string): Promise<RevisionSnapshot>;
@@ -83,6 +87,7 @@ export class RevisionsController {
     #error: unknown;
     #loadGeneration = 0;
     #policy: ReviewPolicy;
+    #refreshGeneration = 0;
     #revision: RevisionSnapshot | undefined;
     #revisions: readonly RevisionMetadata[] = Object.freeze([]);
 
@@ -105,6 +110,8 @@ export class RevisionsController {
                 nextPolicy?: ReviewPolicy,
             ) => this.can(action, revisionId, nextPolicy),
             compare: (id: string) => this.compare(id),
+            erase: (id: string) => this.erase(id),
+            exportData: () => this.exportData(),
             refresh: () => this.refresh(),
             restore: (id: string) => this.restore(id),
             save: (kind: RevisionKind, label: string) => this.save(kind, label),
@@ -132,6 +139,7 @@ export class RevisionsController {
     destroy(): void {
         this.#destroyed = true;
         this.#loadGeneration += 1;
+        this.#refreshGeneration += 1;
         this.#disposeDocumentChange?.();
         this.#disposeDocumentChange = undefined;
         this.#listeners.clear();
@@ -141,11 +149,13 @@ export class RevisionsController {
 
     async refresh(): Promise<void> {
         this.#assertAlive();
+        const generation = ++this.#refreshGeneration;
         try {
             const revisions = boundedRevisions(
                 freezeRevisionList(await this.#options.provider.list()),
             );
             this.#assertAlive();
+            if (generation !== this.#refreshGeneration) return;
             this.#revisions = Object.freeze(
                 [...revisions].sort(
                     (left, right) =>
@@ -156,7 +166,7 @@ export class RevisionsController {
             this.#error = undefined;
             this.#notify();
         } catch (error: unknown) {
-            if (!this.#destroyed) {
+            if (!this.#destroyed && generation === this.#refreshGeneration) {
                 this.#error = error;
                 this.#notify();
             }
@@ -191,6 +201,62 @@ export class RevisionsController {
 
     async compare(id: string): Promise<void> {
         return this.view(id);
+    }
+
+    async erase(id: string): Promise<void> {
+        this.#assertAlive();
+        if (!this.can('erase', id)) throw permissionError('erase');
+        const storage = this.#options.storage;
+        if (storage?.erase === undefined) {
+            throw new Error('Revision storage does not support erasure.');
+        }
+        try {
+            await storage.erase(id);
+            this.#assertAlive();
+        } catch (error: unknown) {
+            this.#recordError(error);
+            throw error;
+        }
+        this.#refreshGeneration += 1;
+        this.#revisions = Object.freeze(
+            this.#revisions.filter((revision) => revision.id !== id),
+        );
+        if (this.#revision?.id === id) {
+            this.#revision = undefined;
+            this.#comparison = undefined;
+        }
+        this.#error = undefined;
+        this.#notify();
+    }
+
+    async exportData(): Promise<RevisionDataExport> {
+        this.#assertAlive();
+        if (!this.can('export')) throw permissionError('export');
+        const revisions: RevisionSnapshot[] = [];
+        try {
+            for (const metadata of this.#revisions) {
+                const revision = freezeRevisionSnapshot(
+                    await this.#options.provider.load(metadata.id),
+                );
+                this.#assertAlive();
+                if (revision.id !== metadata.id) {
+                    throw new Error(
+                        `Revision provider returned "${revision.id}" for requested revision "${metadata.id}".`,
+                    );
+                }
+                revisions.push(revision);
+            }
+        } catch (error: unknown) {
+            this.#recordError(error);
+            throw error;
+        }
+        this.#error = undefined;
+        this.#notify();
+        return Object.freeze({
+            revisions: Object.freeze(revisions),
+            schema: 'soeditor.revisions',
+            version: 1,
+        });
     }
 
     async restore(id: string): Promise<void> {
@@ -252,6 +318,7 @@ export class RevisionsController {
             throw error;
         }
         const remaining = this.#revisions.filter(({ id }) => id !== saved.id);
+        this.#refreshGeneration += 1;
         this.#revisions = boundedRevisions(
             freezeRevisionList([saved, ...remaining]),
         );
@@ -286,6 +353,8 @@ export class RevisionsController {
         this.#assertAlive();
         if (
             action !== 'view' &&
+            action !== 'erase' &&
+            action !== 'export' &&
             action !== 'save' &&
             action !== 'restore' &&
             action !== 'set-policy'
@@ -297,7 +366,7 @@ export class RevisionsController {
                 ? undefined
                 : this.#revisions.find(({ id }) => id === revisionId);
         if (
-            (action === 'view' || action === 'restore') &&
+            (action === 'view' || action === 'restore' || action === 'erase') &&
             revision === undefined
         ) {
             return false;
@@ -309,6 +378,9 @@ export class RevisionsController {
             return false;
         }
         if (action === 'restore' && this.#policy !== 'edit') return false;
+        if (action === 'erase' && this.#options.storage?.erase === undefined) {
+            return false;
+        }
         if (action === 'set-policy' && nextPolicy === undefined) return false;
         return (
             this.#options.permissions.can(
