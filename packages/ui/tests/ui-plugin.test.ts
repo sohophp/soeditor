@@ -26,6 +26,27 @@ describe('UI contribution registry', () => {
         ).not.toThrow();
     });
 
+    it('registers status items with duplicate and cleanup guarantees', async () => {
+        const editor = await Editor.create({ plugins: [UiPlugin] });
+        const registry = editor.services.get(uiRegistryServiceToken);
+        const factory = (): never => {
+            throw new Error('not mounted in this unit test');
+        };
+        const dispose = registry.registerStatusItem('word-count', factory);
+        expect(() =>
+            registry.registerStatusItem('word-count', factory),
+        ).toThrow(UiContributionAlreadyRegisteredError);
+        dispose();
+        dispose();
+        expect(() =>
+            registry.registerStatusItem('word-count', factory),
+        ).not.toThrow();
+        await editor.destroy();
+        expect(() => registry.registerStatusItem('late', factory)).toThrow(
+            'destroyed',
+        );
+    });
+
     it('normalizes shortcuts and rejects duplicate IDs and chords', async () => {
         const editor = await Editor.create({ plugins: [UiPlugin] });
         const registry = editor.services.get(uiRegistryServiceToken);

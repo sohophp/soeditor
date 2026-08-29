@@ -51,6 +51,9 @@ test('renders the configured integrated toolbar, groups, status, and theme', asy
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
         'Visual · Saved',
     );
+    await expect(
+        page.locator('[data-status-item="demo.word-count"]'),
+    ).toHaveText('Words 2');
     await expect(page.locator('#editor-ui')).toHaveAttribute(
         'data-soeditor-theme',
         'auto',
@@ -297,6 +300,28 @@ test('cleans only UI-owned DOM on explicit and editor destruction', async ({
     await page.click('#destroy-editor');
     await expect(page.locator('[role="toolbar"]')).toHaveCount(0);
     await expect(page.locator('#editor-ui')).not.toHaveClass(/soeditor-ui/);
+});
+
+test('finishes UI cleanup when a contributed status destructor fails', async ({
+    page,
+}) => {
+    await page.goto('/?status=failing-cleanup');
+    const errorName = await page.evaluate(() => {
+        const harness = (window as Window & { __soeditor?: UiHarness })
+            .__soeditor;
+        if (harness === undefined) {
+            throw new Error('Playground UI was not exposed.');
+        }
+        try {
+            harness.ui.destroy();
+            return '';
+        } catch (error: unknown) {
+            return error instanceof Error ? error.name : 'unknown';
+        }
+    });
+    expect(errorName).toBe('AggregateError');
+    await expect(page.locator('.soeditor-ui__chrome')).toHaveCount(0);
+    await expect(page.locator('#editor-ui')).not.toHaveClass(/soeditor-ui/u);
 });
 
 async function setSelection(

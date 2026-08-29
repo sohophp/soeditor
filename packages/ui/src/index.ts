@@ -28,6 +28,8 @@ export type {
     PanelHandle,
     PanelOptions,
     PanelService,
+    StatusItemFactory,
+    StatusItemInstance,
     ToolbarConfiguration,
     ToolbarItemContext,
     ToolbarItemFactory,

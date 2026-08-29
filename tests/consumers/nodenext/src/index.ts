@@ -1,9 +1,21 @@
+import { Editor, createServiceToken, type Transaction } from '@soeditor/core';
 import {
-    Editor,
+    DiagnosticsPlugin as SdkDiagnosticsPlugin,
     Plugin,
-    createServiceToken,
-    type Transaction,
-} from '@soeditor/core';
+    UiPlugin as SdkUiPlugin,
+    diagnosticsServiceToken as sdkDiagnosticsServiceToken,
+    uiRegistryServiceToken as sdkUiRegistryServiceToken,
+    type DiagnosticProvider as SdkDiagnosticProvider,
+    type StatusItemFactory,
+} from '@soeditor/plugin-sdk';
+import {
+    classicPreset,
+    developerPreset,
+    extendPreset,
+    markdownPreset,
+    minimalPreset,
+    type EditorPreset,
+} from '@soeditor/presets';
 import {
     createDeveloperToolsEngine,
     createDocumentOutline,
@@ -84,6 +96,9 @@ const ExampleServiceToken = createServiceToken<ExampleService>('example');
 
 class ConsumerPlugin extends Plugin {
     static readonly id = 'consumer';
+    static readonly requires = [SdkUiPlugin, SdkDiagnosticsPlugin];
+    #disposeDiagnostic: (() => void) | undefined;
+    #disposeStatus: (() => void) | undefined;
 
     override init(): void {
         this.editor.commands.register({
@@ -97,6 +112,39 @@ class ConsumerPlugin extends Plugin {
                 );
             },
         });
+        const statusFactory: StatusItemFactory = ({ document, editor }) => {
+            const element = document.createElement('span');
+            return {
+                element,
+                update: () => {
+                    element.textContent = String(editor.getData().length);
+                },
+            };
+        };
+        this.#disposeStatus = this.editor.services
+            .get(sdkUiRegistryServiceToken)
+            .registerStatusItem('consumer.length', statusFactory);
+        const provider: SdkDiagnosticProvider = {
+            id: 'consumer.nonempty',
+            provide: (source) =>
+                source.length === 0
+                    ? [
+                          {
+                              code: 'consumer.empty',
+                              message: 'Document is empty.',
+                              severity: 'warning',
+                          },
+                      ]
+                    : [],
+        };
+        this.#disposeDiagnostic = this.editor.services
+            .get(sdkDiagnosticsServiceToken)
+            .register(provider);
+    }
+
+    override destroy(): void {
+        this.#disposeDiagnostic?.();
+        this.#disposeStatus?.();
     }
 }
 
@@ -211,6 +259,17 @@ void developerToolsOptions;
 void outline;
 void inspector;
 void DeveloperToolsPlugin;
+const presets: readonly EditorPreset[] = [
+    minimalPreset,
+    classicPreset,
+    developerPreset,
+    markdownPreset,
+];
+const extendedPreset = extendPreset(minimalPreset, {
+    plugins: [ConsumerPlugin],
+});
+void presets;
+void extendedPreset;
 const fileManager: FileManager = new SoFinderAdapter({
     pick: async (
         options: FileManagerOpenOptions,

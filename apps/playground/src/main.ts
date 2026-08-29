@@ -2,61 +2,32 @@ import { SoFinderAdapter } from '@soeditor/adapter-sofinder';
 import { Editor, Plugin } from '@soeditor/core';
 import {
     createDeveloperToolsEngine,
-    DeveloperToolsPlugin,
     developerToolsServiceToken,
 } from '@soeditor/dev-tools';
-import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
+import { createVisualEditingEngine } from '@soeditor/engine';
 import {
-    FileManagerPlugin,
     fileManagerServiceToken,
     type FileManager,
 } from '@soeditor/file-manager';
-import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import {
     createMarkdownEditingEngine,
     createMarkdownPreviewRenderer,
-    MarkdownPlugin,
     markdownEditingServiceToken,
 } from '@soeditor/markdown';
-import {
-    createPreviewEngine,
-    PreviewPlugin,
-    previewServiceToken,
-} from '@soeditor/preview';
-import {
-    BlockquotePlugin,
-    BoldPlugin,
-    CodeBlockPlugin,
-    HeadingPlugin,
-    ImagePlugin,
-    InlineCodePlugin,
-    ItalicPlugin,
-    LinkPlugin,
-    OrderedListPlugin,
-    ParagraphPlugin,
-    StrikePlugin,
-    TablePlugin,
-    UnderlinePlugin,
-    UnorderedListPlugin,
-} from '@soeditor/rich-text';
-import {
-    createSourceEditingEngine,
-    SourceEditingPlugin,
-} from '@soeditor/source';
-import {
-    createEditorUi,
-    defaultToolbarConfiguration,
-    UiPlugin,
-    uiRegistryServiceToken,
-} from '@soeditor/ui';
+import { developerPreset, markdownPreset } from '@soeditor/presets';
+import { createPreviewEngine, previewServiceToken } from '@soeditor/preview';
+import { createSourceEditingEngine } from '@soeditor/source';
+import { createEditorUi, UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
 import '@soeditor/ui/styles.css';
 
 class DemoPlugin extends Plugin {
     static readonly id = 'demo';
     static readonly requires = [UiPlugin];
     #disposeFailingToolbarItem: (() => void) | undefined;
+    #disposeFailingStatusItem: (() => void) | undefined;
     #disposeToolbarItem: (() => void) | undefined;
     #disposeShortcut: (() => void) | undefined;
+    #disposeStatusItem: (() => void) | undefined;
 
     override init(): void {
         this.editor.commands.register({
@@ -103,14 +74,48 @@ class DemoPlugin extends Plugin {
             chord: 'Alt+U',
             command: 'demo.uppercase',
         });
+        this.#disposeStatusItem = registry.registerStatusItem(
+            'demo.word-count',
+            ({ document, editor }) => {
+                const element = document.createElement('span');
+                element.setAttribute('aria-label', 'Document word count');
+                return {
+                    element,
+                    update: () => {
+                        const text = editor
+                            .getData()
+                            .replace(/<[^>]*>/gu, ' ')
+                            .trim();
+                        const count =
+                            text.length === 0 ? 0 : text.split(/\s+/u).length;
+                        element.textContent = `Words ${String(count)}`;
+                    },
+                };
+            },
+        );
+        if (parameters.get('status') === 'failing-cleanup') {
+            this.#disposeFailingStatusItem = registry.registerStatusItem(
+                'demo.failing-cleanup',
+                ({ document }) => ({
+                    element: document.createElement('span'),
+                    destroy: () => {
+                        throw new Error('Example status cleanup failed.');
+                    },
+                }),
+            );
+        }
     }
 
     override destroy(): void {
         this.#disposeFailingToolbarItem?.();
+        this.#disposeFailingStatusItem?.();
         this.#disposeShortcut?.();
+        this.#disposeStatusItem?.();
         this.#disposeToolbarItem?.();
         this.#disposeFailingToolbarItem = undefined;
+        this.#disposeFailingStatusItem = undefined;
         this.#disposeShortcut = undefined;
+        this.#disposeStatusItem = undefined;
         this.#disposeToolbarItem = undefined;
     }
 }
@@ -138,41 +143,13 @@ if (
 
 const parameters = new URLSearchParams(window.location.search);
 const markdownDocument = parameters.get('format') === 'markdown';
-const htmlPlugins = [
-    DemoPlugin,
-    HistoryPlugin,
-    ParagraphPlugin,
-    HeadingPlugin,
-    BoldPlugin,
-    ItalicPlugin,
-    UnderlinePlugin,
-    StrikePlugin,
-    LinkPlugin,
-    OrderedListPlugin,
-    UnorderedListPlugin,
-    BlockquotePlugin,
-    InlineCodePlugin,
-    CodeBlockPlugin,
-    ImagePlugin,
-    FileManagerPlugin,
-    TablePlugin,
-    SourceEditingPlugin,
-    DiagnosticsPlugin,
-    HtmlFormattingPlugin,
-    DeveloperToolsPlugin,
-    PreviewPlugin,
-];
+const htmlPlugins = [DemoPlugin, ...developerPreset.plugins];
 const editor = await Editor.create(
     markdownDocument
         ? {
               data: '# SoEditor Markdown\n\n- canonical source\n- isolated preview\n\n<product-card data-id="123"></product-card>',
               format: 'markdown',
-              plugins: [
-                  DemoPlugin,
-                  HistoryPlugin,
-                  MarkdownPlugin,
-                  PreviewPlugin,
-              ],
+              plugins: [DemoPlugin, ...markdownPreset.plugins],
               readonly: parameters.has('readonly'),
           }
         : {
@@ -244,16 +221,7 @@ const ui = createEditorUi({
             : toolbarParameter === 'missing'
               ? { toolbar: ['missing'] }
               : {
-                    toolbar: [
-                        ...defaultToolbarConfiguration,
-                        '|',
-                        'problems',
-                        'image-browse',
-                        'inspector',
-                        'outline',
-                        'find-replace',
-                        'command-palette',
-                    ],
+                    toolbar: developerPreset.toolbar,
                 }),
 });
 const developerToolsEngine = markdownDocument

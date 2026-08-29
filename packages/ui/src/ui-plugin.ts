@@ -8,6 +8,7 @@ import { defaultShortcuts, defaultToolbarItems } from './defaults.js';
 import { freezeShortcut } from './shortcuts.js';
 import type {
     KeyboardShortcutDefinition,
+    StatusItemFactory,
     ToolbarItemFactory,
     UiRegistryService,
 } from './types.js';
@@ -19,6 +20,7 @@ interface StoredShortcut extends KeyboardShortcutDefinition {
 interface RegistryRecord {
     readonly shortcuts: Map<string, StoredShortcut>;
     readonly shortcutIds: Map<string, StoredShortcut>;
+    readonly statusItems: Map<string, StatusItemFactory>;
     readonly toolbarItems: Map<string, ToolbarItemFactory>;
 }
 
@@ -47,11 +49,14 @@ export class UiPlugin extends Plugin {
         const record: RegistryRecord = {
             shortcuts: new Map(),
             shortcutIds: new Map(),
+            statusItems: new Map(),
             toolbarItems: new Map(),
         };
         const service = Object.freeze<UiRegistryService>({
             registerShortcut: (definition) =>
                 this.#registerShortcut(record, definition),
+            registerStatusItem: (id, factory) =>
+                this.#registerStatusItem(record, id, factory),
             registerToolbarItem: (id, factory) =>
                 this.#registerToolbarItem(record, id, factory),
         });
@@ -73,6 +78,7 @@ export class UiPlugin extends Plugin {
             const record = getUiRegistryRecord(service);
             record.shortcuts.clear();
             record.shortcutIds.clear();
+            record.statusItems.clear();
             record.toolbarItems.clear();
         }
         this.#service = undefined;
@@ -98,6 +104,45 @@ export class UiPlugin extends Plugin {
         return () => {
             if (active && record.toolbarItems.get(id) === factory) {
                 record.toolbarItems.delete(id);
+            }
+            active = false;
+        };
+    }
+
+    #registerStatusItem(
+        record: RegistryRecord,
+        id: string,
+        factory: StatusItemFactory,
+    ): () => void {
+        return this.#registerFactory(
+            record.statusItems,
+            'status item',
+            id,
+            factory,
+        );
+    }
+
+    #registerFactory<Factory>(
+        entries: Map<string, Factory>,
+        kind: string,
+        id: string,
+        factory: Factory,
+    ): () => void {
+        this.#assertAlive();
+        if (typeof id !== 'string' || id.trim().length === 0) {
+            throw new TypeError(`A ${kind} ID must not be empty.`);
+        }
+        if (typeof factory !== 'function') {
+            throw new TypeError(`${kind} "${id}" requires a factory.`);
+        }
+        if (entries.has(id)) {
+            throw new UiContributionAlreadyRegisteredError(kind, id);
+        }
+        entries.set(id, factory);
+        let active = true;
+        return () => {
+            if (active && entries.get(id) === factory) {
+                entries.delete(id);
             }
             active = false;
         };

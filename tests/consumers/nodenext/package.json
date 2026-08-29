@@ -14,6 +14,8 @@
         "@soeditor/html-tools": "0.0.0",
         "@soeditor/markdown": "0.0.0",
         "@soeditor/preview": "0.0.0",
+        "@soeditor/plugin-sdk": "0.0.0",
+        "@soeditor/presets": "0.0.0",
         "@soeditor/rich-text": "0.0.0",
         "@soeditor/source": "0.0.0",
         "@soeditor/ui": "0.0.0"

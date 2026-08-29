@@ -1,0 +1,33 @@
+{
+    "name": "@soeditor/plugin-sdk",
+    "version": "0.0.0",
+    "description": "Stable public extension contracts for SoEditor plugins.",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "test": "vitest run --passWithNoTests",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "peerDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/file-manager": "workspace:*",
+        "@soeditor/html-tools": "workspace:*",
+        "@soeditor/ui": "workspace:*"
+    },
+    "devDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/file-manager": "workspace:*",
+        "@soeditor/html-tools": "workspace:*",
+        "@soeditor/ui": "workspace:*"
+    }
+}

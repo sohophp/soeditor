@@ -20,6 +20,16 @@ import {
     createDocumentOutline,
     DeveloperToolsPlugin,
 } from '@soeditor/dev-tools';
+import {
+    Plugin as SdkPlugin,
+    UiPlugin as SdkUiPlugin,
+    uiRegistryServiceToken as sdkUiRegistryServiceToken,
+} from '@soeditor/plugin-sdk';
+import {
+    developerPreset,
+    extendPreset,
+    minimalPreset,
+} from '@soeditor/presets';
 import { SoFinderAdapter } from '@soeditor/adapter-sofinder';
 import { normalizeFileManagerResult } from '@soeditor/file-manager';
 
@@ -29,6 +39,31 @@ class DestroyDuringInit extends Plugin {
     init() {
         void this.editor.destroy();
     }
+}
+
+class RuntimeSdkPlugin extends SdkPlugin {
+    static id = 'runtime-sdk';
+    static requires = [SdkUiPlugin];
+
+    init() {
+        this.editor.services
+            .get(sdkUiRegistryServiceToken)
+            .registerStatusItem('runtime-sdk.length', ({ document }) => ({
+                element: document.createElement('span'),
+            }));
+    }
+}
+
+const extendedRuntimePreset = extendPreset(minimalPreset, {
+    plugins: [RuntimeSdkPlugin],
+});
+if (
+    extendedRuntimePreset.plugins.at(-1) !== RuntimeSdkPlugin ||
+    !developerPreset.plugins.some((plugin) => plugin.id === 'developer-tools')
+) {
+    throw new Error(
+        'Packed plugin SDK or presets failed its runtime smoke test.',
+    );
 }
 
 try {

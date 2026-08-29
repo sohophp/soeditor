@@ -15,6 +15,8 @@ Phase 11 adds docked HTML Problems, element path/Inspector, heading Outline,
 command palette, Find/Replace, and diagnostic-to-source navigation.
 Phase 12 adds a replaceable FileManager capability, validated command-driven
 image selection, and a dependency-free SoFinder picker adapter.
+Phase 13 adds a public plugin-authoring facade, status contributions, immutable
+minimal/classic/developer/Markdown presets, and external-package verification.
 
 ```ts
 import { Editor } from '@soeditor/core';
@@ -49,8 +51,14 @@ const editor = await Editor.create({
   validation, and command-driven Image integration.
 - `@soeditor/adapter-sofinder` — a narrow injected SoFinder picker adapter with
   no SoFinder dependency in Core or feature packages.
+- `@soeditor/plugin-sdk` — stable package-root lifecycle and contribution
+  contracts for third-party plugin authors.
+- `@soeditor/presets` — immutable plugin and toolbar definitions for common
+  editor configurations.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
+
+See [Plugin Guide](docs/plugin-guide.md) for extension and preset usage.
 
 ## Development
 

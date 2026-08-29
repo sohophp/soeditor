@@ -15,6 +15,7 @@
             "@soeditor/html": ["../../packages/html/src/index.ts"],
             "@soeditor/markdown": ["../../packages/markdown/src/index.ts"],
             "@soeditor/preview": ["../../packages/preview/src/index.ts"],
+            "@soeditor/presets": ["../../packages/presets/src/index.ts"],
             "@soeditor/ui": ["../../packages/ui/src/index.ts"]
         }
     },

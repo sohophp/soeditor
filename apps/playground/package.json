@@ -18,6 +18,7 @@
         "@soeditor/html-tools": "workspace:*",
         "@soeditor/markdown": "workspace:*",
         "@soeditor/preview": "workspace:*",
+        "@soeditor/presets": "workspace:*",
         "@soeditor/rich-text": "workspace:*",
         "@soeditor/source": "workspace:*",
         "@soeditor/ui": "workspace:*"

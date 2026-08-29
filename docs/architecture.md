@@ -2,11 +2,11 @@
 
 ## Current implementation status
 
-Phases 1–12 are implemented. Runtime document formats are `html | markdown`
+Phases 1–13 are implemented. Runtime document formats are `html | markdown`
 and projections are `visual | source | markdown | preview`. HTML and Markdown
 remain canonical source formats for separate editor instances; projection
 changes never perform an implicit format conversion. Later sections that
-describe post-Phase-12 capabilities remain product direction rather than an
+describe post-Phase-13 capabilities remain product direction rather than an
 implementation claim.
 
 ### Phase 1.1 stabilization policies
@@ -407,6 +407,26 @@ so the host remains responsible for loading SoFinder, authentication, dialog
 security, and adapting its concrete selection value. The adapter has no
 SoFinder runtime dependency and no SoFinder detail enters Core, Rich Text, or
 generic UI.
+
+## Phase 13 plugin SDK, contributions, and presets
+
+Phase 13 adds `@soeditor/plugin-sdk` as a small ESM facade over intentionally
+public SoEditor-owned extension contracts. The original packages continue to
+own lifecycle, commands, services, diagnostics, FileManager, and UI registries;
+the facade creates no second runtime and exports no third-party implementation
+types or private subpaths.
+
+The UI contribution service now accepts per-editor status-item factories in
+addition to toolbar factories and shortcuts. Attached UI instances mount,
+update, isolate failures from, and destroy those contributions alongside their
+existing editor-owned chrome. The primary status API and DOM identity remain
+compatible.
+
+`@soeditor/presets` publishes frozen minimal, classic, developer, and Markdown
+definitions containing only format, public plugin constructors, and toolbar
+configuration. Surface attachment, Preview policy, and FileManager
+implementations remain explicit application responsibilities. Composition
+returns a new frozen preset and rejects duplicate plugin IDs.
 
 ## 1. 项目定位
 

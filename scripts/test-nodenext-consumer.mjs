@@ -34,6 +34,28 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/plugin-sdk',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
+            '@soeditor/presets',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/adapter-sofinder',
             'pack',
             '--pack-destination',
@@ -170,6 +192,12 @@ try {
     const coreArchive = archives.find((name) =>
         name.startsWith('soeditor-core-'),
     );
+    const pluginSdkArchive = archives.find((name) =>
+        name.startsWith('soeditor-plugin-sdk-'),
+    );
+    const presetsArchive = archives.find((name) =>
+        name.startsWith('soeditor-presets-'),
+    );
     const adapterSoFinderArchive = archives.find((name) =>
         name.startsWith('soeditor-adapter-sofinder-'),
     );
@@ -202,7 +230,7 @@ try {
         name.startsWith('soeditor-markdown-'),
     );
 
-    if (archives.length !== 12 || coreArchive === undefined) {
+    if (archives.length !== 14 || coreArchive === undefined) {
         throw new Error('Expected one packed @soeditor/core archive.');
     }
 
@@ -252,11 +280,27 @@ try {
         );
     }
 
+    if (pluginSdkArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/plugin-sdk archive.');
+    }
+
+    if (presetsArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/presets archive.');
+    }
+
     const packagePath = join(fixtureDirectory, 'package.json');
     const packageData = JSON.parse(await readFile(packagePath, 'utf8'));
     packageData.dependencies['@soeditor/adapter-sofinder'] = `file:${join(
         packDirectory,
         adapterSoFinderArchive,
+    )}`;
+    packageData.dependencies['@soeditor/plugin-sdk'] = `file:${join(
+        packDirectory,
+        pluginSdkArchive,
+    )}`;
+    packageData.dependencies['@soeditor/presets'] = `file:${join(
+        packDirectory,
+        presetsArchive,
     )}`;
     packageData.dependencies['@soeditor/core'] = `file:${join(
         packDirectory,

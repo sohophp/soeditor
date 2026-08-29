@@ -65,6 +65,9 @@ importers:
       '@soeditor/markdown':
         specifier: workspace:*
         version: link:../../packages/markdown
+      '@soeditor/presets':
+        specifier: workspace:*
+        version: link:../../packages/presets
       '@soeditor/preview':
         specifier: workspace:*
         version: link:../../packages/preview
@@ -184,6 +187,54 @@ importers:
       '@types/turndown':
         specifier: 5.0.6
         version: 5.0.6
+
+  packages/plugin-sdk:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/file-manager':
+        specifier: workspace:*
+        version: link:../file-manager
+      '@soeditor/html-tools':
+        specifier: workspace:*
+        version: link:../html-tools
+      '@soeditor/ui':
+        specifier: workspace:*
+        version: link:../ui
+
+  packages/presets:
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/dev-tools':
+        specifier: workspace:*
+        version: link:../dev-tools
+      '@soeditor/engine':
+        specifier: workspace:*
+        version: link:../engine
+      '@soeditor/file-manager':
+        specifier: workspace:*
+        version: link:../file-manager
+      '@soeditor/html-tools':
+        specifier: workspace:*
+        version: link:../html-tools
+      '@soeditor/markdown':
+        specifier: workspace:*
+        version: link:../markdown
+      '@soeditor/preview':
+        specifier: workspace:*
+        version: link:../preview
+      '@soeditor/rich-text':
+        specifier: workspace:*
+        version: link:../rich-text
+      '@soeditor/source':
+        specifier: workspace:*
+        version: link:../source
+      '@soeditor/ui':
+        specifier: workspace:*
+        version: link:../ui
 
   packages/preview:
     devDependencies:

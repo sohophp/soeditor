@@ -385,7 +385,15 @@ function shortcut(
 export function destroyToolbarItems(
     items: readonly ToolbarItemInstance[],
 ): void {
+    const errors: unknown[] = [];
     for (const item of [...items].reverse()) {
-        item.destroy?.();
+        try {
+            item.destroy?.();
+        } catch (error: unknown) {
+            errors.push(error);
+        }
+    }
+    if (errors.length > 0) {
+        throw new AggregateError(errors, 'Toolbar item cleanup failed.');
     }
 }

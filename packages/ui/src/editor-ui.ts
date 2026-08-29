@@ -11,6 +11,8 @@ import type {
     CreateEditorUiOptions,
     EditorUi,
     EditorUiTheme,
+    StatusItemFactory,
+    StatusItemInstance,
     ToolbarConfiguration,
     ToolbarItemContext,
     ToolbarItemFactory,
@@ -50,9 +52,14 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
     toolbar.setAttribute('role', 'toolbar');
     toolbar.setAttribute('aria-label', 'Editor toolbar');
     const status = document.createElement('div');
-    status.className = 'soeditor-ui__status';
+    status.className = 'soeditor-ui__status-bar';
     status.setAttribute('role', 'status');
     status.setAttribute('aria-live', 'polite');
+    const primaryStatus = document.createElement('span');
+    primaryStatus.className = 'soeditor-ui__status';
+    const contributedStatus = document.createElement('span');
+    contributedStatus.className = 'soeditor-ui__status-items';
+    status.append(primaryStatus, contributedStatus);
     const panelLayer = document.createElement('div');
     panelLayer.className = 'soeditor-ui__panels';
     const notificationRegion = document.createElement('div');
@@ -70,6 +77,7 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
     );
     const panelService = createPanelService(document, panelLayer);
     const items: ToolbarItemInstance[] = [];
+    const statusItems: StatusItemInstance[] = [];
     let editingSelection: SelectionBookmark | undefined;
     let destroyed = false;
     let manualStatus: string | undefined;
@@ -82,7 +90,7 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
         element: options.element,
         notifications: overlays.notifications,
         panels: panelService.panels,
-        statusElement: status,
+        statusElement: primaryStatus,
         toolbarElement: toolbar,
         get theme() {
             return theme;
@@ -110,6 +118,13 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
             return;
         }
         for (const item of items) {
+            try {
+                item.update?.();
+            } catch (error: unknown) {
+                showError(error);
+            }
+        }
+        for (const item of statusItems) {
             try {
                 item.update?.();
             } catch (error: unknown) {
@@ -183,14 +198,16 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
             return;
         }
         destroyed = true;
+        const errors: unknown[] = [];
         options.element.removeEventListener('keydown', keydown, true);
         document.removeEventListener('selectionchange', selectionChange);
         disposeState();
         disposeCommand();
         disposeDestroy();
-        destroyToolbarItems(items);
-        overlays.destroy();
-        panelService.destroy();
+        captureCleanupError(errors, () => destroyToolbarItems(items));
+        captureCleanupError(errors, () => destroyStatusItems(statusItems));
+        captureCleanupError(errors, () => overlays.destroy());
+        captureCleanupError(errors, () => panelService.destroy());
         shell.remove();
         if (!hadUiClass) {
             options.element.classList.remove('soeditor-ui');
@@ -201,6 +218,9 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
             options.element.setAttribute('data-soeditor-theme', previousTheme);
         }
         attachedHosts.delete(options.element);
+        if (errors.length > 0) {
+            throw new AggregateError(errors, 'Editor UI cleanup failed.');
+        }
     };
     const assertAlive = (): void => {
         if (destroyed) {
@@ -235,7 +255,7 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
         }
     }
     const renderStatus = (): void => {
-        status.textContent =
+        primaryStatus.textContent =
             manualStatus ??
             `${capitalize(options.editor.state.mode)} · ${
                 options.editor.state.dirty ? 'Unsaved' : 'Saved'
@@ -258,6 +278,12 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
             { document, editor: options.editor, ui },
             items,
         );
+        mountStatusItems(
+            contributedStatus,
+            registry.statusItems,
+            { document, editor: options.editor, ui },
+            statusItems,
+        );
         options.element.classList.add('soeditor-ui');
         options.element.dataset.soeditorTheme = theme;
         options.element.prepend(shell);
@@ -269,6 +295,53 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
     } catch (error: unknown) {
         destroy();
         throw error;
+    }
+}
+
+function mountStatusItems(
+    host: HTMLElement,
+    factories: ReadonlyMap<string, StatusItemFactory>,
+    context: ToolbarItemContext,
+    instances: StatusItemInstance[],
+): void {
+    for (const [id, factory] of factories) {
+        const instance = factory(context);
+        if (
+            typeof instance !== 'object' ||
+            instance === null ||
+            instance.element.ownerDocument !== context.document
+        ) {
+            throw new TypeError(
+                `Status item "${id}" returned an invalid element.`,
+            );
+        }
+        instance.element.dataset.statusItem = id;
+        host.append(instance.element);
+        instances.push(instance);
+    }
+}
+
+function destroyStatusItems(instances: readonly StatusItemInstance[]): void {
+    const errors: unknown[] = [];
+    for (const instance of [...instances].reverse()) {
+        try {
+            instance.destroy?.();
+        } catch (error: unknown) {
+            errors.push(error);
+        } finally {
+            instance.element.remove();
+        }
+    }
+    if (errors.length > 0) {
+        throw new AggregateError(errors, 'Status item cleanup failed.');
+    }
+}
+
+function captureCleanupError(errors: unknown[], cleanup: () => void): void {
+    try {
+        cleanup();
+    } catch (error: unknown) {
+        errors.push(error);
     }
 }
 

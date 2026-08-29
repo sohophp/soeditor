@@ -25,6 +25,18 @@ export type ToolbarItemFactory = (
     context: ToolbarItemContext,
 ) => ToolbarItemInstance;
 
+/** One mounted status contribution owned by its factory. */
+export interface StatusItemInstance {
+    readonly element: HTMLElement;
+    update?(): void;
+    destroy?(): void;
+}
+
+/** Creates one status item for one attached editor UI. */
+export type StatusItemFactory = (
+    context: ToolbarItemContext,
+) => StatusItemInstance;
+
 /** A host-scoped keyboard chord that invokes a shared editor command. */
 export interface KeyboardShortcutDefinition {
     readonly id: string;
@@ -137,5 +149,6 @@ export interface CreateEditorUiOptions {
 /** Per-editor UI contribution registry exposed to plugins. */
 export interface UiRegistryService {
     registerShortcut(definition: KeyboardShortcutDefinition): () => void;
+    registerStatusItem(id: string, factory: StatusItemFactory): () => void;
     registerToolbarItem(id: string, factory: ToolbarItemFactory): () => void;
 }
