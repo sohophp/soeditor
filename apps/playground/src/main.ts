@@ -1,5 +1,6 @@
 import { Editor, Plugin } from '@soeditor/core';
 import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
+import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import {
     BlockquotePlugin,
     BoldPlugin,
@@ -75,6 +76,8 @@ const editor = await Editor.create({
         ImagePlugin,
         TablePlugin,
         SourceEditingPlugin,
+        DiagnosticsPlugin,
+        HtmlFormattingPlugin,
     ],
     readonly: new URLSearchParams(window.location.search).has('readonly'),
 });

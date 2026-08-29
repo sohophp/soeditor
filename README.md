@@ -7,7 +7,8 @@ contains the framework-agnostic Core, HTML document layer, controlled visual
 editing engine, transaction history/clipboard boundaries, and Phase 5
 command-driven rich-text feature plugins. Phase 6 adds exact CodeMirror-powered
 HTML source editing and parser diagnostics. The configurable product UI is not
-built yet.
+built yet. Phase 7 adds extensible HTML problems and explicit Prettier
+formatting.
 
 ```ts
 import { Editor } from '@soeditor/core';
@@ -28,6 +29,8 @@ const editor = await Editor.create({
   formatting, links, lists, images, and basic tables.
 - `@soeditor/source` — CodeMirror 6 HTML source mode, exact Core
   synchronization, and parser diagnostic projection.
+- `@soeditor/html-tools` — UI-independent diagnostic providers/problems and
+  explicit, guarded HTML formatting.
 - `@soeditor/playground` — a development harness for Core and the minimal visual
   engine.
 

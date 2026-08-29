@@ -50,6 +50,9 @@ importers:
       '@soeditor/html':
         specifier: workspace:*
         version: link:../../packages/html
+      '@soeditor/html-tools':
+        specifier: workspace:*
+        version: link:../../packages/html-tools
       '@soeditor/rich-text':
         specifier: workspace:*
         version: link:../../packages/rich-text
@@ -77,6 +80,19 @@ importers:
       parse5:
         specifier: ^8.0.0
         version: 8.0.1
+
+  packages/html-tools:
+    dependencies:
+      prettier:
+        specifier: 3.9.6
+        version: 3.9.6
+    devDependencies:
+      '@soeditor/core':
+        specifier: workspace:*
+        version: link:../core
+      '@soeditor/html':
+        specifier: workspace:*
+        version: link:../html
 
   packages/rich-text:
     devDependencies:

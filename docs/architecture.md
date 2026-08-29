@@ -256,6 +256,37 @@ CodeMirror packages are runtime dependencies of `@soeditor/source` and are
 external imports in its library build. Core, HTML, engine, and rich-text
 packages remain CodeMirror-independent.
 
+## Phase 7 HTML diagnostics and formatting
+
+Phase 7 adds framework-neutral `@soeditor/html-tools`. Its diagnostics plugin
+owns an ordered per-editor provider registry and exposes it through a typed Core
+service token. Validation results are immutable SoEditor problem values:
+
+```text
+severity + message + code + provider + optional SourceRange
+```
+
+Providers may be synchronous or asynchronous. A failed or stale validation does
+not replace the last successfully published current-document problems. Built-in
+providers map parser errors and warn about duplicate IDs, missing image `alt`,
+and complete documents missing root `lang`. They do not treat custom markup,
+comments, SVG/MathML, templates, or unsafe attributes as errors by category.
+
+`document.validate` is the UI-independent command entry point. Phase 8 may
+project the same service into a Problems panel; Phase 7 adds no reusable UI.
+
+`HtmlFormattingPlugin` requires diagnostics and registers `document.format`.
+The command validates a captured source/revision, refuses parser-invalid input,
+calls pinned Prettier standalone with the HTML plugin, rechecks the snapshot,
+and commits the formatted string through a Core command transaction. Formatting
+is always explicit and therefore may deliberately normalize layout; parsing or
+mode switching never invokes it.
+
+Prettier is externalized from the `@soeditor/html-tools` library build, loaded
+only when formatting is requested, and its types do not cross the public
+boundary. The SoEditor API exposes only a small validated formatting option
+subset.
+
 ## 1. 项目定位
 
 SoEditor 是一个面向开发者、CMS 和内容系统的现代可扩展内容编辑器。

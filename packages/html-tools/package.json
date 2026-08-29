@@ -1,0 +1,32 @@
+{
+    "name": "@soeditor/html-tools",
+    "version": "0.0.0",
+    "description": "Extensible HTML diagnostics and formatting for SoEditor.",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "test": "vitest run",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "dependencies": {
+        "prettier": "3.9.6"
+    },
+    "peerDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/html": "workspace:*"
+    },
+    "devDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/html": "workspace:*"
+    }
+}

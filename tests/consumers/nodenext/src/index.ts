@@ -10,6 +10,14 @@ import {
     type HtmlElement,
 } from '@soeditor/html';
 import {
+    DiagnosticsPlugin,
+    HtmlFormattingPlugin,
+    diagnosticsServiceToken,
+    type DiagnosticProvider,
+    type HtmlFormattingOptions,
+    type Problem,
+} from '@soeditor/html-tools';
+import {
     createVisualEditingEngine,
     HistoryPlugin,
     type EditingSelection,
@@ -51,7 +59,14 @@ class ConsumerPlugin extends Plugin {
 const editor = await Editor.create({
     config: { nested: { enabled: true } },
     data: '<p>NodeNext</p>',
-    plugins: [ConsumerPlugin, HistoryPlugin, BoldPlugin, SourceEditingPlugin],
+    plugins: [
+        ConsumerPlugin,
+        HistoryPlugin,
+        BoldPlugin,
+        SourceEditingPlugin,
+        DiagnosticsPlugin,
+        HtmlFormattingPlugin,
+    ],
 });
 
 editor.services.register(ExampleServiceToken, { value: 'available' });
@@ -97,6 +112,16 @@ const sourceOptions = undefined as SourceEditingEngineOptions | undefined;
 void sourceFactory;
 void sourceOptions;
 void sourceEditingServiceToken;
+const diagnosticProvider: DiagnosticProvider = {
+    id: 'consumer',
+    provide: () => [],
+};
+const formattingOptions: HtmlFormattingOptions = { printWidth: 80 };
+const problems: readonly Problem[] = [];
+void diagnosticProvider;
+void formattingOptions;
+void problems;
+void diagnosticsServiceToken;
 const rejectInternalModel = (value: EditingModel): void => {
     void value;
 };

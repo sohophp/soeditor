@@ -16,6 +16,12 @@ export default defineConfig({
             '@soeditor/html': fileURLToPath(
                 new URL('../../packages/html/src/index.ts', import.meta.url),
             ),
+            '@soeditor/html-tools': fileURLToPath(
+                new URL(
+                    '../../packages/html-tools/src/index.ts',
+                    import.meta.url,
+                ),
+            ),
             '@soeditor/source': fileURLToPath(
                 new URL('../../packages/source/src/index.ts', import.meta.url),
             ),

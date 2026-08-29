@@ -486,6 +486,70 @@ test('rejects duplicate source attachment and cleans up idempotently', async ({
     });
 });
 
+test('produces UI-independent parser and structural problems', async ({
+    page,
+}) => {
+    const sourceWithProblems =
+        '<div id="same"></div><p id="same"><img src="x"></p><span a="1" a="2"></span>';
+    await setEditorData(page, sourceWithProblems);
+
+    const problems = await executeCommandResult<
+        readonly {
+            readonly code: string;
+            readonly provider: string;
+            readonly severity: string;
+        }[]
+    >(page, 'document.validate');
+    expect(problems).toEqual(
+        expect.arrayContaining([
+            expect.objectContaining({
+                code: 'duplicate-attribute',
+                provider: 'html.parser',
+                severity: 'error',
+            }),
+            expect.objectContaining({ code: 'html.duplicate-id' }),
+            expect.objectContaining({ code: 'html.image-alt' }),
+        ]),
+    );
+});
+
+test('formats deliberately through a command and shares undo with source mode', async ({
+    page,
+}) => {
+    const unformatted = '<main><h1>Title</h1><p>Text</p></main>';
+    await setEditorData(page, unformatted);
+    await page.click('#mode');
+
+    const formatted = await executeCommandResult<string>(
+        page,
+        'document.format',
+        { htmlWhitespaceSensitivity: 'css', tabWidth: 2 },
+    );
+    expect(formatted).toBe(
+        '<main>\n  <h1>Title</h1>\n  <p>Text</p>\n</main>\n',
+    );
+    await expect(page.locator(source)).toHaveText(formatted);
+    await expect(page.locator('.cm-line')).toHaveCount(5);
+    expect(await page.locator('.cm-line').nth(1).textContent()).toBe(
+        '  <h1>Title</h1>',
+    );
+
+    await executeCommand(page, 'editor.undo');
+    await expect(page.locator(source)).toHaveText(unformatted);
+    await expect(page.locator('.cm-content')).toHaveText(unformatted);
+    await executeCommand(page, 'editor.redo');
+    await expect(page.locator(source)).toHaveText(formatted);
+});
+
+test('refuses to format parser-invalid exact source', async ({ page }) => {
+    const invalid = '<p id="one" id="two">Text</p>';
+    await setEditorData(page, invalid);
+
+    const errorName = await executeCommandErrorName(page, 'document.format');
+    expect(errorName).toBe('InvalidHtmlFormattingSourceError');
+    await expect(page.locator(source)).toHaveText(invalid);
+});
+
 test('synchronizes external canonical source changes', async ({ page }) => {
     await page.click('#world');
 
@@ -798,7 +862,15 @@ async function executeCommand(
     id: string,
     ...args: readonly unknown[]
 ): Promise<void> {
-    await page.evaluate(
+    await executeCommandResult(page, id, ...args);
+}
+
+async function executeCommandResult<Result>(
+    page: Page,
+    id: string,
+    ...args: readonly unknown[]
+): Promise<Result> {
+    return page.evaluate(
         ({ args: commandArgs, id: commandId }) => {
             const harness = (
                 window as Window & {
@@ -815,7 +887,40 @@ async function executeCommand(
             if (harness === undefined) {
                 throw new Error('Playground editor was not exposed.');
             }
-            harness.editor.execute(commandId, ...commandArgs);
+            return harness.editor.execute(commandId, ...commandArgs) as Result;
+        },
+        { args, id },
+    );
+}
+
+async function executeCommandErrorName(
+    page: Page,
+    id: string,
+    ...args: readonly unknown[]
+): Promise<string> {
+    return page.evaluate(
+        async ({ args: commandArgs, id: commandId }) => {
+            const harness = (
+                window as Window & {
+                    __soeditor?: {
+                        editor: {
+                            execute(
+                                id: string,
+                                ...args: readonly unknown[]
+                            ): unknown;
+                        };
+                    };
+                }
+            ).__soeditor;
+            if (harness === undefined) {
+                throw new Error('Playground editor was not exposed.');
+            }
+            try {
+                await harness.editor.execute(commandId, ...commandArgs);
+                return '';
+            } catch (error: unknown) {
+                return error instanceof Error ? error.name : 'unknown';
+            }
         },
         { args, id },
     );
