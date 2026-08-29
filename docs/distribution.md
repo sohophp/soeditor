@@ -95,9 +95,9 @@ own static assets. Pin an exact package version in production:
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.5.1/dist/soeditor.css"
+    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.6.0/dist/soeditor.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.5.1/dist/soeditor.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.6.0/dist/soeditor.global.js"></script>
 <script>
     const editor = await SoEditor.create({
         data: '<p>Hello from a script tag.</p>',
@@ -114,7 +114,7 @@ automatically create editors. ESM and the scoped public package roots remain
 the authoritative APIs. The self-contained global contains optional features,
 so size-sensitive applications should use ESM.
 
-The example remains pinned to the published 0.5.1 reference. Phase 22 will
-align every scoped package and update the exact CDN version together; consumers
-must not mix release lines. See the
+The example is the exact 0.6.0 URL to use after authorized publication and
+external CDN verification. Until then it is a candidate URL; the public stable
+reference remains 0.5.1. Consumers must not mix release lines. See the
 [migration guide](migration-0.5-to-0.6.md).

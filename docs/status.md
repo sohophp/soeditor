@@ -2,14 +2,16 @@
 
 ## Current development
 
-The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 21. Visual, HTML Source, Markdown, and Preview can remain synchronized under
+The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 22. Visual, HTML Source, Markdown, and Preview can remain synchronized under
 one write authority and appear in accessible Visual | Source, Source | Preview,
 or Markdown | Preview layouts. The Developer preset now selects bounded
 accessibility/SEO diagnostics and projection/split infrastructure without
-owning engines or DOM. Phase 22 — SoEditor 0.6 Release Hardening — is active.
+owning engines or DOM. The local `0.6.0` release candidate is complete and
+awaiting an explicitly authorized publication.
 
-The published stable reference remains `0.5.1`; development package manifests
-stay at that version until the coordinated 0.6 release-hardening phase.
+All 17 development package manifests are aligned at the `0.6.0` release
+candidate. The published stable reference remains `0.5.1` until an explicitly
+authorized npm publication and external registry/CDN verification complete.
 
 ## Published 0.5 release scope
 
@@ -46,6 +48,11 @@ deliberate and documented under SemVer principles.
 - the Phase 21 narrow Core/SDK/minimal-preset packed consumer is approximately
   28.0 kB raw and proves unused Source, Markdown, Preview, split DOM, and CSS
   families are absent; all 95 Chromium scenarios pass.
+- the Phase 22 frozen candidate aligns all 17 packages at 0.6.0, passes strict
+  typecheck, unit/consumer/distribution/release/Chromium/build/license/security
+  gates, completes a 17-package npm dry run, and confirms read-only that every
+  0.6.0 package version is unpublished.
+- final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
 
@@ -56,8 +63,14 @@ deliberate and documented under SemVer principles.
   preserved as opaque content; complete documents remain Source-oriented.
 - HTML ↔ Markdown conversion is explicitly lossy. Canonical Markdown itself is
   exact in Markdown mode.
-- FileManager 0.5 selects one existing asset. Upload, rename, delete,
+- FileManager selects one existing asset. Upload, rename, delete,
   authentication, and a concrete SoFinder SDK remain host responsibilities.
+- Accessibility and SEO providers cover only bounded source-inferable rules;
+  they are not WCAG certification, assistive-technology testing, search-engine
+  indexing, or ranking analysis.
+- Split layout supports three finite two-pane pairs. Arbitrary docking,
+  persistence, multi-writer editing, and framework-managed mounting remain
+  deferred.
 - Automated accessibility checks cover WCAG A/AA rules, semantics, accessible
   names, keyboard paths, status announcements, and iframe titles, but are not a
   substitute for manual assistive-technology testing. Sandboxed, host-supplied
@@ -76,3 +89,7 @@ deliberate and documented under SemVer principles.
 Semantic HTML preservation is not byte-for-byte preservation. Framework
 wrappers, SSR DOM emulation, collaboration, and advanced widgets/tables remain
 post-0.6 candidates and are not implied by this preview.
+
+The candidate is not yet a public 0.6 release. npm publication, signed tag,
+GitHub Release, and external npm/jsDelivr verification require explicit owner
+authorization and must refer to the exact reviewed commit.

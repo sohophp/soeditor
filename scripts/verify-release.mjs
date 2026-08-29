@@ -12,12 +12,35 @@ const releaseVersion = workspaceManifest.version;
 const releaseLicense = workspaceManifest.license;
 if (
     typeof releaseVersion !== 'string' ||
-    !/^0\.5\.\d+$/u.test(releaseVersion)
+    !/^0\.6\.\d+$/u.test(releaseVersion)
 ) {
-    throw new Error('The release audit only accepts an aligned 0.5.x version.');
+    throw new Error('The release audit only accepts an aligned 0.6.x version.');
 }
 const packagesRoot = join(repositoryRoot, 'packages');
 const publishable = [];
+const [changelog, migrationGuide, releaseGuide, statusDocument] =
+    await Promise.all([
+        readFile(join(repositoryRoot, 'CHANGELOG.md'), 'utf8'),
+        readFile(join(repositoryRoot, 'docs/migration-0.5-to-0.6.md'), 'utf8'),
+        readFile(join(repositoryRoot, 'docs/releasing.md'), 'utf8'),
+        readFile(join(repositoryRoot, 'docs/status.md'), 'utf8'),
+    ]);
+for (const [label, source, marker] of [
+    ['changelog', changelog, `## ${releaseVersion}`],
+    ['migration guide', migrationGuide, `\`${releaseVersion}\``],
+    [
+        'release guide',
+        releaseGuide,
+        `release:verify-registry ${releaseVersion}`,
+    ],
+    ['status', statusDocument, `\`${releaseVersion}\` release`],
+]) {
+    if (!source.includes(marker)) {
+        throw new Error(
+            `The ${label} is not synchronized with ${releaseVersion}.`,
+        );
+    }
+}
 const changesetConfiguration = JSON.parse(
     await readFile(join(repositoryRoot, '.changeset/config.json'), 'utf8'),
 );

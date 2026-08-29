@@ -1,4 +1,4 @@
-# Releasing SoEditor 0.5.x
+# Releasing SoEditor 0.6.x
 
 Publication is an owner-authorized operation. Local quality gates and dry runs
 do not grant permission to choose a license, publish packages, create a tag, or
@@ -40,9 +40,10 @@ and the `npm` GitHub environment, verify one release through OIDC, then remove
 the long-lived publishing secret. Until that migration is complete, an OIDC
 exchange warning does not replace the granular token requirement.
 
-## Patch policy
+## Release-line policy
 
-The 0.5.x line accepts correctness, security, accessibility, compatibility,
+The 0.6.0 candidate contains the approved Developer Workflow capability set.
+The 0.6.x line accepts correctness, security, accessibility, compatibility,
 documentation, and measured performance fixes. New product capabilities belong
 in a separately approved roadmap. Although 0.x permits breaking SemVer changes,
 avoid them in patch releases; document an unavoidable break and use at least a
@@ -79,7 +80,8 @@ commit.
 
 ## Publication
 
-Run the `Publish npm packages` workflow from the verified commit. Enter its full
+Run the `Publish npm packages` workflow from the verified commit only after the
+repository owner authorizes publication. Enter its full
 commit SHA, type `PUBLISH`, choose `latest` or `next`, and approve the protected
 `npm` environment. The workflow repeats every release gate, performs a dry run,
 verifies that none of the aligned package versions already exist, publishes
@@ -110,9 +112,12 @@ do not republish identical artifacts.
 After publication, or to recheck propagation:
 
 ```bash
-pnpm release:verify-registry 0.5.1
+pnpm release:verify-registry 0.6.0
 ```
 
 This creates a clean Vite consumer from the public npm registry and checks the
 version-pinned jsDelivr JavaScript, CSS, source map, immutable global facade,
 and basic editor lifecycle in Chromium.
+
+This command uses the current 17-package 0.6 release manifest and deliberately
+does not claim to re-verify the historical 15-package 0.5 release set.

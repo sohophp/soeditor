@@ -2,8 +2,9 @@
 
 Developer-first extensible content editor.
 
-**Status: 0.5 Developer Preview.** SoEditor is suitable for evaluation and
-integration development, but is not yet a stable 1.0 release. The repository
+**Status: 0.6 Developer Workflow release candidate.** SoEditor is suitable for
+evaluation and integration development, but is not yet a stable 1.0 release.
+The public registry reference remains 0.5.1 until authorized publication. The repository
 contains the framework-agnostic Core, HTML document layer, controlled visual
 editing engine, transaction history/clipboard boundaries, and Phase 5
 command-driven rich-text feature plugins. Phase 6 adds exact CodeMirror-powered
@@ -21,6 +22,9 @@ minimal/classic/developer/Markdown presets, and external-package verification.
 Phase 14 adds the `@soeditor/editor` ESM umbrella, narrow preset entries, a frozen
 direct-browser global, standalone CSS/maps, and clean NodeNext/Vite/CDN
 consumer verification.
+Phases 17–21 add configurable accessibility/SEO diagnostics, observable
+validation workflows, persistent single-writer projections, accessible split
+layouts, and a curated 0.6 SDK/preset/distribution surface.
 
 ```ts
 import { SoEditor, minimalPreset } from '@soeditor/editor';
@@ -59,6 +63,10 @@ const editor = await SoEditor.create({
   no SoFinder dependency in Core or feature packages.
 - `@soeditor/plugin-sdk` — stable package-root lifecycle and contribution
   contracts for third-party plugin authors.
+- `@soeditor/projections` — DOM-free persistent projection activity and writer
+  coordination.
+- `@soeditor/layout` — application-attached accessible two-pane projection
+  layouts.
 - `@soeditor/presets` — immutable plugin and toolbar definitions for common
   editor configurations.
 - `@soeditor/editor` — convenience ESM and direct-browser distribution over the public
@@ -71,7 +79,7 @@ Start with [Getting started](docs/getting-started.md). See
 [Source editing](docs/source-editing.md), [Preview](docs/preview.md),
 [CMS/SoFinder integration](docs/cms-integration.md), the
 [Plugin Guide](docs/plugin-guide.md), [Release procedure](docs/releasing.md),
-and [0.5 status](docs/status.md).
+and [development status](docs/status.md).
 
 ## Development
 

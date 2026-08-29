@@ -5,9 +5,9 @@
     "type": "module",
     "packageManager": "pnpm@11.20.0",
     "dependencies": {
-        "@soeditor/core": "0.5.1",
-        "@soeditor/plugin-sdk": "0.5.1",
-        "@soeditor/presets": "0.5.1"
+        "@soeditor/core": "0.6.0",
+        "@soeditor/plugin-sdk": "0.6.0",
+        "@soeditor/presets": "0.6.0"
     },
     "devDependencies": {
         "vite": "7.3.6"

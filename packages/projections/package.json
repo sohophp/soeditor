@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/projections",
-    "version": "0.5.1",
+    "version": "0.6.0",
     "license": "MIT",
     "description": "Framework-independent projection activity coordination for SoEditor.",
     "keywords": [

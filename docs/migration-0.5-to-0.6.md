@@ -2,8 +2,9 @@
 
 SoEditor 0.6 keeps the 0.5 document, command, plugin, surface, and ESM model.
 The main additions are configurable quality diagnostics, persistent projection
-coordination, and application-attached split layouts. The package versions in
-the development branch remain `0.5.1` until the coordinated Phase 22 release.
+coordination, and application-attached split layouts. The candidate manifests
+are aligned at `0.6.0`; the public stable reference remains `0.5.1` until an
+authorized publication completes.
 
 ## Existing 0.5 integrations
 
@@ -25,6 +26,24 @@ SplitViewPlugin;
 ```
 
 Duplicate plugin IDs are deliberately rejected.
+
+## Public API change classification
+
+| Change                                                                                                                                                                                     | Compatibility                                                                          | Action                                                                                                                                                             |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| New `@soeditor/projections` package and all package-root coordinator plugins, services, adapters, snapshots, IDs, activities, and typed errors                                             | Additive                                                                               | Install/import only when coordinating persistent projections.                                                                                                      |
+| New `@soeditor/layout` package and all package-root split plugins, services, adapters, snapshots, pairs, orientations, attachments, DOM factory/options/layout, host map, and typed errors | Additive                                                                               | Import `@soeditor/layout/styles.css` when using this package directly.                                                                                             |
+| `@soeditor/editor` and the browser global expose the two new owning-package surfaces                                                                                                       | Additive, larger full global                                                           | Prefer scoped ESM imports when bundle size matters.                                                                                                                |
+| `DiagnosticsService` adds `snapshot`, `failures`, `subscribe()`, `getProblems()`, and `getCounts()`; new workflow/filter/count/failure/status types are exported                           | Additive for consumers; source-breaking for custom structural implementations or mocks | Update custom mocks/adapters to implement the complete 0.6 service contract. Provider registration and `validate()` remain.                                        |
+| `AccessibilityDiagnosticsPlugin`, `SeoDiagnosticsPlugin`, stable rule-code/configuration types, and `InvalidDiagnosticRuleConfigurationError` are exported by `@soeditor/html-tools`       | Additive                                                                               | Configure under `htmlTools.accessibility.rules` and `htmlTools.seo.rules`.                                                                                         |
+| `DiagnosticsPlugin` reads `htmlTools.diagnostics.validation`                                                                                                                               | Additive behavior; manual remains default                                              | Opt into `{ mode: 'debounced', delay? }` only when automatic validation is wanted.                                                                                 |
+| Visual, Source, and Markdown creation options add `activateOnFocus?` and attach to a coordinator when present                                                                              | Additive option; coordinated behavior is conditional                                   | Leave the coordinator out for 0.5-style single-surface mode; enable focus activation only for user-intent writer transfer.                                         |
+| `developerPreset.plugins` adds both quality providers plus projection and split infrastructure                                                                                             | Intentional preset behavior change                                                     | Remove duplicate manual additions. Applications still attach engines/layout explicitly and may compose a narrower preset when persistent projections are unwanted. |
+| `@soeditor/plugin-sdk` adds generic diagnostics workflow, projection, and split service/adapter contracts and their infrastructure plugins/tokens                                          | Additive facade and peer dependencies                                                  | Keep built-in rule implementations and DOM factories imported from their owning packages.                                                                          |
+| Problems UI gains observable validation/loading/failure/filter/count behavior                                                                                                              | Additive UI behavior                                                                   | Custom CSS should target documented SoEditor classes rather than DOM position assumptions.                                                                         |
+
+No 0.5 package-root export was deliberately removed or renamed. Internal
+module paths remain unsupported in both release lines.
 
 ## Diagnostics configuration
 
@@ -144,8 +163,9 @@ umbrella. Import built-in diagnostic implementations from
 Never import package `src` files or private `dist` subpaths.
 
 The browser global remains an explicit, self-contained compatibility build.
-Pin the exact aligned 0.6 version after Phase 22; do not mix 0.5 and 0.6 scoped
-packages. Until then, the published supported reference is still `0.5.1`.
+Pin the exact aligned `0.6.0` version after publication; do not mix 0.5 and 0.6
+scoped packages. Until external registry verification passes, the published
+supported reference is still `0.5.1`.
 
 ## Public API ownership
 

@@ -579,11 +579,11 @@ JavaScript source map accompany it. See `docs/distribution.md` and ADR 0020.
 
 ## Phase 15 release hardening
 
-The 0.5 release gate keeps the Phase 14 architecture unchanged and adds
+The 0.5 release gate kept the Phase 14 architecture unchanged and added
 evidence around it. The 15 packages published for 0.5 share one aligned 0.5.x
-version; the Phase 19 development tree adds `@soeditor/projections` as a
-sixteenth publishable boundary. A release audit checks explicit export maps,
-mapped artifacts, and bundle budgets; packed
+version; the 0.6 candidate adds `@soeditor/projections` and `@soeditor/layout`
+for 17 aligned publishable boundaries. A release audit checks explicit export
+maps, mapped artifacts, and bundle budgets; packed
 NodeNext/native ESM/Vite consumers exercise actual tarballs.
 
 The Playground exposes Classic, Developer, Markdown, and CMS + injected
@@ -2106,11 +2106,11 @@ Visual 和 UI surface 由应用显式创建并管理生命周期。需要更细�
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.5.1/dist/soeditor.css"
+    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.6.0/dist/soeditor.css"
 >
 
 <script
-    src="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.5.1/dist/soeditor.global.js"
+    src="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.6.0/dist/soeditor.global.js"
 ></script>
 ```
 

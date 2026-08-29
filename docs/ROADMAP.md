@@ -2,7 +2,9 @@
 
 ## Status
 
-Complete through Phase 21. The 0.6 roadmap is approved and Phase 22 is active.
+Complete through Phase 22. The verified 0.6.0 candidate is awaiting
+owner-authorized publication; the next roadmap must be derived deliberately
+from 0.6 evidence before later implementation begins.
 
 This roadmap begins from the current repository state.
 
@@ -876,9 +878,9 @@ They require a new roadmap decision.
 
 ## Status
 
-APPROVED. The repository owner authorized implementation through the 0.6 to
-1.0 development sequence on 2026-08-29. Phase 22 is active; later roadmap phases
-remain pending until their predecessors pass the normal release gate.
+COMPLETE. The repository owner authorized implementation through the 0.6 to
+1.0 development sequence on 2026-08-29. The 0.6 implementation and local
+release candidate gates are complete; publication remains owner-controlled.
 
 ## Release theme
 
@@ -1181,7 +1183,7 @@ and split workflows remain configurable, tree-shakeable, and consumable.
 
 ## Status
 
-ACTIVE.
+COMPLETE.
 
 ## Goal
 

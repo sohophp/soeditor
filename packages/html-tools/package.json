@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/html-tools",
-    "version": "0.5.1",
+    "version": "0.6.0",
     "license": "MIT",
     "description": "Extensible HTML diagnostics and formatting for SoEditor.",
     "keywords": [
