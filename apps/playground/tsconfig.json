@@ -1,0 +1,10 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "lib": ["DOM", "ES2022"],
+        "paths": {
+            "@soeditor/core": ["../../packages/core/src/index.ts"]
+        }
+    },
+    "include": ["src", "vite.config.ts"]
+}

@@ -1,0 +1,13 @@
+{
+    "name": "soeditor-nodenext-consumer",
+    "version": "0.0.0",
+    "private": true,
+    "type": "module",
+    "packageManager": "pnpm@11.20.0",
+    "dependencies": {
+        "@soeditor/core": "0.0.0"
+    },
+    "devDependencies": {
+        "typescript": "5.9.2"
+    }
+}

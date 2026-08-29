@@ -1,5 +1,77 @@
 # SoEditor Architecture 0.1
 
+## Phase 1 implementation status
+
+Phase 1 implements only `@soeditor/core`, the `@soeditor/engine` package shell,
+and a minimal core playground. The remainder of this document describes the
+accepted long-term direction and later milestones; it is not implemented by
+Phase 1.
+
+The current `EditorMode` runtime state is `visual | source | preview`, while
+`DocumentFormat` reserves `html | markdown` and only HTML can currently be
+instantiated. There is no selection, history, UI, visual editing engine, source
+editor, Markdown processing, diagnostics, formatting, preview renderer, or file
+manager in this phase.
+
+### Phase 1.1 stabilization policies
+
+- `Editor` exposes narrow command, plugin, service, and event capabilities.
+  Concrete registry cleanup and plugin lifecycle controls remain internal.
+- Public registry capabilities reject use after destruction. Destruction is
+  idempotent, shares one pending promise, and completes cleanup even when plugin
+  hooks or lifecycle-event listeners fail.
+- Normal event emission visits every listener and then reports listener errors.
+  Mandatory lifecycle events use safe emission; failures are reported through
+  `event:error` without interrupting cleanup.
+- Synchronous reentrant dispatch is rejected. Transactions are editor-owned,
+  single-use, and tied to the editor state version at which they were created.
+- Configuration is immutable JSON-like plain data. Unsupported objects,
+  functions, accessors, symbol keys, and cyclic structures are rejected.
+- `readonly` is editing-policy state. Administrative `setData()` updates remain
+  allowed; future user-facing editing surfaces must enforce the policy.
+
+### Phase 1.2 hardening policies
+
+- The first `destroy()` call publishes its shared promise before plugin cleanup
+  starts, so reentrant and concurrent calls observe the same promise identity.
+- `editor.events` is subscription-only. Event publication and cleanup remain
+  capabilities of the internally owned event bus.
+- Commands inspect a PromiseLike `then` property once. Getter failures follow
+  normal `command:error` handling while synchronous results stay synchronous.
+- Configuration arrays must be dense ordinary data arrays. Accessor indices,
+  symbol or custom properties, unsupported values, and cycles are rejected.
+- Core event listeners are synchronous. Returned promises are unsupported and
+  are neither awaited nor incorporated into lifecycle sequencing.
+
+### Phase 1.3 lifecycle finalization
+
+- Editor lifecycle transitions are terminal: `initializing` may become `ready`
+  or `destroying`, while `destroying` may only become `destroyed`.
+- Destruction during plugin construction, initialization, or readiness aborts
+  startup. Remaining hooks do not run and `Editor.create()` rejects with
+  `EditorInitializationAbortedError` after required cleanup completes.
+- Plugin lifecycle stages are advanced only while editor startup remains
+  active. A hook returning after destruction began cannot resurrect a plugin.
+- `editor:ready` is emitted only after guarded plugin startup completes, and a
+  destroyed editor is never returned by `Editor.create()`.
+
+### Phase 1.4 startup abort finalization
+
+- Plugin `init()` and `ready()` waits observe both hook settlement and the
+  editor's internal destruction-start signal. When destruction wins, startup
+  waits only for the shared destruction operation and then rejects creation.
+- Hook promises remain observed after startup aborts. Late fulfillment has no
+  effect, while late rejection cannot become an unhandled rejection or replace
+  the initialization-aborted result.
+- Required post-commit document, mode, and state notifications are attempted
+  independently. Listener errors are reported after every required notification
+  has been attempted and do not roll back committed state.
+- Plain configuration objects reject accessors regardless of enumerability and
+  never invoke those accessors while validating.
+- A plugin `destroy()` hook must not await its own editor's shared `destroy()`
+  promise. The shared promise waits for that hook, so awaiting it from the hook
+  would create a self-dependency; obtaining or comparing it remains allowed.
+
 ## 1. 项目定位
 
 SoEditor 是一个面向开发者、CMS 和内容系统的现代可扩展内容编辑器。

@@ -1,0 +1,25 @@
+{
+    "name": "@soeditor/core",
+    "version": "0.0.0",
+    "description": "Framework-agnostic core architecture for SoEditor.",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "test": "vitest run",
+        "test:coverage": "vitest run --coverage",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "devDependencies": {
+        "@vitest/coverage-v8": "^3.2.4"
+    }
+}

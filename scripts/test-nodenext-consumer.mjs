@@ -1,0 +1,68 @@
+import { execFileSync } from 'node:child_process';
+import {
+    cp,
+    mkdir,
+    mkdtemp,
+    readFile,
+    readdir,
+    rm,
+    writeFile,
+} from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
+import { stdout } from 'node:process';
+import { fileURLToPath, URL } from 'node:url';
+
+const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
+const fixtureSource = join(repositoryRoot, 'tests/consumers/nodenext');
+const temporaryRoot = await mkdtemp(join(tmpdir(), 'soeditor-nodenext-'));
+const packDirectory = join(temporaryRoot, 'package');
+const fixtureDirectory = join(temporaryRoot, 'consumer');
+
+function run(command, args, cwd) {
+    execFileSync(command, args, {
+        cwd,
+        encoding: 'utf8',
+        stdio: 'inherit',
+    });
+}
+
+try {
+    await cp(fixtureSource, fixtureDirectory, { recursive: true });
+    await mkdir(packDirectory, { recursive: true });
+    run(
+        'pnpm',
+        [
+            '--filter',
+            '@soeditor/core',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+
+    const archives = (await readdir(packDirectory)).filter((name) =>
+        name.endsWith('.tgz'),
+    );
+
+    if (archives.length !== 1 || archives[0] === undefined) {
+        throw new Error('Expected exactly one packed @soeditor/core archive.');
+    }
+
+    const packagePath = join(fixtureDirectory, 'package.json');
+    const packageData = JSON.parse(await readFile(packagePath, 'utf8'));
+    packageData.dependencies['@soeditor/core'] = `file:${join(
+        packDirectory,
+        archives[0],
+    )}`;
+    await writeFile(packagePath, `${JSON.stringify(packageData, null, 4)}\n`);
+
+    run('pnpm', ['install', '--ignore-workspace'], fixtureDirectory);
+    run('pnpm', ['exec', 'tsc', '-p', 'tsconfig.json'], fixtureDirectory);
+    stdout.write('NodeNext packed-package consumer passed.\n');
+    run('node', ['runtime.mjs'], fixtureDirectory);
+    stdout.write('Node ESM packed-package runtime smoke test passed.\n');
+} finally {
+    await rm(temporaryRoot, { force: true, recursive: true });
+}
