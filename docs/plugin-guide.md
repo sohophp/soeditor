@@ -229,6 +229,11 @@ services through explicit factories; each factory must return a complete
 `destroy()` handle. Plugin packages must not discover a workspace globally or
 depend on workspace controller internals.
 
+React and Vue integration belongs in the private framework adapter packages.
+Plugins continue to expose framework-neutral commands, services, and explicit
+attachment handles; they must not import React/Vue or assume an adapter owns
+their DOM host.
+
 ## Compatibility rules
 
 - Import package roots only; internal subpaths are unsupported.

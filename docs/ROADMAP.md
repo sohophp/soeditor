@@ -1223,7 +1223,7 @@ repository-owner-controlled operations.
 ## Status
 
 APPROVED from the repository owner's 2026-08-29 authorization to complete
-SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 31 is active.
+SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 32 is active.
 
 The sequence is justified in
 `docs/research/editor-landscape-2026.md`. Each release must pass its own
@@ -1504,7 +1504,7 @@ without hiding application ownership or adding a framework to editor packages.
 
 ## Status
 
-ACTIVE.
+COMPLETE.
 
 ## Goal
 
@@ -1518,6 +1518,16 @@ Provide thin official framework adapters over the workspace controller.
   suspense/error-boundary, teardown, and SSR-import safety tests;
 - no framework components in Core, engine, feature, UI, or SDK packages.
 
+## Delivered
+
+- private `@soeditor/react` and `@soeditor/vue` packages with framework peers
+  isolated to their owning adapters;
+- controlled/uncontrolled inputs, readonly updates, React StrictMode
+  serialization and Error Boundary propagation, and Vue Composition API
+  lifecycle;
+- Node SSR render tests, a real React/Vue Chromium lifecycle and axe workflow,
+  executable demo, and Critical 0 / High 0 review.
+
 ## Explicitly deferred
 
 - Angular/Svelte adapters until independent demand is demonstrated.
@@ -1528,7 +1538,7 @@ Provide thin official framework adapters over the workspace controller.
 
 ## Status
 
-PENDING.
+ACTIVE.
 
 ## Goal
 

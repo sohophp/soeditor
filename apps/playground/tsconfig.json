@@ -1,6 +1,7 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
+        "jsx": "react-jsx",
         "lib": ["DOM", "ES2022"],
         "paths": {
             "@soeditor/adapter-sofinder": [
@@ -22,8 +23,10 @@
             ],
             "@soeditor/presets": ["../../packages/presets/src/index.ts"],
             "@soeditor/revisions": ["../../packages/revisions/src/index.ts"],
+            "@soeditor/react": ["../../packages/react/src/index.ts"],
             "@soeditor/source": ["../../packages/source/src/index.ts"],
             "@soeditor/ui": ["../../packages/ui/src/index.ts"],
+            "@soeditor/vue": ["../../packages/vue/src/index.ts"],
             "@soeditor/workspace": ["../../packages/workspace/src/index.ts"]
         }
     },

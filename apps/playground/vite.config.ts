@@ -5,6 +5,9 @@ export default defineConfig({
     build: {
         rollupOptions: {
             input: {
+                frameworks: fileURLToPath(
+                    new URL('framework-adapters.html', import.meta.url),
+                ),
                 main: fileURLToPath(new URL('index.html', import.meta.url)),
                 workspace: fileURLToPath(
                     new URL('workspace.html', import.meta.url),
@@ -23,6 +26,9 @@ export default defineConfig({
             ),
             '@soeditor/core': fileURLToPath(
                 new URL('../../packages/core/src/index.ts', import.meta.url),
+            ),
+            '@soeditor/react': fileURLToPath(
+                new URL('../../packages/react/src/index.ts', import.meta.url),
             ),
             '@soeditor/engine': fileURLToPath(
                 new URL('../../packages/engine/src/index.ts', import.meta.url),
@@ -77,6 +83,9 @@ export default defineConfig({
             ),
             '@soeditor/ui': fileURLToPath(
                 new URL('../../packages/ui/src/index.ts', import.meta.url),
+            ),
+            '@soeditor/vue': fileURLToPath(
+                new URL('../../packages/vue/src/index.ts', import.meta.url),
             ),
             '@soeditor/workspace': fileURLToPath(
                 new URL(

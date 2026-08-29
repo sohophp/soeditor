@@ -1,0 +1,33 @@
+{
+    "name": "@soeditor/vue",
+    "version": "0.8.0",
+    "private": true,
+    "license": "MIT",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "test": "vitest run",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "peerDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/workspace": "workspace:*",
+        "vue": "^3.5.0"
+    },
+    "devDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/workspace": "workspace:*",
+        "@vue/server-renderer": "3.5.42",
+        "vue": "3.5.42"
+    }
+}

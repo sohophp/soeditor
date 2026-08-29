@@ -436,6 +436,19 @@ observable `recovering`/`failed` states prevent infinite crash loops. This is
 in-process lifecycle recovery, not durable storage, cross-tab recovery, or
 automatic global error interception.
 
+## Phase 31 thin React and Vue adapters
+
+The private `@soeditor/react` and `@soeditor/vue` packages depend on the
+Workspace boundary rather than reproducing Editor orchestration. React/Vue are
+peers only of their owning adapter; Core, engines, features, UI, SDK, presets,
+and umbrella distribution remain framework-independent.
+
+React binds Workspace to an Effect, serializes StrictMode cleanup before a
+replacement mount, applies value/readonly props to the live instance, and can
+rethrow stored asynchronous failures for an Error Boundary. Vue creates from
+`onMounted()`, cleans from `onUnmounted()`, and watches ref/getter value and
+readonly inputs. Neither adapter performs DOM work during import or SSR.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing

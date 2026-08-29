@@ -85,6 +85,8 @@ const editor = await SoEditor.create({
   package roots.
 - `@soeditor/workspace` — private Phase 30 application lifecycle and bounded
   recovery controller; public exposure is deferred to the 0.9 release gate.
+- `@soeditor/react` / `@soeditor/vue` — private Phase 31 lifecycle adapters over
+  Workspace; framework dependencies remain isolated to their owning package.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
 
@@ -97,6 +99,7 @@ the [comments guide](docs/comments.md),
 the [revisions guide](docs/revisions.md),
 [review data governance](docs/review-data-governance.md),
 [workspace lifecycle and recovery](docs/workspace.md),
+[React and Vue adapters](docs/framework-adapters.md),
 [public API policy](docs/public-api.md), and
 [development status](docs/status.md).
 

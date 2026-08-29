@@ -42,6 +42,10 @@ controlled-value, and recovery contracts are validated. It is intentionally
 absent from the 0.8 SDK and umbrella exports; public classification is deferred
 to the Phase 33 0.9 release gate.
 
+Phase 31's `@soeditor/react` and `@soeditor/vue` packages are likewise private
+validation surfaces. They are not 0.8 SDK or umbrella exports, and their React
+or Vue peers do not become dependencies of any existing public package.
+
 ## Structured extension boundary
 
 A third-party structured widget can register a DOM-free conversion and a node

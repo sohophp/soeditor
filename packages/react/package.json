@@ -1,0 +1,35 @@
+{
+    "name": "@soeditor/react",
+    "version": "0.8.0",
+    "private": true,
+    "license": "MIT",
+    "type": "module",
+    "sideEffects": false,
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "import": "./dist/index.js"
+        }
+    },
+    "scripts": {
+        "build": "vite build && tsc -p tsconfig.build.json",
+        "test": "vitest run",
+        "typecheck": "tsc -p tsconfig.json"
+    },
+    "peerDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/workspace": "workspace:*",
+        "react": "^19.0.0"
+    },
+    "devDependencies": {
+        "@soeditor/core": "workspace:*",
+        "@soeditor/workspace": "workspace:*",
+        "@types/react": "19.2.18",
+        "react": "19.2.8",
+        "react-dom": "19.2.8",
+        "@types/react-dom": "19.2.5"
+    }
+}

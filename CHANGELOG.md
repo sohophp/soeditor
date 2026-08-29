@@ -8,6 +8,9 @@
   the last known canonical source.
 - Added focused unit and Chromium coverage plus an executable Workspace demo;
   React/Vue adapters and public 0.9 exports remain deferred.
+- Added private React and Vue lifecycle adapters with controlled values,
+  readonly updates, SSR-safe rendering, React StrictMode/Error Boundary
+  behavior, Vue Composition API lifecycle, and an executable comparison demo.
 
 ## 0.8.0 — Review Workflow candidate
 

@@ -38,7 +38,12 @@ is complete. Its private Core-only application controller provides explicit
 attachment lifecycle, controlled/uncontrolled policies, latest-owner-value
 handling during recovery, bounded restart behavior, documentation, and an
 executable demo. All 120 Chromium scenarios pass with Critical 0 and High 0.
-Phase 31 — React and Vue Adapters — is active.
+Phase 31 — React and Vue Adapters — is complete. Private framework packages now
+bind Workspace through React StrictMode-safe Effects and Vue mounted/unmounted
+lifecycle, with controlled values, readonly updates, SSR-safe rendering, Error
+Boundary behavior, and explicit cleanup. All 121 Chromium scenarios pass with
+Critical 0 and High 0. Phase 32 — Plugin Tooling and Integration Diagnostics —
+is active.
 
 All 19 public package manifests are aligned at the `0.8.0` release candidate.
 The published stable reference remains `0.5.1` until an explicitly authorized
@@ -125,6 +130,12 @@ deliberate and documented under SemVer principles.
   distribution/release audits, MIT verification, zero high-severity known
   vulnerabilities, 19-package npm dry run, and unpublished registry preflight
   pass. Final adversarial review: Critical 0, High 0.
+- Phase 31 adds two Node SSR tests and one real-browser React/Vue workflow for
+  StrictMode setup/cleanup, controlled prop updates, readonly, Suspense
+  compatibility, Error Boundary propagation, Vue lifecycle, axe, and terminal
+  cleanup. All strict type, unit, 121-scenario Chromium, build, 22-directory
+  distribution, 19-public-package release, and high-severity audit gates pass.
+  Final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
 

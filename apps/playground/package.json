@@ -23,9 +23,18 @@
         "@soeditor/projections": "workspace:*",
         "@soeditor/presets": "workspace:*",
         "@soeditor/revisions": "workspace:*",
+        "@soeditor/react": "workspace:*",
         "@soeditor/rich-text": "workspace:*",
         "@soeditor/source": "workspace:*",
         "@soeditor/ui": "workspace:*",
-        "@soeditor/workspace": "workspace:*"
+        "@soeditor/vue": "workspace:*",
+        "@soeditor/workspace": "workspace:*",
+        "react": "19.2.8",
+        "react-dom": "19.2.8",
+        "vue": "3.5.42"
+    },
+    "devDependencies": {
+        "@types/react": "19.2.18",
+        "@types/react-dom": "19.2.5"
     }
 }
