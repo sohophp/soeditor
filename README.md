@@ -5,7 +5,8 @@ Developer-first extensible content editor.
 **Status: early development.** SoEditor is not production ready. The repository
 contains the framework-agnostic Core, HTML document layer, controlled visual
 editing engine, transaction history/clipboard boundaries, and Phase 5
-command-driven rich-text feature plugins. The configurable product UI is not
+command-driven rich-text feature plugins. Phase 6 adds exact CodeMirror-powered
+HTML source editing and parser diagnostics. The configurable product UI is not
 built yet.
 
 ```ts
@@ -25,6 +26,8 @@ const editor = await Editor.create({
   history, selection, clipboard handling, and the typed visual-feature service.
 - `@soeditor/rich-text` — independent command plugins for common inline/block
   formatting, links, lists, images, and basic tables.
+- `@soeditor/source` — CodeMirror 6 HTML source mode, exact Core
+  synchronization, and parser diagnostic projection.
 - `@soeditor/playground` — a development harness for Core and the minimal visual
   engine.
 

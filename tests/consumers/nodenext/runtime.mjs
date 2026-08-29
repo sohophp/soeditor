@@ -7,6 +7,7 @@ import {
 import { parseHtmlFragment, serializeHtmlFragment } from '@soeditor/html';
 import { createVisualEditingEngine, HistoryPlugin } from '@soeditor/engine';
 import { BoldPlugin } from '@soeditor/rich-text';
+import { SourceEditingPlugin } from '@soeditor/source';
 
 class DestroyDuringInit extends Plugin {
     static id = 'destroy-during-init';
@@ -27,7 +28,7 @@ try {
 
 const editor = await Editor.create({
     data: '<p>Runtime</p>',
-    plugins: [HistoryPlugin, BoldPlugin],
+    plugins: [HistoryPlugin, BoldPlugin, SourceEditingPlugin],
 });
 
 if (editor.getData() !== '<p>Runtime</p>') {
@@ -36,6 +37,10 @@ if (editor.getData() !== '<p>Runtime</p>') {
 
 if (!editor.commands.has('format.bold')) {
     throw new Error('Packed rich-text plugin did not register its command.');
+}
+
+if (!editor.commands.has('editor.source')) {
+    throw new Error('Packed source plugin did not register its command.');
 }
 
 editor.setData('<p>Changed</p>');

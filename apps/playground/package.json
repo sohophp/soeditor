@@ -12,6 +12,7 @@
         "@soeditor/core": "workspace:*",
         "@soeditor/engine": "workspace:*",
         "@soeditor/html": "workspace:*",
-        "@soeditor/rich-text": "workspace:*"
+        "@soeditor/rich-text": "workspace:*",
+        "@soeditor/source": "workspace:*"
     }
 }

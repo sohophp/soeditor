@@ -98,6 +98,7 @@ export class HistoryPlugin extends Plugin {
         }
 
         const metadata = readHistoryMetadata(event.transaction);
+        const group = metadata.group;
         const entry: HistoryEntry = Object.freeze({
             afterSource: event.current.source,
             beforeSource: event.previous.source,
@@ -108,7 +109,7 @@ export class HistoryPlugin extends Plugin {
             ...(metadata.beforeSelection === undefined
                 ? {}
                 : { beforeSelection: metadata.beforeSelection }),
-            ...(metadata.group === undefined ? {} : { group: metadata.group }),
+            ...(group === undefined ? {} : { group }),
         });
         const previous = this.#undoStack.at(-1);
 

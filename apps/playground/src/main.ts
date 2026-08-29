@@ -16,6 +16,10 @@ import {
     UnderlinePlugin,
     UnorderedListPlugin,
 } from '@soeditor/rich-text';
+import {
+    createSourceEditingEngine,
+    SourceEditingPlugin,
+} from '@soeditor/source';
 
 class DemoPlugin extends Plugin {
     static readonly id = 'demo';
@@ -40,8 +44,14 @@ class DemoPlugin extends Plugin {
 const stateOutput = document.querySelector<HTMLElement>('#state');
 const sourceOutput = document.querySelector<HTMLElement>('#source');
 const editingHost = document.querySelector<HTMLElement>('#editor');
+const sourceEditingHost = document.querySelector<HTMLElement>('#source-editor');
 
-if (stateOutput === null || sourceOutput === null || editingHost === null) {
+if (
+    stateOutput === null ||
+    sourceOutput === null ||
+    editingHost === null ||
+    sourceEditingHost === null
+) {
     throw new Error('Playground output or editing host was not found.');
 }
 
@@ -64,6 +74,7 @@ const editor = await Editor.create({
         CodeBlockPlugin,
         ImagePlugin,
         TablePlugin,
+        SourceEditingPlugin,
     ],
     readonly: new URLSearchParams(window.location.search).has('readonly'),
 });
@@ -71,9 +82,15 @@ const visualEngine = createVisualEditingEngine({
     editor,
     element: editingHost,
 });
+const sourceEngine = createSourceEditingEngine({
+    editor,
+    element: sourceEditingHost,
+});
 (window as Window & { __soeditor?: unknown }).__soeditor = Object.freeze({
+    createSourceEditingEngine,
     createVisualEditingEngine,
     editor,
+    sourceEngine,
     visualEngine,
 });
 
@@ -96,13 +113,8 @@ editor.events.on('state:change', render);
 bind('hello', () => editor.setData('<p>Hello</p>'));
 bind('world', () => editor.setData('<p>World</p>'));
 bind('mode', () => {
-    editor.update(
-        (transaction) => {
-            transaction.setMode(
-                editor.state.mode === 'source' ? 'visual' : 'source',
-            );
-        },
-        { origin: 'user' },
+    editor.execute(
+        editor.state.mode === 'source' ? 'editor.visual' : 'editor.source',
     );
 });
 bind('clean', () => editor.markClean());

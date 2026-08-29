@@ -4,6 +4,7 @@ export {
     VisualEditingEngineDestroyedError,
 } from './visual-editing-engine.js';
 export { HistoryPlugin } from './history.js';
+export { groupHistoryTransaction } from './history-metadata.js';
 export type {
     EditingEngine,
     VisualEditingEngineOptions,

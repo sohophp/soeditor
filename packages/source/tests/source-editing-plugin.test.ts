@@ -1,0 +1,32 @@
+import { Editor } from '@soeditor/core';
+import { describe, expect, it } from 'vitest';
+
+import { SourceEditingPlugin } from '../src/index.js';
+
+describe('SourceEditingPlugin', () => {
+    it('registers command-driven source and visual mode transitions', async () => {
+        const editor = await Editor.create({ plugins: [SourceEditingPlugin] });
+
+        expect(editor.commands.has('editor.source')).toBe(true);
+        expect(editor.commands.has('editor.visual')).toBe(true);
+        expect(editor.commands.isActive('editor.visual')).toBe(true);
+        expect(editor.commands.canExecute('editor.visual')).toBe(false);
+
+        editor.execute('editor.source');
+        expect(editor.state.mode).toBe('source');
+        expect(editor.commands.isActive('editor.source')).toBe(true);
+        expect(editor.commands.canExecute('editor.source')).toBe(false);
+
+        editor.execute('editor.visual');
+        expect(editor.state.mode).toBe('visual');
+    });
+
+    it('rejects command arguments without changing mode', async () => {
+        const editor = await Editor.create({ plugins: [SourceEditingPlugin] });
+
+        expect(() => editor.execute('editor.source', 'unexpected')).toThrow(
+            'does not accept arguments',
+        );
+        expect(editor.state.mode).toBe('visual');
+    });
+});

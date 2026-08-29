@@ -45,6 +45,17 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/source',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/rich-text',
             'pack',
             '--pack-destination',
@@ -91,8 +102,11 @@ try {
     const richTextArchive = archives.find((name) =>
         name.startsWith('soeditor-rich-text-'),
     );
+    const sourceArchive = archives.find((name) =>
+        name.startsWith('soeditor-source-'),
+    );
 
-    if (archives.length !== 4 || coreArchive === undefined) {
+    if (archives.length !== 5 || coreArchive === undefined) {
         throw new Error('Expected one packed @soeditor/core archive.');
     }
 
@@ -106,6 +120,10 @@ try {
 
     if (richTextArchive === undefined) {
         throw new Error('Expected one packed @soeditor/rich-text archive.');
+    }
+
+    if (sourceArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/source archive.');
     }
 
     const packagePath = join(fixtureDirectory, 'package.json');
@@ -125,6 +143,10 @@ try {
     packageData.dependencies['@soeditor/rich-text'] = `file:${join(
         packDirectory,
         richTextArchive,
+    )}`;
+    packageData.dependencies['@soeditor/source'] = `file:${join(
+        packDirectory,
+        sourceArchive,
     )}`;
     await writeFile(packagePath, `${JSON.stringify(packageData, null, 4)}\n`);
 

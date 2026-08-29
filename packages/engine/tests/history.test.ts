@@ -2,6 +2,7 @@ import { Editor } from '@soeditor/core';
 
 import { HistoryPlugin } from '../src/history.js';
 import {
+    groupHistoryTransaction,
     readReplaySelection,
     setHistoryMetadata,
 } from '../src/history-metadata.js';
@@ -98,6 +99,27 @@ describe('transaction-backed history', () => {
         await editor.destroy();
     });
 
+    it('groups consecutive source-origin snapshots for shared source undo', async () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-08-29T00:00:00Z'));
+        const editor = await Editor.create({
+            data: '<p></p>',
+            plugins: [HistoryPlugin],
+        });
+
+        commitSource(editor, '<p>A</p>');
+        vi.advanceTimersByTime(100);
+        commitSource(editor, '<p>AB</p>');
+        vi.advanceTimersByTime(100);
+        commitSource(editor, '<p>ABC</p>');
+
+        editor.execute('editor.undo');
+        expect(editor.getData()).toBe('<p></p>');
+        editor.execute('editor.redo');
+        expect(editor.getData()).toBe('<p>ABC</p>');
+        await editor.destroy();
+    });
+
     it('places structured selection metadata on undo and redo replay', async () => {
         const editor = await Editor.create({
             data: '<p>A</p>',
@@ -165,4 +187,14 @@ function collapsed(offset: number): EditingSelection {
         anchor: { block: 0, offset },
         focus: { block: 0, offset },
     };
+}
+
+function commitSource(editor: Editor, source: string): void {
+    editor.update(
+        (transaction) => {
+            transaction.replaceDocument(source);
+            groupHistoryTransaction(transaction, 'source-editing');
+        },
+        { origin: 'source' },
+    );
 }

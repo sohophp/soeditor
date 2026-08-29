@@ -305,6 +305,187 @@ test('rejects a duplicate visual service before mutating another host', async ({
     });
 });
 
+test('switches visual to exact HTML source editing and back', async ({
+    page,
+}) => {
+    await page.click('#mode');
+    await expect(page.locator(editor)).toBeHidden();
+    await expect(page.locator('[data-testid="source-editor"]')).toBeVisible();
+    await expect(page.locator('.cm-content')).toContainText(
+        '<strong>SoEditor</strong>',
+    );
+
+    const exact = '<p class="lead">Edited &amp; exact</p>';
+    await setSourceText(page, exact);
+    await expect(page.locator(source)).toHaveText(exact);
+
+    await page.click('#mode');
+    await expect(page.locator('[data-testid="source-editor"]')).toBeHidden();
+    await expect(page.locator(editor)).toBeVisible();
+    await expect(page.locator(`${editor} p`)).toHaveText('Edited & exact');
+    await expect(page.locator(source)).toHaveText(exact);
+});
+
+test('synchronizes external source and provides HTML syntax highlighting', async ({
+    page,
+}) => {
+    await page.click('#mode');
+    await page.click('#world');
+
+    await expect(page.locator('.cm-content')).toHaveText('<p>World</p>');
+    expect(await page.locator('.cm-content span').count()).toBeGreaterThan(0);
+});
+
+test('diagnoses invalid source and locks the last valid visual model until recovery', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await page.click('#mode');
+    const invalid = '<p id="first" id="duplicate">Broken</p>';
+    await setSourceText(page, invalid);
+
+    await expect(page.locator(source)).toHaveText(invalid);
+    await expect(
+        page.locator('.cm-lintPoint-error, .cm-lintRange-error'),
+    ).toHaveCount(1);
+    expect(await sourceDiagnosticCodes(page)).toContain('duplicate-attribute');
+
+    await page.click('#mode');
+    await expect(page.locator(source)).toHaveText(invalid);
+    await expect(page.locator(`${editor} p`)).toHaveText('Hello');
+    await expect(page.locator(editor)).toHaveAttribute(
+        'contenteditable',
+        'false',
+    );
+
+    await page.click('#mode');
+    await setSourceText(page, '<p>Recovered</p>');
+    await page.click('#mode');
+    await expect(page.locator(`${editor} p`)).toHaveText('Recovered');
+    await expect(page.locator(editor)).toHaveAttribute(
+        'contenteditable',
+        'true',
+    );
+});
+
+test('keeps custom and unsafe source exact without executing it', async ({
+    page,
+}) => {
+    await page.click('#mode');
+    const exact =
+        '<p onclick="window.__sourceExecuted=true">A<custom-inline data-id="1"></custom-inline></p><!--CMS:block--><svg><foreignObject><div>SVG</div></foreignObject></svg><template><custom-element></custom-element></template><script>window.__sourceExecuted=true</script>';
+    await setSourceText(page, exact);
+
+    await expect(page.locator(source)).toHaveText(exact);
+    await page.click('#mode');
+    await expect(page.locator(source)).toHaveText(exact);
+    await expect(page.locator('[data-soeditor-opaque-inline]')).toHaveCount(1);
+    expect(
+        await page.evaluate(
+            () =>
+                (window as Window & { __sourceExecuted?: boolean })
+                    .__sourceExecuted,
+        ),
+    ).toBeUndefined();
+});
+
+test('preserves recoverable invalid nesting exactly across mode switches', async ({
+    page,
+}) => {
+    await page.click('#mode');
+    const recoverable = '<p>before<section>inside</section>after';
+    await setSourceText(page, recoverable);
+    await page.click('#mode');
+
+    await expect(page.locator(source)).toHaveText(recoverable);
+    await page.click('#mode');
+    await expect(page.locator('.cm-content')).toHaveText(recoverable);
+});
+
+test('uses shared source undo while keeping canonical source synchronized', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await page.click('#mode');
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('Control+End');
+    await page.keyboard.insertText('X');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>X');
+
+    await page.keyboard.press('Control+z');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+    await expect(page.locator('.cm-content')).toHaveText('<p>Hello</p>');
+
+    await page.keyboard.press('Control+End');
+    await page.keyboard.insertText('Y');
+    await executeCommand(page, 'editor.undo');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>');
+    await page.keyboard.press('Control+Shift+z');
+    await expect(page.locator(source)).toHaveText('<p>Hello</p>Y');
+});
+
+test('honors readonly policy in source mode', async ({ page }) => {
+    await page.goto('/?readonly=1');
+    await page.click('#mode');
+    await expect(page.locator('.cm-content')).toHaveAttribute(
+        'contenteditable',
+        'false',
+    );
+    const initial = await page.locator(source).textContent();
+    await page.locator('.cm-content').click();
+    await page.keyboard.insertText('blocked');
+    await expect(page.locator(source)).toHaveText(initial ?? '');
+});
+
+test('rejects duplicate source attachment and cleans up idempotently', async ({
+    page,
+}) => {
+    const result = await page.evaluate(() => {
+        const harness = (
+            window as Window & {
+                __soeditor?: {
+                    createSourceEditingEngine(options: {
+                        editor: unknown;
+                        element: HTMLElement;
+                    }): unknown;
+                    editor: unknown;
+                    sourceEngine: { destroy(): void };
+                };
+            }
+        ).__soeditor;
+        if (harness === undefined) {
+            throw new Error('Playground editor was not exposed.');
+        }
+        const second = document.createElement('div');
+        document.body.append(second);
+        let errorName = '';
+        try {
+            harness.createSourceEditingEngine({
+                editor: harness.editor,
+                element: second,
+            });
+        } catch (error: unknown) {
+            errorName = error instanceof Error ? error.name : 'unknown';
+        }
+        harness.sourceEngine.destroy();
+        harness.sourceEngine.destroy();
+        const sourceHost = document.querySelector(
+            '[data-testid="source-editor"]',
+        );
+        return {
+            duplicateChildren: second.childNodes.length,
+            errorName,
+            sourceChildren: sourceHost?.childNodes.length,
+        };
+    });
+
+    expect(result).toEqual({
+        duplicateChildren: 0,
+        errorName: 'ServiceAlreadyRegisteredError',
+        sourceChildren: 0,
+    });
+});
+
 test('synchronizes external canonical source changes', async ({ page }) => {
     await page.click('#world');
 
@@ -525,6 +706,7 @@ test('cleans the visual engine when the owning Core editor is destroyed', async 
 
     await expect(page.locator(editor)).toBeEmpty();
     await expect(page.locator(editor)).not.toHaveAttribute('contenteditable');
+    await expect(page.locator('[data-testid="source-editor"]')).toBeEmpty();
 });
 
 async function setSelection(
@@ -677,6 +859,30 @@ async function setEditorData(page: Page, data: string): Promise<void> {
         }
         harness.editor.setData(sourceData);
     }, data);
+}
+
+async function setSourceText(page: Page, value: string): Promise<void> {
+    const content = page.locator('.cm-content');
+    await content.click();
+    await page.keyboard.press('Control+a');
+    await page.keyboard.insertText(value);
+}
+
+async function sourceDiagnosticCodes(page: Page): Promise<readonly string[]> {
+    return page.evaluate(() => {
+        const harness = (
+            window as Window & {
+                __soeditor?: {
+                    sourceEngine: {
+                        readonly diagnostics: readonly {
+                            readonly code: string;
+                        }[];
+                    };
+                };
+            }
+        ).__soeditor;
+        return harness?.sourceEngine.diagnostics.map(({ code }) => code) ?? [];
+    });
 }
 
 async function readSelection(

@@ -69,13 +69,16 @@ export class VisualEditingEngine implements EditingEngine {
     readonly element: HTMLElement;
     readonly #disposeDocumentChange: () => void;
     readonly #disposeEditorDestroy: () => void;
+    readonly #disposeModeChange: () => void;
     readonly #mutationObserver: MutationObserver;
     readonly #previousAttributes: ReadonlyMap<string, string | null>;
+    readonly #previousHidden: boolean;
     readonly #projection: DomProjection;
     readonly #service: VisualEditingService;
     #compositionSelection: EditingSelection | undefined;
     #destroyed = false;
     #lockedDocument = false;
+    #lastValidModel: EditingModel | undefined;
     #model: EditingModel;
     #pending:
         | {
@@ -102,6 +105,8 @@ export class VisualEditingEngine implements EditingEngine {
         const initial = createVisualModel(this.editor.getData());
         this.#model = initial.model;
         this.#lockedDocument = initial.locked;
+        this.#lastValidModel = initial.valid ? initial.model : undefined;
+        this.#previousHidden = this.element.hidden;
         this.#previousAttributes = new Map(
             ['contenteditable', 'role', 'aria-multiline', 'aria-readonly'].map(
                 (name) => [name, this.element.getAttribute(name)],
@@ -155,6 +160,9 @@ export class VisualEditingEngine implements EditingEngine {
             'editor:destroy',
             () => this.destroy(),
         );
+        this.#disposeModeChange = this.editor.events.on('mode:change', () =>
+            this.#updateEditableState(),
+        );
     }
 
     get selection(): EditingSelection | undefined {
@@ -199,6 +207,7 @@ export class VisualEditingEngine implements EditingEngine {
         this.element.removeEventListener('paste', this.#handlePaste);
         this.#disposeDocumentChange();
         this.#disposeEditorDestroy();
+        this.#disposeModeChange();
         try {
             if (
                 this.editor.services.tryGet(visualEditingServiceToken) ===
@@ -212,6 +221,7 @@ export class VisualEditingEngine implements EditingEngine {
             }
         }
         this.element.replaceChildren();
+        this.element.hidden = this.#previousHidden;
         for (const [name, value] of this.#previousAttributes) {
             if (value === null) {
                 this.element.removeAttribute(name);
@@ -530,9 +540,12 @@ export class VisualEditingEngine implements EditingEngine {
             return;
         }
 
-        const next = createVisualModel(source);
+        const next = createVisualModel(source, this.#lastValidModel);
         this.#model = next.model;
         this.#lockedDocument = next.locked;
+        if (next.valid) {
+            this.#lastValidModel = next.model;
+        }
         this.#updateEditableState();
         this.#render(this.#model, readReplaySelection(transaction));
     }
@@ -590,7 +603,10 @@ export class VisualEditingEngine implements EditingEngine {
     }
 
     #updateEditableState(): void {
-        const readonly = this.editor.state.readonly || this.#lockedDocument;
+        const visual = this.editor.state.mode === 'visual';
+        const readonly =
+            this.editor.state.readonly || this.#lockedDocument || !visual;
+        this.element.hidden = !visual;
         this.element.contentEditable = readonly ? 'false' : 'true';
         this.element.setAttribute('aria-readonly', String(readonly));
     }
@@ -623,9 +639,13 @@ function ensureEditableModel(model: EditingModel): EditingModel {
         : model;
 }
 
-function createVisualModel(source: string): {
+function createVisualModel(
+    source: string,
+    fallback?: EditingModel,
+): {
     readonly locked: boolean;
     readonly model: EditingModel;
+    readonly valid: boolean;
 } {
     if (/<!doctype\s|<\/?(?:html|head|body)(?:\s|>)/iu.test(source)) {
         return Object.freeze({
@@ -641,13 +661,36 @@ function createVisualModel(source: string): {
                     },
                 ],
             }),
+            valid: false,
+        });
+    }
+
+    const parsed = parseHtmlFragment(source);
+    if (
+        parsed.diagnostics.some((diagnostic) => diagnostic.severity === 'error')
+    ) {
+        return Object.freeze({
+            locked: true,
+            model:
+                fallback ??
+                freezeModel({
+                    blocks: [
+                        {
+                            kind: 'opaque-block',
+                            node: Object.freeze({
+                                type: 'comment',
+                                value: 'Invalid HTML preserved in source',
+                            }),
+                        },
+                    ],
+                }),
+            valid: false,
         });
     }
 
     return Object.freeze({
         locked: false,
-        model: ensureEditableModel(
-            createEditingModel(parseHtmlFragment(source).document),
-        ),
+        model: ensureEditableModel(createEditingModel(parsed.document)),
+        valid: true,
     });
 }

@@ -8,6 +8,17 @@ const GROUP = 'soeditor.history.group';
 const REPLAY = 'soeditor.history.replay';
 const REPLAY_SELECTION = 'soeditor.history.replaySelection';
 
+/** Marks a transaction as part of a named, continuity-checked history group. */
+export function groupHistoryTransaction(
+    transaction: Transaction,
+    group: string,
+): void {
+    if (group.length === 0) {
+        throw new TypeError('A history group ID must not be empty.');
+    }
+    transaction.setMeta(GROUP, group);
+}
+
 export interface HistoryMetadata {
     readonly beforeSelection?: EditingSelection;
     readonly afterSelection?: EditingSelection;

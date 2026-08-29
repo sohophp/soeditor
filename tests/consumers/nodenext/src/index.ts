@@ -15,6 +15,12 @@ import {
     type EditingSelection,
 } from '@soeditor/engine';
 import { BoldPlugin, type LinkOptions } from '@soeditor/rich-text';
+import {
+    createSourceEditingEngine,
+    SourceEditingPlugin,
+    sourceEditingServiceToken,
+    type SourceEditingEngineOptions,
+} from '@soeditor/source';
 // @ts-expect-error Editing-model internals are not a package subpath API.
 import type { EditingModel } from '@soeditor/engine/model';
 
@@ -45,7 +51,7 @@ class ConsumerPlugin extends Plugin {
 const editor = await Editor.create({
     config: { nested: { enabled: true } },
     data: '<p>NodeNext</p>',
-    plugins: [ConsumerPlugin, HistoryPlugin, BoldPlugin],
+    plugins: [ConsumerPlugin, HistoryPlugin, BoldPlugin, SourceEditingPlugin],
 });
 
 editor.services.register(ExampleServiceToken, { value: 'available' });
@@ -85,6 +91,12 @@ void visualFactory;
 void visualSelection;
 const linkOptions: LinkOptions = { href: '/relative' };
 void linkOptions;
+const sourceFactory: typeof createSourceEditingEngine =
+    createSourceEditingEngine;
+const sourceOptions = undefined as SourceEditingEngineOptions | undefined;
+void sourceFactory;
+void sourceOptions;
+void sourceEditingServiceToken;
 const rejectInternalModel = (value: EditingModel): void => {
     void value;
 };

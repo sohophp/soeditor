@@ -17,6 +17,11 @@
                 padding: 1rem;
             }
 
+            #source-editor {
+                border: 1px solid #8c959f;
+                min-height: 12rem;
+            }
+
             [data-soeditor-opaque-block],
             [data-soeditor-opaque-inline] {
                 background: #f0f3f6;
@@ -62,6 +67,8 @@
             </p>
             <h2>Visual Surface</h2>
             <div id="editor" data-testid="editor"></div>
+            <h2>HTML Source Editor</h2>
+            <div id="source-editor" data-testid="source-editor"></div>
             <h2>Canonical HTML</h2>
             <pre id="source" data-testid="source"></pre>
             <h2>Current State</h2>

@@ -216,6 +216,46 @@ images and tables are semantic source structures but inert placeholders in the
 visual surface. Advanced widgets, nested lists, pending collapsed-caret marks,
 and configurable schemas remain deferred.
 
+## Phase 6 source editing
+
+Phase 6 adds browser package `@soeditor/source`. `SourceEditingPlugin` registers
+`editor.source` and `editor.visual`; both mode transitions are Core
+transactions. `SourceEditingEngine` owns a CodeMirror 6 HTML surface and a
+per-editor typed source service.
+
+```text
+CodeMirror document (exact user text)
+              ↓ update listener
+ Core replace-document transaction
+              ↓ document:change
+ canonical EditorDocument source
+       ↙                    ↘
+source synchronization   visual parsing/projection
+```
+
+Source keystrokes commit the exact complete string without an HTML
+parse/serialize round trip. External, visual, programmatic, and history changes
+synchronize back into CodeMirror with a non-history CodeMirror transaction and
+a feedback-loop guard. CodeMirror's HTML language package provides highlighting
+and editor behavior. `@soeditor/html` document/fragment diagnostics are mapped
+to its lint UI, but public services return only SoEditor diagnostic types.
+
+When `HistoryPlugin` is present, high-priority CodeMirror undo/redo shortcuts
+invoke the shared `editor.undo` / `editor.redo` commands. Consecutive
+`source`-origin snapshots group within the existing history time window. A
+surface without Core history falls back to CodeMirror's local history.
+
+Only the active surface is visible and editable. Invalid source remains
+canonical and source-editable. The visual engine retains its last parse-valid
+fragment model as a locked projection while parser errors exist, so a recovered
+tree cannot be edited and serialized over the invalid source. It resumes from
+the new model after source becomes valid. Initial invalid source uses an inert
+placeholder; complete documents keep the existing locked-source policy.
+
+CodeMirror packages are runtime dependencies of `@soeditor/source` and are
+external imports in its library build. Core, HTML, engine, and rich-text
+packages remain CodeMirror-independent.
+
 ## 1. 项目定位
 
 SoEditor 是一个面向开发者、CMS 和内容系统的现代可扩展内容编辑器。
