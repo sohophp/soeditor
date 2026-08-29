@@ -15,10 +15,12 @@ use an npm identity.
 3. Create the protected GitHub `npm` environment and require reviewer approval.
 4. Configure an environment-scoped `NPM_TOKEN` automation secret for this
    repository/workflow. It must be restricted to the required packages.
-5. Protect `master` and require the CI release gate.
-6. Enable GitHub private vulnerability reporting for the repository.
+5. Enable GitHub private vulnerability reporting for the repository.
 
-No package should be published until all six conditions are true.
+No package should be published until all five conditions are true. As a
+separate repository-governance decision, protect `master` and require the CI
+release gate when the maintainer is ready to require pull requests for release
+changes.
 
 ## Patch policy
 

@@ -22,6 +22,8 @@ deliberate and documented under SemVer principles.
 - automated axe WCAG A/AA scans cover the primary Visual, HTML Source,
   Markdown, and outer Preview UI; CI repeats the complete release gate and npm
   publication dry run from a frozen install.
+- the GitHub `npm` environment requires an explicit `sohophp` review, and
+  private vulnerability reporting is enabled.
 - current global bundle guard: 1.25 MB raw / 410 kB gzip; measured approximately
   1.198 MB raw / 390 kB gzip.
 - current minimal Vite consumer: approximately 27.9 kB raw / 8.74 kB gzip.
@@ -44,10 +46,10 @@ deliberate and documented under SemVer principles.
 - Lifecycle timing uses a generous regression budget, not a cross-device
   performance guarantee. Snapshot history has linear memory cost.
 - Public npm publication has not yet been performed. Repository/package
-  metadata, CI, dry-run, and the protected manual workflow are prepared. The
-  repository owner must still choose a license, confirm control of both npm
-  names, configure the protected `npm` environment/token, and authorize the
-  publication.
+  metadata, green CI, dry-run, protected manual workflow/environment, and
+  private vulnerability reporting are prepared. The repository owner must
+  still choose a license, confirm control of both npm names, add the
+  environment-scoped `NPM_TOKEN`, and authorize the publication.
 
 ## Lower-priority notes
 
