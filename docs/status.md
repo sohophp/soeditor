@@ -48,11 +48,14 @@ deliberate and documented under SemVer principles.
   performance guarantee. Snapshot history has linear memory cost.
 - Public npm publication is in recovery. The third protected `0.5.0` attempt
   published all 14 `@soeditor/*` packages, then the unscoped `soeditor` package
-  was denied by its token permissions. Those immutable artifacts remain
-  published, but `0.5.0` is not the complete supported release set. The
-  recovery candidate advances all 15 packages to `0.5.1` and publishes the
-  unscoped umbrella first. Publication must use a granular token with package
-  read/write access set to **All Packages** and Bypass 2FA enabled.
+  was denied. Those immutable artifacts remain published, but `0.5.0` is not
+  the complete supported release set. The aligned `0.5.1` recovery candidate
+  passed local and clean CI gates and remains entirely unpublished. Its
+  unscoped package guard proved the final blocker is npm's package-name
+  similarity rule: npm rejects `soeditor` as too similar to `jsoneditor`.
+  Publication is paused for an explicit owner decision between a scoped
+  umbrella name and an npm support appeal; credential retries cannot resolve
+  this policy response.
 
 ## Lower-priority notes
 

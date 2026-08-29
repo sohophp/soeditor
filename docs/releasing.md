@@ -32,6 +32,12 @@ separate repository-governance decision, protect `master` and require the CI
 release gate when the maintainer is ready to require pull requests for release
 changes.
 
+Registry availability is not sufficient evidence that a new unscoped name can
+be created. npm may reject an unpublished name under its package-name
+similarity policy. Treat that response as a public naming decision: use an
+owner-approved scoped name or complete an npm support appeal, then rerun every
+release gate. Do not keep rotating credentials for a naming-policy rejection.
+
 After the packages exist, configure npm trusted publishing for `publish.yml`
 and the `npm` GitHub environment, verify one release through OIDC, then remove
 the long-lived publishing secret. Until that migration is complete, an OIDC
