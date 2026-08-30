@@ -1,8 +1,7 @@
 # Compatibility and support policy
 
-This policy defines the intended SoEditor 1.x contract. Until an authorized
-1.0 publication, the repository contains a release candidate rather than a
-public 1.x compatibility promise.
+This policy defines the SoEditor 1.x contract beginning with the published
+`1.0.0` release.
 
 ## API classifications
 
@@ -10,7 +9,7 @@ Every declared package entry point is recorded in
 [`api-report.md`](api-report.md). The generated report is the authoritative
 inventory and uses four classifications:
 
-- **stable** — covered by SemVer once 1.0 is released;
+- **stable** — covered by the documented 1.x SemVer policy;
 - **experimental** — public and supported for evaluation, but may change in a
   minor release with migration notes;
 - **deprecated** — still supported but scheduled for removal according to the
@@ -24,7 +23,7 @@ npm tarball.
 
 ## SemVer and deprecation
 
-For stable APIs after 1.0:
+For stable APIs in 1.x:
 
 - patches may fix defects and security issues without intentionally changing
   documented behavior or types;
@@ -67,8 +66,7 @@ channel. Do not disclose an unpatched vulnerability in a public issue. There is
 no contractual response-time SLA, but confirmed issues are prioritized by
 severity and corrected on the newest supported line.
 
-Before 1.0, only the current candidate line is maintained. After 1.0, the
-newest 1.x minor receives compatibility, security, accessibility, and
+The newest 1.x minor receives compatibility, security, accessibility, and
 correctness fixes. Older minors may be superseded by the next minor; a
 separately announced long-term-support line is not implied. npm deprecation is
 preferred over unpublishing a defective immutable version.

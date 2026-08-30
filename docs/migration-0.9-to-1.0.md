@@ -1,18 +1,16 @@
 # Migrating from SoEditor 0.9 to 1.0
 
-This guide describes the frozen 1.0 candidate contract. Use the final aligned
-`1.0.x` versions only after an owner-authorized release exists; the repository
-currently contains the aligned local `1.0.0` candidate.
+This guide describes the stable 1.0 contract. Install the aligned `1.0.x`
+versions together; `1.0.0` is available from the public npm registry.
 
 ## Compatibility outcome
 
 Representative 0.9 NodeNext, native ESM, Vite, CMS, plugin, React, Vue, and
 browser integrations compile and run unchanged against the frozen stable API.
-No stable 0.9 package-root symbol requires a source migration for the 1.0
-candidate.
+No stable 0.9 package-root symbol requires a source migration for 1.0.
 
 Phase 34 adds a generated API report and classifies each export. Stable entries
-receive the documented 1.x SemVer policy after release. Structured editing
+receive the documented 1.x SemVer policy. Structured editing
 models/operations, conversion/node-view contracts, visual decorations, and
 table/media extension breadth remain experimental and may evolve in a 1.x
 minor with migration notes.
@@ -38,7 +36,7 @@ and use the supported Node line recorded in package manifests and
 
 ## CSP-capable Source and Markdown
 
-The candidate adds an optional `cspNonce` to Source and Markdown engine options.
+The release adds an optional `cspNonce` to Source and Markdown engine options.
 Existing integrations need no change. Applications with nonce-based
 `style-src` should pass the per-response nonce:
 
@@ -71,6 +69,6 @@ accidental inherited host text color must style their own container explicitly.
 7. Read the security, deployment/operations, troubleshooting, and support
    policies before rollout.
 
-The 1.0 candidate does not add real-time collaboration, track changes, remote
+The 1.0 release does not add real-time collaboration, track changes, remote
 plugins, executable Preview, arbitrary HTML execution, byte-perfect
 preservation, or lossless HTML/Markdown conversion.

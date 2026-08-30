@@ -5,7 +5,7 @@ file being present in a tarball does not make it public; `src`, `dist` file
 paths, concrete registries, DOM projection internals, and undocumented globals
 are internal and may change without migration support.
 
-## 1.0 candidate classifications
+## 1.0 classifications
 
 The generated [`api-report.md`](api-report.md) inventories every exported
 symbol and declaration signature. [`support-policy.md`](support-policy.md)

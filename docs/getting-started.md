@@ -1,9 +1,8 @@
 # Getting started
 
-SoEditor is an ESM-first 1.0 candidate. It separates the canonical document
+SoEditor is an ESM-first 1.0 release. It separates the canonical document
 (`Editor`) from browser surfaces so a CMS can mount exactly the UI it needs.
-The public registry reference remains 0.5.1 until an authorized candidate is
-published.
+The public registry reference is `@soeditor/editor@1.0.0`.
 
 ## Install and create
 

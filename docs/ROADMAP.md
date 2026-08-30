@@ -2,7 +2,7 @@
 
 ## Status
 
-Complete through Phase 36. The verified 1.0.0 candidate remains unpublished.
+Complete through Phase 36. SoEditor 1.0.0 is published and externally verified.
 The evidence-derived 0.7–1.0 roadmap is complete.
 
 This roadmap begins from the current repository state.

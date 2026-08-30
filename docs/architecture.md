@@ -482,7 +482,7 @@ are reproducible guards rather than device-independent performance claims.
 
 ## Phase 34 generated public API contract
 
-The 1.0 candidate treats built declaration entry points as the auditable public
+The 1.0 release treats built declaration entry points as the auditable public
 boundary. A generated, committed report enumerates every symbol from all 23
 package roots and declared preset subpaths, records declaration hashes, and
 lists CSS/CLI resources. CI regenerates the report after building and rejects

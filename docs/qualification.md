@@ -1,6 +1,6 @@
 # 1.0 qualification evidence
 
-Phase 35 qualifies the frozen candidate with executable evidence. This is a
+Phase 35 qualified the frozen 1.0 contract with executable evidence. This is a
 regression record, not a claim of universal device, browser, assistive-
 technology, security, or performance certification.
 

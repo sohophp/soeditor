@@ -2,7 +2,7 @@
 
 ## Unreleased
 
-## 1.0.0 — Release candidate
+## 1.0.0 — Stable release
 
 - Froze and classified every declared public package entry with generated
   symbol/signature and declaration-tree compatibility evidence.
@@ -16,9 +16,9 @@
 - Advanced the plugin scaffold to template version 2 with 1.x SDK peer and
   development ranges; the checker now rejects pre-1.0 SDK ranges.
 
-This entry describes a verified local release candidate. npm publication, the
-`v1.0.0` tag, hosted release, and registry/CDN verification remain pending
-explicit owner authorization.
+All 23 packages were published from commit
+`f6196545a0054fda3f63a10ead5b21e86ec90339`. Public npm installation and
+jsDelivr/Chromium lifecycle verification passed after registry propagation.
 
 ## 0.9.0 — Integration candidate
 

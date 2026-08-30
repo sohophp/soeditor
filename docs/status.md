@@ -66,9 +66,8 @@ consumer fixtures, release checks, and the version-2 plugin template are
 aligned at 1.0.0. The final release, supply-chain, and adversarial gates pass
 with Critical 0 and High 0.
 
-All 23 public package manifests are aligned at the `1.0.0` release candidate.
-The published stable reference remains `0.5.1` until an explicitly authorized
-npm publication and external registry/CDN verification complete.
+All 23 public package manifests are aligned and published at `1.0.0`.
+`@soeditor/editor@1.0.0` is the current stable registry reference.
 
 ## Published 0.5 release scope
 
@@ -196,6 +195,12 @@ deliberate and documented under SemVer principles.
   API/docs, packed consumers, distribution/release, all 126 Chromium scenarios,
   build, MIT, dependency audit, 23-package npm dry-run, and read-only registry
   preflight pass. Final adversarial review: Critical 0, High 0.
+- The owner-authorized `1.0.0` workflow published all 23 packages from commit
+  `f6196545a0054fda3f63a10ead5b21e86ec90339`. After npm index propagation, a
+  clean anonymous consumer installed the public umbrella, built with Vite,
+  validated every package's metadata, and passed jsDelivr JavaScript, CSS,
+  source-map, frozen-global, and Chromium lifecycle checks. The annotated
+  `v1.0.0` tag and GitHub Release point to the published commit.
 
 ## Accepted Medium limitations
 
@@ -276,6 +281,6 @@ wrappers, SSR DOM emulation, collaboration, spreadsheet behavior, office-paste
 parity, and arbitrary executable widgets remain post-0.7 candidates and are
 not implied by this preview.
 
-The candidate is not yet a public 1.0 release. npm publication, signed tag,
-GitHub Release, and external npm/jsDelivr verification require explicit owner
-authorization and must refer to the exact reviewed commit.
+SoEditor 1.0.0 is published. The local environment had no signing key, so its
+annotated `v1.0.0` tag is not cryptographically signed; the GitHub Release and
+npm provenance identify the owner-authorized workflow and published commit.

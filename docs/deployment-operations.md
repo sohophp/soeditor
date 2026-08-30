@@ -1,12 +1,10 @@
 # Deployment and operations
 
-This guide covers a production host integrating the SoEditor 1.0 candidate. It
-does not authorize npm publication of the repository candidate.
+This guide covers a production host integrating SoEditor 1.0.
 
 ## Build and pin
 
-After an owner-authorized registry publication, install aligned package
-versions and commit the lockfile:
+Install aligned package versions and commit the lockfile:
 
 ```bash
 pnpm add @soeditor/editor@1.0.0

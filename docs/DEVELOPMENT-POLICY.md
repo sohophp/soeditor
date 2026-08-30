@@ -518,11 +518,11 @@ Avoid architecture that requires reparsing/re-rendering the entire document for 
 
 # 20. Backward Compatibility
 
-Before 1.0, public APIs may evolve.
+After 1.0, stable public APIs follow the compatibility and deprecation policy
+in `docs/support-policy.md`. Experimental APIs may evolve only within their
+documented boundary and with migration notes.
 
-Breaking changes must still be deliberate.
-
-When a later phase reveals that an earlier public API is wrong:
+When a later phase reveals that a public API is wrong:
 
 1. determine whether the change is genuinely necessary;
 2. update relevant ADR/documentation;

@@ -71,6 +71,7 @@ try {
         },
         36,
     );
+    await verifyPublishedPackageIndexes();
     run(
         'pnpm',
         ['install', '--registry=https://registry.npmjs.org'],
@@ -168,6 +169,33 @@ async function verifyPublishedPackages(releaseVersion, releaseLicense) {
     );
 }
 
+async function verifyPublishedPackageIndexes() {
+    const packagesRoot = new URL('../packages/', import.meta.url);
+    const packageNames = [];
+    for (const directory of await readdir(packagesRoot)) {
+        const manifest = JSON.parse(
+            await readFile(
+                new URL(`${directory}/package.json`, packagesRoot),
+                'utf8',
+            ),
+        );
+        if (manifest.private !== true) packageNames.push(manifest.name);
+    }
+    await Promise.all(
+        packageNames.map((name) =>
+            fetchWithRetry(
+                `https://registry.npmjs.org/${encodeURIComponent(name)}`,
+                {
+                    headers: {
+                        Accept: 'application/vnd.npm.install-v1+json',
+                    },
+                },
+                36,
+            ),
+        ),
+    );
+}
+
 async function fetchWithRetry(url, init = {}, attempts = 12) {
     let latestFailure = 'no response';
     for (let attempt = 0; attempt < attempts; attempt += 1) {
@@ -176,7 +204,14 @@ async function fetchWithRetry(url, init = {}, attempts = 12) {
                 ...init,
                 signal: globalThis.AbortSignal.timeout(15_000),
             });
-            if (response.ok) return response;
+            if (response.ok) {
+                const body = await response.arrayBuffer();
+                return new globalThis.Response(body, {
+                    headers: response.headers,
+                    status: response.status,
+                    statusText: response.statusText,
+                });
+            }
             latestFailure = `HTTP ${String(response.status)}`;
         } catch (error) {
             latestFailure = error instanceof Error ? error.message : 'unknown';
