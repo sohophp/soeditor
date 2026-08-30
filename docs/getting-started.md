@@ -1,8 +1,9 @@
 # Getting started
 
-SoEditor is an ESM-first Developer Preview. It separates the canonical
-document (`Editor`) from browser surfaces so a CMS can mount exactly the UI it
-needs.
+SoEditor is an ESM-first 1.0 candidate. It separates the canonical document
+(`Editor`) from browser surfaces so a CMS can mount exactly the UI it needs.
+The public registry reference remains 0.5.1 until an authorized candidate is
+published.
 
 ## Install and create
 
@@ -73,5 +74,7 @@ and UI hosts remain explicit. Continue with the
 [configuration guide](configuration.md) or run the Playground links for each
 release configuration.
 
-For the 0.6 workflow and upgrade boundaries, read the
-[0.5-to-0.6 migration guide](migration-0.5-to-0.6.md).
+Continue with the task-oriented [API overview](api-overview.md),
+[deployment and operations](deployment-operations.md), and the complete
+[0.9-to-1.0 migration guide](migration-0.9-to-1.0.md). Public 0.5.1 consumers
+must follow each versioned migration guide in order.

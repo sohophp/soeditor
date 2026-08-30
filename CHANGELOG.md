@@ -26,6 +26,9 @@
   packages, framework/CMS/SSR verification, and measured integration budgets.
 - Added a generated symbol/declaration API report and explicit candidate 1.x
   compatibility, deprecation, runtime, security, and maintenance policies.
+- Added Source/Markdown CSP nonce forwarding, dark-theme and forced-colors
+  fixes, explicit-GC retention and accessibility qualification gates, and the
+  1.0 security/deployment/troubleshooting/API/migration documentation set.
 
 This entry describes a verified local release candidate. npm publication, the
 `v0.9.0` tag, hosted release, and registry/CDN verification remain pending

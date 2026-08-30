@@ -495,6 +495,21 @@ decorations, and table/media extension breadth remain explicitly experimental.
 The report does not replace packed consumers or behavioral tests and introduces
 no runtime dependency, registry, reflection, or global state.
 
+## Phase 35 production qualification boundary
+
+Production qualification composes existing public-path scenarios into an
+evidence matrix covering authoring, developer workflows, CMS/FileManager,
+widgets, tables/media, review, Workspace, frameworks, distribution, security,
+accessibility, performance, memory, and cleanup. Claims remain bounded to the
+tested Chromium/Node environment and automated checks.
+
+Source and Markdown accept an optional per-surface CSP nonce and forward it to
+CodeMirror's generated style element. Nonces remain request-scoped application
+inputs and never enter Core, global state, configuration discovery, or Preview.
+UI theme color ownership is limited to editor chrome, and forced-colors focus
+uses system colors. Backend rendering, persistence, authorization, monitoring,
+deployment CSP issuance, and executable site Preview remain host concerns.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing

@@ -1,7 +1,7 @@
 # Comments and mapped annotations
 
-`@soeditor/comments` is a public 0.8 package. It is not part of the published
-0.5.1 set or the unpublished 0.7 candidate.
+`@soeditor/comments` is a public review package in the aligned candidate. It was
+not part of the published 0.5.1 set.
 
 Comments are host data, not HTML. The host supplies identity, authorization,
 unique IDs, a clock, and atomic full-snapshot storage:

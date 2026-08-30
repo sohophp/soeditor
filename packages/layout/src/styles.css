@@ -81,3 +81,11 @@
     box-shadow: inset 0 0 0 3px #0969da;
     outline: none;
 }
+
+@media (forced-colors: active) {
+    .soeditor-split-view__separator:focus-visible {
+        box-shadow: none;
+        outline: 2px solid Highlight;
+        outline-offset: -2px;
+    }
+}

@@ -1,5 +1,5 @@
 import { performance } from 'node:perf_hooks';
-import { stdout } from 'node:process';
+import { memoryUsage, stdout } from 'node:process';
 
 import {
     freezeCommentThread,
@@ -33,6 +33,9 @@ const metrics = Object.freeze({
     tableOperations: await measureTableOperations(),
 });
 
+const memoryRetention = await measureMemoryRetention();
+const memoryRetentionBudget = 16 * 1024 * 1024;
+
 for (const [name, duration] of Object.entries(metrics)) {
     const budget = Reflect.get(budgets, name);
     if (typeof budget !== 'number' || duration > budget) {
@@ -42,11 +45,39 @@ for (const [name, duration] of Object.entries(metrics)) {
     }
 }
 
+if (memoryRetention > memoryRetentionBudget) {
+    throw new Error(
+        `memoryRetention exceeded its integration budget: ${String(memoryRetention)} bytes > ${String(memoryRetentionBudget)} bytes.`,
+    );
+}
+
 stdout.write(
     `Integration performance budgets passed: ${Object.entries(metrics)
         .map(([name, duration]) => `${name}=${duration.toFixed(2)}ms`)
-        .join(', ')}.\n`,
+        .join(
+            ', ',
+        )}, memoryRetention=${(memoryRetention / 1024 / 1024).toFixed(2)}MiB.\n`,
 );
+
+async function measureMemoryRetention() {
+    if (typeof globalThis.gc !== 'function') {
+        throw new Error('Memory qualification requires Node --expose-gc.');
+    }
+    for (let index = 0; index < 100; index += 1) {
+        const editor = await Editor.create();
+        await editor.destroy();
+    }
+    globalThis.gc();
+    const baseline = memoryUsage().heapUsed;
+    for (let index = 0; index < 2_000; index += 1) {
+        const editor = await Editor.create({
+            data: `<p>Memory lifecycle ${String(index)}</p>`,
+        });
+        await editor.destroy();
+    }
+    globalThis.gc();
+    return Math.max(0, memoryUsage().heapUsed - baseline);
+}
 
 async function measureCanonicalInput() {
     const editor = await Editor.create();

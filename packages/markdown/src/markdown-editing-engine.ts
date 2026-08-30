@@ -30,6 +30,8 @@ const accessibleActiveLineTheme = EditorView.theme({
 export interface MarkdownEditingEngineOptions {
     readonly activateOnFocus?: boolean;
     readonly ariaLabel?: string;
+    /** CSP nonce applied to CodeMirror's generated style element. */
+    readonly cspNonce?: string;
     readonly editor: Editor;
     readonly element: HTMLElement;
 }
@@ -98,11 +100,15 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
 
         this.#previousHidden = this.element.hidden;
         const readonly = this.#isReadonly();
+        const cspNonce = readCspNonce(options.cspNonce);
         this.#view = new EditorView({
             doc: this.editor.getData(),
             extensions: [
                 basicSetup,
                 accessibleActiveLineTheme,
+                ...(cspNonce === undefined
+                    ? []
+                    : [EditorView.cspNonce.of(cspNonce)]),
                 markdown(),
                 this.#editable.of([
                     EditorState.readOnly.of(readonly),
@@ -327,6 +333,16 @@ export class MarkdownEditingEngine implements MarkdownEditingEngineHandle {
             throw new MarkdownEditingEngineDestroyedError();
         }
     }
+}
+
+function readCspNonce(value: string | undefined): string | undefined {
+    if (value === undefined) return undefined;
+    if (value.trim().length === 0) {
+        throw new TypeError(
+            'The Markdown editing CSP nonce must not be empty.',
+        );
+    }
+    return value;
 }
 
 /** Attaches a CodeMirror Markdown surface to an editor. */

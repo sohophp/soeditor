@@ -2,9 +2,8 @@
 
 ## Status
 
-Complete through Phase 29. The verified 0.8.0 candidate is awaiting
-owner-authorized publication. The evidence-derived 0.7–1.0 roadmap is approved
-and Phase 30 is active.
+Complete through Phase 35. The verified 0.9.0 candidate remains unpublished.
+The evidence-derived 0.7–1.0 roadmap is approved and Phase 36 is active.
 
 This roadmap begins from the current repository state.
 
@@ -14,8 +13,8 @@ The SoEditor 0.5 Developer Preview roadmap is complete. Phase 16 was authorized
 after that checkpoint to prepare and stabilize the public 0.5.x release line.
 
 The completed public target is **SoEditor 0.5 Developer Preview** and its
-stabilized `0.5.1` release. The active development target is **SoEditor 0.9
-Integration Release**.
+stabilized `0.5.1` release. The active development target is **SoEditor 1.0
+Release Candidate**.
 
 ---
 
@@ -1223,7 +1222,7 @@ repository-owner-controlled operations.
 ## Status
 
 APPROVED from the repository owner's 2026-08-29 authorization to complete
-SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 35 is active.
+SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 36 is active.
 
 The sequence is justified in
 `docs/research/editor-landscape-2026.md`. Each release must pass its own
@@ -1645,7 +1644,7 @@ Classify, simplify, and freeze the evidence-backed public platform.
 
 ## Status
 
-ACTIVE.
+COMPLETE.
 
 ## Goal
 
@@ -1664,13 +1663,25 @@ paths.
 - no unsupported claim of WCAG certification, perfect preservation, or
   real-time collaboration.
 
+## Delivered
+
+- production qualification for public authoring, source, Markdown, Preview,
+  CMS, widget, table/media, review, Workspace, React, and Vue paths;
+- deterministic keyboard/focus, contrast, forced-colors, reduced-motion, CSP
+  nonce, lifecycle, explicit-GC memory, and large-document evidence;
+- security, operations, troubleshooting, qualification, API overview, and
+  0.9-to-1.0 migration guides with a local-link documentation audit;
+- full lint, strict typecheck, unit, performance, API, documentation, packed
+  consumer, distribution, release, 126-test Chromium, license, security,
+  npm dry-run, and registry preflight gates with Critical 0 / High 0.
+
 ---
 
 # Phase 36 — SoEditor 1.0 Release Candidate and Hardening
 
 ## Status
 
-PENDING.
+ACTIVE.
 
 ## Goal
 

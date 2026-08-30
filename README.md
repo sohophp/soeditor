@@ -30,12 +30,13 @@ media, and a packed third-party widget release gate. Phase 27 adds host-owned,
 operation-mapped comments and non-canonical visual decorations; Phase 28 adds
 host-owned revision history, semantic comparison, restore, and review policies.
 Phase 29 makes those packages public with explicit export/erasure governance
-and a 19-package release gate. Phase 30 adds a private, framework-neutral
+and a 19-package release gate. Phase 30 adds a framework-neutral
 workspace controller for explicit application mounting, reverse teardown,
 controlled/uncontrolled values, and bounded in-process recovery. Phases 31–33
 add public React/Vue adapters, offline plugin tooling, explicit Workspace
 integration diagnostics, measured performance gates, and a 23-package 0.9
-release boundary.
+release boundary. Phases 34–35 freeze the candidate public API, compatibility
+policy, accessibility/security/performance evidence, and production guidance.
 
 ```ts
 import { SoEditor, minimalPreset } from '@soeditor/editor';
@@ -108,8 +109,14 @@ the [revisions guide](docs/revisions.md),
 [plugin tooling and integration diagnostics](docs/plugin-tooling.md),
 [performance budgets](docs/performance.md),
 [0.8-to-0.9 migration](docs/migration-0.8-to-0.9.md),
+[0.9-to-1.0 migration](docs/migration-0.9-to-1.0.md),
 [public API policy](docs/public-api.md), the generated
-[API report](docs/api-report.md), [support policy](docs/support-policy.md), and
+[API report](docs/api-report.md), [API overview](docs/api-overview.md),
+[security model](docs/security.md),
+[deployment and operations](docs/deployment-operations.md),
+[troubleshooting](docs/troubleshooting.md),
+[qualification evidence](docs/qualification.md),
+[support policy](docs/support-policy.md), and
 [development status](docs/status.md).
 
 ## Development

@@ -1,8 +1,8 @@
 # Distribution and integration
 
-SoEditor Developer Preview is ESM-first. The `@soeditor/editor` package is
-the straightforward application entry; the other scoped packages remain
-available for smaller or more tightly controlled integrations.
+SoEditor is ESM-first. The `@soeditor/editor` package is the straightforward
+application entry; the other scoped packages remain available for smaller or
+more tightly controlled integrations.
 
 ## Install
 
@@ -95,9 +95,9 @@ own static assets. Pin an exact package version in production:
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.8.0/dist/soeditor.css"
+    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.9.0/dist/soeditor.css"
 />
-<script src="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.8.0/dist/soeditor.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@soeditor/editor@0.9.0/dist/soeditor.global.js"></script>
 <script>
     const editor = await SoEditor.create({
         data: '<p>Hello from a script tag.</p>',
@@ -114,9 +114,8 @@ automatically create editors. ESM and the scoped public package roots remain
 the authoritative APIs. The self-contained global contains optional features,
 so size-sensitive applications should use ESM.
 
-The example is the exact 0.8.0 URL to use after authorized publication and
+The example is the exact 0.9.0 URL to use only after authorized publication and
 external CDN verification. Until then it is a candidate URL; the public stable
-reference remains 0.5.1. Consumers must not mix release lines. See the
-[0.7-to-0.8 migration guide](migration-0.7-to-0.8.md). The 0.6 and 0.7
-candidates were not published; public 0.5.1 consumers should also review the
-[0.5-to-0.6 migration guide](migration-0.5-to-0.6.md).
+reference remains 0.5.1. Consumers must not mix release lines and must follow
+the complete migration chain through
+[`migration-0.9-to-1.0.md`](migration-0.9-to-1.0.md).

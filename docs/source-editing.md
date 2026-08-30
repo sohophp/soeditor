@@ -29,3 +29,13 @@ not execute them.
 Developer tools expose Find/Replace and source-range navigation through
 SoEditor-owned services and commands. Destroy the source engine during host
 teardown or let terminal editor destruction clean it up.
+
+For a nonce-based application `style-src`, pass the current response nonce when
+attaching CodeMirror:
+
+```ts
+createSourceEditingEngine({ cspNonce, editor, element: sourceHost });
+```
+
+The nonce is forwarded to CodeMirror's generated style element. It is not a
+Preview permission and must not be reused to weaken the isolated iframe policy.

@@ -35,7 +35,7 @@ Phase 28 adds the general application-level `Editor.setReadonly()` transition;
 attached editor surfaces must honor it dynamically. Phase 29 makes the
 revision provider/storage, comparison, review-policy, plugin, service,
 versioned export, and optional erasure contracts in `@soeditor/revisions`
-application public. Both review families are curated through the 0.8 SDK and
+application public. Both review families are curated through the aligned SDK and
 umbrella package.
 
 Concrete comment/revision controllers, panel renderers, mapping internals, and

@@ -21,11 +21,17 @@ The Phase 33 reference run on Node 22.14 measured:
 | startup/teardown   |                 100 Core instances |   2.54 ms | 4,000 ms |
 | table operations   |           100 edits over 400 cells |  48.64 ms | 4,000 ms |
 
+The same command runs with explicit GC enabled. After warm-up it creates and
+destroys 2,000 additional Core editors, forces collection, and permits at most
+16 MiB retained heap growth. The Phase 35 reference run retained 0.22 MiB. This
+is a regression signal, not a proof of leak freedom or an application memory
+budget.
+
 Chromium separately projects 1,000 real Visual paragraphs, applies a real
 `beforeinput`, renders a 400-cell table, and repeats 20 Editor/Visual/UI
 lifecycles. The per-operation guards are 4 seconds for large projection and
 table insertion, 1 second for input, and 6 seconds for the repeated lifecycle.
-The complete browser gate currently contains 122 scenarios.
+The complete browser gate currently contains 126 scenarios.
 
 Release bundle guards remain enforced by `pnpm test:release`: 1.35 MB raw and
 430 kB gzip for the full direct-browser global, 10 kB CSS, 2 kB for the ESM

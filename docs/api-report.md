@@ -358,7 +358,7 @@ Declaration SHA-256:
 | `MarkdownEditingEngine`                               | type/value | stable         | `58635afedfb1bf88` |
 | `MarkdownEditingEngineDestroyedError`                 | type/value | stable         | `11beaac72016e92f` |
 | `MarkdownEditingEngineHandle`                         | type       | stable         | `0e77b38439105b4d` |
-| `MarkdownEditingEngineOptions`                        | type       | stable         | `8cfcf90b336f518c` |
+| `MarkdownEditingEngineOptions`                        | type       | stable         | `62644f8e027e1541` |
 | `MarkdownEditingService`                              | type       | stable         | `06a9693935c5e448` |
 | `markdownEditingServiceToken`                         | value      | stable         | `ebe5add9b05776a2` |
 | `MarkdownPlugin`                                      | type/value | stable         | `fa0f1f9cc6704697` |
@@ -460,7 +460,7 @@ Declaration SHA-256:
 | `SoFinderSelection`                                   | type       | stable         | `5e01c6bce6e8dd1f` |
 | `SourceEditingEngine`                                 | type/value | stable         | `6bf813b5f266fb2e` |
 | `SourceEditingEngineDestroyedError`                   | type/value | stable         | `982f8e8bad3b7be1` |
-| `SourceEditingEngineOptions`                          | type       | stable         | `db485eb892cee85f` |
+| `SourceEditingEngineOptions`                          | type       | stable         | `5cfbd6c405a0b156` |
 | `SourceEditingPlugin`                                 | type/value | stable         | `889b0d71fdad00d8` |
 | `SourceEditingService`                                | type       | stable         | `609ef75151c01fa8` |
 | `sourceEditingServiceToken`                           | value      | stable         | `ec16a44f36dc0c78` |
@@ -770,7 +770,7 @@ Declaration SHA-256:
 ## @soeditor/markdown
 
 Declaration tree SHA-256:
-`359ebcccb560cebb9423271e1855bd6268281992b11a75c1b28f111a09f889fa`
+`e0c9a2332bb88387cbe5917d3cbb50fbdcc65e3b6e6f7c369750825a23b8fc9b`
 
 ### .
 
@@ -787,7 +787,7 @@ Declaration SHA-256:
 | `MarkdownEditingEngine`                  | type/value | stable         | `58635afedfb1bf88` |
 | `MarkdownEditingEngineDestroyedError`    | type/value | stable         | `11beaac72016e92f` |
 | `MarkdownEditingEngineHandle`            | type       | stable         | `0e77b38439105b4d` |
-| `MarkdownEditingEngineOptions`           | type       | stable         | `8cfcf90b336f518c` |
+| `MarkdownEditingEngineOptions`           | type       | stable         | `62644f8e027e1541` |
 | `MarkdownEditingService`                 | type       | stable         | `06a9693935c5e448` |
 | `markdownEditingServiceToken`            | value      | stable         | `ebe5add9b05776a2` |
 | `MarkdownPlugin`                         | type/value | stable         | `fa0f1f9cc6704697` |
@@ -1166,7 +1166,7 @@ Declaration SHA-256:
 ## @soeditor/source
 
 Declaration tree SHA-256:
-`d3cb272d4127768a8e88699ee76b43323dcd24ed40036997cf81a4dccfdc8ef6`
+`6c3cfdeba89a92370e1aae0c5690b79ffdf87c8b3797f8a18c9b8b8303e9c097`
 
 ### .
 
@@ -1178,7 +1178,7 @@ Declaration SHA-256:
 | `createSourceEditingEngine`            | value      | stable         | `58744efbcc7e4308` |
 | `SourceEditingEngine`                  | type/value | stable         | `6bf813b5f266fb2e` |
 | `SourceEditingEngineDestroyedError`    | type/value | stable         | `982f8e8bad3b7be1` |
-| `SourceEditingEngineOptions`           | type       | stable         | `db485eb892cee85f` |
+| `SourceEditingEngineOptions`           | type       | stable         | `5cfbd6c405a0b156` |
 | `SourceEditingPlugin`                  | type/value | stable         | `889b0d71fdad00d8` |
 | `SourceEditingService`                 | type       | stable         | `609ef75151c01fa8` |
 | `sourceEditingServiceToken`            | value      | stable         | `ec16a44f36dc0c78` |

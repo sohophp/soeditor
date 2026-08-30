@@ -218,24 +218,24 @@ feature: for example, comments accept a host `reviewPolicy` callback to
 distinguish comments-only access from a fully readonly review.
 
 Review integrations can import comments/revisions plugin factories, service
-tokens, and adapter types from the 0.8 SDK. Storage remains host-owned. Treat
+tokens, and adapter types from the aligned SDK. Storage remains host-owned. Treat
 `delete` as a retained comment tombstone, gate `export`/`erase` independently,
 and implement backend authorization and retention as described in
 `review-data-governance.md`.
 
-The private Phase 30 workspace layer is application infrastructure rather than
-a plugin registry. Applications may attach plugin-provided surfaces and
+The public Workspace layer is application infrastructure rather than a plugin
+registry. Applications may attach plugin-provided surfaces and
 services through explicit factories; each factory must return a complete
 `destroy()` handle. Plugin packages must not discover a workspace globally or
 depend on workspace controller internals.
 
-React and Vue integration belongs in the private framework adapter packages.
+React and Vue integration belongs in the separate public framework adapters.
 Plugins continue to expose framework-neutral commands, services, and explicit
 attachment handles; they must not import React/Vue or assume an adapter owns
 their DOM host.
 
-The private Phase 32 `@soeditor/plugin-tools` package can create a versioned
-0.9 SDK package and check its metadata, root exports, plugin IDs, public-root
+The public Node-only `@soeditor/plugin-tools` package can create a versioned 0.9
+SDK package and check its metadata, root exports, plugin IDs, public-root
 imports, tree-shaking declaration, and packed files. Run the packed check only
 after building:
 

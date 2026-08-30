@@ -33,3 +33,9 @@ policies are removed or rendered inert before preview.
 The sandbox intentionally has no execution permissions. Preview is not a way
 to run CMS scripts. Applications needing executable site behavior require a
 separate trusted deployment environment outside SoEditor's preview boundary.
+
+For the full content/Preview/plugin/host threat model, see
+[`security.md`](security.md). Application-shell CSP and CodeMirror nonces are
+documented separately in
+[`deployment-operations.md`](deployment-operations.md); neither changes this
+iframe's fixed execution policy.

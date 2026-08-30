@@ -56,7 +56,12 @@ adversarial gates pass with Critical 0 and High 0. Phase 34 — 1.0 Public API
 Stabilization — is complete. Every declared public entry is now covered by a
 generated symbol/signature/declaration-tree report and explicit compatibility,
 deprecation, runtime, security, and maintenance policies. The complete 0.9
-consumer and release gates remain unchanged and pass with Critical 0 and High 0. Phase 35 — 1.0 Qualification and Documentation — is active.
+consumer and release gates remain unchanged and pass with Critical 0 and High 0. Phase 35 — 1.0 Qualification and Documentation — is complete. It adds
+production security, operations, troubleshooting, API, qualification, and
+migration guidance plus deterministic CSP, accessibility, lifecycle, memory,
+and large-document evidence. All 126 Chromium scenarios and complete release
+gates pass with Critical 0 and High 0. Phase 36 — SoEditor 1.0 Release
+Candidate and Hardening — is active.
 
 All 23 public package manifests are aligned at the `0.9.0` release candidate.
 The published stable reference remains `0.5.1` until an explicitly authorized
@@ -172,6 +177,15 @@ deliberate and documented under SemVer principles.
   packed consumers, strict typecheck, unit/performance/API/distribution/release,
   all 122 Chromium scenarios, MIT, security, dry-run, and registry gates pass.
   Final adversarial review: Critical 0, High 0.
+- Phase 35 adds CSP nonces to both CodeMirror-backed editing engines, scopes
+  theme ownership to SoEditor chrome, and verifies keyboard focus restoration,
+  contrast, forced-colors, reduced-motion, isolated-document CSP styles, and
+  2,000-instance explicit-GC retention. Security, deployment, troubleshooting,
+  qualification, API overview, and 0.9-to-1.0 migration documentation are
+  linked and audited. Lint, strict typecheck, unit/performance/API/docs,
+  consumer/distribution/release, all 126 Chromium scenarios, MIT, dependency
+  audit, npm dry-run, and unpublished registry preflight pass. Final
+  adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
 

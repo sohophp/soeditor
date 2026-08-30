@@ -78,8 +78,8 @@ script output.
 Surface configuration is deliberately separate from Core:
 
 - Visual: `{ editor, element, ariaLabel? }`.
-- HTML Source: `{ editor, element, ariaLabel? }`.
-- Markdown: `{ editor, element, ariaLabel? }`.
+- HTML Source: `{ editor, element, ariaLabel?, cspNonce? }`.
+- Markdown: `{ editor, element, ariaLabel?, cspNonce? }`.
 - UI: `{ editor, element, toolbar?, theme? }`.
 - Preview: `{ editor, element, renderer?, configuration? }`.
 - Developer tools: `{ editor, ui, visualElement }`.
@@ -88,6 +88,10 @@ responsiveBreakpoint? }`.
 
 Only one service-owning surface of each kind may attach to an editor. Duplicate
 attachment fails before taking over an existing host.
+
+`cspNonce` forwards an application-generated response nonce to CodeMirror's
+runtime style element. Omit it when the host CSP does not use style nonces; an
+empty nonce is rejected.
 
 Split layout pairs are `visual-source`, `source-preview`, and
 `markdown-preview`. Projection engines remain application-owned. Destroy the

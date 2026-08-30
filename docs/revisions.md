@@ -1,7 +1,6 @@
 # Revisions and review policy
 
-`@soeditor/revisions` is a public 0.8 package. It is not part of the unpublished
-0.7 release candidate.
+`@soeditor/revisions` is a public review package in the aligned candidate.
 
 The host owns revision persistence and identity:
 

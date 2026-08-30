@@ -46,6 +46,8 @@ const accessibleActiveLineTheme = EditorView.theme({
 /** Options for attaching a source surface to one editor and host. */
 export interface SourceEditingEngineOptions {
     readonly activateOnFocus?: boolean;
+    /** CSP nonce applied to CodeMirror's generated style element. */
+    readonly cspNonce?: string;
     readonly editor: Editor;
     readonly element: HTMLElement;
     readonly ariaLabel?: string;
@@ -116,11 +118,15 @@ export class SourceEditingEngine implements SourceEngine {
         const source = this.editor.getData();
         this.#diagnostics = readDiagnostics(source);
         const readonly = this.#isReadonly();
+        const cspNonce = readCspNonce(options.cspNonce);
         this.#view = new EditorView({
             doc: source,
             extensions: [
                 basicSetup,
                 accessibleActiveLineTheme,
+                ...(cspNonce === undefined
+                    ? []
+                    : [EditorView.cspNonce.of(cspNonce)]),
                 html({ autoCloseTags: false }),
                 lintGutter(),
                 linter(
@@ -406,6 +412,14 @@ export class SourceEditingEngine implements SourceEngine {
             throw new SourceEditingEngineDestroyedError();
         }
     }
+}
+
+function readCspNonce(value: string | undefined): string | undefined {
+    if (value === undefined) return undefined;
+    if (value.trim().length === 0) {
+        throw new TypeError('The source editing CSP nonce must not be empty.');
+    }
+    return value;
 }
 
 /** Attaches a CodeMirror source surface to an editor. */
