@@ -2,8 +2,8 @@
 
 ## Status
 
-Complete through Phase 35. The verified 0.9.0 candidate remains unpublished.
-The evidence-derived 0.7–1.0 roadmap is approved and Phase 36 is active.
+Complete through Phase 36. The verified 1.0.0 candidate remains unpublished.
+The evidence-derived 0.7–1.0 roadmap is complete.
 
 This roadmap begins from the current repository state.
 
@@ -1222,7 +1222,7 @@ repository-owner-controlled operations.
 ## Status
 
 APPROVED from the repository owner's 2026-08-29 authorization to complete
-SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 36 is active.
+SoEditor 0.6 through 1.0 and the Phase 22 evidence review. Phase 36 is complete.
 
 The sequence is justified in
 `docs/research/editor-landscape-2026.md`. Each release must pass its own
@@ -1681,7 +1681,7 @@ paths.
 
 ## Status
 
-ACTIVE.
+COMPLETE.
 
 ## Goal
 
@@ -1697,6 +1697,18 @@ Produce one coherent 1.0 release candidate from the frozen APIs.
 - Critical = 0 and High = 0; accepted Medium/Low limitations documented;
 - npm publication, tags, hosted release, and external CDN verification remain
   explicit owner-authorized actions.
+
+## Delivered
+
+- aligned root, 23 public packages, packed consumer fixtures, release scripts,
+  documentation, and generated plugin template at `1.0.0` / SDK 1.x;
+- template version 2 for new third-party plugins, with the checker enforcing a
+  compatible 1.x SDK peer range;
+- frozen-install, lint, strict typecheck, unit, API, documentation, performance,
+  packed NodeNext/ESM/Vite/React/Vue/plugin/widget, distribution, release,
+  build, and 126-test Chromium gates;
+- MIT license, dependency audit, 23-package npm dry-run, and read-only registry
+  availability checks with Critical 0 / High 0.
 
 ## Explicit non-goals for 1.0
 

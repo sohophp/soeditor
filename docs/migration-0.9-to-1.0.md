@@ -2,7 +2,7 @@
 
 This guide describes the frozen 1.0 candidate contract. Use the final aligned
 `1.0.x` versions only after an owner-authorized release exists; the repository
-currently remains on the local `0.9.0` candidate.
+currently contains the aligned local `1.0.0` candidate.
 
 ## Compatibility outcome
 

@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/html",
-    "version": "0.9.0",
+    "version": "1.0.0",
     "license": "MIT",
     "description": "Standards-oriented HTML document infrastructure for SoEditor.",
     "keywords": [

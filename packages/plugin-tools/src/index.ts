@@ -7,4 +7,4 @@ export type {
 } from './plugin-check.js';
 export type { ScaffoldPluginOptions } from './scaffold.js';
 
-export const pluginTemplateVersion = 1;
+export const pluginTemplateVersion = 2;

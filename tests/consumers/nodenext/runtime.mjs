@@ -56,9 +56,9 @@ import { pluginTemplateVersion } from '@soeditor/plugin-tools';
 if (
     typeof useReactSoEditorWorkspace !== 'function' ||
     typeof useVueSoEditorWorkspace !== 'function' ||
-    pluginTemplateVersion !== 1
+    pluginTemplateVersion !== 2
 ) {
-    throw new Error('Packed 0.9 adapter or plugin-tool import failed.');
+    throw new Error('Packed 1.0 adapter or plugin-tool import failed.');
 }
 const integrationWorkspace = await createEditorWorkspace({
     createEditor: ({ source }) => Editor.create({ data: source }),

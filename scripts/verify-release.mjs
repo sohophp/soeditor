@@ -12,9 +12,9 @@ const releaseVersion = rootManifest.version;
 const releaseLicense = rootManifest.license;
 if (
     typeof releaseVersion !== 'string' ||
-    !/^0\.9\.\d+$/u.test(releaseVersion)
+    !/^1\.0\.\d+$/u.test(releaseVersion)
 ) {
-    throw new Error('The release audit only accepts an aligned 0.9.x version.');
+    throw new Error('The release audit only accepts an aligned 1.0.x version.');
 }
 const packagesRoot = join(repositoryRoot, 'packages');
 const publishable = [];
@@ -27,7 +27,7 @@ const [
 ] = await Promise.all([
     readFile(join(repositoryRoot, 'CHANGELOG.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/review-data-governance.md'), 'utf8'),
-    readFile(join(repositoryRoot, 'docs/migration-0.8-to-0.9.md'), 'utf8'),
+    readFile(join(repositoryRoot, 'docs/migration-0.9-to-1.0.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/releasing.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/status.md'), 'utf8'),
 ]);
@@ -154,7 +154,7 @@ if (
     toolsManifest.dependencies !== undefined
 ) {
     throw new Error(
-        'The 0.9 Workspace, framework, tooling, or umbrella dependency boundary is invalid.',
+        'The 1.0 Workspace, framework, tooling, or umbrella dependency boundary is invalid.',
     );
 }
 
@@ -168,7 +168,7 @@ const umbrellaDeclarations = await readFile(
     'utf8',
 );
 if (!umbrellaDeclarations.includes("export * from '@soeditor/workspace'")) {
-    throw new Error('The 0.9 umbrella is missing the public Workspace export.');
+    throw new Error('The 1.0 umbrella is missing the public Workspace export.');
 }
 for (const contract of [
     'CommentDataExport',

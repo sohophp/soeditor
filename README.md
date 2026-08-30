@@ -2,9 +2,9 @@
 
 Developer-first extensible content editor.
 
-**Status: 0.9 Integration release candidate.** SoEditor is suitable for
-evaluation and integration development, but is not yet a stable 1.0 release.
-The public registry reference remains 0.5.1 until authorized publication. The
+**Status: 1.0 release candidate.** SoEditor is suitable for evaluation and
+integration development, but the 1.0 candidate is not published yet. The
+public registry reference remains 0.5.1 until authorized publication. The
 repository contains the framework-agnostic Core, HTML document layer, controlled visual
 editing engine, transaction history/clipboard boundaries, and Phase 5
 command-driven rich-text feature plugins. Phase 6 adds exact CodeMirror-powered
@@ -92,7 +92,7 @@ const editor = await SoEditor.create({
 - `@soeditor/react` / `@soeditor/vue` — public lifecycle adapters over
   Workspace; framework dependencies remain isolated to their owning package.
 - `@soeditor/plugin-tools` — public Node-only offline plugin scaffold and
-  package checker targeting the 0.9 SDK.
+  package checker targeting the 1.0 SDK.
 - `@soeditor/playground` — an integrated browser development and verification
   harness.
 

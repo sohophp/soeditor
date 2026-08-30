@@ -1,4 +1,4 @@
-# Releasing SoEditor 0.9.x
+# Releasing SoEditor 1.0.x
 
 Publication is an owner-authorized operation. Local quality gates and dry runs
 do not grant permission to choose a license, publish packages, create a tag, or
@@ -42,12 +42,12 @@ exchange warning does not replace the granular token requirement.
 
 ## Release-line policy
 
-The 0.9.0 candidate contains the approved Integration capability set.
-The 0.9.x line accepts correctness, security, accessibility, compatibility,
+The 1.0.0 candidate contains the frozen and qualified public capability set.
+The 1.0.x line accepts correctness, security, accessibility, compatibility,
 documentation, and measured performance fixes. New product capabilities belong
-in a separately approved roadmap. Although 0.x permits breaking SemVer changes,
-avoid them in patch releases; document an unavoidable break and use at least a
-minor version.
+in a separately approved roadmap. Patch releases must remain compatible;
+additive compatible capability belongs in a minor release, and an unavoidable
+stable API break requires a new major version with migration guidance.
 
 All 23 public packages use an aligned version so consumers and support reports
 can identify one tested release set. Add a Changeset for each user-visible
@@ -115,13 +115,13 @@ do not republish identical artifacts.
 After publication, or to recheck propagation:
 
 ```bash
-pnpm release:verify-registry 0.9.0
+pnpm release:verify-registry 1.0.0
 ```
 
 This creates a clean Vite consumer from the public npm registry and checks the
 version-pinned jsDelivr JavaScript, CSS, source map, immutable global facade,
 and basic editor lifecycle in Chromium.
 
-This command uses the current 23-package 0.9 release manifest and deliberately
+This command uses the current 23-package 1.0 release manifest and deliberately
 does not claim to re-verify the historical 15-package 0.5 release set or the
 unpublished 0.6/0.7 candidates.

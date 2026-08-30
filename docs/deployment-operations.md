@@ -9,7 +9,7 @@ After an owner-authorized registry publication, install aligned package
 versions and commit the lockfile:
 
 ```bash
-pnpm add @soeditor/editor@0.9.0
+pnpm add @soeditor/editor@1.0.0
 pnpm install --frozen-lockfile
 pnpm build
 ```

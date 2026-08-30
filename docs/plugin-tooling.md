@@ -1,8 +1,8 @@
 # Plugin package tooling and integration diagnostics
 
-SoEditor 0.9 provides the public Node-only `@soeditor/plugin-tools` package. Template version
-1 targets the SoEditor 0.9 public SDK and creates a strict ESM package without
-overwriting an existing directory.
+SoEditor 1.0 provides the public Node-only `@soeditor/plugin-tools` package.
+Template version 2 targets the SoEditor 1.0 public SDK and creates a strict ESM
+package without overwriting an existing directory.
 
 ```bash
 soeditor-plugin create ./product-card \
@@ -13,7 +13,7 @@ soeditor-plugin check ./product-card
 soeditor-plugin check ./product-card --packed
 ```
 
-The static check validates manifest/SemVer shape, ESM exports, the 0.9 SDK peer
+The static check validates manifest/SemVer shape, ESM exports, the 1.x SDK peer
 range, `sideEffects: false`, explicit root contribution export, stable and
 unique plugin IDs, and absence of SoEditor `src`/`dist`/`internal` imports. It
 does not import or execute the plugin.

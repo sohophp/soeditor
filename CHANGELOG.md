@@ -2,6 +2,24 @@
 
 ## Unreleased
 
+## 1.0.0 — Release candidate
+
+- Froze and classified every declared public package entry with generated
+  symbol/signature and declaration-tree compatibility evidence.
+- Documented the 1.x compatibility, deprecation, runtime, security,
+  maintenance, migration, troubleshooting, deployment, and operations
+  contracts.
+- Added Source/Markdown CSP nonce forwarding, dark-theme and forced-colors
+  fixes, explicit-GC retention and accessibility qualification gates.
+- Aligned all 23 MIT-licensed public packages, framework adapters, plugin
+  tooling, packed consumers, ESM/global artifacts, and release checks at 1.0.0.
+- Advanced the plugin scaffold to template version 2 with 1.x SDK peer and
+  development ranges; the checker now rejects pre-1.0 SDK ranges.
+
+This entry describes a verified local release candidate. npm publication, the
+`v1.0.0` tag, hosted release, and registry/CDN verification remain pending
+explicit owner authorization.
+
 ## 0.9.0 — Integration candidate
 
 - Added a private framework-neutral workspace controller with explicit ordered
@@ -26,13 +44,9 @@
   packages, framework/CMS/SSR verification, and measured integration budgets.
 - Added a generated symbol/declaration API report and explicit candidate 1.x
   compatibility, deprecation, runtime, security, and maintenance policies.
-- Added Source/Markdown CSP nonce forwarding, dark-theme and forced-colors
-  fixes, explicit-GC retention and accessibility qualification gates, and the
-  1.0 security/deployment/troubleshooting/API/migration documentation set.
-
-This entry describes a verified local release candidate. npm publication, the
-`v0.9.0` tag, hosted release, and registry/CDN verification remain pending
-explicit owner authorization.
+  This entry describes a verified local release candidate. npm publication, the
+  `v0.9.0` tag, hosted release, and registry/CDN verification remain pending
+  explicit owner authorization.
 
 ## 0.8.0 — Review Workflow candidate
 

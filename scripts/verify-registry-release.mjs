@@ -18,8 +18,8 @@ const workspaceManifest = JSON.parse(
     await readFile(new URL('../package.json', import.meta.url), 'utf8'),
 );
 const version = argv[2] ?? workspaceManifest.version;
-if (!/^0\.9\.\d+$/u.test(version)) {
-    throw new TypeError('Registry verification requires a 0.9.x version.');
+if (!/^1\.0\.\d+$/u.test(version)) {
+    throw new TypeError('Registry verification requires a 1.0.x version.');
 }
 
 const temporaryRoot = await mkdtemp(join(tmpdir(), 'soeditor-registry-'));

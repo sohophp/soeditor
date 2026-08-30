@@ -157,10 +157,7 @@ function checkManifest(
     }
     const peers = record(manifest.peerDependencies);
     const sdkRange = peers['@soeditor/plugin-sdk'];
-    if (
-        typeof sdkRange !== 'string' ||
-        !/(?:\^0\.9\.|>=\s*0\.9\.)/u.test(sdkRange)
-    ) {
+    if (typeof sdkRange !== 'string' || !/(?:\^1\.|>=\s*1\.)/u.test(sdkRange)) {
         issue(
             issues,
             'SDK_PEER_RANGE',

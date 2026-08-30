@@ -29,7 +29,7 @@ describe('plugin package tooling', () => {
             pluginId: 'example.product-card',
         });
 
-        expect(pluginTemplateVersion).toBe(1);
+        expect(pluginTemplateVersion).toBe(2);
         expect(
             await readFile(resolve(target, 'src/plugin.ts'), 'utf8'),
         ).toContain("from '@soeditor/plugin-sdk'");

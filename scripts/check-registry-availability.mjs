@@ -12,10 +12,10 @@ const releaseVersion = JSON.parse(
 
 if (
     typeof releaseVersion !== 'string' ||
-    !/^0\.9\.\d+$/u.test(releaseVersion)
+    !/^1\.0\.\d+$/u.test(releaseVersion)
 ) {
     throw new Error(
-        'Registry availability checks only accept a 0.9.x release version.',
+        'Registry availability checks only accept a 1.0.x release version.',
     );
 }
 

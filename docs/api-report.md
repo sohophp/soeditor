@@ -938,12 +938,12 @@ Declaration SHA-256:
 ## @soeditor/plugin-tools
 
 Declaration tree SHA-256:
-`dabdda5fb5091eb940d8c797bd6c921825cdcc8d69806cab400201d98f93abee`
+`cab835d746ccbc3df4c359d1ddc0d33fb3f47c631daa07b91bec9bbe185d5e4b`
 
 ### .
 
 Declaration SHA-256:
-`b1f98ddd0b12b73404f9c0c31f7d74e16b524bf040b72c20633a4efc2cf75af4`
+`609aa60bcb0755a9fcfb6d01bf7d0e9b2ff267ec422215e83a961fcbeb9fce5a`
 
 | Export                  | Kind  | Classification | Signature SHA-256  |
 | ----------------------- | ----- | -------------- | ------------------ |
@@ -951,7 +951,7 @@ Declaration SHA-256:
 | `PluginCheckIssue`      | type  | stable         | `4d4941b535702292` |
 | `PluginCheckOptions`    | type  | stable         | `487fa091ed41b085` |
 | `PluginCheckReport`     | type  | stable         | `6f4e75298e85c637` |
-| `pluginTemplateVersion` | value | stable         | `4b10c044fec0d4c9` |
+| `pluginTemplateVersion` | value | stable         | `0c19a2b09ca90a48` |
 | `ScaffoldPluginOptions` | type  | stable         | `c4612091cc590791` |
 | `scaffoldPluginPackage` | value | stable         | `ab472fbe46a53655` |
 

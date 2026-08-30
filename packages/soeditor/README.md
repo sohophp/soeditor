@@ -19,6 +19,6 @@ const editor = await SoEditor.create({
 The repository distribution guide contains visual-surface and direct-browser
 examples. The umbrella also exports the public comments and revisions
 packages; applications still supply identity, permissions, persistence,
-retention, and audit behavior. The 0.9 umbrella additionally exports the
+retention, and audit behavior. The 1.0 umbrella additionally exports the
 framework-neutral Workspace lifecycle; React, Vue, and Node-only plugin tools
 remain separate packages.

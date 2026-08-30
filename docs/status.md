@@ -61,9 +61,12 @@ production security, operations, troubleshooting, API, qualification, and
 migration guidance plus deterministic CSP, accessibility, lifecycle, memory,
 and large-document evidence. All 126 Chromium scenarios and complete release
 gates pass with Critical 0 and High 0. Phase 36 — SoEditor 1.0 Release
-Candidate and Hardening — is active.
+Candidate and Hardening — is complete. All 23 public packages, external
+consumer fixtures, release checks, and the version-2 plugin template are
+aligned at 1.0.0. The final release, supply-chain, and adversarial gates pass
+with Critical 0 and High 0.
 
-All 23 public package manifests are aligned at the `0.9.0` release candidate.
+All 23 public package manifests are aligned at the `1.0.0` release candidate.
 The published stable reference remains `0.5.1` until an explicitly authorized
 npm publication and external registry/CDN verification complete.
 
@@ -186,6 +189,13 @@ deliberate and documented under SemVer principles.
   consumer/distribution/release, all 126 Chromium scenarios, MIT, dependency
   audit, npm dry-run, and unpublished registry preflight pass. Final
   adversarial review: Critical 0, High 0.
+- Phase 36 aligns the root, all 23 public packages, packed consumers, release
+  scripts, current distribution guidance, and generated plugin tooling at
+  `1.0.0`. Template version 2 declares 1.x SDK ranges and its checker rejects
+  pre-1.0 SDK peers. Frozen install, lint, strict typecheck, unit/performance/
+  API/docs, packed consumers, distribution/release, all 126 Chromium scenarios,
+  build, MIT, dependency audit, 23-package npm dry-run, and read-only registry
+  preflight pass. Final adversarial review: Critical 0, High 0.
 
 ## Accepted Medium limitations
 
@@ -229,7 +239,7 @@ deliberate and documented under SemVer principles.
   packaging decision.
 - The Phase 32 plugin checker is a bounded static package-shape check, not a
   parser, behavioral test, malware scanner, signing service, or trust verdict.
-  Its template targets the aligned 0.9 SDK; release qualification does not turn
+  Its template targets the aligned 1.0 SDK; release qualification does not turn
   static inspection into a security certification.
 - FileManager selects one existing asset. Upload, rename, delete,
   authentication, and a concrete SoFinder SDK remain host responsibilities.
@@ -266,6 +276,6 @@ wrappers, SSR DOM emulation, collaboration, spreadsheet behavior, office-paste
 parity, and arbitrary executable widgets remain post-0.7 candidates and are
 not implied by this preview.
 
-The candidate is not yet a public 0.9 release. npm publication, signed tag,
+The candidate is not yet a public 1.0 release. npm publication, signed tag,
 GitHub Release, and external npm/jsDelivr verification require explicit owner
 authorization and must refer to the exact reviewed commit.
