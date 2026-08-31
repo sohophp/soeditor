@@ -11,7 +11,7 @@ page is the task-oriented map.
 | `@soeditor/core`    | Editor lifecycle, immutable state, transactions, commands, plugins, events, services, errors |
 | `@soeditor/html`    | SoEditor-owned HTML tree, parse/serialize, diagnostics, source ranges                        |
 | `@soeditor/editor`  | Framework-neutral convenience umbrella and direct-browser build                              |
-| `@soeditor/presets` | Immutable minimal, classic, developer, and Markdown configurations                           |
+| `@soeditor/presets` | Immutable minimal, classic, CMS, developer, and Markdown configurations                      |
 
 Canonical application flow is `command → transaction → state`. Read source
 with `editor.getData()`, replace it with `setData()`, and destroy the instance
@@ -22,7 +22,7 @@ terminally with `await editor.destroy()`.
 | Package                 | Primary public role                                                     |
 | ----------------------- | ----------------------------------------------------------------------- |
 | `@soeditor/engine`      | Visual engine, history, structured editing, visual services/decorations |
-| `@soeditor/rich-text`   | Paragraph/mark/link/list/image/table/media feature plugins              |
+| `@soeditor/rich-text`   | Formatting, links, CMS objects, image/table/media feature plugins       |
 | `@soeditor/source`      | Exact CodeMirror HTML Source surface                                    |
 | `@soeditor/markdown`    | Canonical Markdown surface, rendering, explicit conversion              |
 | `@soeditor/preview`     | Sandboxed, fixed-policy iframe projection                               |
@@ -30,8 +30,10 @@ terminally with `await editor.destroy()`.
 | `@soeditor/layout`      | Application-attached accessible two-pane layouts                        |
 
 Structured model/operation, node-view/conversion, visual-decoration, and
-table/media extension surfaces remain experimental. Their exact classification
-is recorded per entry in the API report.
+table/media/CMS-object extension surfaces remain experimental. Link-target and
+embed-metadata providers are host-owned service boundaries; they do not grant
+remote markup execution. Exact classifications are recorded per entry in the
+API report.
 
 ## UI, diagnostics, and assets
 
@@ -45,16 +47,19 @@ is recorded per entry in the API report.
 
 ## Review and application integration
 
-| Package               | Primary public role                                                             |
-| --------------------- | ------------------------------------------------------------------------------- |
-| `@soeditor/comments`  | Host-owned mapped annotations and comment UI/service                            |
-| `@soeditor/revisions` | Host-owned snapshots, comparison, restore, review policy                        |
-| `@soeditor/workspace` | Ordered application lifecycle, controlled values, diagnostics, bounded recovery |
-| `@soeditor/react`     | React lifecycle hook over Workspace                                             |
-| `@soeditor/vue`       | Vue Composition API hook over Workspace                                         |
+| Package               | Primary public role                                                              |
+| --------------------- | -------------------------------------------------------------------------------- |
+| `@soeditor/comments`  | Host-owned mapped annotations and comment UI/service                             |
+| `@soeditor/revisions` | Host-owned snapshots, comparison, restore, review policy                         |
+| `@soeditor/workspace` | Application lifecycle, controlled values, recovery, and host-owned save workflow |
+| `@soeditor/react`     | React lifecycle hook over Workspace                                              |
+| `@soeditor/vue`       | Vue Composition API hook over Workspace                                          |
 
 React/Vue packages remain outside the umbrella so framework runtimes never
 enter framework-neutral consumers.
+Save workflow types are experimental in Phase 46. They preserve host ownership
+of transport and conflicts while preventing a stale response from marking
+newer canonical source clean.
 
 ## Extension authoring
 

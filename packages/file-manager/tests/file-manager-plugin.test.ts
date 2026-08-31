@@ -64,6 +64,31 @@ describe('FileManagerPlugin', () => {
         await editor.destroy();
     });
 
+    it('uses the same manager boundary for existing file links', async () => {
+        const editor = await Editor.create({ plugins: [FileManagerPlugin] });
+        const links: unknown[] = [];
+        let request: FileManagerOpenOptions | undefined;
+        registerVisualService(editor, [], links);
+        editor.services.register(fileManagerServiceToken, {
+            open: (options) => {
+                request = options;
+                return Promise.resolve({
+                    mime: 'application/pdf',
+                    name: 'Product guide',
+                    url: '/assets/product-guide.pdf',
+                });
+            },
+        });
+
+        await editor.execute('link.file.browse');
+
+        expect(request).toEqual({ kind: 'file', multiple: false });
+        expect(links).toEqual([
+            { href: '/assets/product-guide.pdf', title: 'Product guide' },
+        ]);
+        await editor.destroy();
+    });
+
     it('treats cancellation as a no-op and rejects unsafe results', async () => {
         const editor = await Editor.create({ plugins: [FileManagerPlugin] });
         const inserted: string[] = [];
@@ -122,7 +147,11 @@ describe('FileManagerPlugin', () => {
     });
 });
 
-function registerVisualService(editor: Editor, inserted: string[]): void {
+function registerVisualService(
+    editor: Editor,
+    inserted: string[],
+    links: unknown[] = [],
+): void {
     editor.services.register(visualEditingServiceToken, {
         canEdit: () => true,
         getSelection: () => undefined,
@@ -135,7 +164,7 @@ function registerVisualService(editor: Editor, inserted: string[]): void {
         isStructuredBlockSelected: () => false,
         replaceStructuredBlockContent: () => undefined,
         setBlock: () => undefined,
-        setLink: () => undefined,
+        setLink: (link) => links.push(link),
         setSelection: () => false,
         setStructuredBlockAttributes: () => undefined,
         toggleList: () => undefined,

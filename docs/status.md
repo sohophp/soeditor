@@ -2,6 +2,115 @@
 
 ## Current development
 
+The `1.0.0` release is published and externally verified.
+The local `1.1.0` release is an unpublished candidate aligned across all 24
+public packages. Phases 38–56 are complete. Publication remains an explicit
+repository-owner operation and is currently NO-GO pending Firefox and
+WebKit/Safari qualification on a compatible host.
+The authorized work is the Phase 49–56 WYSIWYG completion program. Its
+contract is `docs/wysiwyg-editor.md`. Existing native WYSIWYG behavior and the
+199 Chromium scenarios are a regression baseline, not a claim that every
+author-facing WYSIWYG feature is verified. Developer Visual evidence cannot be
+used as a substitute for WYSIWYG-specific UI evidence.
+Phase 49 added a dedicated WYSIWYG fixture and four direct browser scenarios,
+removed the Developer Visual host from WYSIWYG-only DOM assembly, and recorded
+feature ownership and test gaps in the WYSIWYG capability matrix. At that
+checkpoint the Chromium gate contained 162 scenarios.
+Phase 50 adds direct real-pointer coverage at every fixture text boundary,
+forward/reverse selection, cell replacement, keyboard extension, native
+clipboard and paragraph editing, grouped typing history, Unicode/IME/RTL,
+narrow zoom, multi-instance isolation, mutation repair, and invalid-source
+recovery. The complete Chromium gate now contains 173 scenarios.
+Phase 51 directly qualifies semantic marks, color, background, font size,
+remove-format, block/list commands, selected and collapsed links, existing-link
+editing/unlinking, and named anchors across paragraphs, nested lists, and table
+cells. Phase 52 qualifies native structural table selection, one stable context
+toolbar, properties, Tab navigation, merge/split/clear, rows, columns, and
+one-step history without changing ordinary cell text behavior. The complete
+Chromium gate at that checkpoint contains 181 scenarios. Phases 53–55 add
+direct asset, upload, rich cell paste, video properties, seven-layout,
+Source/Preview, counters, content-style, special-character and WCAG evidence.
+Phase 56 established a 189-scenario Chromium gate; the current gate contains
+199 scenarios. Phase 56 passed all
+available local, Chromium, mobile, performance, API, consumer, distribution,
+license and security gates and records the conditional decision in
+`docs/wysiwyg-release-decision.md`.
+The additive, lazily loaded
+`createClassicEditor()` API now mounts Workspace, UI, Visual, and Source on a
+textarea or element, synchronizes native submit/reset behavior, supports
+readonly, callbacks, bounded sizing/auto-grow, and restores caller-owned state
+on startup failure or terminal destruction. The CMS preset avoids unrelated
+developer tools. The CMS preset includes multi-block daily formatting,
+superscript/subscript,
+remove-format, alignment, indentation, horizontal rules, bounded nested lists,
+list start/marker properties, and validated instance-scoped semantic styles.
+It also routes external paste and drop through a bounded, instance-scoped
+pipeline with deterministic Office, Google Docs, LibreOffice, web, plain-text,
+and internal-clipboard policies. Fixed fixture, rejection, security, and
+one-step history evidence is covered alongside host-owned upload tasks,
+temporary preview cleanup, file paste/drop, retry/cancel, and complete image
+properties. Complete link editing now applies deterministic URL/target/rel
+policy and optional internal/file selection. Configured atomic CMS objects,
+named anchors, page breaks, placeholders, special characters, and metadata-only
+embeds remain command/transaction backed and inert. All 199 Chromium scenarios
+plus API, performance, packed consumer,
+distribution, release, license, and security gates pass.
+The root Playground route now presents the complete CMS showcase directly,
+including visible tool icons, contextual production-table controls, 12
+interactive feature tours, and 12 capability summaries. The isolated native
+WYSIWYG engine now measures 2.211 MB raw / 649.18 kB gzip with 29.11 kB
+standalone CSS, against reviewed 2.25 MB / 665 kB / 31 kB release guards. The
+guard still requires the table-widget selector. The largest lazily loaded
+Playground chunk measures 1.062 MB against a reviewed 1.08 MB guard.
+
+Phase 43 adds command-backed table, row, cell, and bounded column properties,
+semantic captions and sections, accessible column resizing, owned column-width
+serialization, safe matrix paste through the shared paste policy, and complete
+list exit/outdent boundary behavior. Unsupported foreign column groups and
+ambiguous attributed sections are preserved and explicitly refused rather than
+normalized away.
+
+Phase 44 completes the responsive classic chrome with wrap/scroll, sticky and
+collapse toolbar policies, roving keyboard focus, registered command-backed
+context menus, element path and text counts, bounded pointer/keyboard resizing,
+and coordinated maximize restoration. Desktop, narrow, 150% zoom,
+forced-colors, mouse, Shift+F10, focus, and teardown evidence is included.
+Phase 45 delivers per-instance English, Simplified Chinese, Traditional Chinese,
+and custom RTL resources; localized dynamic chrome and embedded keyboard help;
+44px mobile controls; isolated content direction; and composition-session
+history boundaries. Chromium desktop/mobile qualification passes. Firefox and
+WebKit launch are currently blocked by documented host runtime libraries.
+
+Phase 46 delivers a framework-neutral save workflow with exact
+canonical-source requests, opaque revision tokens, progress, manual save,
+bounded debounced autosave, non-overlapping writes, failure/retry, explicit
+conflicts, stale-response protection, and abort-on-destroy. Classic composes it
+with a command-backed localized Save/Retry control and coordinated opt-in
+multi-instance leave-page protection. Packed and framework integration
+qualification passes through the packed NodeNext and Vite consumers.
+
+Phase 47 qualifies CMS styles, contextual UI, paste, upload, content-picker,
+translation, and atomic-object contracts through the curated plugin SDK.
+Template version 3 generates focused CMS widget, paste, upload, and theme
+packages offline; packed checks cover each family and report common remote-code
+and unsafe-DOM sinks without executing source. Per-instance plain-text icons and
+host-scoped chrome variables remain separate from canonical content and restore
+caller styling on teardown.
+All 144 Chromium scenarios, four desktop/mobile CMS project runs, generated
+family builds and packed checks, NodeNext/Vite/widget consumers, distribution,
+release, license, and dependency audits pass. Phase 47 adversarial review found
+Critical 0 and High 0. Firefox/WebKit execution remains limited by the
+documented host runtime-library gap rather than a product test failure.
+
+Phase 48 adds a single continuous acceptance journey spanning textarea load,
+unknown CMS source, Chinese composition, styles/lists, Office paste, upload,
+links, tables, history, Source, native submission, inert dangerous source, and
+exact teardown. It passes on Chromium desktop and mobile alongside the two
+focused locale/interaction scenarios (six runs total). The full Firefox/WebKit
+matrix was attempted: both fail before page creation because this host lacks
+their required system runtime libraries; no product assertion ran or was
+weakened.
+
 The approved SoEditor 0.6 Developer Workflow roadmap is complete through Phase 22. Visual, HTML Source, Markdown, and Preview can remain synchronized under
 one write authority and appear in accessible Visual | Source, Source | Preview,
 or Markdown | Preview layouts. The Developer preset now selects bounded
@@ -242,12 +351,13 @@ deliberate and documented under SemVer principles.
   packages as peers. Bundlers remove unused families, but a plugin consumer
   must still satisfy that peer set; narrower domain SDK entries remain a future
   packaging decision.
-- The Phase 32 plugin checker is a bounded static package-shape check, not a
-  parser, behavioral test, malware scanner, signing service, or trust verdict.
-  Its template targets the aligned 1.0 SDK; release qualification does not turn
-  static inspection into a security certification.
-- FileManager selects one existing asset. Upload, rename, delete,
-  authentication, and a concrete SoFinder SDK remain host responsibilities.
+- The plugin checker is a bounded static package-shape check, not a parser,
+  behavioral test, malware scanner, signing service, or trust verdict. Template
+  version 3 targets the compatible 1.x SDK range; release qualification does
+  not turn static inspection into a security certification.
+- FileManager selects an existing asset and the Upload workflow coordinates a
+  host implementation. Rename, delete, authentication, durable storage, media
+  processing, and a concrete SoFinder SDK remain host responsibilities.
 - Accessibility and SEO providers cover only bounded source-inferable rules;
   they are not WCAG certification, assistive-technology testing, search-engine
   indexing, or ranking analysis.
@@ -264,9 +374,11 @@ deliberate and documented under SemVer principles.
   Its hashes intentionally change with public declaration signatures and may
   also require review after TypeScript declaration-emitter or formatting
   changes. Experimental entries do not receive the stable 1.x promise.
-- Dedicated Firefox and Safari gates are not yet present. Chrome/Edge support
-  follows the qualified Chromium platform; other standards-oriented browsers
-  remain best effort until equivalent evidence exists.
+- Firefox and WebKit projects exist, but this host lacks the native runtime
+  libraries required to launch them. Their product assertions therefore remain
+  pending on a compatible host. Chrome/Edge support follows the qualified
+  Chromium platform; Safari support requires equivalent WebKit and manual
+  platform evidence.
 - The immutable scoped `0.5.0` artifacts remain available from an incomplete
   publication attempt, but they are not the supported complete release set.
   npm rejected the former unscoped umbrella name `soeditor` as too similar to
@@ -276,11 +388,13 @@ deliberate and documented under SemVer principles.
 
 ## Lower-priority notes
 
-Semantic HTML preservation is not byte-for-byte preservation. Framework
-wrappers, SSR DOM emulation, collaboration, spreadsheet behavior, office-paste
-parity, and arbitrary executable widgets remain post-0.7 candidates and are
-not implied by this preview.
+Semantic HTML preservation is not byte-for-byte preservation. SSR DOM
+emulation, collaboration, spreadsheet behavior, complete Office application
+parity, and arbitrary executable widgets remain outside this candidate and are
+not implied by bounded CMS paste support.
 
-SoEditor 1.0.0 is published. The local environment had no signing key, so its
+SoEditor 1.0.0 is published. The local 1.1.0 CMS candidate has not been
+published, tagged, or turned into a hosted release. The local environment had
+no signing key, so the 1.0.0
 annotated `v1.0.0` tag is not cryptographically signed; the GitHub Release and
 npm provenance identify the owner-authorized workflow and published commit.

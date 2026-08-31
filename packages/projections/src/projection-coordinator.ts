@@ -5,8 +5,9 @@ import {
     type EditorMode,
 } from '@soeditor/core';
 
-/** Built-in projection identities coordinated in SoEditor 0.6. */
-export type ProjectionId = 'visual' | 'source' | 'markdown' | 'preview';
+/** Built-in projection identities coordinated by SoEditor. */
+export type ProjectionId =
+    'visual' | 'wysiwyg' | 'source' | 'markdown' | 'preview';
 
 /** Projection identities that may hold logical write authority. */
 export type EditableProjectionId = Exclude<ProjectionId, 'preview'>;
@@ -83,6 +84,7 @@ export class InvalidProjectionTransitionError extends Error {
 
 const projectionIds: readonly ProjectionId[] = Object.freeze([
     'visual',
+    'wysiwyg',
     'source',
     'markdown',
     'preview',
@@ -237,7 +239,14 @@ export class ProjectionCoordinatorPlugin extends Plugin {
 
     #setVisible(id: ProjectionId, visible: boolean): void {
         this.#assertAttached(id);
-        if (!visible && id === this.#primary) {
+        if (
+            !visible &&
+            id === this.#primary &&
+            !(
+                this.editor.state.mode === 'preview' &&
+                this.#visible.has('preview')
+            )
+        ) {
             throw new InvalidProjectionTransitionError(
                 `Primary projection "${id}" cannot be hidden.`,
             );
@@ -403,7 +412,7 @@ function isEditableForFormat(
     format: DocumentFormat,
 ): id is EditableProjectionId {
     return format === 'html'
-        ? id === 'visual' || id === 'source'
+        ? id === 'visual' || id === 'wysiwyg' || id === 'source'
         : id === 'markdown';
 }
 

@@ -8,6 +8,7 @@ const docsRoot = join(repositoryRoot, 'docs');
 const requiredDocuments = [
     'api-overview.md',
     'api-report.md',
+    'cms-plugin-ecosystem.md',
     'deployment-operations.md',
     'getting-started.md',
     'migration-0.5-to-0.6.md',
@@ -110,9 +111,9 @@ for (const name of await readdir(join(repositoryRoot, 'tests', 'browser'))) {
     );
     browserScenarios += content.match(/^test\s*\(/gmu)?.length ?? 0;
 }
-if (browserScenarios !== 126) {
+if (browserScenarios !== 199) {
     throw new Error(
-        `Expected 126 documented Chromium scenarios, found ${String(browserScenarios)}.`,
+        `Expected 199 documented Chromium scenarios, found ${String(browserScenarios)}.`,
     );
 }
 

@@ -31,6 +31,9 @@ export type {
     TransactionOrigin,
 } from '@soeditor/core';
 export {
+    PastePipelinePlugin,
+    PasteRejectedError,
+    pastePipelineServiceToken,
     mapEditingPoint,
     readEditingOperations,
     StructuredEditingContributionAlreadyRegisteredError,
@@ -43,6 +46,7 @@ export {
     visualEditingServiceToken,
 } from '@soeditor/engine';
 export type {
+    ExternalPastePolicy,
     EditingBlock,
     EditingModel,
     EditingOperation,
@@ -51,6 +55,15 @@ export type {
     EditingSelection,
     EditingStructuredBlock,
     EditingStructuredBlockContent,
+    PasteDiagnostic,
+    PasteInputClassification,
+    PasteInputFile,
+    PastePipelineInput,
+    PastePipelineResult,
+    PastePipelineService,
+    PasteProcessor,
+    PasteProcessorContext,
+    PasteProcessorResult,
     StructuredBlockBehavior,
     StructuredBlockConversion,
     StructuredEditingRegistry,
@@ -127,16 +140,51 @@ export type {
     RevisionSnapshot,
     RevisionStorage,
 } from '@soeditor/revisions';
-export { fileManagerServiceToken } from '@soeditor/file-manager';
+export {
+    fileManagerServiceToken,
+    uploadServiceToken,
+    uploadWorkflowServiceToken,
+} from '@soeditor/file-manager';
 export type {
     FileManager,
     FileManagerKind,
     FileManagerOpenOptions,
     FileManagerResult,
+    ImageUploadOptions,
+    UploadProgress,
+    UploadRecord,
+    UploadRequest,
+    UploadService,
+    UploadStatus,
+    UploadTask,
+    UploadWorkflowService,
 } from '@soeditor/file-manager';
+export {
+    cmsEmbedProviderServiceToken,
+    CmsObjectsPlugin,
+    linkTargetProviderServiceToken,
+    SemanticStylesPlugin,
+} from '@soeditor/rich-text';
+export type {
+    CmsEmbedMetadata,
+    CmsEmbedProvider,
+    CmsObjectDefinition,
+    LinkTargetProvider,
+    LinkTargetSelection,
+    SemanticStyleAttribute,
+    SemanticStyleDefinition,
+} from '@soeditor/rich-text';
 export { UiPlugin, uiRegistryServiceToken } from '@soeditor/ui';
 export type {
+    ContextMenuItemContext,
+    ContextMenuItemDefinition,
     EditorUi,
+    EditorUiDirection,
+    EditorUiIconResource,
+    EditorUiTheme,
+    EditorUiThemeVariable,
+    EditorUiThemeVariables,
+    EditorUiTranslationResource,
     KeyboardShortcutDefinition,
     StatusItemFactory,
     StatusItemInstance,

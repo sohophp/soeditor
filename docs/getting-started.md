@@ -4,6 +4,44 @@ SoEditor is an ESM-first 1.0 release. It separates the canonical document
 (`Editor`) from browser surfaces so a CMS can mount exactly the UI it needs.
 The public registry reference is `@soeditor/editor@1.0.0`.
 
+## CMS Classic Editor
+
+The experimental 1.1 development API assembles the existing Core, Workspace,
+Visual, Source, and UI capabilities around a textarea:
+
+```ts
+import { createClassicEditor } from '@soeditor/editor';
+import '@soeditor/editor/styles.css';
+
+const textarea = document.querySelector<HTMLTextAreaElement>('#content');
+if (textarea === null) throw new Error('Missing #content textarea.');
+
+const classic = await createClassicEditor(textarea, {
+    placeholder: 'Write article content',
+    minHeight: 240,
+    toolbarLayout: {
+        collapsible: true,
+        overflow: 'wrap',
+        sticky: true,
+    },
+    onChange: ({ source }) => {
+        console.log('Canonical HTML changed', source);
+    },
+});
+```
+
+The original textarea remains the successful form control while hidden. Its
+value is synchronized with canonical HTML, refreshed before form submission,
+and reset through the editor when its form resets. Destroying the handle
+restores the caller-owned host. This API is experimental until the CMS release
+qualification; the underlying stable 1.0 APIs remain unchanged.
+
+The default classic chrome exposes keyboard-operable toolbar grouping,
+collapse, maximize, bounded pointer/keyboard height resizing, element path,
+word/character counts, dirty state, and command-backed contextual menus. These
+surfaces are instance scoped and destruction restores both the original host
+and any document overflow changed by maximize.
+
 ## Install and create
 
 ```bash
@@ -55,6 +93,38 @@ ui.destroy();
 visual.destroy();
 await editor.destroy();
 ```
+
+Instance-scoped CMS styles are configuration, not global DOM rules or computed
+style capture:
+
+```ts
+const editor = await createClassicEditor(textarea, {
+    config: {
+        cms: {
+            styles: [
+                {
+                    id: 'lead',
+                    label: 'Lead text',
+                    target: 'inline',
+                    element: 'span',
+                    attributes: [{ name: 'class', value: 'cms-lead' }],
+                },
+                {
+                    id: 'callout',
+                    label: 'Callout',
+                    target: 'block',
+                    element: 'blockquote',
+                    attributes: [{ name: 'class', value: 'cms-callout' }],
+                },
+            ],
+        },
+    },
+});
+```
+
+Applications provide the matching content CSS. Style definitions reject event
+handlers and CSS outside the bounded color, background-color, font-family, and
+font-size policy.
 
 Editor destruction is terminal and also asks attached SoEditor surfaces to
 clean up. Explicit surface teardown keeps application ownership obvious.

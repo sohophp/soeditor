@@ -43,16 +43,16 @@ resolve the dependency graph.
 
 ## Runtime support matrix
 
-| Runtime                                    | 1.0 qualification level                                                                     |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------- |
-| Node.js                                    | `>=22.14.0 <23`, as declared by package manifests and CI                                    |
-| Chromium browsers                          | Current Playwright Chromium used by CI; full editor, accessibility, security, and lifecycle |
-| Chrome / Edge                              | Supported when matching the qualified Chromium platform                                     |
-| Firefox / Safari                           | Standards-oriented, best effort until dedicated release-gate coverage exists                |
-| React                                      | `>=18.2.0 <20`; SSR import/render and real Chromium lifecycle coverage                      |
-| Vue                                        | `^3.5.0`; SSR import/render and real Chromium lifecycle coverage                            |
-| TypeScript                                 | Strict NodeNext and bundler consumers using the repository-qualified TypeScript line        |
-| ESM / Vite / direct-browser global and CSS | Release-gated                                                                               |
+| Runtime                                    | 1.0 qualification level                                                                                                                   |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| Node.js                                    | `>=22.14.0 <23`, as declared by package manifests and CI                                                                                  |
+| Chromium browsers                          | Current Playwright Chromium used by CI; full editor, accessibility, security, and lifecycle                                               |
+| Chrome / Edge                              | Supported when matching the qualified Chromium platform                                                                                   |
+| Firefox / Safari                           | CMS matrix defined; current Linux host cannot launch Playwright Firefox/WebKit due system libraries, so product assertions remain pending |
+| React                                      | `>=18.2.0 <20`; SSR import/render and real Chromium lifecycle coverage                                                                    |
+| Vue                                        | `^3.5.0`; SSR import/render and real Chromium lifecycle coverage                                                                          |
+| TypeScript                                 | Strict NodeNext and bundler consumers using the repository-qualified TypeScript line                                                      |
+| ESM / Vite / direct-browser global and CSS | Release-gated                                                                                                                             |
 
 SoEditor does not claim support for CommonJS `require`, Internet Explorer,
 unqualified DOM emulators, framework versions outside peer ranges, or browser

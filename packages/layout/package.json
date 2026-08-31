@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/layout",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "license": "MIT",
     "description": "Accessible command-driven split-view layouts for SoEditor.",
     "keywords": [

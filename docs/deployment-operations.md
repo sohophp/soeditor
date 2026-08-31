@@ -54,9 +54,13 @@ isolated Preview iframe adds its own fixed CSP; do not weaken its sandbox.
 
 ## Persistence and recovery
 
-Listen to canonical `document:change`, debounce application saves, and include
-your own document version or ETag. Handle conflicts in the backend or product
-workflow; SoEditor does not silently merge concurrent documents.
+For Classic integrations, configure the host-owned `save.adapter`; it receives
+exact canonical source, Core revision, an optional opaque revision token,
+progress reporting, and an abort signal. Manual save and bounded opt-in
+autosave share one non-overlapping workflow. Handle explicit conflicts in the
+backend/product workflow; SoEditor never silently merges concurrent documents
+or replaces local source with a server response. Framework-neutral Workspace
+users may create the same workflow directly.
 
 Workspace recovery is optional and bounded. Observe `onDiagnostic`,
 `onError`, and failed snapshots, preserve the latest owner value for controlled
@@ -106,3 +110,9 @@ overwriting a defective artifact.
 Before changing SoEditor versions, review the complete migration chain and API
 report. After deployment, smoke-test Visual, Source/Markdown, Preview, save,
 readonly, FileManager, review adapters, and teardown using the production CSP.
+
+Before a CMS rollout, also exercise the continuous journey in
+`cms-multibrowser.spec.ts` against representative templates, upload/save
+adapters, locale/IME inputs, and the actual supported browser images. A browser
+process that cannot launch because of host libraries is an infrastructure
+failure, not passing product evidence.

@@ -27,12 +27,17 @@ import {
     freezeSelection,
     paragraphLength,
     serializeEditingModel,
+    type EditingPoint,
     type EditingModel,
     type EditingSelection,
     type EditingStructuredBlock,
     type EditingStructuredBlockContent,
 } from './model.js';
 import {
+    applyBlockAttributes,
+    applyInlineStyle,
+    adjustBlockIndent,
+    areBlockAttributesActive,
     deleteBackward,
     deleteForward,
     deleteSelection,
@@ -40,16 +45,22 @@ import {
     insertParagraph,
     insertText,
     isBlockTagActive,
+    isBlockAlignmentActive,
+    isInlineStyleActive,
     isLinkActive,
+    getLinkAttributes,
     isListActive,
     isTextMarkActive,
     isStructuredBlockSelected,
     moveStructuredBlock,
     getSelectedStructuredBlock,
     replaceStructuredBlockContent,
+    removeFormat,
     setBlockTag,
+    setBlockAlignment,
     setEditingOperations,
     setLink,
+    setListAttributes,
     setStructuredBlockAttributes,
     toggleMark,
     toggleList,
@@ -57,6 +68,12 @@ import {
     UnsupportedEditingSelectionError,
     validateSelection,
 } from './operations.js';
+import {
+    PasteRejectedError,
+    SOEDITOR_CLIPBOARD_MIME,
+    pastePipelineServiceToken,
+    type PastePipelineInput,
+} from './paste-pipeline.js';
 import {
     sealStructuredEditingRegistry,
     snapshotStructuredEditingRegistry,
@@ -67,6 +84,9 @@ import {
     visualEditingServiceToken,
     type VisualBlockTag,
     type VisualEditingService,
+    type VisualHtmlInsertionOptions,
+    type VisualInlineStyle,
+    type VisualListProperties,
     type VisualLinkAttributes,
     type VisualTextMark,
 } from './visual-editing-service.js';
@@ -80,7 +100,16 @@ export interface VisualEditingEngineOptions {
     readonly editor: Editor;
     readonly element: HTMLElement;
     readonly ariaLabel?: string;
+    /** Projection identity used by this controlled HTML editing surface. */
+    readonly projectionId?: VisualEditingProjectionId;
+    /**
+     * Registers the command-facing editing service. Disable this for a
+     * secondary Developer Visual surface shown beside a WYSIWYG writer.
+     */
+    readonly registerEditingService?: boolean;
 }
+
+export type VisualEditingProjectionId = 'visual' | 'wysiwyg';
 
 export interface EditingEngine {
     destroy(): void;
@@ -103,6 +132,17 @@ export class UnsupportedVisualDocumentFormatError extends Error {
     }
 }
 
+function announceEditingFeedback(element: HTMLElement, message: string): void {
+    const EventConstructor =
+        element.ownerDocument.defaultView?.CustomEvent ?? CustomEvent;
+    element.dispatchEvent(
+        new EventConstructor('soeditor:editing-feedback', {
+            bubbles: true,
+            detail: Object.freeze({ message, severity: 'warning' }),
+        }),
+    );
+}
+
 export class VisualEditingEngine implements EditingEngine {
     readonly editor: Editor;
     readonly element: HTMLElement;
@@ -118,7 +158,11 @@ export class VisualEditingEngine implements EditingEngine {
     readonly #schema: StructuredEditingSchema;
     readonly #visualDecorations: VisualDecorationsService | undefined;
     readonly #activateOnFocus: boolean;
+    readonly #projectionId: VisualEditingProjectionId;
+    readonly #registerEditingService: boolean;
     #compositionSelection: EditingSelection | undefined;
+    #compositionGroup: string | undefined;
+    #compositionSequence = 0;
     #draggedStructuredBlock: number | undefined;
     #destroyed = false;
     #lockedDocument = false;
@@ -141,12 +185,18 @@ export class VisualEditingEngine implements EditingEngine {
         this.editor = options.editor;
         this.element = options.element;
         this.#activateOnFocus = options.activateOnFocus ?? false;
+        this.#projectionId = options.projectionId ?? 'visual';
+        this.#registerEditingService = options.registerEditingService ?? true;
         if (this.editor.state.document.format !== 'html') {
             throw new UnsupportedVisualDocumentFormatError(
                 this.editor.state.document.format,
             );
         }
-        const ariaLabel = options.ariaLabel ?? 'Visual editor';
+        const ariaLabel =
+            options.ariaLabel ??
+            (this.#projectionId === 'wysiwyg'
+                ? 'WYSIWYG editor'
+                : 'Developer Visual editor');
         if (typeof ariaLabel !== 'string' || ariaLabel.trim().length === 0) {
             throw new TypeError('A visual editor ariaLabel must not be empty.');
         }
@@ -156,7 +206,10 @@ export class VisualEditingEngine implements EditingEngine {
                 'The visual editing host is not attached to a window.',
             );
         }
-        if (this.editor.services.has(visualEditingServiceToken)) {
+        if (
+            this.#registerEditingService &&
+            this.editor.services.has(visualEditingServiceToken)
+        ) {
             throw new ServiceAlreadyRegisteredError(
                 visualEditingServiceToken.id,
             );
@@ -190,11 +243,21 @@ export class VisualEditingEngine implements EditingEngine {
             decorations: () => this.#visualDecorations?.snapshot ?? [],
             executeCommand: (commandId, args) =>
                 this.editor.execute(commandId, ...args),
+            hasCommand: (commandId) => this.editor.commands.has(commandId),
+            insertParagraphAfter: (block) =>
+                this.#insertParagraphAfterOpaque(block),
+            projectionId: this.#projectionId,
             readonly: this.#isReadonly() || this.#lockedDocument,
             schema: this.#schema,
         });
         this.#projection.render(this.#model);
         const service: VisualEditingService = {
+            adjustIndent: (delta) => this.#adjustIndent(delta),
+            applyBlockAttributes: (attributes) =>
+                this.#applyBlockAttributes(attributes),
+            applyInlineStyle: (style) => this.#applyInlineStyle(style),
+            areBlockAttributesActive: (attributes) =>
+                this.#areBlockAttributesActive(attributes),
             canEdit: () => this.#canEdit(),
             getSelection: () => {
                 this.#assertAlive();
@@ -210,17 +273,27 @@ export class VisualEditingEngine implements EditingEngine {
             },
             getSelectedStructuredBlock: (type) =>
                 this.#getSelectedStructuredBlock(type),
-            insertHtml: (html) => this.#insertHtml(html),
+            getLinkAttributes: () => this.#getLinkAttributes(),
+            insertHtml: (html, options) => this.#insertHtml(html, options),
             isBlockActive: (tagName) => this.#isBlockActive(tagName),
+            isAlignmentActive: (alignment) =>
+                this.#isAlignmentActive(alignment),
             isLinkActive: () => this.#isLinkActive(),
             isListActive: (list) => this.#isListActive(list),
             isMarkActive: (mark) => this.#isMarkActive(mark),
+            isInlineStyleActive: (style) => this.#isInlineStyleActive(style),
             isStructuredBlockSelected: (type) =>
                 this.#isStructuredBlockSelected(type),
             replaceStructuredBlockContent: (type, content) =>
                 this.#replaceStructuredBlockContent(type, content),
+            removeSelectedStructuredBlock: (type) =>
+                this.#removeSelectedStructuredBlock(type),
+            removeFormat: () => this.#removeFormat(),
             setBlock: (tagName) => this.#setBlock(tagName),
+            setAlignment: (alignment) => this.#setAlignment(alignment),
             setLink: (attributes) => this.#setLink(attributes),
+            setListProperties: (properties) =>
+                this.#setListProperties(properties),
             setSelection: (selection, focus) => {
                 if (focus === true) this.focus();
                 const restored = this.setSelection(selection);
@@ -235,7 +308,12 @@ export class VisualEditingEngine implements EditingEngine {
             toggleMark: (mark) => this.#toggleMark(mark),
         };
         this.#service = Object.freeze(service);
-        this.editor.services.register(visualEditingServiceToken, this.#service);
+        if (this.#registerEditingService) {
+            this.editor.services.register(
+                visualEditingServiceToken,
+                this.#service,
+            );
+        }
         this.#disposeVisualDecorations = this.#visualDecorations?.subscribe(
             () => this.#render(this.#model, this.#retainedSelection),
         );
@@ -244,8 +322,7 @@ export class VisualEditingEngine implements EditingEngine {
             if (
                 !this.#destroyed &&
                 records.some(
-                    (record) =>
-                        !this.#projection.ownsNodeViewMutation(record.target),
+                    (record) => !this.#projection.ownsNodeViewMutation(record),
                 )
             ) {
                 this.#render(this.#model);
@@ -298,7 +375,7 @@ export class VisualEditingEngine implements EditingEngine {
             projectionCoordinatorServiceToken,
         );
         this.#disposeProjection = coordinator?.attach({
-            id: 'visual',
+            id: this.#projectionId,
             update: (activity) => {
                 this.#projectionActivity = activity;
                 this.#updateEditableState();
@@ -387,8 +464,9 @@ export class VisualEditingEngine implements EditingEngine {
         this.#disposeStateChange();
         try {
             if (
+                this.#registerEditingService &&
                 this.editor.services.tryGet(visualEditingServiceToken) ===
-                this.#service
+                    this.#service
             ) {
                 this.editor.services.unregister(visualEditingServiceToken);
             }
@@ -454,7 +532,13 @@ export class VisualEditingEngine implements EditingEngine {
                 case 'insertCompositionText':
                     if (event.data !== null) {
                         result = insertText(this.#model, selection, event.data);
-                        group = 'typing';
+                        if (event.inputType === 'insertCompositionText') {
+                            this.#compositionGroup ??=
+                                this.#nextCompositionGroup();
+                            group = this.#compositionGroup;
+                        } else {
+                            group = 'typing';
+                        }
                     }
                     break;
                 case 'insertParagraph':
@@ -497,6 +581,7 @@ export class VisualEditingEngine implements EditingEngine {
                 });
             } else {
                 this.#compositionSelection = undefined;
+                this.#compositionGroup = undefined;
             }
         }
     };
@@ -506,6 +591,7 @@ export class VisualEditingEngine implements EditingEngine {
             return;
         }
         this.#compositionSelection = this.#projection.readSelection();
+        this.#compositionGroup = this.#nextCompositionGroup();
     };
 
     readonly #handleCompositionEnd = (event: CompositionEvent): void => {
@@ -513,7 +599,13 @@ export class VisualEditingEngine implements EditingEngine {
             return;
         }
         this.#compositionSelection = undefined;
+        this.#compositionGroup = undefined;
     };
+
+    #nextCompositionGroup(): string {
+        this.#compositionSequence += 1;
+        return `composition-${String(this.#compositionSequence)}`;
+    }
 
     readonly #handleFocusIn = (event: FocusEvent): void => {
         this.#projection.selectStructuredBlockFromNode(event.target);
@@ -532,12 +624,31 @@ export class VisualEditingEngine implements EditingEngine {
             this.#projectionActivity?.visible === true &&
             this.#projectionActivity.primary === false
         ) {
-            this.editor.execute('projection.activate', 'visual');
+            this.editor.execute('projection.activate', this.#projectionId);
         }
     }
 
     readonly #handleKeyDown = (event: KeyboardEvent): void => {
         const selection = this.#projection.readSelection();
+        const selectedBlock =
+            selection === undefined
+                ? undefined
+                : this.#model.blocks[selection.focus.block];
+        if (
+            event.key === 'Tab' &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.altKey &&
+            selectedBlock?.kind === 'paragraph' &&
+            selectedBlock.list !== undefined
+        ) {
+            const command = event.shiftKey ? 'format.outdent' : 'format.indent';
+            if (this.editor.commands.canExecute(command)) {
+                event.preventDefault();
+                this.editor.execute(command);
+                return;
+            }
+        }
         if (
             selection !== undefined &&
             !event.ctrlKey &&
@@ -681,18 +792,24 @@ export class VisualEditingEngine implements EditingEngine {
         }
 
         try {
-            const inserted = createPastedModel(
-                clipboard.getData('text/html'),
-                clipboard.getData('text/plain'),
-                this.#schema,
-            );
+            const inserted = this.#createTransferModel(clipboard, 'paste');
+            if (inserted === undefined) return;
             const result = insertModel(this.#model, selection, inserted);
             this.#commit(result, {
                 afterSelection: result.selection,
                 beforeSelection: selection,
             });
         } catch (error: unknown) {
-            if (!(error instanceof UnsupportedEditingSelectionError)) {
+            if (error instanceof UnsupportedEditingSelectionError) {
+                announceEditingFeedback(
+                    this.element,
+                    'Paste cannot replace a selection that crosses preserved HTML.',
+                );
+            }
+            if (
+                !(error instanceof UnsupportedEditingSelectionError) &&
+                !(error instanceof PasteRejectedError)
+            ) {
                 throw error;
             }
         }
@@ -733,6 +850,10 @@ export class VisualEditingEngine implements EditingEngine {
         transfer.effectAllowed = 'move';
         transfer.setData('text/html', payload.html);
         transfer.setData('text/plain', payload.text);
+        transfer.setData(
+            SOEDITOR_CLIPBOARD_MIME,
+            `soeditor/1\n${payload.html}`,
+        );
         this.#draggedStructuredBlock = selection.anchor.block;
     };
 
@@ -803,21 +924,18 @@ export class VisualEditingEngine implements EditingEngine {
             focus: { block: target.block, offset },
         };
         try {
-            const result = insertModel(
-                this.#model,
-                selection,
-                createPastedModel(
-                    transfer.getData('text/html'),
-                    transfer.getData('text/plain'),
-                    this.#schema,
-                ),
-            );
+            const inserted = this.#createTransferModel(transfer, 'drop');
+            if (inserted === undefined) return;
+            const result = insertModel(this.#model, selection, inserted);
             this.#commit(result, {
                 afterSelection: result.selection,
                 beforeSelection: selection,
             });
         } catch (error: unknown) {
-            if (!(error instanceof UnsupportedEditingSelectionError)) {
+            if (
+                !(error instanceof UnsupportedEditingSelectionError) &&
+                !(error instanceof PasteRejectedError)
+            ) {
                 throw error;
             }
         }
@@ -900,6 +1018,31 @@ export class VisualEditingEngine implements EditingEngine {
             : isTextMarkActive(this.#model, selection, mark);
     }
 
+    #applyInlineStyle(style: VisualInlineStyle): void {
+        this.#applyFeature((selection) =>
+            applyInlineStyle(this.#model, selection, {
+                attributes: style.attributes,
+                kind: 'element',
+                tagName: style.tagName,
+            }),
+        );
+    }
+
+    #isInlineStyleActive(style: VisualInlineStyle): boolean {
+        const selection = this.#projection.readSelection();
+        return selection === undefined
+            ? false
+            : isInlineStyleActive(this.#model, selection, {
+                  attributes: style.attributes,
+                  kind: 'element',
+                  tagName: style.tagName,
+              });
+    }
+
+    #removeFormat(): void {
+        this.#applyFeature((selection) => removeFormat(this.#model, selection));
+    }
+
     #setBlock(tagName: VisualBlockTag): void {
         this.#applyFeature((selection) =>
             setBlockTag(this.#model, selection, tagName),
@@ -913,6 +1056,42 @@ export class VisualEditingEngine implements EditingEngine {
             : isBlockTagActive(this.#model, selection, tagName);
     }
 
+    #applyBlockAttributes(attributes: readonly HtmlAttribute[]): void {
+        this.#applyFeature((selection) =>
+            applyBlockAttributes(this.#model, selection, attributes),
+        );
+    }
+
+    #setAlignment(
+        alignment: 'center' | 'justify' | 'left' | 'right' | undefined,
+    ): void {
+        this.#applyFeature((selection) =>
+            setBlockAlignment(this.#model, selection, alignment),
+        );
+    }
+
+    #isAlignmentActive(
+        alignment: 'center' | 'justify' | 'left' | 'right' | undefined,
+    ): boolean {
+        const selection = this.#projection.readSelection();
+        return selection === undefined
+            ? false
+            : isBlockAlignmentActive(this.#model, selection, alignment);
+    }
+
+    #adjustIndent(delta: -1 | 1): void {
+        this.#applyFeature((selection) =>
+            adjustBlockIndent(this.#model, selection, delta),
+        );
+    }
+
+    #areBlockAttributesActive(attributes: readonly HtmlAttribute[]): boolean {
+        const selection = this.#projection.readSelection();
+        return selection === undefined
+            ? false
+            : areBlockAttributesActive(this.#model, selection, attributes);
+    }
+
     #toggleList(list: 'ol' | 'ul'): void {
         this.#applyFeature((selection) =>
             toggleList(this.#model, selection, list),
@@ -924,6 +1103,26 @@ export class VisualEditingEngine implements EditingEngine {
         return selection === undefined
             ? false
             : isListActive(this.#model, selection, list);
+    }
+
+    #setListProperties(properties: VisualListProperties): void {
+        const attributes: HtmlAttribute[] = [];
+        if (properties.start !== undefined) {
+            if (
+                !Number.isInteger(properties.start) ||
+                properties.start < -999_999 ||
+                properties.start > 999_999
+            ) {
+                throw new RangeError('List start must be a bounded integer.');
+            }
+            attributes.push({ name: 'start', value: String(properties.start) });
+        }
+        if (properties.type !== undefined) {
+            attributes.push({ name: 'type', value: properties.type });
+        }
+        this.#applyFeature((selection) =>
+            setListAttributes(this.#model, selection, attributes),
+        );
     }
 
     #setLink(attributes: VisualLinkAttributes | undefined): void {
@@ -947,6 +1146,35 @@ export class VisualEditingEngine implements EditingEngine {
         return selection === undefined
             ? false
             : isLinkActive(this.#model, selection);
+    }
+
+    #getLinkAttributes(): VisualLinkAttributes | undefined {
+        const selection = this.#projection.readSelection();
+        if (selection === undefined) return undefined;
+        const attributes = getLinkAttributes(this.#model, selection);
+        if (attributes === undefined) return undefined;
+        const values = Object.fromEntries(
+            attributes
+                .filter((attribute) =>
+                    ['href', 'rel', 'target', 'title'].includes(attribute.name),
+                )
+                .map((attribute) => [attribute.name, attribute.value]),
+        );
+        const href = values.href;
+        return typeof href === 'string'
+            ? Object.freeze({
+                  href,
+                  ...(typeof values.rel === 'string'
+                      ? { rel: values.rel }
+                      : {}),
+                  ...(typeof values.target === 'string'
+                      ? { target: values.target }
+                      : {}),
+                  ...(typeof values.title === 'string'
+                      ? { title: values.title }
+                      : {}),
+              })
+            : undefined;
     }
 
     #setStructuredBlockAttributes(
@@ -977,6 +1205,17 @@ export class VisualEditingEngine implements EditingEngine {
         );
     }
 
+    #removeSelectedStructuredBlock(type: string): void {
+        this.#applyFeature((selection) => {
+            if (!isStructuredBlockSelected(this.#model, selection, type)) {
+                throw new Error(
+                    `A structured block of type "${type}" is not selected.`,
+                );
+            }
+            return deleteSelection(this.#model, selection);
+        });
+    }
+
     #getSelectedStructuredBlock(
         type?: string,
     ): EditingStructuredBlock | undefined {
@@ -993,14 +1232,52 @@ export class VisualEditingEngine implements EditingEngine {
             : isStructuredBlockSelected(this.#model, selection, type);
     }
 
-    #insertHtml(html: string): void {
+    #insertHtml(html: string, options?: VisualHtmlInsertionOptions): void {
         this.#applyFeature((selection) =>
             insertModel(
                 this.#model,
-                selection,
+                options?.placement === 'selection-start'
+                    ? collapseAtSelectionStart(selection)
+                    : selection,
                 createPastedModel(html, '', this.#schema),
             ),
         );
+    }
+
+    #insertParagraphAfterOpaque(block: number): void {
+        this.#assertAlive();
+        if (this.#isReadonly() || this.#lockedDocument) return;
+        if (this.#model.blocks[block]?.kind !== 'opaque-block') {
+            throw new UnsupportedEditingSelectionError(
+                'An unsupported block is required before inserting a continuation paragraph.',
+            );
+        }
+        const blocks = [...this.#model.blocks];
+        blocks.splice(block + 1, 0, {
+            attributes: [],
+            inlines: [],
+            kind: 'paragraph',
+            tagName: 'p',
+        });
+        const point = { block: block + 1, offset: 0 };
+        const selection = { anchor: point, focus: point };
+        this.#commit(
+            {
+                model: freezeModel({ blocks }),
+                operations: [
+                    {
+                        from: { block, offset: 1 },
+                        insertedEnd: point,
+                        kind: 'replace-range',
+                        to: { block, offset: 1 },
+                    },
+                ],
+                selection,
+            },
+            { afterSelection: selection },
+        );
+        this.focus();
+        this.#projection.restoreSelection(selection);
     }
 
     #handleDocumentChange(source: string, transaction: Transaction): void {
@@ -1056,6 +1333,44 @@ export class VisualEditingEngine implements EditingEngine {
         });
     }
 
+    #createTransferModel(
+        transfer: DataTransfer,
+        source: PastePipelineInput['source'],
+    ): EditingModel | undefined {
+        const custom = transfer.getData(SOEDITOR_CLIPBOARD_MIME);
+        const prefix = 'soeditor/1\n';
+        const input: PastePipelineInput = Object.freeze({
+            files: Object.freeze(
+                Array.from(transfer.files, (file) =>
+                    Object.freeze({
+                        data: file,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                    }),
+                ),
+            ),
+            html: transfer.getData('text/html'),
+            ...(custom.startsWith(prefix)
+                ? { internalHtml: custom.slice(prefix.length) }
+                : {}),
+            source,
+            text: transfer.getData('text/plain'),
+            types: Object.freeze(Array.from(transfer.types)),
+        });
+        const pipeline = this.editor.services.tryGet(pastePipelineServiceToken);
+        const result = pipeline?.process(input);
+        if (result?.consumed === true) return undefined;
+        return createPastedModel(
+            result?.html ?? input.internalHtml ?? input.html,
+            result?.policy === 'plain-text'
+                ? result.text
+                : (result?.text ?? input.text),
+            this.#schema,
+            result?.policy === 'plain-text',
+        );
+    }
+
     #writeClipboard(event: ClipboardEvent): EditingSelection | undefined {
         const clipboard = event.clipboardData;
         const selection = this.#projection.readSelection();
@@ -1071,6 +1386,10 @@ export class VisualEditingEngine implements EditingEngine {
             );
             clipboard.setData('text/plain', payload.text);
             clipboard.setData('text/html', payload.html);
+            clipboard.setData(
+                SOEDITOR_CLIPBOARD_MIME,
+                `soeditor/1\n${payload.html}`,
+            );
             event.preventDefault();
             return selection;
         } catch (error: unknown) {
@@ -1093,11 +1412,11 @@ export class VisualEditingEngine implements EditingEngine {
     }
 
     #updateEditableState(): void {
-        const visual =
+        const visible =
             this.#projectionActivity?.visible ??
-            this.editor.state.mode === 'visual';
-        const readonly = this.#isReadonly() || this.#lockedDocument || !visual;
-        this.element.hidden = !visual;
+            this.editor.state.mode === this.#projectionId;
+        const readonly = this.#isReadonly() || this.#lockedDocument || !visible;
+        this.element.hidden = !visible;
         this.element.contentEditable = readonly ? 'false' : 'true';
         this.element.setAttribute('aria-readonly', String(readonly));
         this.#projection.setReadonly(readonly);
@@ -1106,7 +1425,8 @@ export class VisualEditingEngine implements EditingEngine {
     #isReadonly(): boolean {
         return (
             this.#projectionActivity?.readonly ??
-            (this.editor.state.readonly || this.editor.state.mode !== 'visual')
+            (this.editor.state.readonly ||
+                this.editor.state.mode !== this.#projectionId)
         );
     }
 
@@ -1121,6 +1441,22 @@ export function createVisualEditingEngine(
     options: VisualEditingEngineOptions,
 ): VisualEditingEngine {
     return new VisualEditingEngine(options);
+}
+
+function collapseAtSelectionStart(
+    selection: EditingSelection,
+): EditingSelection {
+    const start = pointComesBefore(selection.anchor, selection.focus)
+        ? selection.anchor
+        : selection.focus;
+    return Object.freeze({ anchor: start, focus: start });
+}
+
+function pointComesBefore(left: EditingPoint, right: EditingPoint): boolean {
+    return (
+        left.block < right.block ||
+        (left.block === right.block && left.offset <= right.offset)
+    );
 }
 
 function ensureEditableModel(model: EditingModel): EditingModel {

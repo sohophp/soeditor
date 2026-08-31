@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
     classicPreset,
+    cmsPreset,
     developerPreset,
     extendPreset,
     markdownPreset,
@@ -11,10 +12,11 @@ import {
 import { minimalPreset as narrowMinimalPreset } from '../src/minimal.js';
 
 describe('editor presets', () => {
-    it('publishes four immutable, duplicate-free definitions', () => {
+    it('publishes five immutable, duplicate-free definitions', () => {
         for (const preset of [
             minimalPreset,
             classicPreset,
+            cmsPreset,
             developerPreset,
             markdownPreset,
         ]) {
@@ -26,6 +28,22 @@ describe('editor presets', () => {
             ).toBe(preset.plugins.length);
         }
         expect(markdownPreset.format).toBe('markdown');
+        expect(cmsPreset.toolbar).toEqual(
+            expect.arrayContaining([
+                'source',
+                'sourceFind',
+                'format',
+                'preview',
+            ]),
+        );
+        expect(cmsPreset.plugins.map((plugin) => plugin.id)).toEqual(
+            expect.arrayContaining([
+                'html-diagnostics',
+                'html-formatting',
+                'preview',
+                'projection-coordinator',
+            ]),
+        );
         expect(narrowMinimalPreset).toBe(minimalPreset);
         expect(developerPreset.plugins.map((plugin) => plugin.id)).toContain(
             'developer-tools',
@@ -58,7 +76,12 @@ describe('editor presets', () => {
     });
 
     it('initializes every HTML preset without browser surface ownership', async () => {
-        for (const preset of [minimalPreset, classicPreset, developerPreset]) {
+        for (const preset of [
+            minimalPreset,
+            classicPreset,
+            cmsPreset,
+            developerPreset,
+        ]) {
             const editor = await Editor.create({ plugins: preset.plugins });
             expect(editor.state.document.format).toBe('html');
             if (preset === developerPreset) {

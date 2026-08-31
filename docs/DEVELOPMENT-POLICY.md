@@ -20,9 +20,10 @@ Before implementing work, use these repository documents in this priority order:
 2. accepted ADRs under `docs/decisions/`
 3. `docs/PRODUCT.md`
 4. `docs/architecture.md`
-5. `docs/ROADMAP.md`
-6. current phase specification under `docs/prompts/`, if one exists
-7. current implementation and tests
+5. `docs/wysiwyg-editor.md` for WYSIWYG work
+6. `docs/ROADMAP.md`
+7. current phase specification under `docs/prompts/`, if one exists
+8. current implementation and tests
 
 If these sources materially conflict, do not guess.
 
@@ -32,21 +33,27 @@ Apply the Stop Conditions in this document.
 
 # 2. Current Starting Point
 
-Phases 1–15 are complete and the SoEditor 0.5 Developer Preview release gate
-has passed. The repository owner subsequently authorized Phase 16 publication
-and stabilization work.
+Phases 1–36 are complete and SoEditor 1.0.0 is published and externally
+verified.
 
-The current authorized roadmap phase is:
+The authorized CMS roadmap is complete through:
 
 ```text
-Phase 25 — Production Tables and Media (active)
+Phase 48 — CMS Production Qualification and Release (complete)
 ```
 
-The repository owner authorized the SoEditor 0.6 through 1.0 development goal
-on 2026-08-29. The 0.7–1.0 roadmap was derived deliberately from the verified
-0.6 evidence and recorded in `docs/research/editor-landscape-2026.md` and
-`docs/ROADMAP.md`. npm publication, tags, and hosted releases remain separately
-owner-controlled operations.
+The post-1.1 WYSIWYG completion program is documented in Phases 49–56. The
+repository owner authorized the complete program on 2026-08-31 and Phase 49 is
+active. Autonomous progression through Phase 56 is authorized only after each
+preceding phase passes its direct WYSIWYG qualification gate. Publication,
+tags, and hosted releases remain explicit owner decisions.
+
+The repository owner authorized the CMS Classic Editor direction after the
+1.0 release. Phases 37–48 deliberately prioritize classic CMS authoring,
+textarea/form integration, reliable rich text, paste, uploads, media, tables,
+localization, accessibility, and integration over further expansion of
+Markdown, review, collaboration, or developer-only workflows. Publication,
+tags, and hosted releases remain separately owner-controlled operations.
 
 ---
 
@@ -686,19 +693,18 @@ Do not ask the user for routine approval between phases.
 
 ---
 
-# 27. End of Autonomous Roadmap
+# 27. End of Authorized Autonomous Roadmap
 
-Autonomous development ends after:
+The currently authorized autonomous roadmap ended after:
 
 ```text
-Phase 15 — SoEditor 0.5 Release Hardening
+Phase 48 — CMS Production Qualification and Release
 ```
 
-passes its release gate.
+Do not automatically begin Phase 49 or publish the 1.1 candidate. The proposed
+Phase 49–56 WYSIWYG program becomes active only after an explicit owner request.
 
-Do not automatically begin Post-0.5 candidate work.
-
-At that point provide a final report covering:
+At an authorized program boundary provide a report covering:
 
 - implemented capabilities;
 - package structure;

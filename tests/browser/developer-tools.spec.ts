@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?developer=1');
+    await page.locator('body[data-ready="true"]').waitFor();
 });
 
 test('shows selection element path and a read-only HTML inspector', async ({
@@ -157,14 +158,15 @@ test('filters and executes labeled commands from Mod-Shift-P palette', async ({
             throw new Error('Missing developer harness.');
         harness.editor.setData('<p>  Needs formatting </p>');
     });
-    await page.locator('[data-testid="editor"]').click();
+    await page.locator('#mode').click();
+    await page.locator('[data-testid="source-editor"] .cm-content').click();
     await page.keyboard.press('Control+Shift+P');
     const dialog = page.getByRole('dialog', { name: 'Command Palette' });
     await expect(dialog).toBeVisible();
     const filter = dialog.getByRole('searchbox', { name: 'Filter commands' });
-    await filter.fill('format html');
+    await filter.fill('format source');
     const format = dialog.locator('[data-command-id="document.format"]');
-    await expect(format).toHaveText('Format HTML');
+    await expect(format).toHaveText('Format source HTML');
     await format.click();
     await expect(dialog).toHaveCount(0);
     await expect(page.locator('[data-testid="source"]')).toContainText(

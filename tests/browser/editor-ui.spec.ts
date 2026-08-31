@@ -4,7 +4,7 @@ const editor = '[data-testid="editor"]';
 const source = '[data-testid="source"]';
 
 test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?developer=1');
     await expect(page.locator(editor)).toHaveAttribute(
         'contenteditable',
         'true',
@@ -32,6 +32,11 @@ test('renders the configured integrated toolbar, groups, status, and theme', asy
         'italic',
         'underline',
         'strike',
+        'fontFamily',
+        'fontSize',
+        'fontColor',
+        'fontBackgroundColor',
+        'highlight',
         'link',
         '|',
         'image',
@@ -50,6 +55,17 @@ test('renders the configured integrated toolbar, groups, status, and theme', asy
         'find-replace',
         'command-palette',
     ]);
+    const strikeIcon = page.locator(
+        '[data-toolbar-item="strike"] .soeditor-ui__icon',
+    );
+    await expect(strikeIcon.locator('text')).toHaveCount(0);
+    await expect(strikeIcon).toHaveClass(/soeditor-ui__icon--solid/u);
+    await expect(strikeIcon.locator('path')).toHaveCount(1);
+    await expect(strikeIcon.locator('path')).toHaveAttribute(
+        'd',
+        /^M1760 896/u,
+    );
+    await expect(strikeIcon).toHaveAttribute('viewBox', '0 0 1792 1792');
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
         'Visual · Saved',
     );
@@ -104,7 +120,40 @@ test('uses the heading dropdown and mode button through shared commands', async 
 }) => {
     await page.click('#hello');
     await setSelection(page, 0, 0, 5);
-    await page.locator('[data-toolbar-item="heading"] summary').click();
+    const heading = page.locator('[data-toolbar-item="heading"]');
+    await heading.locator('summary').click();
+    const headingStyles = await heading
+        .locator('.soeditor-ui__heading-choice > span')
+        .evaluateAll((samples) =>
+            samples.map((sample) => {
+                const style = getComputedStyle(sample);
+                return [
+                    Number.parseFloat(style.fontSize),
+                    Number.parseInt(style.fontWeight, 10),
+                ];
+            }),
+        );
+    expect(headingStyles).toEqual([
+        [16, 400],
+        [32, 700],
+        [24, 700],
+        [18.72, 700],
+        [16, 700],
+        [13.28, 700],
+        [10.72, 700],
+    ]);
+    await page.locator(editor).click();
+    await expect(heading).not.toHaveAttribute('open', '');
+
+    await heading.locator('summary').click();
+    const fontSize = page.locator('[data-toolbar-item="fontSize"]');
+    await fontSize.locator('summary').click();
+    await expect(heading).not.toHaveAttribute('open', '');
+    await expect(fontSize).toHaveAttribute('open', '');
+    await page.locator('[data-toolbar-item="bold"]').focus();
+    await expect(fontSize).not.toHaveAttribute('open', '');
+
+    await heading.locator('summary').click();
     await page.getByRole('button', { name: 'Heading 2' }).click();
     await expect(page.locator(source)).toHaveText('<h2>Hello</h2>');
 
@@ -133,7 +182,8 @@ test('applies a link through a native modal dialog', async ({ page }) => {
     await setSelection(page, 0, 0, 5);
     await page.locator('[data-toolbar-item="link"]').click();
     const dialog = page.getByRole('dialog', { name: 'Link' });
-    await dialog.getByLabel('URL').fill('/article');
+    await expect(dialog.getByLabel('Displayed text')).toHaveValue('Hello');
+    await dialog.getByLabel('Link URL').fill('/article');
     await dialog.getByLabel('Title').fill('Article');
     await dialog.getByRole('button', { name: 'Insert link' }).click();
 
@@ -143,7 +193,7 @@ test('applies a link through a native modal dialog', async ({ page }) => {
     );
 });
 
-test('inserts image and table data through command dialogs', async ({
+test('inserts image through a dialog and tables through the size picker', async ({
     page,
 }) => {
     await page.click('#hello');
@@ -159,10 +209,12 @@ test('inserts image and table data through command dialogs', async ({
 
     await setSelection(page, 0, 5);
     await page.locator('[data-toolbar-item="table"]').click();
-    const tableDialog = page.getByRole('dialog', { name: 'Table' });
-    await tableDialog.getByLabel('Rows').fill('2');
-    await tableDialog.getByLabel('Columns').fill('3');
-    await tableDialog.getByRole('button', { name: 'Insert table' }).click();
+    const tablePicker = page.getByRole('dialog', {
+        name: 'Choose table size',
+    });
+    await tablePicker
+        .getByRole('gridcell', { name: 'Insert 2 by 3 table' })
+        .click();
     await expect(page.locator(source)).toContainText('<table>');
     await expect(
         page.locator(
@@ -246,6 +298,8 @@ test('renders notifications and balloons as text and switches themes', async ({
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
         '<strong>custom</strong>',
     );
+    await page.locator(editor).click();
+    await expect(page.locator('.soeditor-ui__balloon')).toHaveCount(0);
 });
 
 test('cleans only UI-owned DOM on explicit and editor destruction', async ({

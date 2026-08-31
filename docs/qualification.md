@@ -1,4 +1,4 @@
-# 1.0 qualification evidence
+# 1.0 and CMS qualification evidence
 
 Phase 35 qualified the frozen 1.0 contract with executable evidence. This is a
 regression record, not a claim of universal device, browser, assistive-
@@ -17,6 +17,7 @@ technology, security, or performance certification.
 | Workspace recovery        | `workspace.spec.ts` and 14 focused Workspace unit tests                              |
 | React and Vue             | SSR unit tests and `framework-adapters.spec.ts` real-browser lifecycle               |
 | ESM/NodeNext/Vite/CDN     | packed 23-package consumer, narrow tree-shaking, browser global smoke                |
+| CMS Classic acceptance    | `cms-multibrowser.spec.ts` continuous authoring/save/security/teardown journey       |
 
 The scenarios use public package roots. Source, Markdown, Preview, framework,
 plugin-tooling, and experimental widget/table/media paths remain separated by
@@ -29,6 +30,34 @@ The complete journey evidence is distributed across `comments.spec.ts`,
 `node-views.spec.ts`, `qualification.spec.ts`, `release-hardening.spec.ts`,
 `revisions.spec.ts`, `split-view.spec.ts`, `table.spec.ts`,
 `visual-editing.spec.ts`, and `workspace.spec.ts`.
+
+## CMS Classic continuous journey
+
+Phase 48 adds one uninterrupted public-path browser scenario that proves:
+
+1. named-textarea replacement and initial custom-element/comment preservation;
+2. Chinese composition and Latin content in the same canonical document;
+3. configured semantic styling and nested-list keyboard behavior;
+4. semantic Office paste cleanup with scripts, event handlers, and `mso-*`
+   styling rejected;
+5. a host upload task plus safe link and structured table insertion;
+6. shared undo/redo, HTML Source editing, and native form submission;
+7. dangerous source retained canonically but absent from executable Visual DOM;
+8. terminal destruction restoring the exact textarea and final source.
+
+The repository now contains 199 Chromium scenarios. The focused CMS project
+runs all three CMS scenarios on Chromium desktop and mobile (six passing runs).
+The full 12-run matrix was also attempted. Firefox exits before page creation
+because the host `/lib64/libstdc++.so.6` lacks `GLIBCXX_3.4.26`; WebKit reports
+missing GTK 4, Vulkan, Graphene, Event, Flite, AVIF, JPEG, and Manette runtime
+libraries. These are reproducible environment gaps, not skipped or passing
+product assertions. Firefox/Safari product qualification remains pending on a
+compatible browser host.
+
+The Phase 50 WYSIWYG selection corpus independently reconfirmed the same launch
+limitations: Firefox cannot load `libmozsandbox.so` because
+`GLIBCXX_3.4.26` is unavailable, and WebKit reports the documented missing
+runtime-library set before any WYSIWYG assertion runs.
 
 ## Accessibility
 

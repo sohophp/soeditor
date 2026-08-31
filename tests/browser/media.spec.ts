@@ -6,7 +6,7 @@ const source = '[data-testid="source"]';
 const mediaBoundary = '[data-soeditor-structured-block="soeditor.media"]';
 
 test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?developer=1');
     await page.locator('#hello').click();
     await placeCaret(page);
 });
@@ -86,9 +86,11 @@ test('preserves unsafe or unsupported source without executing it', async ({
         page,
         '<figure data-cms="complex"><picture><img src="x.png"></picture><script>window.__mediaExecuted=true</script></figure>',
     );
-    await expect(page.locator(mediaBoundary)).toContainText(
-        'Unsupported figure preserved',
-    );
+    await expect(
+        page.locator(
+            '[data-soeditor-opaque-block="true"] .soeditor-opaque__label',
+        ),
+    ).toHaveText('<figure>');
     await expect(page.locator(source)).toContainText('<picture>');
     await expect(page.locator(source)).toContainText('<script>');
     expect(

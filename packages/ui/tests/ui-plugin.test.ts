@@ -4,10 +4,44 @@ import { describe, expect, it } from 'vitest';
 import {
     UiContributionAlreadyRegisteredError,
     UiPlugin,
+    builtInUiTranslations,
+    resolveUiTranslation,
     uiRegistryServiceToken,
 } from '../src/index.js';
 
 describe('UI contribution registry', () => {
+    it('resolves isolated Chinese and custom RTL translation resources', () => {
+        const simplified = resolveUiTranslation('zh_Hans_CN');
+        const traditional = resolveUiTranslation('zh-Hant');
+        const rtl = resolveUiTranslation('ar-EG', [
+            {
+                direction: 'rtl',
+                locale: 'ar',
+                messages: { Bold: 'عريض' },
+            },
+        ]);
+
+        expect(simplified.locale).toBe('zh-CN');
+        expect(simplified.translate('Source')).toBe('源码');
+        expect(traditional.locale).toBe('zh-TW');
+        expect(traditional.translate('Source')).toBe('原始碼');
+        expect(traditional.translate('Table cell properties')).toBe(
+            '儲存格屬性',
+        );
+        expect(rtl.direction).toBe('rtl');
+        expect(rtl.translate('Bold')).toBe('عريض');
+        expect(resolveUiTranslation('en').translate('Bold')).toBe('Bold');
+
+        const simplifiedKeys = Object.keys(
+            builtInUiTranslations.find(({ locale }) => locale === 'zh-CN')!
+                .messages,
+        ).sort();
+        const traditionalKeys = Object.keys(
+            builtInUiTranslations.find(({ locale }) => locale === 'zh-TW')!
+                .messages,
+        ).sort();
+        expect(traditionalKeys).toEqual(simplifiedKeys);
+    });
     it('registers and idempotently removes per-editor toolbar items', async () => {
         const editor = await Editor.create({ plugins: [UiPlugin] });
         const registry = editor.services.get(uiRegistryServiceToken);
@@ -45,6 +79,37 @@ describe('UI contribution registry', () => {
         expect(() => registry.registerStatusItem('late', factory)).toThrow(
             'destroyed',
         );
+    });
+
+    it('registers validated instance-scoped context menu commands', async () => {
+        const editor = await Editor.create({ plugins: [UiPlugin] });
+        const registry = editor.services.get(uiRegistryServiceToken);
+        const dispose = registry.registerContextMenuItem('example.inspect', {
+            command: 'example.inspect',
+            label: 'Inspect item',
+            when: ({ target }) => target.localName === 'a',
+        });
+
+        expect(() =>
+            registry.registerContextMenuItem('example.inspect', {
+                command: 'example.other',
+                label: 'Other item',
+            }),
+        ).toThrow(UiContributionAlreadyRegisteredError);
+        expect(() =>
+            registry.registerContextMenuItem('example.invalid', {
+                command: '',
+                label: 'Invalid',
+            }),
+        ).toThrow('invalid');
+        dispose();
+        dispose();
+        expect(() =>
+            registry.registerContextMenuItem('example.inspect', {
+                command: 'example.inspect',
+                label: 'Inspect item',
+            }),
+        ).not.toThrow();
     });
 
     it('normalizes shortcuts and rejects duplicate IDs and chords', async () => {

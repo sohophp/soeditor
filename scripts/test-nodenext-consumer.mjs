@@ -244,6 +244,17 @@ try {
         'pnpm',
         [
             '--filter',
+            '@soeditor/wysiwyg',
+            'pack',
+            '--pack-destination',
+            packDirectory,
+        ],
+        repositoryRoot,
+    );
+    run(
+        'pnpm',
+        [
+            '--filter',
             '@soeditor/engine',
             'pack',
             '--pack-destination',
@@ -321,6 +332,9 @@ try {
     const richTextArchive = archives.find((name) =>
         name.startsWith('soeditor-rich-text-'),
     );
+    const wysiwygArchive = archives.find((name) =>
+        name.startsWith('soeditor-wysiwyg-'),
+    );
     const sourceArchive = archives.find((name) =>
         name.startsWith('soeditor-source-'),
     );
@@ -354,7 +368,7 @@ try {
     );
 
     if (
-        archives.length !== 23 ||
+        archives.length !== 24 ||
         coreArchive === undefined ||
         commentsArchive === undefined ||
         revisionsArchive === undefined ||
@@ -363,7 +377,7 @@ try {
         vueArchive === undefined ||
         pluginToolsArchive === undefined
     ) {
-        throw new Error('Expected all 23 packed @soeditor archives.');
+        throw new Error('Expected all 24 packed @soeditor archives.');
     }
 
     if (htmlArchive === undefined) {
@@ -376,6 +390,10 @@ try {
 
     if (richTextArchive === undefined) {
         throw new Error('Expected one packed @soeditor/rich-text archive.');
+    }
+
+    if (wysiwygArchive === undefined) {
+        throw new Error('Expected one packed @soeditor/wysiwyg archive.');
     }
 
     if (sourceArchive === undefined) {
@@ -481,6 +499,10 @@ try {
     packageData.dependencies['@soeditor/rich-text'] = `file:${join(
         packDirectory,
         richTextArchive,
+    )}`;
+    packageData.dependencies['@soeditor/wysiwyg'] = `file:${join(
+        packDirectory,
+        wysiwygArchive,
     )}`;
     packageData.dependencies['@soeditor/source'] = `file:${join(
         packDirectory,
@@ -629,9 +651,9 @@ try {
         (total, source) => total + Buffer.byteLength(source),
         0,
     );
-    if (narrowSize > 75_000) {
+    if (narrowSize > 85_000) {
         throw new Error(
-            `Narrow Vite consumer exceeds its 75 kB guard (${String(narrowSize)} bytes).`,
+            `Narrow Vite consumer exceeds its 85 kB guard (${String(narrowSize)} bytes).`,
         );
     }
     for (const excludedMarker of [

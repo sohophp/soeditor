@@ -7,7 +7,7 @@ const browseSelector = '[data-toolbar-item="image-browse"]';
 test('inserts through a custom FileManager without changing ImagePlugin', async ({
     page,
 }) => {
-    await openEditableEditor(page, '/');
+    await openEditableEditor(page, '/?developer=1');
     await setCaret(page);
     await page.locator(browseSelector).click();
 
@@ -31,7 +31,7 @@ test('uses the same image workflow through SoFinderAdapter', async ({
 test('keeps cancellation inert and reports an unsafe manager result', async ({
     page,
 }) => {
-    await openEditableEditor(page, '/');
+    await openEditableEditor(page, '/?developer=1');
     await replaceManager(page, 'cancel');
     await setCaret(page);
     const before = await page.locator(sourceSelector).textContent();

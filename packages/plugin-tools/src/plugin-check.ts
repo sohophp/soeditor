@@ -82,6 +82,31 @@ export async function checkPluginPackage(
                 `${path} imports an unsupported SoEditor internal path.`,
             );
         }
+        if (/(?:from\s+|import\s*\()\s*['"](?:https?:)?\/\//u.test(source)) {
+            issue(
+                issues,
+                'REMOTE_IMPORT',
+                `${path} imports executable code from a remote URL.`,
+            );
+        }
+        if (/\b(?:eval\s*\(|new\s+Function\s*\()/u.test(source)) {
+            issue(
+                issues,
+                'DYNAMIC_CODE',
+                `${path} contains dynamic code evaluation.`,
+            );
+        }
+        if (
+            /\.innerHTML\s*=|\.outerHTML\s*=|\.insertAdjacentHTML\s*\(/u.test(
+                source,
+            )
+        ) {
+            issue(
+                issues,
+                'UNSAFE_DOM_OUTPUT',
+                `${path} writes untrusted HTML through a DOM injection sink.`,
+            );
+        }
     }
     if (
         !sources.some(({ source }) =>

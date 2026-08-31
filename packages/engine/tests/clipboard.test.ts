@@ -42,6 +42,17 @@ describe('clipboard model boundary', () => {
         );
     });
 
+    it('normalizes a copied nested list branch to a standalone list', () => {
+        const model = fromHtml(
+            '<ol><li>Parent<ul type="square"><li>Child</li></ul></li></ol>',
+        );
+
+        expect(createClipboardPayload(model, range(1, 0, 1, 5))).toEqual({
+            html: '<ul type="square"><li>Child</li></ul>',
+            text: 'Child',
+        });
+    });
+
     it('rejects clipboard extraction across opaque content', () => {
         const model = fromHtml(
             '<p>A<product-card data-id="1"></product-card>B</p>',

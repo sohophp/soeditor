@@ -1,6 +1,70 @@
 # Configuration
 
-## Editor options
+## Classic CMS options
+
+The normal CMS entry point keeps Core configuration separate from browser UI,
+form, and persistence options:
+
+```ts
+const classic = await createClassicEditor(textarea, {
+    ariaLabel: 'Article body',
+    autoGrow: true,
+    editingModes: ['wysiwyg', 'source'],
+    initialEditingMode: 'wysiwyg',
+    config: {
+        cms: {
+            paste: { policy: 'semantic' },
+            specialCharacters: ['©', '®', '™', '€', '→', '✓'],
+            styles: [
+                {
+                    attributes: [{ name: 'class', value: 'lead' }],
+                    element: 'span',
+                    id: 'lead',
+                    label: 'Lead',
+                    target: 'inline',
+                },
+            ],
+        },
+    },
+    icons: { 'format.bold': 'B' },
+    locale: 'zh-CN',
+    minHeight: 240,
+    save: {
+        adapter: articleSaveAdapter,
+        autoSaveDelay: 1500,
+        leavePageProtection: true,
+    },
+    themeVariables: { accent: '#005ea8', focusRing: 'CanvasText' },
+    toolbar: ['undo', 'redo', '|', 'heading', 'bold', 'italic', 'link'],
+    unsupportedContentDisplay: 'detailed', // Developer Visual only
+});
+```
+
+`editingModes` controls which authoring engines are mounted. Use
+`['wysiwyg', 'source']` for a normal CMS editor, or
+`['visual', 'source']` for the Developer Visual workflow. When both visual
+engines are enabled, WYSIWYG remains the command-facing writer and the
+coordinator enforces one active writer. `initialEditingMode` must be one of the
+enabled modes. Developer Visual can show unsupported HTML using `detailed` or
+`compact` presentation and exposes that choice in its toolbar. WYSIWYG never
+shows source labels or `Edit HTML` controls for preserved nodes. Set
+`cms.specialCharacters` to a custom list or `false` to disable its preset
+palette.
+
+`setWorkspaceView()` accepts explicit single- and multi-pane arrangements.
+Normal WYSIWYG installations expose `wysiwyg`, `source`, `wysiwyg-source`,
+`wysiwyg-preview`, `source-preview`, `wysiwyg-source-preview`, and `preview`.
+The Classic toolbar presents these as one labeled selector rather than
+ambiguous pane-count icons.
+
+`icons`, translations, theme variables, toolbar layout, sizing, callbacks, and
+save behavior are owned by that editor instance. Theme/icon data affects chrome
+only and is never serialized. The save adapter receives exact canonical source
+and a revision; backend authorization and conflict policy remain host-owned.
+See [Classic UI](classic-ui.md), [CMS saving](cms-saving.md), and the
+[CMS plugin/theme guide](cms-plugin-ecosystem.md).
+
+## Core editor options
 
 `SoEditor.create()` accepts one instance-scoped object:
 
@@ -80,7 +144,7 @@ Surface configuration is deliberately separate from Core:
 - Visual: `{ editor, element, ariaLabel? }`.
 - HTML Source: `{ editor, element, ariaLabel?, cspNonce? }`.
 - Markdown: `{ editor, element, ariaLabel?, cspNonce? }`.
-- UI: `{ editor, element, toolbar?, theme? }`.
+- UI: `{ editor, element, toolbar?, theme?, themeVariables?, icons?, locale?, translations? }`.
 - Preview: `{ editor, element, renderer?, configuration? }`.
 - Developer tools: `{ editor, ui, visualElement }`.
 - Split layout: `{ editor, element, hosts, initialPair, orientation?, ratio?,

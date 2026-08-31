@@ -5,7 +5,7 @@ const previewButton = '[data-toolbar-item="preview"]';
 const source = '[data-testid="source"]';
 
 test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?developer=1');
     await expect(page.locator(previewButton)).toBeEnabled();
 });
 

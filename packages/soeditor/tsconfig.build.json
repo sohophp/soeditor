@@ -10,5 +10,5 @@
         "stripInternal": true,
         "types": []
     },
-    "include": ["src/index.ts"]
+    "include": ["src/index.ts", "src/style-module.d.ts"]
 }

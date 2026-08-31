@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/file-manager",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "license": "MIT",
     "description": "Generic file-selection capability and Image integration for SoEditor.",
     "keywords": [
@@ -43,6 +43,7 @@
     },
     "peerDependencies": {
         "@soeditor/core": "workspace:*",
+        "@soeditor/engine": "workspace:*",
         "@soeditor/rich-text": "workspace:*",
         "@soeditor/ui": "workspace:*"
     },

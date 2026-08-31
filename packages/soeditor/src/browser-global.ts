@@ -1,7 +1,6 @@
 import type { EditorCreateOptions } from '@soeditor/core';
 import { Editor } from '@soeditor/core';
-import '@soeditor/layout/styles.css';
-import '@soeditor/ui/styles.css';
+import './styles.css';
 
 import * as publicApi from './index.js';
 

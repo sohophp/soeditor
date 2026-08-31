@@ -58,6 +58,7 @@ const defaultLabels: Readonly<Record<ProjectionId, string>> = Object.freeze({
     preview: 'Preview',
     source: 'HTML Source',
     visual: 'Visual',
+    wysiwyg: 'WYSIWYG',
 });
 
 interface HostOrigin {

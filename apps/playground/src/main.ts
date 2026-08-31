@@ -230,6 +230,7 @@ function createProductCardNodeView(context: {
     };
     readonly document: Document;
     readonly node: StructuredNodeViewState['node'];
+    readonly projectionId: StructuredNodeViewState['projectionId'];
     readonly readonly: boolean;
     readonly selected: boolean;
 }) {
@@ -730,6 +731,7 @@ bind('destroy-editor', () => {
     void editor.destroy();
 });
 render();
+document.body.dataset.ready = 'true';
 
 function readSplitPair(value: string | null): SplitViewPair | undefined {
     if (value === null) return undefined;

@@ -1,10 +1,16 @@
-import { Plugin, type CommandContext } from '@soeditor/core';
+import {
+    Plugin,
+    createServiceToken,
+    type CommandContext,
+} from '@soeditor/core';
 import {
     StructuredEditingPlugin,
     visualEditingServiceToken,
     type VisualBlockTag,
     type VisualEditingService,
+    type VisualInlineStyle,
     type VisualLinkAttributes,
+    type VisualListProperties,
     type VisualTextMark,
 } from '@soeditor/engine';
 import {
@@ -13,6 +19,8 @@ import {
     type HtmlChildNode,
     type HtmlElement,
 } from '@soeditor/html';
+
+import { nestedEditingBridgeToken } from './nested-editing.js';
 
 /** Reports an invalid rich-text command argument without mutating the editor. */
 export class RichTextArgumentError extends TypeError {
@@ -38,17 +46,14 @@ abstract class FeaturePlugin extends Plugin {
             id,
             ...(label === undefined ? {} : { label }),
             canExecute: ({ editor }) =>
-                editor.services.tryGet(visualEditingServiceToken)?.canEdit() ??
-                false,
+                resolveFeatureService(editor, id)?.canEdit() ?? false,
             execute: (context, ...args) =>
-                execute(requireService(context, id), args),
+                execute(requireFeatureService(context, id), args),
             ...(isActive === undefined
                 ? {}
                 : {
                       isActive: ({ editor }: CommandContext) => {
-                          const service = editor.services.tryGet(
-                              visualEditingServiceToken,
-                          );
+                          const service = resolveFeatureService(editor, id);
                           return service === undefined
                               ? false
                               : isActive(service);
@@ -151,6 +156,171 @@ export class InlineCodePlugin extends MarkPlugin {
     }
 }
 
+/** Registers semantic superscript formatting. */
+export class SuperscriptPlugin extends MarkPlugin {
+    static readonly id = 'superscript';
+    override init(): void {
+        this.registerMark('format.superscript', 'sup');
+    }
+}
+
+/** Registers semantic subscript formatting. */
+export class SubscriptPlugin extends MarkPlugin {
+    static readonly id = 'subscript';
+    override init(): void {
+        this.registerMark('format.subscript', 'sub');
+    }
+}
+
+/** Removes inline presentation marks while retaining links. */
+export class RemoveFormatPlugin extends FeaturePlugin {
+    static readonly id = 'remove-format';
+    override init(): void {
+        this.register('format.remove', (service, args) => {
+            assertNoArguments('format.remove', args);
+            requireExtendedCapability(service.removeFormat, 'format.remove')();
+        });
+    }
+}
+
+/** Inserts a semantic horizontal rule at the current selection. */
+export class HorizontalRulePlugin extends FeaturePlugin {
+    static readonly id = 'horizontal-rule';
+    override init(): void {
+        this.register('horizontalRule.insert', (service, args) => {
+            assertNoArguments('horizontalRule.insert', args);
+            service.insertHtml('<hr>');
+        });
+    }
+}
+
+export type TextAlignment = 'center' | 'justify' | 'left' | 'right';
+
+/** Registers explicit block alignment. */
+export class AlignmentPlugin extends FeaturePlugin {
+    static readonly id = 'alignment';
+    override init(): void {
+        this.register('format.alignment', (service, args) => {
+            const value = oneArgument('format.alignment', args);
+            if (
+                value !== 'left' &&
+                value !== 'center' &&
+                value !== 'right' &&
+                value !== 'justify'
+            ) {
+                throw new RichTextArgumentError(
+                    'format.alignment',
+                    'requires left, center, right, or justify.',
+                );
+            }
+            requireExtendedCapability(
+                service.setAlignment,
+                'format.alignment',
+            )(value);
+        });
+    }
+}
+
+/** Registers bounded block/list indentation commands. */
+export class IndentationPlugin extends FeaturePlugin {
+    static readonly id = 'indentation';
+    override init(): void {
+        this.register('format.indent', (service, args) => {
+            assertNoArguments('format.indent', args);
+            requireExtendedCapability(service.adjustIndent, 'format.indent')(1);
+        });
+        this.register('format.outdent', (service, args) => {
+            assertNoArguments('format.outdent', args);
+            requireExtendedCapability(
+                service.adjustIndent,
+                'format.outdent',
+            )(-1);
+        });
+    }
+}
+
+export interface SemanticStyleAttribute {
+    readonly name: string;
+    readonly value: string;
+}
+
+export type SemanticStyleDefinition =
+    | {
+          readonly attributes: readonly SemanticStyleAttribute[];
+          readonly element?: VisualBlockTag;
+          readonly id: string;
+          readonly label: string;
+          readonly target: 'block';
+      }
+    | {
+          readonly attributes: readonly SemanticStyleAttribute[];
+          readonly element: VisualInlineStyle['tagName'];
+          readonly id: string;
+          readonly label: string;
+          readonly target: 'inline';
+      }
+    | {
+          readonly attributes: readonly SemanticStyleAttribute[];
+          readonly id: string;
+          readonly label: string;
+          readonly objectType: string;
+          readonly target: 'structured';
+      };
+
+/** Reports malformed or unsafe instance-scoped CMS style definitions. */
+export class SemanticStyleConfigurationError extends TypeError {
+    constructor(message: string) {
+        super(`Invalid CMS style configuration: ${message}`);
+        this.name = 'SemanticStyleConfigurationError';
+    }
+}
+
+/** Registers validated instance-scoped semantic style commands. */
+export class SemanticStylesPlugin extends Plugin {
+    static readonly id = 'semantic-styles';
+    static readonly requires = [StructuredEditingPlugin];
+
+    override init(): void {
+        const definitions = readSemanticStyles(
+            this.editor.config.get<unknown>('cms.styles'),
+        );
+        for (const definition of definitions) {
+            const commandId = `style.${definition.id}`;
+            this.editor.commands.register({
+                id: commandId,
+                label: definition.label,
+                canExecute: ({ editor }) => {
+                    const service = editor.services.tryGet(
+                        visualEditingServiceToken,
+                    );
+                    return (
+                        service?.canEdit() === true &&
+                        (definition.target !== 'structured' ||
+                            service.isStructuredBlockSelected(
+                                definition.objectType,
+                            ))
+                    );
+                },
+                execute: (context, ...args) => {
+                    assertNoArguments(commandId, args);
+                    applySemanticStyle(
+                        requireService(context, commandId),
+                        definition,
+                    );
+                },
+                isActive: ({ editor }) => {
+                    const service = editor.services.tryGet(
+                        visualEditingServiceToken,
+                    );
+                    return service === undefined
+                        ? false
+                        : isSemanticStyleActive(service, definition);
+                },
+            });
+        }
+    }
+}
+
 abstract class ToggleBlockPlugin extends FeaturePlugin {
     protected registerBlock(id: string, tagName: 'blockquote' | 'pre'): void {
         this.register(
@@ -215,19 +385,89 @@ export class UnorderedListPlugin extends ListPlugin {
     }
 }
 
+/** Registers ordered/unordered list start and marker properties. */
+export class ListPropertiesPlugin extends FeaturePlugin {
+    static readonly id = 'list-properties';
+    override init(): void {
+        this.register('list.properties', (service, args) => {
+            const properties = readListProperties(args);
+            requireExtendedCapability(
+                service.setListProperties,
+                'list.properties',
+            )(properties);
+        });
+    }
+}
+
 /** Options accepted by `link.set`. */
 export type LinkOptions = VisualLinkAttributes;
+
+export type LinkTargetSelection = LinkOptions;
+
+export interface LinkTargetProvider {
+    select(kind: 'file' | 'internal'): PromiseLike<LinkTargetSelection | null>;
+}
+
+export const linkTargetProviderServiceToken =
+    createServiceToken<LinkTargetProvider>('soeditor.link-target-provider');
+
+interface LinkPolicy {
+    readonly allowRelative: boolean;
+    readonly protocols: readonly string[];
+}
 
 /** Registers link application and removal commands. */
 export class LinkPlugin extends FeaturePlugin {
     static readonly id = 'link';
 
     override init(): void {
+        const policy = readLinkPolicy(
+            this.editor.config.get<unknown>('cms.links'),
+        );
         this.register(
             'link.set',
-            (service, args) => service.setLink(readLinkOptions(args)),
+            (service, args) => service.setLink(readLinkOptions(args, policy)),
             (service) => service.isLinkActive(),
         );
+        this.register('link.setText', (service, args) => {
+            const value = readRecord('link.setText', args);
+            rejectUnknownKeys('link.setText', value, [
+                'href',
+                'rel',
+                'target',
+                'text',
+                'title',
+            ]);
+            const text = requiredString('link.setText', value, 'text');
+            if (text.length > 100_000 || hasControlCharacters(text)) {
+                throw new RichTextArgumentError(
+                    'link.setText',
+                    'requires bounded single-line displayed text.',
+                );
+            }
+            const attributes = normalizeLinkOptions(
+                {
+                    href: requiredString('link.setText', value, 'href'),
+                    ...optionalStringProperties('link.setText', value, [
+                        'target',
+                        'rel',
+                        'title',
+                    ]),
+                },
+                policy,
+            );
+            service.insertHtml(
+                serializeNodes([
+                    element(
+                        'a',
+                        Object.entries(attributes).flatMap(([name, entry]) =>
+                            entry === undefined ? [] : [attribute(name, entry)],
+                        ),
+                        [Object.freeze({ type: 'text', value: text })],
+                    ),
+                ]),
+            );
+        });
         this.register(
             'link.remove',
             (service, args) => {
@@ -237,6 +477,47 @@ export class LinkPlugin extends FeaturePlugin {
             (service) => service.isLinkActive(),
             'Remove link',
         );
+        this.register('link.auto', (service, args) => {
+            const candidate = oneStringArgument('link.auto', args);
+            service.setLink({ href: normalizeAutoLink(candidate, policy) });
+        });
+        this.editor.commands.register({
+            id: 'link.inspect',
+            label: 'Inspect selected link',
+            canExecute: ({ editor }) =>
+                resolveFeatureService(editor, 'link.inspect')?.isLinkActive() ??
+                false,
+            execute: ({ editor }, ...args) => {
+                assertNoArguments('link.inspect', args);
+                return resolveFeatureService(
+                    editor,
+                    'link.inspect',
+                )?.getLinkAttributes?.();
+            },
+        });
+        this.editor.commands.register({
+            id: 'link.pick',
+            label: 'Select a CMS link target',
+            canExecute: ({ editor }) =>
+                editor.services.has(linkTargetProviderServiceToken) &&
+                (resolveFeatureService(editor, 'link.pick')?.canEdit() ??
+                    false),
+            execute: async ({ editor }, kind) => {
+                if (kind !== 'file' && kind !== 'internal') {
+                    throw new RichTextArgumentError(
+                        'link.pick',
+                        'requires "file" or "internal".',
+                    );
+                }
+                const selected = await editor.services
+                    .get(linkTargetProviderServiceToken)
+                    .select(kind);
+                if (selected === null) return null;
+                const options = normalizeLinkOptions(selected, policy);
+                resolveFeatureService(editor, 'link.pick')?.setLink(options);
+                return options;
+            },
+        });
     }
 }
 
@@ -252,7 +533,258 @@ function markLabel(mark: VisualTextMark): string {
             return 'Toggle strikethrough';
         case 'code':
             return 'Toggle inline code';
+        case 'sub':
+            return 'Toggle subscript';
+        case 'sup':
+            return 'Toggle superscript';
     }
+}
+
+function readSemanticStyles(
+    value: unknown,
+): readonly SemanticStyleDefinition[] {
+    if (value === undefined) return [];
+    if (!Array.isArray(value) || value.length > 64) {
+        throw new SemanticStyleConfigurationError(
+            'cms.styles must be an array with at most 64 entries.',
+        );
+    }
+    const seen = new Set<string>();
+    return Object.freeze(
+        value.map((candidate, index) => {
+            if (
+                typeof candidate !== 'object' ||
+                candidate === null ||
+                Array.isArray(candidate)
+            ) {
+                throw new SemanticStyleConfigurationError(
+                    `entry ${String(index)} must be an object.`,
+                );
+            }
+            const record = candidate as Record<string, unknown>;
+            const id = styleString(record, 'id', index);
+            const label = styleString(record, 'label', index);
+            if (!/^[a-z][a-z0-9-]{0,47}$/u.test(id) || seen.has(id)) {
+                throw new SemanticStyleConfigurationError(
+                    `entry ${String(index)} has an invalid or duplicate id.`,
+                );
+            }
+            seen.add(id);
+            const attributes = styleAttributes(record.attributes, index);
+            if (record.target === 'inline') {
+                if (
+                    record.element !== 'span' &&
+                    record.element !== 'mark' &&
+                    record.element !== 'small' &&
+                    record.element !== 'kbd'
+                ) {
+                    throw new SemanticStyleConfigurationError(
+                        `inline entry "${id}" requires span, mark, small, or kbd.`,
+                    );
+                }
+                return Object.freeze({
+                    attributes,
+                    element: record.element,
+                    id,
+                    label,
+                    target: 'inline' as const,
+                });
+            }
+            if (record.target === 'block') {
+                const element = record.element;
+                if (element !== undefined && !isVisualBlockTag(element)) {
+                    throw new SemanticStyleConfigurationError(
+                        `block entry "${id}" has an unsupported element.`,
+                    );
+                }
+                return Object.freeze({
+                    attributes,
+                    ...(element === undefined ? {} : { element }),
+                    id,
+                    label,
+                    target: 'block' as const,
+                });
+            }
+            if (record.target === 'structured') {
+                const objectType = styleString(record, 'objectType', index);
+                return Object.freeze({
+                    attributes,
+                    id,
+                    label,
+                    objectType,
+                    target: 'structured' as const,
+                });
+            }
+            throw new SemanticStyleConfigurationError(
+                `entry "${id}" has an unsupported target.`,
+            );
+        }),
+    );
+}
+
+function styleString(
+    record: Record<string, unknown>,
+    key: string,
+    index: number,
+): string {
+    const value = record[key];
+    if (typeof value !== 'string' || value.length === 0 || value.length > 128) {
+        throw new SemanticStyleConfigurationError(
+            `entry ${String(index)} requires a bounded string "${key}".`,
+        );
+    }
+    return value;
+}
+
+function styleAttributes(
+    value: unknown,
+    index: number,
+): readonly SemanticStyleAttribute[] {
+    if (!Array.isArray(value) || value.length === 0 || value.length > 8) {
+        throw new SemanticStyleConfigurationError(
+            `entry ${String(index)} requires 1 to 8 attributes.`,
+        );
+    }
+    return Object.freeze(
+        value.map((candidate) => {
+            if (
+                typeof candidate !== 'object' ||
+                candidate === null ||
+                Array.isArray(candidate)
+            ) {
+                throw new SemanticStyleConfigurationError(
+                    `entry ${String(index)} contains an invalid attribute.`,
+                );
+            }
+            const record = candidate as Record<string, unknown>;
+            const name = record.name;
+            const attributeValue = record.value;
+            if (
+                typeof name !== 'string' ||
+                typeof attributeValue !== 'string' ||
+                !/^(?:class|dir|lang|style|title|data-[a-z0-9-]+)$/u.test(
+                    name,
+                ) ||
+                attributeValue.length === 0 ||
+                attributeValue.length > 512 ||
+                (name === 'style' && !isSafeSemanticStyle(attributeValue))
+            ) {
+                throw new SemanticStyleConfigurationError(
+                    `entry ${String(index)} contains an unsafe attribute.`,
+                );
+            }
+            return Object.freeze({ name, value: attributeValue });
+        }),
+    );
+}
+
+function isSafeSemanticStyle(value: string): boolean {
+    return /^(?:(?:color|background-color|font-family|font-size)\s*:\s*[-#(),.%\w\s"']+;?\s*)+$/iu.test(
+        value,
+    );
+}
+
+function isVisualBlockTag(value: unknown): value is VisualBlockTag {
+    return (
+        value === 'p' ||
+        value === 'blockquote' ||
+        value === 'pre' ||
+        (typeof value === 'string' && /^h[1-6]$/u.test(value))
+    );
+}
+
+function toHtmlAttributes(
+    attributes: readonly SemanticStyleAttribute[],
+): readonly HtmlAttribute[] {
+    return Object.freeze(
+        attributes.map(({ name, value }) => Object.freeze({ name, value })),
+    );
+}
+
+function applySemanticStyle(
+    service: VisualEditingService,
+    definition: SemanticStyleDefinition,
+): void {
+    const attributes = toHtmlAttributes(definition.attributes);
+    if (definition.target === 'inline') {
+        requireExtendedCapability(
+            service.applyInlineStyle,
+            `style.${definition.id}`,
+        )({
+            attributes,
+            tagName: definition.element,
+        });
+    } else if (definition.target === 'block') {
+        if (definition.element !== undefined)
+            service.setBlock(definition.element);
+        requireExtendedCapability(
+            service.applyBlockAttributes,
+            `style.${definition.id}`,
+        )(attributes);
+    } else {
+        const block = service.getSelectedStructuredBlock(definition.objectType);
+        if (block === undefined) return;
+        service.setStructuredBlockAttributes(
+            definition.objectType,
+            mergeAttributes(block.attributes, attributes),
+        );
+    }
+}
+
+function isSemanticStyleActive(
+    service: VisualEditingService,
+    definition: SemanticStyleDefinition,
+): boolean {
+    const attributes = toHtmlAttributes(definition.attributes);
+    if (definition.target === 'inline') {
+        return (
+            service.isInlineStyleActive?.({
+                attributes,
+                tagName: definition.element,
+            }) ?? false
+        );
+    }
+    if (definition.target === 'block') {
+        return (
+            (definition.element === undefined ||
+                service.isBlockActive(definition.element)) &&
+            (service.areBlockAttributesActive?.(attributes) ?? false)
+        );
+    }
+    const block = service.getSelectedStructuredBlock(definition.objectType);
+    return (
+        block !== undefined &&
+        attributes.every((attribute) =>
+            block.attributes.some(
+                (candidate) =>
+                    candidate.name === attribute.name &&
+                    candidate.value === attribute.value,
+            ),
+        )
+    );
+}
+
+function mergeAttributes(
+    current: readonly HtmlAttribute[],
+    added: readonly HtmlAttribute[],
+): readonly HtmlAttribute[] {
+    const names = new Set(added.map(({ name }) => name));
+    return Object.freeze([
+        ...current.filter(({ name }) => !names.has(name)),
+        ...added,
+    ]);
+}
+
+function requireExtendedCapability<T>(
+    capability: T | undefined,
+    commandId: string,
+): T {
+    if (capability === undefined) {
+        throw new Error(
+            `Command "${commandId}" requires the CMS formatting engine capability.`,
+        );
+    }
+    return capability;
 }
 
 /** Options accepted by `image.insert`. */
@@ -298,6 +830,32 @@ function requireService(
     return service;
 }
 
+function resolveFeatureService(
+    editor: CommandContext['editor'],
+    commandId: string,
+): VisualEditingService | undefined {
+    const nested = editor.services.tryGet(nestedEditingBridgeToken);
+    if (nested !== undefined) {
+        const active = nested.getActive(commandId);
+        if (active !== undefined) return active;
+        if (nested.getActive('*') !== undefined) return undefined;
+    }
+    return editor.services.tryGet(visualEditingServiceToken);
+}
+
+function requireFeatureService(
+    context: CommandContext,
+    commandId: string,
+): VisualEditingService {
+    const service = resolveFeatureService(context.editor, commandId);
+    if (service === undefined) {
+        throw new Error(
+            `Command "${commandId}" requires an editable rich-text selection.`,
+        );
+    }
+    return service;
+}
+
 function assertNoArguments(commandId: string, args: readonly unknown[]): void {
     if (args.length !== 0) {
         throw new RichTextArgumentError(
@@ -331,18 +889,199 @@ function readRecord(
     return value as Record<string, unknown>;
 }
 
-function readLinkOptions(args: readonly unknown[]): LinkOptions {
+function readLinkOptions(
+    args: readonly unknown[],
+    policy: LinkPolicy,
+): LinkOptions {
     const value = readRecord('link.set', args);
     rejectUnknownKeys('link.set', value, ['href', 'target', 'rel', 'title']);
     const href = requiredString('link.set', value, 'href');
-    return {
+    return normalizeLinkOptions(
+        {
+            href,
+            ...optionalStringProperties('link.set', value, [
+                'target',
+                'rel',
+                'title',
+            ]),
+        },
+        policy,
+    );
+}
+
+function normalizeLinkOptions(
+    options: LinkTargetSelection,
+    policy: LinkPolicy,
+): LinkOptions {
+    if (
+        typeof options !== 'object' ||
+        options === null ||
+        typeof options.href !== 'string' ||
+        (options.title !== undefined &&
+            (typeof options.title !== 'string' ||
+                options.title.length > 512 ||
+                hasControlCharacters(options.title))) ||
+        (options.target !== undefined && typeof options.target !== 'string') ||
+        (options.rel !== undefined &&
+            (typeof options.rel !== 'string' || options.rel.length > 512))
+    ) {
+        throw new RichTextArgumentError(
+            'link.set',
+            'requires bounded string properties.',
+        );
+    }
+    const href = options.href.trim();
+    if (!isAllowedLink(href, policy)) {
+        throw new RichTextArgumentError(
+            'link.set',
+            'requires a safe URL allowed by cms.links policy.',
+        );
+    }
+    const target = normalizeLinkTarget(options.target);
+    const rel = normalizeRel(options.rel, target);
+    return Object.freeze({
         href,
-        ...optionalStringProperties('link.set', value, [
-            'target',
-            'rel',
-            'title',
-        ]),
-    };
+        ...(target === undefined ? {} : { target }),
+        ...(rel === undefined ? {} : { rel }),
+        ...(options.title === undefined ? {} : { title: options.title }),
+    });
+}
+
+function normalizeLinkTarget(value: string | undefined): string | undefined {
+    if (value === undefined || value.trim().length === 0) return undefined;
+    const target = value.trim();
+    const specialTargets = new Set(['_blank', '_parent', '_self', '_top']);
+    if (
+        !specialTargets.has(target) &&
+        !/^[A-Za-z][A-Za-z0-9_.:-]{0,127}$/u.test(target)
+    ) {
+        throw new RichTextArgumentError(
+            'link.set',
+            'requires _self, _blank, _parent, _top, or a custom target name beginning with a letter.',
+        );
+    }
+    return target;
+}
+
+function readLinkPolicy(value: unknown): LinkPolicy {
+    if (value === undefined) {
+        return Object.freeze({
+            allowRelative: true,
+            protocols: Object.freeze(['http', 'https', 'mailto', 'tel']),
+        });
+    }
+    if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+        throw new TypeError('cms.links must be an object.');
+    }
+    const record = value as Record<string, unknown>;
+    const allowRelative = record.allowRelative ?? true;
+    const protocols = record.protocols ?? ['http', 'https', 'mailto', 'tel'];
+    if (typeof allowRelative !== 'boolean') {
+        throw new TypeError('cms.links.allowRelative must be boolean.');
+    }
+    if (
+        !Array.isArray(protocols) ||
+        protocols.length < 1 ||
+        protocols.length > 16 ||
+        !protocols.every(
+            (protocol) =>
+                typeof protocol === 'string' &&
+                /^[a-z][a-z0-9+.-]{0,31}$/u.test(protocol) &&
+                !['data', 'file', 'javascript', 'vbscript'].includes(protocol),
+        )
+    ) {
+        throw new TypeError('cms.links.protocols contains an unsafe protocol.');
+    }
+    return Object.freeze({
+        allowRelative,
+        protocols: Object.freeze([...new Set(protocols)]),
+    });
+}
+
+function isAllowedLink(value: string, policy: LinkPolicy): boolean {
+    if (
+        value.length === 0 ||
+        value.length > 2048 ||
+        hasControlCharacters(value) ||
+        value.includes('\\')
+    ) {
+        return false;
+    }
+    const scheme = /^([a-z][a-z0-9+.-]*):/iu.exec(value)?.[1]?.toLowerCase();
+    if (scheme !== undefined) {
+        if (!policy.protocols.includes(scheme)) return false;
+        if (scheme === 'http' || scheme === 'https') {
+            try {
+                const parsed = new URL(value);
+                return (
+                    parsed.protocol === `${scheme}:` &&
+                    parsed.hostname.length > 0 &&
+                    parsed.username.length === 0 &&
+                    parsed.password.length === 0
+                );
+            } catch {
+                return false;
+            }
+        }
+        return true;
+    }
+    return (
+        policy.allowRelative &&
+        !value.startsWith('//') &&
+        /^(?:#|\?|\/|\.\.?(?:\/|$)|[^\s:]+(?:\/[^\s]*)?)$/u.test(value)
+    );
+}
+
+function hasControlCharacters(value: string): boolean {
+    return Array.from(value).some((character) => {
+        const code = character.codePointAt(0);
+        return code !== undefined && (code < 32 || code === 127);
+    });
+}
+
+function normalizeRel(
+    value: string | undefined,
+    target: string | undefined,
+): string | undefined {
+    const tokens = (value ?? '')
+        .split(/\s+/u)
+        .filter((token) => token.length > 0)
+        .map((token) => token.toLowerCase());
+    if (tokens.some((token) => !/^[a-z][a-z0-9.-]{0,63}$/u.test(token))) {
+        throw new RichTextArgumentError(
+            'link.set',
+            'contains an invalid rel token.',
+        );
+    }
+    if (target === '_blank') tokens.push('noopener', 'noreferrer');
+    const normalized = [...new Set(tokens)].sort().join(' ');
+    return normalized.length === 0 ? undefined : normalized;
+}
+
+function normalizeAutoLink(value: string, policy: LinkPolicy): string {
+    const candidate = value.trim();
+    const href = /^[^\s@]+@[^\s@]+\.[^\s@]+$/u.test(candidate)
+        ? `mailto:${candidate}`
+        : /^\+?[\d(). -]{7,32}$/u.test(candidate)
+          ? `tel:${candidate.replace(/[().\s-]/gu, '')}`
+          : /^www\./iu.test(candidate)
+            ? `https://${candidate}`
+            : candidate;
+    if (!isAllowedLink(href, policy)) {
+        throw new RichTextArgumentError(
+            'link.auto',
+            'could not derive a safe link.',
+        );
+    }
+    return href;
+}
+
+function oneStringArgument(command: string, args: readonly unknown[]): string {
+    const value = oneArgument(command, args);
+    if (typeof value !== 'string') {
+        throw new RichTextArgumentError(command, 'requires a string.');
+    }
+    return value;
 }
 
 function readImageOptions(args: readonly unknown[]): ImageInsertOptions {
@@ -357,6 +1096,44 @@ function readImageOptions(args: readonly unknown[]): ImageInsertOptions {
         ...strings,
         ...(width === undefined ? {} : { width }),
         ...(height === undefined ? {} : { height }),
+    };
+}
+
+function readListProperties(args: readonly unknown[]): VisualListProperties {
+    const value = readRecord('list.properties', args);
+    rejectUnknownKeys('list.properties', value, ['start', 'type']);
+    const start = value.start;
+    const type = value.type;
+    if (
+        start !== undefined &&
+        (!Number.isInteger(start) ||
+            Number(start) < -999_999 ||
+            Number(start) > 999_999)
+    ) {
+        throw new RichTextArgumentError(
+            'list.properties',
+            'requires a bounded integer "start".',
+        );
+    }
+    if (
+        type !== undefined &&
+        type !== '1' &&
+        type !== 'a' &&
+        type !== 'A' &&
+        type !== 'i' &&
+        type !== 'I' &&
+        type !== 'disc' &&
+        type !== 'circle' &&
+        type !== 'square'
+    ) {
+        throw new RichTextArgumentError(
+            'list.properties',
+            'requires a supported marker "type".',
+        );
+    }
+    return {
+        ...(start === undefined ? {} : { start: Number(start) }),
+        ...(type === undefined ? {} : { type }),
     };
 }
 

@@ -7,6 +7,7 @@ import {
 import { defaultShortcuts, defaultToolbarItems } from './defaults.js';
 import { freezeShortcut } from './shortcuts.js';
 import type {
+    ContextMenuItemDefinition,
     KeyboardShortcutDefinition,
     StatusItemFactory,
     ToolbarItemFactory,
@@ -18,6 +19,7 @@ interface StoredShortcut extends KeyboardShortcutDefinition {
 }
 
 interface RegistryRecord {
+    readonly contextMenuItems: Map<string, ContextMenuItemDefinition>;
     readonly shortcuts: Map<string, StoredShortcut>;
     readonly shortcutIds: Map<string, StoredShortcut>;
     readonly statusItems: Map<string, StatusItemFactory>;
@@ -47,12 +49,15 @@ export class UiPlugin extends Plugin {
 
     override init(): void {
         const record: RegistryRecord = {
+            contextMenuItems: new Map(),
             shortcuts: new Map(),
             shortcutIds: new Map(),
             statusItems: new Map(),
             toolbarItems: new Map(),
         };
         const service = Object.freeze<UiRegistryService>({
+            registerContextMenuItem: (id, definition) =>
+                this.#registerContextMenuItem(record, id, definition),
             registerShortcut: (definition) =>
                 this.#registerShortcut(record, definition),
             registerStatusItem: (id, factory) =>
@@ -76,6 +81,7 @@ export class UiPlugin extends Plugin {
         const service = this.#service;
         if (service !== undefined) {
             const record = getUiRegistryRecord(service);
+            record.contextMenuItems.clear();
             record.shortcuts.clear();
             record.shortcutIds.clear();
             record.statusItems.clear();
@@ -104,6 +110,52 @@ export class UiPlugin extends Plugin {
         return () => {
             if (active && record.toolbarItems.get(id) === factory) {
                 record.toolbarItems.delete(id);
+            }
+            active = false;
+        };
+    }
+
+    #registerContextMenuItem(
+        record: RegistryRecord,
+        id: string,
+        definition: ContextMenuItemDefinition,
+    ): () => void {
+        this.#assertAlive();
+        if (typeof definition !== 'object' || definition === null) {
+            throw new TypeError(
+                `Context menu item "${id}" requires a definition.`,
+            );
+        }
+        if (
+            typeof definition.label !== 'string' ||
+            definition.label.trim().length === 0 ||
+            typeof definition.command !== 'string' ||
+            definition.command.trim().length === 0 ||
+            (definition.when !== undefined &&
+                typeof definition.when !== 'function')
+        ) {
+            throw new TypeError(`Context menu item "${id}" is invalid.`);
+        }
+        if (typeof id !== 'string' || id.trim().length === 0) {
+            throw new TypeError('A context menu item ID must not be empty.');
+        }
+        if (record.contextMenuItems.has(id)) {
+            throw new UiContributionAlreadyRegisteredError(
+                'context menu item',
+                id,
+            );
+        }
+        const frozen = Object.freeze({
+            ...definition,
+            ...(definition.args === undefined
+                ? {}
+                : { args: Object.freeze([...definition.args]) }),
+        });
+        record.contextMenuItems.set(id, frozen);
+        let active = true;
+        return () => {
+            if (active && record.contextMenuItems.get(id) === frozen) {
+                record.contextMenuItems.delete(id);
             }
             active = false;
         };

@@ -5,6 +5,6 @@ export type {
     PluginCheckOptions,
     PluginCheckReport,
 } from './plugin-check.js';
-export type { ScaffoldPluginOptions } from './scaffold.js';
+export type { PluginTemplateKind, ScaffoldPluginOptions } from './scaffold.js';
 
-export const pluginTemplateVersion = 2;
+export const pluginTemplateVersion = 3;

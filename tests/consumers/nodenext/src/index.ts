@@ -10,17 +10,24 @@ import {
     createCommentsPlugin,
     createRevisionsPlugin,
     mapEditingPoint,
+    pastePipelineServiceToken as sdkPastePipelineServiceToken,
     revisionsServiceToken,
     splitViewServiceToken as sdkSplitViewServiceToken,
     StructuredEditingPlugin,
     structuredEditingRegistryToken,
     uiRegistryServiceToken as sdkUiRegistryServiceToken,
+    uploadServiceToken as sdkUploadServiceToken,
+    type CmsObjectDefinition as SdkCmsObjectDefinition,
     type DiagnosticProvider as SdkDiagnosticProvider,
     type CommentStorageAdapter,
     type CommentThread,
     type DiagnosticsWorkflowConfig,
     type EditingOperation,
     type EditingStructuredBlockContent,
+    type EditorUiIconResource,
+    type EditorUiThemeVariables,
+    type EditorUiTranslationResource as SdkEditorUiTranslationResource,
+    type PasteProcessor,
     type ProjectionAdapter as SdkProjectionAdapter,
     type RevisionSnapshot,
     type RevisionStorage,
@@ -29,6 +36,7 @@ import {
     type StatusItemFactory,
     type StructuredBlockConversion,
     type StructuredNodeViewFactory,
+    type UploadService as SdkUploadService,
 } from '@soeditor/plugin-sdk';
 import {
     classicPreset,
@@ -45,7 +53,10 @@ import {
     minimalPreset as umbrellaMinimalPreset,
 } from '@soeditor/editor';
 import {
+    createEditorSaveWorkflow,
     createEditorWorkspace,
+    type EditorSaveAdapter,
+    type EditorSaveRequest,
     type WorkspaceAttachmentFactory,
     type WorkspaceDiagnostic,
 } from '@soeditor/workspace';
@@ -68,11 +79,15 @@ import {
 } from '@soeditor/dev-tools';
 import {
     FileManagerPlugin,
+    UploadPlugin,
     fileManagerServiceToken,
     normalizeFileManagerResult,
+    uploadServiceToken,
+    uploadWorkflowServiceToken,
     type FileManager,
     type FileManagerOpenOptions,
     type FileManagerResult,
+    type UploadService,
 } from '@soeditor/file-manager';
 import {
     SoFinderAdapter,
@@ -107,11 +122,21 @@ import {
 } from '@soeditor/engine';
 import {
     BoldPlugin,
+    CmsObjectsPlugin,
     MediaPlugin,
     TablePlugin,
+    cmsEmbedProviderServiceToken,
+    linkTargetProviderServiceToken,
+    type CmsEmbedProvider,
+    type CmsObjectDefinition,
+    type LinkTargetProvider,
     type LinkOptions,
     type MediaInsertOptions,
     type TableCellRange,
+    type TableCellProperties,
+    type TableColumnResizeOptions,
+    type TableProperties,
+    type TableRowProperties,
 } from '@soeditor/rich-text';
 import {
     createSourceEditingEngine,
@@ -123,8 +148,12 @@ import {
     UiPlugin,
     uiRegistryServiceToken,
     type EditorUiTheme,
+    type EditorUiDirection,
+    type EditorUiTranslationResource,
+    type ContextMenuItemDefinition,
     type KeyboardShortcutDefinition,
     type ToolbarConfiguration,
+    type ToolbarLayoutOptions,
 } from '@soeditor/ui';
 import {
     createMarkdownEditingEngine,
@@ -189,7 +218,49 @@ const tableRange: TableCellRange = {
     anchor: { column: 0, row: 0 },
     focus: { column: 1, row: 1 },
 };
-void [MediaPlugin, TablePlugin, mediaOptions, tableRange];
+const tableProperties: TableProperties = {
+    alignment: 'center',
+    caption: 'Consumer table',
+    width: '100%',
+};
+const tableRowProperties: TableRowProperties = {
+    height: 48,
+    section: 'head',
+};
+const tableCellProperties: TableCellProperties = {
+    horizontalAlignment: 'right',
+    scope: 'col',
+};
+const tableColumnResize: TableColumnResizeOptions = { width: 240 };
+const contextMenuItem: ContextMenuItemDefinition = {
+    command: 'consumer.replace',
+    label: 'Replace content',
+};
+const toolbarLayout: ToolbarLayoutOptions = {
+    collapsible: true,
+    overflow: 'scroll',
+    sticky: true,
+};
+const uiDirection: EditorUiDirection = 'rtl';
+const uiTranslation: EditorUiTranslationResource = {
+    direction: uiDirection,
+    locale: 'ar',
+    messages: { Bold: 'عريض' },
+};
+void [
+    MediaPlugin,
+    TablePlugin,
+    mediaOptions,
+    tableCellProperties,
+    tableColumnResize,
+    tableProperties,
+    tableRange,
+    tableRowProperties,
+    contextMenuItem,
+    toolbarLayout,
+    uiDirection,
+    uiTranslation,
+];
 
 class ConsumerPlugin extends Plugin {
     static readonly id = 'consumer';
@@ -199,6 +270,7 @@ class ConsumerPlugin extends Plugin {
         StructuredEditingPlugin,
     ];
     #disposeDiagnostic: (() => void) | undefined;
+    #disposeContextMenu: (() => void) | undefined;
     #disposeStatus: (() => void) | undefined;
     #disposeStructuredBlock: (() => void) | undefined;
     #disposeStructuredNodeView: (() => void) | undefined;
@@ -227,6 +299,9 @@ class ConsumerPlugin extends Plugin {
         this.#disposeStatus = this.editor.services
             .get(sdkUiRegistryServiceToken)
             .registerStatusItem('consumer.length', statusFactory);
+        this.#disposeContextMenu = this.editor.services
+            .get(sdkUiRegistryServiceToken)
+            .registerContextMenuItem('consumer.replace', contextMenuItem);
         const provider: SdkDiagnosticProvider = {
             id: 'consumer.nonempty',
             provide: (source) =>
@@ -278,6 +353,7 @@ class ConsumerPlugin extends Plugin {
         this.#disposeStructuredNodeView?.();
         this.#disposeStructuredBlock?.();
         this.#disposeDiagnostic?.();
+        this.#disposeContextMenu?.();
         this.#disposeStatus?.();
     }
 }
@@ -443,7 +519,27 @@ void visualSelection;
 void mappedVisualPoint;
 void structuredContent;
 const linkOptions: LinkOptions = { href: '/relative' };
-void linkOptions;
+const cmsObjectDefinition: CmsObjectDefinition = {
+    element: 'aside',
+    id: 'promo',
+    label: 'Promotion',
+    properties: ['campaign'],
+};
+const linkTargetProvider: LinkTargetProvider = {
+    select: async () => ({ href: '/content/42', title: 'Content' }),
+};
+const cmsEmbedProvider: CmsEmbedProvider = {
+    resolve: async (url) => ({ provider: 'consumer', title: 'Embed', url }),
+};
+void [
+    CmsObjectsPlugin,
+    cmsEmbedProvider,
+    cmsEmbedProviderServiceToken,
+    cmsObjectDefinition,
+    linkOptions,
+    linkTargetProvider,
+    linkTargetProviderServiceToken,
+];
 const sourceFactory: typeof createSourceEditingEngine =
     createSourceEditingEngine;
 const sourceOptions = undefined as SourceEditingEngineOptions | undefined;
@@ -535,6 +631,24 @@ void adapterOptions;
 void fileResult;
 void fileManagerServiceToken;
 void FileManagerPlugin;
+const uploadService: UploadService = {
+    create: (request) => ({
+        cancel: () => undefined,
+        result: Promise.resolve({
+            mime: request.type,
+            name: request.name,
+            url: '/consumer-upload.png',
+        }),
+        subscribe: (listener) => {
+            listener({ loaded: request.size, total: request.size });
+            return () => undefined;
+        },
+    }),
+};
+void uploadService;
+void uploadServiceToken;
+void uploadWorkflowServiceToken;
+void UploadPlugin;
 const rejectInternalModel = (value: EditingModel): void => {
     void value;
 };
@@ -552,6 +666,26 @@ const workspace = await createEditorWorkspace({
     onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
     value: { initialValue: '<p>Workspace</p>', kind: 'uncontrolled' },
 });
+const saveRequests: EditorSaveRequest[] = [];
+const saveAdapter: EditorSaveAdapter = {
+    save: async (request) => {
+        saveRequests.push(request);
+        return { revisionToken: 'consumer-v1', status: 'saved' };
+    },
+};
+const saveWorkflow = createEditorSaveWorkflow({
+    adapter: saveAdapter,
+    editor: workspace.editor,
+});
+workspace.editor.setData('<p>Packed save</p>');
+await saveWorkflow.save();
+if (
+    saveRequests[0]?.source !== '<p>Packed save</p>' ||
+    workspace.editor.state.dirty
+) {
+    throw new Error('Packed save workflow did not persist canonical source.');
+}
+saveWorkflow.destroy();
 await workspace.destroy();
 const reactOptions = {
     attachments: [attachment],
@@ -567,11 +701,37 @@ const vueOptions = {
     onDiagnostic: (diagnostic) => diagnostics.push(diagnostic),
     previewIsolation: 'isolated',
 } satisfies VueWorkspaceOptions;
+const sdkCmsObjects = [
+    { id: 'product-card', label: 'Product card' },
+] satisfies readonly SdkCmsObjectDefinition[];
+const sdkPasteProcessor = {
+    id: 'consumer.paste',
+    process: ({ html }) => ({ html }),
+} satisfies PasteProcessor;
+const sdkUploadService = {
+    create: () => {
+        throw new Error('Consumer-only upload adapter.');
+    },
+} satisfies SdkUploadService;
+const sdkTranslations = [
+    { locale: 'en-CMS', messages: { Inspect: 'Inspect' } },
+] satisfies readonly SdkEditorUiTranslationResource[];
+const sdkIcons = { 'format.bold': 'B' } satisfies EditorUiIconResource;
+const sdkTheme = { accent: '#005ea8' } satisfies EditorUiThemeVariables;
 void [
     createUmbrellaWorkspace,
     diagnostics,
     pluginTemplateVersion,
+    sdkCmsObjects,
+    sdkIcons,
+    sdkPastePipelineServiceToken,
+    sdkPasteProcessor,
+    sdkTheme,
+    sdkTranslations,
+    sdkUploadService,
+    sdkUploadServiceToken,
     reactOptions,
+    saveRequests,
     useReactSoEditorWorkspace,
     useVueSoEditorWorkspace,
     vueOptions,

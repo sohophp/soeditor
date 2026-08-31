@@ -1,9 +1,17 @@
-# SoEditor Architecture 0.6
+# SoEditor Architecture
 
 ## Current implementation status
 
-Phases 1–21 are implemented. Runtime document formats are `html | markdown`
-and projections are `visual | source | markdown | preview`. HTML and Markdown
+The maintained roadmap is complete through Phase 48. The post-1.1 WYSIWYG
+completion program is planned in Phases 49–56. The current native-DOM WYSIWYG
+engine is the implementation baseline for that program, not evidence that every
+authoring feature is complete. `docs/wysiwyg-editor.md` is the normative
+WYSIWYG behavior and qualification contract.
+Runtime document formats are `html | markdown`
+and projections are `visual | wysiwyg | source | markdown | preview`.
+Developer Visual and WYSIWYG are distinct HTML projections; exactly one editing
+projection owns write authority while other visible projections synchronize
+from canonical source. HTML and Markdown
 remain canonical source formats for separate editor instances; projection
 changes never perform an implicit format conversion. Later sections that
 describe post-Phase-15 capabilities remain product direction rather than an
@@ -166,7 +174,8 @@ diagnostic providers.
 
 Phase 19 adds DOM-free `@soeditor/projections`. Its per-editor coordinator owns
 only projection attachment and immutable `visible`, `primary`, and effective
-`readonly` activity for Visual, HTML Source, Markdown, and Preview. Canonical
+`readonly` activity for Developer Visual, WYSIWYG, HTML Source, Markdown, and
+Preview. Canonical
 content, history, parsing, rendering, selections, and host layout remain owned
 by their existing layers.
 
@@ -175,7 +184,7 @@ user command / optional user focus intent
                    ↓
        ProjectionCoordinatorPlugin
           ↓ activity snapshots
- Visual / Source / Markdown / Preview adapters
+ Visual / WYSIWYG / Source / Markdown / Preview adapters
           ↘       ↓       ↙
         canonical EditorDocument source
 ```
@@ -466,6 +475,20 @@ instance immediately before attachment. Rejected integrations and recovery
 failures become frozen, bounded, per-workspace diagnostics. No global catalog,
 telemetry, remote source loading, or runtime plugin discovery is introduced.
 
+## Phase 47 CMS plugin and theme ecosystem
+
+The curated plugin SDK now qualifies CMS semantic styles, contextual UI, paste
+processors, upload adapters, link-target pickers, translations, and atomic CMS
+objects through documented package roots. Offline plugin tooling provides
+versioned focused CMS widget, paste, upload, and theme families and statically
+reports common remote-execution and unsafe-DOM sinks without importing code.
+
+Theme variables and bounded plain-text icon maps belong to one attached UI
+host. Mount snapshots affected inline custom properties and destroy restores
+them, so instances cannot share theme state accidentally. Chrome styling and
+canonical content remain separate application inputs; neither Core nor saved
+HTML knows about themes or icons.
+
 ## Phase 33 public 0.9 integration boundary
 
 The 0.9 line promotes Workspace through its package root and the framework-
@@ -510,6 +533,278 @@ UI theme color ownership is limited to editor chrome, and forced-colors focus
 uses system colors. Backend rendering, persistence, authorization, monitoring,
 deployment CSP issuance, and executable site Preview remain host concerns.
 
+## Phase 37 CMS product contract and baseline
+
+The CMS roadmap changes product priority without reversing the 1.0 platform.
+Classic authoring, form integration, paste, assets, and production UI become
+the primary delivery sequence. Source, diagnostics, Markdown, review, and
+plugin APIs remain supported, while loaded-source preservation stays separate
+from external-input cleanup and execution policy. The maintained capability
+matrix and measured pre-implementation baseline bound future claims.
+
+## Phase 38 classic application assembly
+
+`@soeditor/editor` now provides an experimental application assembly over
+existing ownership boundaries:
+
+```text
+textarea or element (caller-owned, retained)
+                    ↓
+      classic shell (umbrella-owned DOM)
+        ↓          ↓          ↓
+      UI host    Visual host   Source host
+          \         |         /
+             EditorWorkspace
+                    ↓
+           Core Editor + CMS preset
+```
+
+The original textarea remains the named successful form control. Canonical
+document changes update its value, the submit boundary performs a final
+synchronous refresh, and form reset returns through `Editor.setData()` before
+marking the reset state clean. Element hosts retain their original children.
+Classic destruction tears down Workspace attachments in reverse order, removes
+only owned DOM/listeners/animation frames, and restores the caller's hidden
+state. Initialization failure follows the same cleanup path and restores the
+original textarea value.
+
+The additive `cmsPreset` selects authoring, Visual, Source, and UI capabilities
+without eagerly selecting Preview, diagnostics, or Prettier formatting. The
+classic API and CMS preset remain experimental while the existing 1.0 stable
+surface remains unchanged. The ESM umbrella loads the Classic assembly as an
+asynchronous chunk so its facade stays inside the release budget; the
+self-contained browser global still inlines it. Core stays DOM-free; form and
+shell ownership live only in the umbrella package.
+
+## Phase 39 CMS formatting and nested-list model
+
+Daily CMS formatting extends the controlled Engine model rather than making
+the projected DOM authoritative. Text marks now operate across compatible
+paragraph selections; superscript and subscript are mutually exclusive, and
+remove-format retains link semantics. Alignment and bounded indentation are
+explicit paragraph data serialized as controlled CSS declarations.
+
+Lists are flattened into immutable paragraph blocks with list kind, depth,
+boundary, and container attributes, then recursively serialized and rendered.
+This representation supports bounded nested lists, ordered starts/marker
+types, Tab/Shift+Tab commands, history, and standalone clipboard normalization
+without injecting loaded source into the live DOM. Unsupported list structure
+remains opaque.
+
+`SemanticStylesPlugin` registers per-instance `style.<id>` commands from
+validated JSON-like configuration. Inline, block, and registered structured
+targets use existing Visual service transactions. Only bounded attributes and
+color/background/font/size CSS declarations are accepted; browser-computed
+style is never captured. The capability methods added to the stable Visual
+service are optional so existing third-party service implementations remain
+source compatible while the new contracts are experimental.
+
+`FontPlugin` exposes text color, background color, and font size as ordinary
+commands over the same controlled Visual service. The UI supplies presets and
+a native custom-color chooser, while the plugin remains independent from DOM
+and validates every value. WYSIWYG and Developer Visual therefore share the
+same transaction path; Source continues to edit the canonical HTML directly.
+
+Classic document statistics are computed from canonical content rather than a
+projection. Unicode code points determine the character count and
+`Intl.Segmenter` supplies word-like segmentation when available, so WYSIWYG,
+Source, and Developer Visual show consistent words and characters. A separate
+source-character count includes tags, attributes, comments, and whitespace.
+
+## Phase 40 external paste and drop boundary
+
+External clipboard and drop content now enters an instance-owned
+`PastePipelineService` before model conversion. The service classifies input,
+applies bounded priority-ordered plugin processors, and returns one immutable
+result or an observable rejection. SoEditor copy/drag data carries a versioned
+custom MIME value; compatible internal content bypasses external cleanup,
+while an incompatible custom value is classified as cross-editor input.
+
+`CmsPastePlugin` owns CMS policy rather than Engine or Core. Semantic,
+preserve, and plain-text policies all reject complete documents and remove
+executable elements, event attributes, unsafe URLs, and unsafe CSS. Semantic
+mode normalizes common Office elements and formatting whitespace while
+preserving supported headings, marks, links, lists, tables, and images.
+Optional style retention is a bounded declaration allowlist. Loaded CMS source
+is not routed through this policy and remains governed by the separate inert
+projection boundary.
+
+Paste and external drop each create at most one document transaction. Size,
+file, or processor rejection leaves canonical source unchanged. File metadata
+is classified but intentionally rejected until the Phase 41 host-owned upload
+service handles progress, cancellation, validation, and temporary previews.
+
+## Phase 41 host-owned upload and asset workflow
+
+`@soeditor/file-manager` now separates existing-asset selection from new-file
+transport. Applications register one `UploadService` per editor; its tasks own
+the actual network/storage operation and expose a result promise, progress
+subscription, and cancellation. `UploadPlugin` owns bounded task state,
+concurrency, retry, immutable status snapshots, and terminal cleanup. No
+backend protocol, authentication, storage provider, or global registry enters
+the editor packages.
+
+File-bearing paste/drop input is consumed by a high-priority paste processor,
+so no empty document transaction is created while upload work is asynchronous.
+The raw `Blob` is passed only to the host task. Temporary object URLs exist only
+in workflow records and are revoked at every terminal transition; canonical
+HTML changes only after the returned asset passes the existing FileManager
+result validator.
+
+Successful uploads delegate to the same structured-media commands used by the
+asset picker. Figure content now supports bounded title, dimensions,
+aspect-ratio lock, caption, alignment, responsive class tokens, safe links,
+replacement, and removal. Unsupported loaded figures remain opaque and inert.
+The optional structured-block removal capability preserves compatibility with
+existing third-party Visual service implementations.
+
+## Phase 42 links and CMS content objects
+
+Link policy remains outside Engine. Engine exposes only transaction-backed link
+marks and optional selection introspection; `LinkPlugin` validates manual,
+automatic, internal-content, and file-picker targets against one per-instance
+policy. HTTP(S) credentials, protocol-relative URLs, backslash ambiguity,
+controls, executable schemes, unsupported targets, and unbounded relation
+tokens are rejected. `_blank` produces deterministic `noopener noreferrer`
+relations.
+
+`CmsObjectsPlugin` turns bounded `cms.objects` definitions into atomic
+structured conversions, inert text-only node views, and namespaced
+insert/update/remove commands. Definitions own only their declared `data-*`
+properties, so updates retain unrelated CMS source attributes. Special
+characters, named anchors, page breaks, and placeholders use the same Visual
+insertion transaction boundary.
+
+Internal/file selection and embed resolution are instance-owned services.
+`LinkTargetProvider` returns link attributes that re-enter the normal policy.
+`CmsEmbedProvider` returns metadata only; SoEditor constructs a semantic figure
+and never accepts provider HTML, scripts, or iframes. The media matcher owns only
+parseable image figures, leaving embed figures to their specific conversion and
+unsupported figures opaque.
+
+## Phase 43 production tables and lists
+
+The atomic table model remains source-shaped, while table commands now own
+bounded table, row, cell, section, caption, and column-width changes. CMS
+presentation properties use namespaced attributes instead of overwriting
+unrelated loaded `style` or `class` values. Column width uses a marked,
+SoEditor-owned `colgroup`; structural and resize commands reject foreign
+`colgroup` metadata. The node view projects this state and native range inputs
+invoke the same column command for pointer and keyboard interaction.
+
+Table-local clipboard handling calls the instance PastePipeline before matrix
+conversion. Versioned internal table data retains source fidelity. External
+cell content is reduced to bounded inert semantic markup after CMS cleanup, so
+scripts, event handlers, executable links, and ambiguous elements cannot enter
+canonical cells through the node view. Each accepted matrix is one structured
+content replacement and therefore one history step.
+
+List paragraphs remain the controlled representation. Engine operations now
+distinguish normal item split/merge from an empty-item exit boundary: nested
+empty items outdent, top-level empty items become paragraphs that split the
+surrounding list, and Backspace merges only compatible list siblings. These
+rules extend existing Tab/Shift+Tab and list-property commands without making
+the live list DOM authoritative.
+
+## Phase 44 classic UI completion
+
+`@soeditor/ui` keeps one registry and one DOM chrome per Editor. Toolbar layout
+is an attachment policy: wrap or horizontal overflow, sticky positioning, and
+collapse never change the configured command set. A roving tab stop provides
+arrow/Home/End navigation while every item retains a visible label or
+accessible name and tooltip.
+
+Context-menu definitions are registered per editor as labels, commands,
+arguments, and target predicates. The mounted UI performs availability checks,
+restores the controlled editing selection, and executes the command; it never
+mutates the projected link, media, or table DOM. Pointer contextmenu and
+Shift+F10 share that path and overlays remain owned by the UI lifecycle.
+
+The classic wrapper owns application layout behavior above the generic UI.
+Manual height changes update both Visual and Source hosts within configured
+bounds. Maximize is explicit, coordinates document overflow across instances,
+and restores the exact prior inline value on restore or destruction. Element
+path and word/character counts are readonly projections; canonical dirty state
+continues to come from Core.
+
+## Phase 45 localization, IME, mobile, and accessibility
+
+Localization is an instance-owned UI concern. `@soeditor/ui` resolves a
+normalized locale through exact, base-language, and English fallback, merges
+immutable host resources over built-in English/Simplified Chinese/Traditional
+Chinese baselines, and applies logical direction only to the chrome subtree.
+The Visual and Source siblings do not inherit chrome direction, so localization
+cannot rewrite or reinterpret canonical content.
+
+UI strings remain plain text and attributes. A chrome-scoped observer covers
+dynamically mounted dialogs, menus, toolbar state, and accessibility names
+without observing editable content. Custom resources cannot provide nodes or
+HTML. The classic surface enables localized keyboard help and mobile target
+sizing while retaining command execution and lifecycle ownership.
+
+Each native composition session now owns a unique history group. Intermediate
+`insertCompositionText` values replace the original composition range, while a
+second composition is independently undoable even when it begins immediately
+after the first. The model/transaction remains authoritative across browser
+event variants.
+
+## Phase 46 CMS save and integration workflows
+
+`@soeditor/workspace` owns a framework-neutral, optional save workflow above
+Core. It snapshots exact canonical source plus document revision, passes them
+to a host adapter with an abort signal and opaque revision token, and marks
+Core clean only if that same source/revision remains current when the adapter
+returns. Transport, authentication, authorization, conflict resolution, and
+durable storage remain application concerns.
+
+Classic composes the generic workflow with localized Save/Retry UI and optional
+window-leave protection. Autosave remains disabled by default, bounded,
+debounced, non-overlapping, and instance owned. Window listeners are shared
+only as cleanup coordination across opted-in instances; they do not store
+editor data or create a global editor registry.
+
+## Independent WYSIWYG editing engine
+
+Developer Visual remains a controlled, inspection-oriented HTML projection.
+The CMS-facing `@soeditor/wysiwyg` package does not wrap that engine. It owns one
+native `contenteditable` subtree and constructs safe standard HTML elements
+directly from the parsed canonical fragment. Tables have actual `table`, `tr`,
+`td`, and `th` nodes in the same editing host as surrounding content; images
+are actual `img` nodes; and semantic containers such as `aside` are not turned
+into attribute lists or structured editor widgets.
+
+The browser's native `Selection`/`Range` is the WYSIWYG selection authority.
+The surface remembers the exact range while toolbar controls or property
+dialogs have focus. Rich-text and table commands operate through the
+`VisualEditingService`, mutate that range, serialize the authoring DOM, and
+commit a canonical document transaction. Input, paste, drop, and composition
+follow the same DOM-to-transaction boundary. A transaction originating from the
+surface does not immediately reconstruct its DOM; external canonical changes
+do reconstruct it with best-effort range restoration.
+
+CMS table metadata remains canonical as `data-soeditor-*` attributes. The
+native WYSIWYG projection maps bounded table/column widths, alignment, row
+height, and row/cell class metadata to visible DOM styles and classes. It
+records the authored `style` and `class` values before decorating, so these
+projection-only values are removed again during serialization instead of
+polluting saved HTML.
+
+Preservation remains distinct from execution. The live authoring DOM omits
+executable attributes and represents comments, custom elements, scripts, and
+unsafe embeds with inert mapped tokens. Serialization restores those parsed
+nodes to canonical Source. Developer-only source labels, `Edit HTML` controls,
+and structured continuation UI never appear in WYSIWYG. Whole-document HTML
+formatting remains a Source-only command. See ADR 0037.
+
+Classic presentation is independent from editing authority. Its explicit
+workspace views cover WYSIWYG, Source, and Preview alone or in every useful
+combination. Preview-only may hide the logical primary writer while mode is
+`preview`; it does not promote the isolated iframe to an editable projection.
+Leaving that view makes the chosen writer visible before transferring
+authority. Table-cell nested editing delegates the normal inline commands,
+including text color, background color, and font size, through the same command
+and transaction boundary as body text.
+
 ## Phase 3 minimal visual editing engine
 
 Phase 3 turns `@soeditor/engine` into the first browser-dependent editing
@@ -523,7 +818,9 @@ package. Dependency direction remains one way:
       controlled contenteditable DOM
 ```
 
-The engine derives a short-lived immutable editing model from an HTML fragment.
+This section describes the Developer Visual engine, not the independent
+WYSIWYG engine. The engine derives a short-lived immutable editing model from
+an HTML fragment.
 Paragraphs contain text runs marked with `strong` and/or `em`; unsupported
 elements and comments remain opaque `@soeditor/html` tree values. Complete HTML
 documents remain source-preserved and display a locked placeholder in this
@@ -680,17 +977,28 @@ comments, SVG/MathML, templates, or unsafe attributes as errors by category.
 `document.validate` is the UI-independent command entry point. Phase 8 may
 project the same service into a Problems panel; Phase 7 adds no reusable UI.
 
-`HtmlFormattingPlugin` requires diagnostics and registers `document.format`.
-The command validates a captured source/revision, refuses parser-invalid input,
-calls pinned Prettier standalone with the HTML plugin, rechecks the snapshot,
-and commits the formatted string through a Core command transaction. Formatting
-is always explicit and therefore may deliberately normalize layout; parsing or
-mode switching never invokes it.
+`HtmlFormattingPlugin` requires diagnostics and registers `document.format`
+and `document.minify`. Both commands validate a captured source/revision,
+refuse parser-invalid input, recheck the snapshot, and commit through a Core
+command transaction. Formatting calls pinned Prettier standalone. Minification
+uses the standards parser/serializer and removes indentation-only whitespace
+between block structures while preserving inline/preformatted whitespace,
+comments, custom elements, and attributes. Both operations are explicit;
+parsing or mode switching never invokes either one.
 
-Prettier is externalized from the `@soeditor/html-tools` library build, loaded
-only when formatting is requested, and its types do not cross the public
-boundary. The SoEditor API exposes only a small validated formatting option
-subset.
+In browsers, Prettier runs in a dedicated inline Web Worker so its synchronous
+parser and printer cannot block Source input or the editor chrome. The inline
+worker keeps npm, bundled ESM, global, and CDN distributions independent of a
+separately deployed worker URL. Non-browser consumers retain an asynchronous
+same-thread fallback. Formatting and minification reject source above 2 MB
+before diagnostics; browser formatting terminates its worker after 15 seconds.
+Prettier types do not cross the public boundary, and the SoEditor API exposes
+only a small validated formatting option subset.
+
+The Source formatter post-processes only a Prettier line break encountered
+inside an HTML tag immediately before its closing `>`. This avoids hanging
+brackets in whitespace-sensitive adjacent inline markup without changing text
+nodes, quoted attributes, or literal greater-than content.
 
 ## Phase 8 editor UI system
 

@@ -5,6 +5,9 @@ export default defineConfig({
     build: {
         rollupOptions: {
             input: {
+                classic: fileURLToPath(
+                    new URL('classic.html', import.meta.url),
+                ),
                 frameworks: fileURLToPath(
                     new URL('framework-adapters.html', import.meta.url),
                 ),
@@ -12,12 +15,27 @@ export default defineConfig({
                 workspace: fileURLToPath(
                     new URL('workspace.html', import.meta.url),
                 ),
+                wysiwyg: fileURLToPath(
+                    new URL('wysiwyg.html', import.meta.url),
+                ),
             },
         },
         sourcemap: true,
     },
     resolve: {
         alias: {
+            '@soeditor/editor/styles.css': fileURLToPath(
+                new URL(
+                    '../../packages/soeditor/src/styles.css',
+                    import.meta.url,
+                ),
+            ),
+            '@soeditor/editor': fileURLToPath(
+                new URL(
+                    '../../packages/soeditor/src/index.ts',
+                    import.meta.url,
+                ),
+            ),
             '@soeditor/adapter-sofinder': fileURLToPath(
                 new URL(
                     '../../packages/adapter-sofinder/src/index.ts',
@@ -72,6 +90,12 @@ export default defineConfig({
                     import.meta.url,
                 ),
             ),
+            '@soeditor/rich-text': fileURLToPath(
+                new URL(
+                    '../../packages/rich-text/src/index.ts',
+                    import.meta.url,
+                ),
+            ),
             '@soeditor/presets': fileURLToPath(
                 new URL('../../packages/presets/src/index.ts', import.meta.url),
             ),
@@ -92,6 +116,9 @@ export default defineConfig({
                     '../../packages/workspace/src/index.ts',
                     import.meta.url,
                 ),
+            ),
+            '@soeditor/wysiwyg': fileURLToPath(
+                new URL('../../packages/wysiwyg/src/index.ts', import.meta.url),
             ),
         },
     },

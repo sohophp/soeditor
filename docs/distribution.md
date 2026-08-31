@@ -50,7 +50,7 @@ Applications must destroy attached surfaces before destroying the editor.
 ## Presets and modular imports
 
 Presets are immutable configuration values, not pre-mounted editor classes.
-`minimalPreset`, `classicPreset`, `developerPreset`, and `markdownPreset` are
+`minimalPreset`, `classicPreset`, experimental `cmsPreset`, `developerPreset`, and `markdownPreset` are
 available from `@soeditor/editor` and from the aggregate `@soeditor/presets`
 package.
 Narrow preset paths avoid evaluating unrelated preset families:

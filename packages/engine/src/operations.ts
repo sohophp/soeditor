@@ -7,7 +7,9 @@ import {
     normalizeInlines,
     paragraphLength,
     type EditingBlock,
+    type EditingElementMark,
     type EditingInline,
+    type EditingLinkMark,
     type EditingMark,
     type EditingModel,
     type EditingParagraph,
@@ -169,14 +171,27 @@ export function insertParagraph(
     const deleted = deleteSelection(model, selection);
     const point = deleted.selection.focus;
     const paragraph = getParagraph(deleted.model, point);
+    if (
+        paragraph.list !== undefined &&
+        paragraphLength(paragraph) === 0 &&
+        point.offset === 0
+    ) {
+        const exited = exitListAtPoint(deleted.model, point, paragraph);
+        return result(exited.model, exited.selection, [
+            ...deleted.operations,
+            ...exited.operations,
+        ]);
+    }
     const [before, after] = splitInlines(paragraph.inlines, point.offset);
+    const { listAttributes: _listAttributes, ...continuation } = paragraph;
+    void _listAttributes;
     const blocks = [...deleted.model.blocks];
     blocks.splice(
         point.block,
         1,
         { ...paragraph, inlines: before },
         {
-            ...paragraph,
+            ...continuation,
             attributes: [],
             inlines: after,
             kind: 'paragraph',
@@ -210,6 +225,18 @@ export function deleteBackward(
         });
     }
 
+    if (paragraph.list !== undefined) {
+        const previous = model.blocks[point.block - 1];
+        const continuesPreviousItem =
+            paragraph.listStart !== true &&
+            previous?.kind === 'paragraph' &&
+            previous.list === paragraph.list &&
+            (previous.listDepth ?? 0) === (paragraph.listDepth ?? 0);
+        if (!continuesPreviousItem) {
+            return exitListAtPoint(model, point, paragraph);
+        }
+    }
+
     if (point.block === 0) {
         return unchanged(model, selection);
     }
@@ -219,6 +246,13 @@ export function deleteBackward(
         return unchanged(model, selection);
     }
     if (paragraph.attributes.length > 0) {
+        return unchanged(model, selection);
+    }
+    if (
+        previous.list !== paragraph.list ||
+        (previous.listDepth ?? 0) !== (paragraph.listDepth ?? 0) ||
+        paragraph.listStart === true
+    ) {
         return unchanged(model, selection);
     }
 
@@ -239,6 +273,25 @@ export function deleteBackward(
             },
         ],
     );
+}
+
+function exitListAtPoint(
+    model: EditingModel,
+    point: EditingPoint,
+    paragraph: EditingParagraph,
+): EditingResult {
+    if ((paragraph.listDepth ?? 0) > 0) {
+        return adjustBlockIndent(model, collapsed(point), -1);
+    }
+    const blocks = [...model.blocks];
+    blocks[point.block] = withoutList(paragraph);
+    return result({ blocks }, collapsed(point), [
+        {
+            from: point,
+            kind: 'format-blocks',
+            to: point,
+        },
+    ]);
 }
 
 export function deleteForward(
@@ -268,6 +321,13 @@ export function deleteForward(
     if (following.attributes.length > 0) {
         return unchanged(model, selection);
     }
+    if (
+        following.list !== paragraph.list ||
+        (following.listDepth ?? 0) !== (paragraph.listDepth ?? 0) ||
+        following.listStart === true
+    ) {
+        return unchanged(model, selection);
+    }
 
     const blocks = [...model.blocks];
     blocks.splice(point.block, 2, {
@@ -290,57 +350,71 @@ export function toggleMark(
 ): EditingResult {
     const ordered = orderSelection(selection);
 
-    if (
-        comparePoints(ordered.start, ordered.end) === 0 ||
-        ordered.start.block !== ordered.end.block
-    ) {
+    if (comparePoints(ordered.start, ordered.end) === 0) {
         return unchanged(model, selection);
     }
-
-    const paragraph = getParagraph(model, ordered.start);
-    assertPoint(paragraph, ordered.end);
-    assertEditableRange(paragraph, ordered.start.offset, ordered.end.offset);
-    const [before, remainder] = splitInlines(
-        paragraph.inlines,
-        ordered.start.offset,
-    );
-    const [middle, after] = splitInlines(
-        remainder,
-        ordered.end.offset - ordered.start.offset,
-    );
-    const textRuns = middle.filter(
-        (inline): inline is EditingTextRun => inline.kind === 'text',
-    );
+    const selectedRuns = selectedTextRuns(model, ordered);
     const remove =
-        textRuns.length > 0 &&
-        textRuns.every((run) => run.marks.includes(mark));
-    const marked = middle.map((inline): EditingInline => {
-        if (inline.kind !== 'text') {
-            return inline;
-        }
+        selectedRuns.length > 0 &&
+        selectedRuns.every((run) => run.marks.includes(mark));
+    return formatSelectedRuns(model, selection, (run) => ({
+        ...run,
+        marks: remove
+            ? run.marks.filter((value) => value !== mark)
+            : orderedMarks([
+                  ...run.marks.filter(
+                      (value) =>
+                          !(
+                              typeof value === 'string' &&
+                              ((mark === 'sub' && value === 'sup') ||
+                                  (mark === 'sup' && value === 'sub'))
+                          ),
+                  ),
+                  mark,
+              ]),
+    }));
+}
 
-        return {
-            ...inline,
-            marks: remove
-                ? inline.marks.filter((value) => value !== mark)
-                : orderedMarks([...inline.marks, mark]),
-        };
-    });
+export function applyInlineStyle(
+    model: EditingModel,
+    selection: EditingSelection,
+    style: EditingElementMark,
+): EditingResult {
+    const ordered = orderSelection(selection);
+    if (comparePoints(ordered.start, ordered.end) === 0) {
+        return unchanged(model, selection);
+    }
+    const selectedRuns = selectedTextRuns(model, ordered);
+    const remove =
+        selectedRuns.length > 0 &&
+        selectedRuns.every((run) =>
+            run.marks.some((mark) => sameElementMark(mark, style)),
+        );
+    return formatSelectedRuns(model, selection, (run) => ({
+        ...run,
+        marks: remove
+            ? run.marks.filter((mark) => !sameElementMark(mark, style))
+            : orderedMarks([
+                  ...run.marks.filter((mark) => !sameElementMark(mark, style)),
+                  style,
+              ]),
+    }));
+}
 
-    return replaceParagraph(
-        model,
-        ordered.start.block,
-        { ...paragraph, inlines: [...before, ...marked, ...after] },
-        selection.focus,
-        selection,
-        [
-            {
-                from: ordered.start,
-                kind: 'format-inline',
-                to: ordered.end,
-            },
-        ],
-    );
+export function removeFormat(
+    model: EditingModel,
+    selection: EditingSelection,
+): EditingResult {
+    const ordered = orderSelection(selection);
+    if (comparePoints(ordered.start, ordered.end) === 0) {
+        return unchanged(model, selection);
+    }
+    return formatSelectedRuns(model, selection, (run) => ({
+        ...run,
+        marks: run.marks.filter(
+            (mark) => typeof mark !== 'string' && mark.kind === 'link',
+        ),
+    }));
 }
 
 export function deleteSelection(
@@ -465,6 +539,11 @@ export function extractSelection(
     }
 
     const blocks = [] as EditingParagraph[];
+    const firstSelected = model.blocks[ordered.start.block];
+    const baseListDepth =
+        firstSelected?.kind === 'paragraph' && firstSelected.list !== undefined
+            ? (firstSelected.listDepth ?? 0)
+            : 0;
 
     for (
         let index = ordered.start.block;
@@ -494,7 +573,13 @@ export function extractSelection(
             kind: 'paragraph',
             ...(block.list === undefined
                 ? {}
-                : { listStart: index === ordered.start.block }),
+                : {
+                      listDepth: Math.max(
+                          0,
+                          (block.listDepth ?? 0) - baseListDepth,
+                      ),
+                      listStart: index === ordered.start.block,
+                  }),
         });
     }
 
@@ -622,9 +707,7 @@ export function setBlockTag(
             throw new UnsupportedEditingSelectionError();
         }
         blocks[index] = {
-            attributes: block.attributes,
-            inlines: block.inlines,
-            kind: 'paragraph',
+            ...(block.list === undefined ? block : withoutList(block)),
             tagName,
         };
     }
@@ -636,6 +719,132 @@ export function setBlockTag(
             to: range.end,
         },
     ]);
+}
+
+export function applyBlockAttributes(
+    model: EditingModel,
+    selection: EditingSelection,
+    attributes: readonly HtmlAttribute[],
+): EditingResult {
+    const range = orderSelection(selection);
+    const blocks = [...model.blocks];
+
+    for (let index = range.start.block; index <= range.end.block; index += 1) {
+        const block = blocks[index];
+        if (block?.kind !== 'paragraph') {
+            throw new UnsupportedEditingSelectionError();
+        }
+        const names = new Set(
+            attributes.map(
+                (attribute) => `${attribute.namespace ?? ''}:${attribute.name}`,
+            ),
+        );
+        blocks[index] = {
+            ...block,
+            attributes: [
+                ...block.attributes.filter(
+                    (attribute) =>
+                        !names.has(
+                            `${attribute.namespace ?? ''}:${attribute.name}`,
+                        ),
+                ),
+                ...attributes,
+            ],
+        };
+    }
+
+    return result({ blocks }, selection, [
+        { from: range.start, kind: 'format-blocks', to: range.end },
+    ]);
+}
+
+export function setBlockAlignment(
+    model: EditingModel,
+    selection: EditingSelection,
+    alignment: EditingParagraph['alignment'],
+): EditingResult {
+    const range = orderSelection(selection);
+    const blocks = [...model.blocks];
+    for (let index = range.start.block; index <= range.end.block; index += 1) {
+        const block = blocks[index];
+        if (block?.kind !== 'paragraph') {
+            throw new UnsupportedEditingSelectionError();
+        }
+        if (alignment === undefined) {
+            const { alignment: _alignment, ...withoutAlignment } = block;
+            void _alignment;
+            blocks[index] = withoutAlignment;
+        } else {
+            blocks[index] = { ...block, alignment };
+        }
+    }
+    return result({ blocks }, selection, [
+        { from: range.start, kind: 'format-blocks', to: range.end },
+    ]);
+}
+
+export function adjustBlockIndent(
+    model: EditingModel,
+    selection: EditingSelection,
+    delta: -1 | 1,
+): EditingResult {
+    const range = orderSelection(selection);
+    const blocks = [...model.blocks];
+    let changed = false;
+    for (let index = range.start.block; index <= range.end.block; index += 1) {
+        const block = blocks[index];
+        if (block?.kind !== 'paragraph') {
+            throw new UnsupportedEditingSelectionError();
+        }
+        if (block.list !== undefined) {
+            const currentDepth = block.listDepth ?? 0;
+            if (delta === 1) {
+                const previous = blocks[index - 1];
+                const maximum =
+                    previous?.kind === 'paragraph' &&
+                    previous.list !== undefined
+                        ? Math.min(8, (previous.listDepth ?? 0) + 1)
+                        : currentDepth;
+                const next = Math.min(currentDepth + 1, maximum);
+                if (next !== currentDepth) changed = true;
+                blocks[index] = {
+                    ...block,
+                    listDepth: next,
+                    listStart: true,
+                };
+            } else if (currentDepth > 0) {
+                changed = true;
+                const previous = blocks[index - 1];
+                blocks[index] = {
+                    ...block,
+                    listDepth: currentDepth - 1,
+                    listStart: !(
+                        previous?.kind === 'paragraph' &&
+                        previous.list === block.list &&
+                        (previous.listDepth ?? 0) === currentDepth - 1
+                    ),
+                };
+            } else {
+                changed = true;
+                blocks[index] = withoutList(block);
+            }
+            continue;
+        }
+        const next = Math.max(0, Math.min(8, (block.indent ?? 0) + delta));
+        if (next !== (block.indent ?? 0)) changed = true;
+        if (next === 0) {
+            const { indent: _indent, ...withoutIndent } = block;
+            void _indent;
+            blocks[index] = withoutIndent;
+        } else {
+            blocks[index] = { ...block, indent: next };
+        }
+    }
+    return changed
+        ? result({ blocks }, selection, [
+              { from: range.start, kind: 'format-blocks', to: range.end },
+          ])
+        : unchanged(model, selection);
 }
 
 export function toggleList(
@@ -655,18 +864,15 @@ export function toggleList(
             throw new UnsupportedEditingSelectionError();
         }
         blocks[index] = remove
-            ? {
-                  attributes: block.attributes,
-                  inlines: block.inlines,
-                  kind: 'paragraph',
-                  tagName: 'p',
-              }
+            ? withoutList(block)
             : {
-                  attributes: block.attributes,
-                  inlines: block.inlines,
-                  kind: 'paragraph',
+                  ...block,
                   list,
+                  listDepth: 0,
                   listStart: index === range.start.block,
+                  ...(index === range.start.block
+                      ? { listAttributes: Object.freeze([]) }
+                      : {}),
                   tagName: 'p',
               };
     }
@@ -677,6 +883,48 @@ export function toggleList(
             kind: 'format-blocks',
             to: range.end,
         },
+    ]);
+}
+
+export function setListAttributes(
+    model: EditingModel,
+    selection: EditingSelection,
+    attributes: readonly HtmlAttribute[],
+): EditingResult {
+    const range = orderSelection(selection);
+    const selected = model.blocks[range.start.block];
+    if (selected?.kind !== 'paragraph' || selected.list === undefined) {
+        throw new UnsupportedEditingSelectionError(
+            'A list item selection is required.',
+        );
+    }
+    const depth = selected.listDepth ?? 0;
+    let start = range.start.block;
+    while (start > 0) {
+        const previous = model.blocks[start - 1];
+        if (
+            previous?.kind !== 'paragraph' ||
+            previous.list !== selected.list ||
+            (previous.listDepth ?? 0) !== depth ||
+            model.blocks[start]?.kind !== 'paragraph' ||
+            (model.blocks[start] as EditingParagraph).listStart === true
+        ) {
+            break;
+        }
+        start -= 1;
+    }
+    const block = model.blocks[start];
+    if (block?.kind !== 'paragraph') {
+        throw new UnsupportedEditingSelectionError();
+    }
+    const blocks = [...model.blocks];
+    blocks[start] = {
+        ...block,
+        listAttributes: attributes,
+        listStart: true,
+    };
+    return result({ blocks }, selection, [
+        { from: range.start, kind: 'format-blocks', to: range.end },
     ]);
 }
 
@@ -865,25 +1113,83 @@ export function isTextMarkActive(
     mark: EditingTextMark,
 ): boolean {
     const range = orderSelection(selection);
-    const paragraph = model.blocks[range.start.block];
-    if (paragraph?.kind !== 'paragraph') {
-        return false;
-    }
     if (comparePoints(range.start, range.end) === 0) {
+        const paragraph = model.blocks[range.start.block];
+        if (paragraph?.kind !== 'paragraph') {
+            return false;
+        }
         return marksAtPoint(paragraph, range.start.offset).includes(mark);
     }
-    if (range.start.block !== range.end.block) {
+    try {
+        const runs = selectedTextRuns(model, range);
+        return runs.length > 0 && runs.every((run) => run.marks.includes(mark));
+    } catch {
         return false;
     }
-    const [, remainder] = splitInlines(paragraph.inlines, range.start.offset);
-    const [middle] = splitInlines(
-        remainder,
-        range.end.offset - range.start.offset,
-    );
-    const runs = middle.filter(
-        (inline): inline is EditingTextRun => inline.kind === 'text',
-    );
-    return runs.length > 0 && runs.every((run) => run.marks.includes(mark));
+}
+
+export function isInlineStyleActive(
+    model: EditingModel,
+    selection: EditingSelection,
+    style: EditingElementMark,
+): boolean {
+    const range = orderSelection(selection);
+    if (comparePoints(range.start, range.end) === 0) {
+        const paragraph = model.blocks[range.start.block];
+        return (
+            paragraph?.kind === 'paragraph' &&
+            marksAtPoint(paragraph, range.start.offset).some((mark) =>
+                sameElementMark(mark, style),
+            )
+        );
+    }
+    try {
+        const runs = selectedTextRuns(model, range);
+        return (
+            runs.length > 0 &&
+            runs.every((run) =>
+                run.marks.some((mark) => sameElementMark(mark, style)),
+            )
+        );
+    } catch {
+        return false;
+    }
+}
+
+export function areBlockAttributesActive(
+    model: EditingModel,
+    selection: EditingSelection,
+    attributes: readonly HtmlAttribute[],
+): boolean {
+    const range = orderSelection(selection);
+    return model.blocks
+        .slice(range.start.block, range.end.block + 1)
+        .every(
+            (block) =>
+                block?.kind === 'paragraph' &&
+                attributes.every((attribute) =>
+                    block.attributes.some(
+                        (candidate) =>
+                            candidate.name === attribute.name &&
+                            candidate.namespace === attribute.namespace &&
+                            candidate.value === attribute.value,
+                    ),
+                ),
+        );
+}
+
+export function isBlockAlignmentActive(
+    model: EditingModel,
+    selection: EditingSelection,
+    alignment: EditingParagraph['alignment'],
+): boolean {
+    const range = orderSelection(selection);
+    return model.blocks
+        .slice(range.start.block, range.end.block + 1)
+        .every(
+            (block) =>
+                block?.kind === 'paragraph' && block.alignment === alignment,
+        );
 }
 
 export function isBlockTagActive(
@@ -946,6 +1252,39 @@ export function isLinkActive(
             ),
         )
     );
+}
+
+export function getLinkAttributes(
+    model: EditingModel,
+    selection: EditingSelection,
+): readonly HtmlAttribute[] | undefined {
+    const range = orderSelection(selection);
+    const paragraph = model.blocks[range.start.block];
+    if (
+        paragraph?.kind !== 'paragraph' ||
+        range.start.block !== range.end.block
+    ) {
+        return undefined;
+    }
+    const collapsedSelection = comparePoints(range.start, range.end) === 0;
+    const marks = collapsedSelection
+        ? marksAtPoint(paragraph, range.start.offset)
+        : [];
+    const links = collapsedSelection
+        ? marks.filter(isEditingLinkMark)
+        : selectedTextRuns(model, range).map((run) =>
+              run.marks.find(isEditingLinkMark),
+          );
+    if (links.some((link) => link === undefined)) return undefined;
+    if (links.length === 0) return undefined;
+    const signature = JSON.stringify(links[0]?.attributes ?? []);
+    return links.every((link) => JSON.stringify(link?.attributes) === signature)
+        ? links[0]?.attributes
+        : undefined;
+}
+
+function isEditingLinkMark(mark: EditingMark): mark is EditingLinkMark {
+    return typeof mark !== 'string' && mark.kind === 'link';
 }
 
 function replaceParagraph(
@@ -1223,6 +1562,100 @@ function paragraphText(paragraph: EditingParagraph): string {
     return paragraph.inlines
         .map((inline) => (inline.kind === 'text' ? inline.text : '\uFFFC'))
         .join('');
+}
+
+function selectedTextRuns(
+    model: EditingModel,
+    range: { readonly start: EditingPoint; readonly end: EditingPoint },
+): readonly EditingTextRun[] {
+    const runs: EditingTextRun[] = [];
+    for (let index = range.start.block; index <= range.end.block; index += 1) {
+        const paragraph = getParagraph(model, { block: index, offset: 0 });
+        const from = index === range.start.block ? range.start.offset : 0;
+        const to =
+            index === range.end.block
+                ? range.end.offset
+                : paragraphLength(paragraph);
+        assertEditableRange(paragraph, from, to);
+        const [, remainder] = splitInlines(paragraph.inlines, from);
+        const [middle] = splitInlines(remainder, to - from);
+        runs.push(
+            ...middle.filter(
+                (inline): inline is EditingTextRun => inline.kind === 'text',
+            ),
+        );
+    }
+    return runs;
+}
+
+function formatSelectedRuns(
+    model: EditingModel,
+    selection: EditingSelection,
+    format: (run: EditingTextRun) => EditingTextRun,
+): EditingResult {
+    const range = orderSelection(selection);
+    const blocks = [...model.blocks];
+    for (let index = range.start.block; index <= range.end.block; index += 1) {
+        const paragraph = getParagraph(model, { block: index, offset: 0 });
+        const from = index === range.start.block ? range.start.offset : 0;
+        const to =
+            index === range.end.block
+                ? range.end.offset
+                : paragraphLength(paragraph);
+        assertEditableRange(paragraph, from, to);
+        const [before, remainder] = splitInlines(paragraph.inlines, from);
+        const [middle, after] = splitInlines(remainder, to - from);
+        blocks[index] = {
+            ...paragraph,
+            inlines: [
+                ...before,
+                ...middle.map((inline) =>
+                    inline.kind === 'text' ? format(inline) : inline,
+                ),
+                ...after,
+            ],
+        };
+    }
+    return result({ blocks }, selection, [
+        { from: range.start, kind: 'format-inline', to: range.end },
+    ]);
+}
+
+function sameElementMark(
+    mark: EditingMark,
+    style: EditingElementMark,
+): boolean {
+    return (
+        typeof mark !== 'string' &&
+        mark.kind === 'element' &&
+        mark.tagName === style.tagName &&
+        mark.attributes.length === style.attributes.length &&
+        mark.attributes.every((attribute, index) => {
+            const candidate = style.attributes[index];
+            return (
+                candidate !== undefined &&
+                candidate.name === attribute.name &&
+                candidate.value === attribute.value &&
+                candidate.namespace === attribute.namespace &&
+                candidate.prefix === attribute.prefix
+            );
+        })
+    );
+}
+
+function withoutList(block: EditingParagraph): EditingParagraph {
+    const {
+        list: _list,
+        listAttributes: _listAttributes,
+        listDepth: _listDepth,
+        listStart: _listStart,
+        ...paragraph
+    } = block;
+    void _list;
+    void _listAttributes;
+    void _listDepth;
+    void _listStart;
+    return { ...paragraph, tagName: 'p' };
 }
 
 function isHighSurrogate(value: number): boolean {

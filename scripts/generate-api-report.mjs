@@ -128,9 +128,9 @@ packages.sort((left, right) =>
     left.manifest.name.localeCompare(right.manifest.name),
 );
 
-if (packages.length !== 23) {
+if (packages.length !== 24) {
     throw new Error(
-        `Expected 23 public packages, found ${String(packages.length)}.`,
+        `Expected 24 public packages, found ${String(packages.length)}.`,
     );
 }
 
@@ -291,7 +291,7 @@ if (checkOnly) {
             `Public API report is stale. Run pnpm api:report and review ${relative(repositoryRoot, reportPath)}.`,
         );
     }
-    stdout.write('Public API report matches all 23 package entry points.\n');
+    stdout.write('Public API report matches all 24 package entry points.\n');
 } else {
     await writeFile(reportPath, report);
     stdout.write(`Updated ${relative(repositoryRoot, reportPath)}.\n`);

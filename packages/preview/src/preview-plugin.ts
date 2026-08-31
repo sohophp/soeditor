@@ -1,12 +1,15 @@
 import { Plugin, type Editor } from '@soeditor/core';
-import { projectionCoordinatorServiceToken } from '@soeditor/projections';
+import {
+    projectionCoordinatorServiceToken,
+    type EditableProjectionId,
+} from '@soeditor/projections';
 
 import { previewServiceToken } from './preview-service.js';
 
 /** Registers command-driven Preview mode and explicit refresh. */
 export class PreviewPlugin extends Plugin {
     static readonly id = 'preview';
-    #returnMode: 'markdown' | 'source' | 'visual' = 'visual';
+    #returnMode: EditableProjectionId = 'visual';
 
     override init(): void {
         this.editor.commands.register({

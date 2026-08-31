@@ -45,6 +45,8 @@ export interface StructuredEditingRegistry {
 /** Immutable state supplied when a structured node view is mounted or updated. */
 export interface StructuredNodeViewState {
     readonly node: EditingStructuredBlock;
+    /** Editing projection requesting the node view. */
+    readonly projectionId: 'visual' | 'wysiwyg';
     readonly readonly: boolean;
     readonly selected: boolean;
 }

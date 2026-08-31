@@ -72,8 +72,9 @@ export function createPastedModel(
     html: string,
     plainText: string,
     schema?: StructuredEditingSchema,
+    forcePlainText = false,
 ): EditingModel {
-    if (html.length > 0) {
+    if (!forcePlainText && html.length > 0) {
         if (/<!doctype\s|<\/?(?:html|head|body)(?:\s|>)/iu.test(html)) {
             throw new UnsupportedEditingSelectionError(
                 'A complete HTML document cannot be pasted into an HTML fragment without losing its document structure.',

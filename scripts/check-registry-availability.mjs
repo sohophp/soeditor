@@ -12,10 +12,10 @@ const releaseVersion = JSON.parse(
 
 if (
     typeof releaseVersion !== 'string' ||
-    !/^1\.0\.\d+$/u.test(releaseVersion)
+    !/^1\.1\.\d+$/u.test(releaseVersion)
 ) {
     throw new Error(
-        'Registry availability checks only accept a 1.0.x release version.',
+        'Registry availability checks only accept a 1.1.x release version.',
     );
 }
 
@@ -35,7 +35,7 @@ for (const directory of await readdir(packagesRoot)) {
 }
 
 if (
-    packageNames.length !== 23 ||
+    packageNames.length !== 24 ||
     packageNames.some((name) => typeof name !== 'string')
 ) {
     throw new Error('Expected exactly 23 named public packages.');

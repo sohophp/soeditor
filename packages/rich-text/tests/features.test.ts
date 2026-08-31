@@ -11,18 +11,29 @@ import { parseHtmlFragment } from '@soeditor/html';
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+    AlignmentPlugin,
     BlockquotePlugin,
     BoldPlugin,
     CodeBlockPlugin,
+    FontPlugin,
     HeadingPlugin,
+    HorizontalRulePlugin,
     ImagePlugin,
     InlineCodePlugin,
     ItalicPlugin,
+    IndentationPlugin,
     LinkPlugin,
+    linkTargetProviderServiceToken,
+    ListPropertiesPlugin,
     OrderedListPlugin,
     ParagraphPlugin,
+    RemoveFormatPlugin,
     RichTextArgumentError,
+    SemanticStyleConfigurationError,
+    SemanticStylesPlugin,
     StrikePlugin,
+    SubscriptPlugin,
+    SuperscriptPlugin,
     TablePlugin,
     UnderlinePlugin,
     UnorderedListPlugin,
@@ -35,9 +46,18 @@ const plugins: readonly PluginConstructor[] = [
     ItalicPlugin,
     UnderlinePlugin,
     StrikePlugin,
+    SubscriptPlugin,
+    SuperscriptPlugin,
+    RemoveFormatPlugin,
+    FontPlugin,
+    AlignmentPlugin,
+    IndentationPlugin,
+    HorizontalRulePlugin,
+    SemanticStylesPlugin,
     LinkPlugin,
     OrderedListPlugin,
     UnorderedListPlugin,
+    ListPropertiesPlugin,
     BlockquotePlugin,
     InlineCodePlugin,
     CodeBlockPlugin,
@@ -46,9 +66,13 @@ const plugins: readonly PluginConstructor[] = [
 ];
 
 interface ServiceHarness {
+    readonly adjustIndent: ReturnType<typeof vi.fn>;
     readonly service: VisualEditingService;
     readonly insertHtml: ReturnType<typeof vi.fn>;
+    readonly removeInlineStyleProperty: ReturnType<typeof vi.fn>;
     readonly setBlock: ReturnType<typeof vi.fn>;
+    readonly setAlignment: ReturnType<typeof vi.fn>;
+    readonly setListProperties: ReturnType<typeof vi.fn>;
     readonly setLink: ReturnType<typeof vi.fn>;
     readonly toggleList: ReturnType<typeof vi.fn>;
     readonly toggleMark: ReturnType<typeof vi.fn>;
@@ -69,12 +93,30 @@ describe('rich-text feature plugins', () => {
                 'format.underline',
                 'format.strike',
                 'format.inlineCode',
+                'format.subscript',
+                'format.superscript',
+                'format.remove',
+                'font.color',
+                'font.backgroundColor',
+                'font.backgroundColor.remove',
+                'font.size',
+                'font.color.remove',
+                'font.highlight.remove',
+                'format.alignment',
+                'format.indent',
+                'format.outdent',
+                'horizontalRule.insert',
                 'blockquote.toggle',
                 'codeBlock.toggle',
                 'list.ordered',
                 'list.unordered',
+                'list.properties',
                 'link.set',
+                'link.setText',
                 'link.remove',
+                'link.auto',
+                'link.inspect',
+                'link.pick',
                 'image.insert',
                 'table.insert',
             ].every((id) => editor.commands.has(id)),
@@ -91,10 +133,18 @@ describe('rich-text feature plugins', () => {
         editor.execute('format.underline');
         editor.execute('format.strike');
         editor.execute('format.inlineCode');
+        editor.execute('format.subscript');
+        editor.execute('format.superscript');
+        editor.execute('format.remove');
+        editor.execute('format.alignment', 'center');
+        editor.execute('format.indent');
+        editor.execute('format.outdent');
+        editor.execute('horizontalRule.insert');
         editor.execute('blockquote.toggle');
         editor.execute('codeBlock.toggle');
         editor.execute('list.ordered');
         editor.execute('list.unordered');
+        editor.execute('list.properties', { start: 4, type: 'A' });
 
         expect(harness.setBlock.mock.calls).toEqual([
             ['p'],
@@ -108,8 +158,17 @@ describe('rich-text feature plugins', () => {
             ['u'],
             ['s'],
             ['code'],
+            ['sub'],
+            ['sup'],
         ]);
         expect(harness.toggleList.mock.calls).toEqual([['ol'], ['ul']]);
+        expect(harness.setAlignment).toHaveBeenCalledWith('center');
+        expect(harness.adjustIndent.mock.calls).toEqual([[1], [-1]]);
+        expect(harness.setListProperties).toHaveBeenCalledWith({
+            start: 4,
+            type: 'A',
+        });
+        expect(harness.insertHtml).toHaveBeenCalledWith('<hr>');
     });
 
     it('uses active state to toggle structural commands back to paragraphs', async () => {
@@ -140,9 +199,21 @@ describe('rich-text feature plugins', () => {
         expect(() =>
             editor.execute('link.set', { href: '', unsafe: true }),
         ).toThrow(RichTextArgumentError);
+        expect(() =>
+            editor.execute('link.set', { href: 'javascript:alert(1)' }),
+        ).toThrow(RichTextArgumentError);
+        expect(() =>
+            editor.execute('link.set', {
+                href: 'https://trusted.test@evil.test/path',
+            }),
+        ).toThrow(RichTextArgumentError);
+        expect(() =>
+            editor.execute('link.set', { href: '//evil.test/path' }),
+        ).toThrow(RichTextArgumentError);
         editor.execute('link.set', {
-            href: 'javascript:alert(1)',
-            rel: 'nofollow',
+            href: 'https://example.test/article',
+            rel: 'nofollow privacy-policy',
+            target: 'articlePreview',
             title: 'preserved',
         });
         editor.execute('link.remove');
@@ -150,13 +221,175 @@ describe('rich-text feature plugins', () => {
         expect(harness.setLink.mock.calls).toEqual([
             [
                 {
-                    href: 'javascript:alert(1)',
-                    rel: 'nofollow',
+                    href: 'https://example.test/article',
+                    rel: 'nofollow privacy-policy',
+                    target: 'articlePreview',
                     title: 'preserved',
                 },
             ],
             [undefined],
         ]);
+        expect(() =>
+            editor.execute('link.set', {
+                href: '/invalid-target',
+                target: '_unsupported',
+            }),
+        ).toThrow(RichTextArgumentError);
+        expect(() =>
+            editor.execute('link.set', {
+                href: '/invalid-rel',
+                rel: 'not/one-token',
+            }),
+        ).toThrow(RichTextArgumentError);
+        editor.execute('link.setText', {
+            href: '/renamed',
+            text: 'Renamed & safe',
+        });
+        expect(harness.insertHtml).toHaveBeenCalledWith(
+            '<a href="/renamed">Renamed &amp; safe</a>',
+        );
+    });
+
+    it('normalizes automatic links and accepts cancellable CMS target providers', async () => {
+        const { editor, harness } = await createHarness();
+        editor.services.register(linkTargetProviderServiceToken, {
+            select: vi
+                .fn()
+                .mockResolvedValueOnce({ href: '/articles/42', title: 'Story' })
+                .mockResolvedValueOnce(null),
+        });
+
+        editor.execute('link.auto', 'writer@example.test');
+        editor.execute('link.auto', 'www.example.test/docs');
+        editor.execute('link.auto', '+86 (21) 5555-1234');
+        await editor.execute('link.pick', 'internal');
+        await editor.execute('link.pick', 'file');
+
+        expect(harness.setLink.mock.calls).toEqual([
+            [{ href: 'mailto:writer@example.test' }],
+            [{ href: 'https://www.example.test/docs' }],
+            [{ href: 'tel:+862155551234' }],
+            [{ href: '/articles/42', title: 'Story' }],
+        ]);
+    });
+
+    it('keeps provider failure observable without mutating a link', async () => {
+        const { editor, harness } = await createHarness();
+        editor.services.register(linkTargetProviderServiceToken, {
+            select: () => Promise.reject(new Error('Picker unavailable')),
+        });
+
+        await expect(editor.execute('link.pick', 'internal')).rejects.toThrow(
+            'Picker unavailable',
+        );
+        expect(harness.setLink).not.toHaveBeenCalled();
+    });
+
+    it('registers validated per-instance semantic styles and rejects executable attributes', async () => {
+        const created = await createHarness({
+            styles: [
+                {
+                    attributes: [{ name: 'class', value: 'cms-lead' }],
+                    element: 'span',
+                    id: 'lead',
+                    label: 'Lead',
+                    target: 'inline',
+                },
+                {
+                    attributes: [{ name: 'class', value: 'cms-callout' }],
+                    element: 'blockquote',
+                    id: 'callout',
+                    label: 'Callout',
+                    target: 'block',
+                },
+            ],
+        });
+        created.editor.execute('style.lead');
+        created.editor.execute('style.callout');
+        expect(created.harness.service.applyInlineStyle).toHaveBeenCalledWith({
+            attributes: [{ name: 'class', value: 'cms-lead' }],
+            tagName: 'span',
+        });
+        expect(created.harness.setBlock).toHaveBeenCalledWith('blockquote');
+        expect(
+            created.harness.service.applyBlockAttributes,
+        ).toHaveBeenCalledWith([{ name: 'class', value: 'cms-callout' }]);
+
+        await expect(
+            createHarness({
+                styles: [
+                    {
+                        attributes: [{ name: 'onclick', value: 'run()' }],
+                        element: 'span',
+                        id: 'unsafe',
+                        label: 'Unsafe',
+                        target: 'inline',
+                    },
+                ],
+            }),
+        ).rejects.toBeInstanceOf(SemanticStyleConfigurationError);
+    });
+
+    it('applies validated font families, colors, highlights, and sizes', async () => {
+        const { editor, harness } = await createHarness();
+
+        editor.execute('font.color', '#2563EB');
+        editor.execute('font.backgroundColor', 'rgb(254, 249, 195)');
+        editor.execute('font.highlight', '#fef08a');
+        editor.execute('font.family', 'Georgia');
+        editor.execute('font.size', 24);
+        editor.execute('font.color.remove');
+        editor.execute('font.backgroundColor.remove');
+        editor.execute('font.highlight.remove');
+
+        expect(harness.service.applyInlineStyle).toHaveBeenNthCalledWith(1, {
+            attributes: [{ name: 'style', value: 'color: #2563eb;' }],
+            tagName: 'span',
+        });
+        expect(harness.service.applyInlineStyle).toHaveBeenNthCalledWith(2, {
+            attributes: [
+                {
+                    name: 'style',
+                    value: 'background-color: rgb(254, 249, 195);',
+                },
+            ],
+            tagName: 'span',
+        });
+        expect(harness.service.applyInlineStyle).toHaveBeenNthCalledWith(3, {
+            attributes: [
+                { name: 'style', value: 'background-color: #fef08a;' },
+            ],
+            tagName: 'span',
+        });
+        expect(harness.service.applyInlineStyle).toHaveBeenNthCalledWith(4, {
+            attributes: [{ name: 'style', value: 'font-family: georgia;' }],
+            tagName: 'span',
+        });
+        expect(harness.service.applyInlineStyle).toHaveBeenNthCalledWith(5, {
+            attributes: [{ name: 'style', value: 'font-size: 24px;' }],
+            tagName: 'span',
+        });
+        expect(harness.removeInlineStyleProperty).toHaveBeenNthCalledWith(
+            1,
+            'color',
+        );
+        expect(harness.removeInlineStyleProperty).toHaveBeenNthCalledWith(
+            2,
+            'background-color',
+        );
+        expect(harness.removeInlineStyleProperty).toHaveBeenNthCalledWith(
+            3,
+            'background-color',
+        );
+        expect(() => editor.execute('font.color', 'url(javascript:x)')).toThrow(
+            RichTextArgumentError,
+        );
+        expect(() => editor.execute('font.size', '200px')).toThrow(
+            RichTextArgumentError,
+        );
+        expect(() => editor.execute('font.family', 'Comic Sans MS')).toThrow(
+            RichTextArgumentError,
+        );
     });
 
     it('builds escaped semantic image HTML and validates dimensions', async () => {
@@ -220,30 +453,50 @@ async function createHarness(options?: {
     readonly activeBlocks?: ReadonlySet<VisualBlockTag>;
     readonly activeMarks?: ReadonlySet<VisualTextMark>;
     readonly canEdit?: boolean;
+    readonly styles?: readonly unknown[];
 }): Promise<{ readonly editor: Editor; readonly harness: ServiceHarness }> {
-    const editor = await Editor.create({ plugins });
+    const editor = await Editor.create({
+        plugins,
+        ...(options?.styles === undefined
+            ? {}
+            : { config: { cms: { styles: options.styles } } }),
+    });
     const insertHtml = vi.fn();
+    const removeInlineStyleProperty = vi.fn();
+    const adjustIndent = vi.fn();
+    const setAlignment = vi.fn();
+    const setListProperties = vi.fn();
     const setBlock = vi.fn();
     const setLink = vi.fn();
     const toggleList = vi.fn();
     const toggleMark = vi.fn();
     const service: VisualEditingService = {
+        adjustIndent,
+        applyBlockAttributes: vi.fn(),
+        applyInlineStyle: vi.fn(),
+        areBlockAttributesActive: () => false,
         canEdit: () => options?.canEdit ?? true,
         getSelection: () => undefined,
         getSelectedStructuredBlock: () => undefined,
         insertHtml,
         isBlockActive: (tagName) =>
             options?.activeBlocks?.has(tagName) ?? false,
+        isAlignmentActive: () => false,
+        isInlineStyleActive: () => false,
         isLinkActive: () => false,
         isListActive: () => false,
         isMarkActive: (mark) => options?.activeMarks?.has(mark) ?? false,
         isStructuredBlockSelected: () => false,
         replaceStructuredBlockContent: vi.fn(),
+        removeFormat: vi.fn(),
+        removeInlineStyleProperty,
+        setAlignment,
         setBlock,
         setLink: setLink as (
             attributes: VisualLinkAttributes | undefined,
         ) => void,
         setSelection: () => false,
+        setListProperties,
         setStructuredBlockAttributes: vi.fn(),
         toggleList,
         toggleMark,
@@ -252,9 +505,13 @@ async function createHarness(options?: {
     return {
         editor,
         harness: {
+            adjustIndent,
+            removeInlineStyleProperty,
             insertHtml,
             service,
             setBlock,
+            setAlignment,
+            setListProperties,
             setLink,
             toggleList,
             toggleMark,

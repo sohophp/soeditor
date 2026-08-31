@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta
+            name="description"
+            content="SoEditor 1.1 CMS Classic Editor 完整交互演示"
+        />
+        <title>SoEditor 1.1 · CMS Classic Editor</title>
+    </head>
+    <body>
+        <header class="demo-topbar">
+            <a class="demo-brand" href="/" aria-label="SoEditor CMS 演示首页">
+                <span class="demo-brand__mark" aria-hidden="true">S</span>
+                <span>
+                    <strong>SoEditor</strong>
+                    <small>CMS Classic 1.1</small>
+                </span>
+            </a>
+            <nav class="demo-nav" aria-label="演示导航">
+                <a aria-current="page" href="/classic.html">完整演示</a>
+                <a href="/?developer=1">开发者工作台</a>
+                <a href="/?format=markdown">Markdown</a>
+                <a href="/framework-adapters.html">React / Vue</a>
+            </nav>
+            <span class="demo-release"><i></i> 本地 1.1.0 候选版</span>
+        </header>
+
+        <main class="demo-page">
+            <section class="demo-hero" aria-labelledby="demo-title">
+                <div>
+                    <p class="demo-eyebrow">面向网页内容管理</p>
+                    <h1 id="demo-title">真正可操作的 CMS 富文本编辑器</h1>
+                    <p class="demo-lead">
+                        在同一个编辑器里体验图标工具栏、中文输入、Office
+                        粘贴、图片上传、链接、嵌套列表、生产级表格、HTML
+                        源码、实时预览、WYSIWYG
+                        三屏同步和保存冲突处理。Developer Visual
+                        仍可由应用配置启用，但不出现在本演示中。
+                    </p>
+                </div>
+                <div class="demo-hero__stats" aria-label="版本验证摘要">
+                    <span><strong>188</strong> 浏览器场景</span>
+                    <span><strong>23</strong> 对齐包</span>
+                    <span><strong>0</strong> Critical / High</span>
+                </div>
+            </section>
+
+            <section class="demo-layout" aria-label="CMS 编辑工作区">
+                <aside class="demo-sidebar" aria-labelledby="tour-title">
+                    <div class="demo-sidebar__heading">
+                        <span class="demo-sidebar__icon" aria-hidden="true"
+                            >✦</span
+                        >
+                        <div>
+                            <h2 id="tour-title">功能体验</h2>
+                            <p>点击即可看到真实编辑结果</p>
+                        </div>
+                    </div>
+
+                    <div class="demo-action-group">
+                        <h3>内容生产</h3>
+                        <button data-demo-action="sample" type="button">
+                            <span aria-hidden="true">▤</span> 恢复完整示例
+                        </button>
+                        <button data-demo-action="office" type="button">
+                            <span aria-hidden="true">W</span> 模拟 Office 粘贴
+                        </button>
+                        <button data-demo-action="table" type="button">
+                            <span aria-hidden="true">▦</span> 插入 3 × 3 表格
+                        </button>
+                        <button data-demo-action="upload" type="button">
+                            <span aria-hidden="true">⇧</span> 模拟上传图片
+                        </button>
+                        <button data-demo-action="link" type="button">
+                            <span aria-hidden="true">↗</span> 为示例文字加链接
+                        </button>
+                    </div>
+
+                    <div class="demo-action-group">
+                        <h3>编辑器状态</h3>
+                        <button data-demo-action="source" type="button">
+                            <span aria-hidden="true">&lt;/&gt;</span> 切换 HTML
+                            源码
+                        </button>
+                        <button data-demo-action="preview" type="button">
+                            <span aria-hidden="true">◧</span> 源码 + 实时预览
+                        </button>
+                        <button data-demo-action="triple" type="button">
+                            <span aria-hidden="true">▥</span> 打开三屏同步
+                        </button>
+                        <button data-demo-action="assets" type="button">
+                            <span aria-hidden="true">▧</span> 打开资源管理器
+                        </button>
+                        <button data-demo-action="readonly" type="button">
+                            <span aria-hidden="true">◇</span> 切换只读模式
+                        </button>
+                        <button data-demo-action="theme" type="button">
+                            <span aria-hidden="true">◐</span> 切换深色主题
+                        </button>
+                        <button data-demo-action="conflict" type="button">
+                            <span aria-hidden="true">!</span> 演示保存冲突
+                        </button>
+                    </div>
+
+                    <div class="demo-tip">
+                        <strong>小提示</strong>
+                        <p>
+                            表格工具仅在选中单元格后出现；“编辑视图”可明确切换
+                            WYSIWYG、Source、Preview 的 7 种单屏或同步组合。
+                        </p>
+                    </div>
+                </aside>
+
+                <div class="demo-workspace">
+                    <div class="demo-workspace__bar">
+                        <div>
+                            <span class="demo-breadcrumb"
+                                >内容 / 文章 / 编辑</span
+                            >
+                            <strong>产品发布说明</strong>
+                        </div>
+                        <div class="demo-state" aria-live="polite">
+                            <span id="demo-mode"><i></i> 可视化</span>
+                            <span id="demo-save-state"><i></i> 已保存</span>
+                        </div>
+                    </div>
+
+                    <form id="article-form" class="demo-form">
+                        <label class="demo-field-label" for="content">
+                            正文内容
+                            <span>支持语义 HTML 与未知 CMS 标记保留</span>
+                        </label>
+                        <textarea id="content" name="content">
+<p>Hello <strong>CMS</strong></p><!--CMS:block--><product-card data-id="42"></product-card></textarea>
+                        <div class="demo-form__actions">
+                            <button id="reset" class="demo-button" type="reset">
+                                重置文章
+                            </button>
+                            <button
+                                id="submit"
+                                class="demo-button demo-button--primary"
+                                type="submit"
+                            >
+                                保存文章
+                            </button>
+                        </div>
+                    </form>
+
+                    <section
+                        class="demo-submission"
+                        aria-labelledby="submitted-title"
+                    >
+                        <div>
+                            <h2 id="submitted-title">原生表单提交结果</h2>
+                            <p>
+                                点击“保存文章”后，这里显示 textarea
+                                实际提交的规范 HTML。
+                            </p>
+                        </div>
+                        <output
+                            id="submitted"
+                            aria-label="Submitted source"
+                        ></output>
+                    </section>
+
+                    <div id="element-host"><p>Element initial</p></div>
+                </div>
+            </section>
+
+            <section
+                class="demo-capabilities"
+                aria-labelledby="capabilities-title"
+            >
+                <div class="demo-section-heading">
+                    <p class="demo-eyebrow">本次已实现</p>
+                    <h2 id="capabilities-title">不只是换了一个工具栏</h2>
+                    <p>
+                        这些能力均通过命令、事务、插件与实例级服务实现，并有自动化验证。
+                    </p>
+                </div>
+                <div class="demo-capability-grid">
+                    <article>
+                        <span>01</span>
+                        <h3>Classic 表单集成</h3>
+                        <p>
+                            textarea
+                            自动同步、submit/reset、只读、自动增高、最大化和精确销毁恢复。
+                        </p>
+                    </article>
+                    <article>
+                        <span>02</span>
+                        <h3>CMS 富文本</h3>
+                        <p>
+                            语义样式、上下标、对齐、缩进、嵌套列表、分页符和特殊字符。
+                        </p>
+                    </article>
+                    <article>
+                        <span>03</span>
+                        <h3>Office 粘贴</h3>
+                        <p>
+                            识别 Word、Google Docs、LibreOffice
+                            与网页内容，清理脚本和事件属性。
+                        </p>
+                    </article>
+                    <article>
+                        <span>04</span>
+                        <h3>上传与媒体</h3>
+                        <p>
+                            进度、失败重试、取消、临时预览清理、图片属性和可替换资源服务。
+                        </p>
+                    </article>
+                    <article>
+                        <span>05</span>
+                        <h3>生产级表格</h3>
+                        <p>
+                            行列属性、表头、标题、合并拆分、矩阵粘贴和键盘列宽调整。
+                        </p>
+                    </article>
+                    <article>
+                        <span>06</span>
+                        <h3>安全链接与对象</h3>
+                        <p>
+                            URL/target/rel
+                            策略、内部内容选择、锚点、占位符和惰性 CMS 对象。
+                        </p>
+                    </article>
+                    <article>
+                        <span>07</span>
+                        <h3>中文与无障碍</h3>
+                        <p>
+                            简繁中文资源、IME
+                            历史边界、RTL、移动触控、键盘帮助和焦点恢复。
+                        </p>
+                    </article>
+                    <article>
+                        <span>08</span>
+                        <h3>保存工作流</h3>
+                        <p>
+                            手动/自动保存、修订令牌、并发保护、冲突重试和离开页面保护。
+                        </p>
+                    </article>
+                    <article>
+                        <span>09</span>
+                        <h3>插件与主题</h3>
+                        <p>
+                            CMS widget、paste、upload、theme
+                            模板以及实例隔离的图标和设计变量。
+                        </p>
+                    </article>
+                    <article>
+                        <span>10</span>
+                        <h3>HTML 源码工作台</h3>
+                        <p>
+                            CodeMirror 6 提供行号、查找替换、HTML
+                            诊断、格式化和与编辑区一致的高度。
+                        </p>
+                    </article>
+                    <article>
+                        <span>11</span>
+                        <h3>实时预览与多栏同步</h3>
+                        <p>
+                            自定义模板、安全 iframe、WYSIWYG / Source / Preview
+                            三屏同步，并可用“预览”单屏结合编辑器最大化。
+                        </p>
+                    </article>
+                    <article>
+                        <span>12</span>
+                        <h3>可替换资源管理器</h3>
+                        <p>
+                            图片、媒体、文件链接共用类型化选择接口；上传传输与资源浏览仍可由
+                            CMS 分别替换。
+                        </p>
+                    </article>
+                </div>
+            </section>
+        </main>
+
+        <footer class="demo-footer">
+            <span>SoEditor 1.1 CMS Classic Editor</span>
+            <span>HTML-first · Plugin-first · Command-driven</span>
+        </footer>
+
+        <div
+            id="demo-toast"
+            class="demo-toast"
+            role="status"
+            aria-live="polite"
+        ></div>
+        <script type="module" src="/src/classic-demo.ts"></script>
+    </body>
+</html>

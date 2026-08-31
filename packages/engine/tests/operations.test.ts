@@ -8,21 +8,27 @@ import {
     type EditingSelection,
 } from '../src/model.js';
 import {
+    adjustBlockIndent,
+    applyInlineStyle,
     deleteBackward,
     deleteForward,
     deleteSelection,
     insertParagraph,
     insertModel,
     insertText,
+    getLinkAttributes,
     isBlockTagActive,
     isLinkActive,
     isListActive,
     isTextMarkActive,
+    removeFormat,
     mapEditingPoint,
     readEditingOperations,
     setBlockTag,
+    setBlockAlignment,
     setEditingOperations,
     setLink,
+    setListAttributes,
     toggleMark,
     toggleList,
     UnsupportedEditingSelectionError,
@@ -97,6 +103,56 @@ describe('editing operations', () => {
         expect(toHtml(unstrong.model)).toBe('<p>Ex<em>amp</em>le</p>');
     });
 
+    it('formats multiple blocks, enforces exclusive script marks, and removes presentation', () => {
+        const model = fromHtml(
+            '<p>One</p><p><a href="/cms"><strong>Two</strong></a></p>',
+        );
+        const superscript = toggleMark(model, range(0, 1, 1, 3), 'sup');
+        const subscript = toggleMark(
+            superscript.model,
+            range(0, 1, 1, 3),
+            'sub',
+        );
+        const styled = applyInlineStyle(subscript.model, range(0, 1, 1, 3), {
+            attributes: [{ name: 'class', value: 'lead' }],
+            kind: 'element',
+            tagName: 'span',
+        });
+        const cleared = removeFormat(styled.model, range(0, 1, 1, 3));
+
+        expect(toHtml(superscript.model)).toContain('<sup>');
+        expect(toHtml(subscript.model)).not.toContain('<sup>');
+        expect(toHtml(subscript.model)).toContain('<sub>');
+        expect(toHtml(styled.model)).toContain('<span class="lead">');
+        expect(toHtml(cleared.model)).toBe(
+            '<p>One</p><p><a href="/cms">Two</a></p>',
+        );
+    });
+
+    it('serializes bounded block formatting and nested list properties', () => {
+        const blocks = fromHtml('<p>One</p><p>Two</p>');
+        const aligned = setBlockAlignment(blocks, range(0, 0, 1, 3), 'center');
+        const indented = adjustBlockIndent(aligned.model, range(0, 0, 1, 3), 1);
+        expect(toHtml(indented.model)).toBe(
+            '<p style="text-align: center; margin-inline-start: 2em;">One</p><p style="text-align: center; margin-inline-start: 2em;">Two</p>',
+        );
+
+        const list = fromHtml('<ol><li>One</li><li>Two</li></ol>');
+        const nested = adjustBlockIndent(list, range(1, 0, 1, 3), 1);
+        const configured = setListAttributes(nested.model, range(0, 0, 0, 3), [
+            { name: 'start', value: '3' },
+            { name: 'type', value: 'A' },
+        ]);
+        expect(toHtml(configured.model)).toBe(
+            '<ol start="3" type="A"><li>One<ol><li>Two</li></ol></li></ol>',
+        );
+        expect(
+            toHtml(
+                adjustBlockIndent(nested.model, range(1, 0, 1, 3), -1).model,
+            ),
+        ).toBe('<ol><li>One</li><li>Two</li></ol>');
+    });
+
     it('sets blocks and toggles lists across forward or backward selections', () => {
         const model = fromHtml('<p>One</p><p>Two</p>');
         const selection = range(1, 3, 0, 0);
@@ -122,6 +178,41 @@ describe('editing operations', () => {
         );
     });
 
+    it('splits, merges, and exits list items at semantic boundaries', () => {
+        const split = insertParagraph(
+            fromHtml('<ul><li>OneTwo</li></ul>'),
+            collapsed(0, 3),
+        );
+        expect(toHtml(split.model)).toBe('<ul><li>One</li><li>Two</li></ul>');
+        expect(toHtml(deleteBackward(split.model, collapsed(1, 0)).model)).toBe(
+            '<ul><li>OneTwo</li></ul>',
+        );
+
+        const firstExited = deleteBackward(
+            fromHtml('<ul><li>One</li><li>Two</li></ul>'),
+            collapsed(0, 0),
+        );
+        expect(toHtml(firstExited.model)).toBe(
+            '<p>One</p><ul><li>Two</li></ul>',
+        );
+
+        const emptyExited = insertParagraph(
+            fromHtml('<ul><li>One</li><li></li><li>Two</li></ul>'),
+            collapsed(1, 0),
+        );
+        expect(toHtml(emptyExited.model)).toBe(
+            '<ul><li>One</li></ul><p></p><ul><li>Two</li></ul>',
+        );
+
+        const nestedOutdented = insertParagraph(
+            fromHtml('<ul><li>One<ul><li></li></ul></li><li>Two</li></ul>'),
+            collapsed(1, 0),
+        );
+        expect(toHtml(nestedOutdented.model)).toBe(
+            '<ul><li>One</li><li></li><li>Two</li></ul>',
+        );
+    });
+
     it('sets, detects, and removes links without interpreting their URL', () => {
         const model = fromHtml('<p>Example</p>');
         const selection = range(0, 1, 0, 6);
@@ -134,6 +225,13 @@ describe('editing operations', () => {
             '<p>E<a href="javascript:alert(1)" data-cms="kept">xampl</a>e</p>',
         );
         expect(isLinkActive(linked.model, selection)).toBe(true);
+        expect(getLinkAttributes(linked.model, selection)).toEqual([
+            { name: 'href', value: 'javascript:alert(1)' },
+            { name: 'data-cms', value: 'kept' },
+        ]);
+        expect(
+            getLinkAttributes(linked.model, range(0, 0, 0, 6)),
+        ).toBeUndefined();
         expect(toHtml(setLink(linked.model, selection, undefined).model)).toBe(
             '<p>Example</p>',
         );

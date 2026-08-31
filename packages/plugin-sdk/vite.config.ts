@@ -14,6 +14,7 @@ export default defineConfig({
                 '@soeditor/layout',
                 '@soeditor/projections',
                 '@soeditor/revisions',
+                '@soeditor/rich-text',
                 '@soeditor/ui',
             ],
         },

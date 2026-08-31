@@ -2,8 +2,9 @@
 
 ## Status
 
-Complete through Phase 36. SoEditor 1.0.0 is published and externally verified.
-The evidence-derived 0.7–1.0 roadmap is complete.
+Complete through Phase 48. SoEditor 1.0.0 is published and externally verified.
+The aligned SoEditor 1.1.0 CMS Classic Editor candidate is prepared locally but
+has not been published, tagged, or turned into a hosted release.
 
 This roadmap begins from the current repository state.
 
@@ -12,9 +13,17 @@ Phases 1–15 are complete.
 The SoEditor 0.5 Developer Preview roadmap is complete. Phase 16 was authorized
 after that checkpoint to prepare and stabilize the public 0.5.x release line.
 
-The completed public target is **SoEditor 0.5 Developer Preview** and its
-stabilized `0.5.1` release. The active development target is **SoEditor 1.0
-Release Candidate**.
+The completed stable target is **SoEditor 1.0.0**. The completed local
+development target is **SoEditor 1.1 CMS Classic Editor Foundation**. The next
+completed target is the **post-1.1 WYSIWYG completion program** in Phases 49–56.
+The repository owner authorized completion of the full program on 2026-08-31.
+Phase 56 records a conditional release decision: integration may continue, but
+production publication remains blocked on Firefox and WebKit/Safari execution
+in a compatible environment.
+
+The WYSIWYG program is governed by `docs/wysiwyg-editor.md`. Existing
+Developer Visual features and historical CMS qualification do not automatically
+count as completed WYSIWYG features.
 
 ---
 
@@ -379,6 +388,7 @@ Required commands include conceptually:
 ```text
 document.validate
 document.format
+document.minify
 ```
 
 ## Problems model
@@ -1717,3 +1727,716 @@ Produce one coherent 1.0 release candidate from the frozen APIs.
 - AI authoring, arbitrary remote widgets, hosted marketplace, or arbitrary
   docking;
 - byte-for-byte HTML preservation or lossless HTML/Markdown conversion.
+
+---
+
+# SoEditor 1.1–1.3 CMS Classic Editor Roadmap
+
+The CMS roadmap builds on the published 1.0 platform. It does not replace the
+transaction, command, plugin, preservation, lifecycle, or security contracts.
+Stable 1.0 APIs remain covered by the documented 1.x compatibility policy.
+
+# Phase 37 — CMS Product Contract and Baseline
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Make classic CMS rich-text authoring the primary product path and establish
+executable evidence for the gaps between the 1.0 platform and that product.
+
+## Required outcomes
+
+- align product, roadmap, status, development policy, architecture, and README
+  language around the CMS-first direction;
+- define the canonical CMS author journey and a maintained capability matrix;
+- record baseline bundle, lifecycle, browser, input, and large-document
+  evidence before new features change it;
+- specify Phases 38–48 without weakening the frozen 1.0 API contract.
+
+## Explicitly deferred
+
+- feature implementation beyond baseline fixtures and specifications;
+- publication or version changes.
+
+## Definition of Done
+
+- documentation checks pass with no conflicting active phase;
+- the capability matrix maps every planned feature to an owning phase;
+- Critical = 0 and High = 0 in the phase review.
+
+---
+
+# Phase 38 — Classic Editor and Form Integration
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Provide one application-facing API that mounts a complete classic editor on a
+textarea or element and restores the host deterministically.
+
+## Required outcomes
+
+- an additive `@soeditor/editor` classic API over Workspace, UI, Visual, and
+  Source without moving DOM ownership into Core;
+- textarea initial-value, submit, reset, name/value, disabled/readonly, and
+  destroy/restore behavior;
+- element-hosted initial data, controlled application updates, focus, blur,
+  change, ready, error, and terminal lifecycle behavior;
+- placeholder, initial/minimum/maximum height, and bounded auto-grow;
+- multi-instance, partial-startup failure, SSR-import, and repeated teardown
+  tests.
+
+## Explicitly deferred
+
+- inline-on-focus editing, autosave, uploads, advanced formatting, and Office
+  paste.
+
+## Definition of Done
+
+- a traditional form posts the latest canonical HTML with no server changes;
+- destroying the editor restores the exact caller-owned host state;
+- all repository gates pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 39 — CMS Rich-Text Semantics and Styles
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Complete the ordinary semantic formatting and list behavior required by CMS
+authors without making arbitrary DOM mutation authoritative.
+
+## Required outcomes
+
+- superscript, subscript, remove-format, horizontal-rule, alignment, indent,
+  and outdent commands and plugins;
+- nested lists, list indentation, ordered-list start/style, deterministic
+  split/merge, and Tab/Shift+Tab behavior;
+- validated instance-scoped semantic style definitions for inline, block, and
+  supported structured targets;
+- optional bounded color/font/size features that serialize through explicit
+  policy rather than computed DOM state;
+- mixed-state command queries, multi-block selection, history, clipboard, and
+  IME-safe behavior.
+
+## Explicitly deferred
+
+- arbitrary CSS editing, browser-computed-style capture, and office-layout
+  fidelity.
+
+## Definition of Done
+
+- the CMS preset exposes a complete daily-formatting toolbar;
+- all edits are commands and transactions; unknown source remains preserved;
+- all repository gates pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 40 — External Paste and Drop Pipeline
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Turn untrusted external clipboard and drop input into deterministic, clean,
+configurable CMS HTML while keeping loaded-source preservation separate.
+
+## Required outcomes
+
+- explicit internal, cross-editor, web, plain-text, Office, and file input
+  classification;
+- plugin-owned paste processors with preserve, semantic, and plain-text
+  policies and bounded input/output sizes;
+- representative Word, Excel, Google Docs, LibreOffice, browser, and malicious
+  fixture corpora;
+- semantic headings, marks, links, lists, tables, and optional style retention;
+- one undoable transaction, observable rejection, and no executable paste or
+  drop path.
+
+## Explicitly deferred
+
+- pixel-identical Office fidelity, formulas, macros, and arbitrary CSS.
+
+## Definition of Done
+
+- fixture output is deterministic and documented losses are explicit;
+- internal clipboard fidelity is not degraded by external paste policy;
+- all repository gates pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 41 — Upload and Asset Workflow
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Add host-owned uploads to the existing replaceable FileManager selection
+boundary and provide a complete image authoring workflow.
+
+## Required outcomes
+
+- typed UploadService/task tokens with progress, cancellation, validation,
+  retry evidence, and terminal cleanup;
+- file input, picker, drop, clipboard, Office-image, replace, and remove paths;
+- temporary previews with deterministic Blob URL cleanup and transactional
+  replacement by validated uploaded assets;
+- image alt/title/dimensions/aspect/caption/alignment/responsive-class/link
+  properties;
+- authentication, storage, authorization, and server processing remain host
+  responsibilities.
+
+## Explicitly deferred
+
+- a built-in server, DAM, image optimizer, or SoFinder hard dependency.
+
+## Definition of Done
+
+- success, cancellation, failure, retry, destroy, unsafe result, and concurrent
+  upload scenarios pass in real browsers;
+- all repository gates pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 42 — Links and CMS Content Objects
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Make links and commonly inserted CMS objects editable rather than insertion-
+only while keeping executable embeds behind explicit boundaries.
+
+## Required outcomes
+
+- create/edit/remove link UI for URL, title, target, rel, email, telephone,
+  anchors, file selection, and host-provided internal-content selection;
+- safe auto-link and protocol policy with deterministic rel handling;
+- special characters, anchors, horizontal/page breaks, placeholders, and
+  registered CMS structured objects;
+- optional provider-based safe embed metadata without injecting provider HTML
+  into the editor UI.
+
+## Explicitly deferred
+
+- arbitrary remote scripts, untrusted iframe execution, and universal embed
+  support.
+
+## Definition of Done
+
+- every object is command/transaction backed and source preserving;
+- link and embed security tests cover deceptive and executable URLs;
+- all repository gates pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 43 — Production Tables and Lists for CMS
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Extend the bounded 1.0 table/list foundation to common CMS authoring without
+claiming spreadsheet behavior.
+
+## Required outcomes
+
+- table, row, column, and cell properties; caption and section controls;
+- accessible column resize, table width, alignment, responsive classes, and
+  keyboard navigation;
+- Excel-style bounded matrix paste integrated with the external paste policy;
+- complete nested-list keyboard, start, marker, split, merge, and clipboard
+  behavior;
+- explicit preservation or refusal for unsupported `colgroup`, nested, and
+  attributed structures.
+
+## Explicitly deferred
+
+- formulas, arbitrary nested tables, spreadsheet selection parity, and layout
+  engines.
+
+## Definition of Done
+
+- representative table/list CMS tasks work by pointer and keyboard;
+- destructive ambiguity is refused without source loss;
+- all repository gates pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 44 — Classic UI Completion
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Deliver a responsive and accessible classic editor chrome suitable for daily
+content production.
+
+## Required outcomes
+
+- icon buttons, labels/tooltips, grouped keyboard navigation, wrap/overflow,
+  collapse, and sticky policies;
+- contextual link/image/table balloons or toolbars and registered context-menu
+  contributions;
+- maximize, manual resize, bounded auto-grow, responsive layout, and exact
+  restoration;
+- element path, word/character count, dirty/save status, and clear async
+  notifications;
+- host-themed CSS variables without leaking editor chrome styles.
+
+## Explicitly deferred
+
+- arbitrary docking, application-framework-owned mounting, and a page builder.
+
+## Definition of Done
+
+- desktop, narrow viewport, zoom, forced-colors, keyboard, and lifecycle gates
+  pass;
+- all repository gates pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 45 — Localization, IME, Mobile, and Accessibility
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Make the classic editor usable in multilingual CMS deployments, with Chinese
+input and complete keyboard operation as release gates.
+
+## Required outcomes
+
+- per-instance lazy-capable translation resources with English, Simplified and
+  Traditional Chinese baseline locales and RTL infrastructure;
+- localized toolbar, dialogs, notifications, status, commands, and embedded
+  accessibility help;
+- composition-safe input/history for major CJK event sequences;
+- touch selection, responsive/mobile keyboard behavior, and browser-specific
+  failure coverage;
+- toolbar groups, dialogs, menus, content objects, element path, and return-to-
+  editing focus usable by keyboard and assistive technology.
+
+## Explicitly deferred
+
+- universal language coverage and unsupported claims of WCAG or assistive-
+  technology certification.
+
+## Definition of Done
+
+- Chromium, Firefox, and WebKit automation plus documented manual IME and
+  screen-reader checks pass where the environment permits;
+- all repository gates pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 46 — CMS Save and Integration Workflows
+
+COMPLETE.
+
+## Goal
+
+Provide explicit host-owned saving and representative integration paths from
+legacy forms through modern controlled applications.
+
+## Required outcomes
+
+- dirty-state and optional save-adapter contracts with manual save, bounded
+  debounce, progress, failure, retry, revision token, and conflict reporting;
+- opt-in leave-page protection without global hidden policy;
+- vanilla form, Ajax, Node service, React, Vue, multi-instance, modal, and
+  dynamic-field examples and packed consumers;
+- CKEditor 4 concept-to-SoEditor migration guidance without API or plugin
+  compatibility claims.
+
+## Explicitly deferred
+
+- a hosted CMS backend, permissions database, or implicit autosave.
+
+## Definition of Done
+
+- integration consumers submit and recover exact canonical source across
+  success and failure paths;
+- all repository gates pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 47 — CMS Plugin and Theme Ecosystem
+
+COMPLETE.
+
+## Goal
+
+Make the CMS-specific extension surface documented, testable, and distributable
+without remote execution or a hosted marketplace.
+
+## Required outcomes
+
+- public contributions for styles, context menus, contextual UI, paste
+  processors, upload adapters, content pickers, translations, and CMS objects;
+- versioned scaffold templates and checks for the supported contribution types;
+- theme variables, icon replacement, content-style separation, high-contrast,
+  and host isolation examples;
+- packed third-party CMS widget, paste, upload, and theme consumers.
+
+## Explicitly deferred
+
+- remote plugin loading, trust certification, or a hosted marketplace.
+
+## Definition of Done
+
+- third-party fixtures use only documented public roots and survive packing;
+- all repository gates pass with Critical = 0 and High = 0.
+
+---
+
+# Phase 48 — CMS Production Qualification and Release
+
+COMPLETE.
+
+## Goal
+
+Qualify and prepare one coherent SoEditor CMS release line from the completed
+classic authoring workflow.
+
+## Required outcomes
+
+- end-to-end load, CJK input, Office paste, lists, upload, links, tables,
+  Source, history, form/save, and destroy scenarios;
+- Chromium, Firefox, WebKit, narrow/mobile, accessibility, security, CSP,
+  lifecycle, memory, large-document, paste, upload, bundle, and API evidence;
+- complete CMS configuration, integration, migration, troubleshooting,
+  security, operations, and plugin documentation;
+- aligned versions, packed consumers, licenses, declarations, maps, CSS,
+  ESM/global builds, dry run, and adversarial review.
+
+## Explicitly deferred
+
+- publication, tags, and hosted releases without explicit owner authorization;
+- collaboration, track changes, a page builder, arbitrary execution, and
+  spreadsheet parity.
+
+## Definition of Done
+
+- every planned CMS capability is proven by direct executable evidence;
+- Critical = 0 and High = 0; accepted limitations are documented;
+- every repository verification and release-preparation gate passes.
+
+---
+
+# Post-1.1 WYSIWYG Completion Program
+
+This program requalifies the current independent native-DOM WYSIWYG baseline as
+one coherent author-facing HTML editor. It does not reopen Developer Visual and
+does not migrate WYSIWYG behavior back into it.
+
+Every phase follows the feature-completeness definition in
+`docs/wysiwyg-editor.md`. A direct command test, a changed Source string, or an
+existing Developer Visual test is not sufficient evidence.
+
+# Phase 49 — WYSIWYG Boundary Audit and Dedicated Harness
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Remove remaining behavioral ownership ambiguity and establish WYSIWYG-only
+evidence before adding more features.
+
+## Required outcomes
+
+- inventory every WYSIWYG behavior currently owned by `classic-editor.ts`,
+  Developer Visual, rich-text plugins, and `@soeditor/wysiwyg`;
+- move WYSIWYG-specific state and behavior behind WYSIWYG services or focused
+  plugins while leaving application assembly in Classic;
+- complete and maintain the dedicated WYSIWYG capability matrix using its four
+  defined states and direct evidence links;
+- create WYSIWYG-only browser fixtures for paragraphs, nested lists, tables,
+  links, images, unknown HTML, Source synchronization, and readonly mode;
+- remove invented phase numbers and ambiguous `Visual` wording from active
+  documentation and UI labels;
+- ensure application configuration chooses `wysiwyg` and `visual` explicitly.
+
+## Explicitly deferred
+
+- new formatting, table, media, paste, or email breadth.
+
+## Definition of Done
+
+- no WYSIWYG engine path constructs or delegates to Developer Visual;
+- no old Developer Visual test is cited as sole WYSIWYG evidence;
+- every current WYSIWYG capability has an owner, state, and test gap;
+- lint, typecheck, unit, browser, docs, and build gates pass.
+
+# Phase 50 — Selection, Input, Clipboard, and History Correctness
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Make ordinary browser editing behavior trustworthy before feature expansion.
+
+## Required outcomes
+
+- exact caret placement at every text boundary in body, list item, caption, and
+  each table cell;
+- forward/reverse pointer drag selection, double-click word selection,
+  Shift+Arrow and platform selection behavior;
+- Enter, Shift+Enter, Backspace, Delete, replacement, copy, cut, and paste;
+- toolbar/dialog selection bookmarks that never jump to another block or cell;
+- Chinese IME, emoji, combining characters, RTL, mobile viewport and zoom;
+- predictable undo/redo grouping and selection restoration;
+- mutation repair, readonly, multi-instance, teardown, and error recovery.
+
+## Explicitly deferred
+
+- broad table structure tools and new media UI.
+
+## Definition of Done
+
+- the dedicated selection corpus passes in Chromium, Firefox, and WebKit where
+  the environment can launch them;
+- failures are reproduced from real user input, never hidden by synthetic range
+  setup alone;
+- no P0 selection defect remains open.
+
+# Phase 51 — Text, Blocks, Lists, Links, and Toolbar State
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Complete daily rich-text authoring consistently across paragraphs, nested list
+items, captions, and table cells.
+
+## Required outcomes
+
+- all P0 inline marks, color, background color, font size, and remove format;
+- headings, paragraph, blockquote, pre/code, alignment, indentation, and rule;
+- complete ordered/unordered nested-list keyboard and clipboard behavior;
+- link creation from selected text, collapsed insertion, click-to-edit,
+  unlinking, target/rel policy, internal targets, files, and named anchors;
+- mixed-selection toolbar state and no formatting-state leakage;
+- one command path for body, list, and cell content without cell-only duplicate
+  formatting tools.
+
+## Explicitly deferred
+
+- table structure completion and advanced media.
+
+## Definition of Done
+
+- every formatting command passes paragraph, nested-list-item, and table-cell
+  UI scenarios plus Source round-trip and undo/redo;
+- link boundary, keyboard, security, and existing-link editing scenarios pass.
+
+# Phase 52 — Production WYSIWYG Tables
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Rebuild and qualify table authoring as ordinary rich content plus explicit
+table structure controls, using CKEditor 5 interaction behavior as the primary
+reference.
+
+## Required outcomes
+
+- unrestricted normal caret and text selection inside every cell;
+- one stable contextual toolbar anchored above the selected table with viewport
+  fallback and no content-DOM controls;
+- distinct native text selection and explicit rectangular cell selection;
+- block and inline rich content, links, lists, and images inside cells;
+- insert/delete rows and columns, headers, merge/split, clear, caption, table,
+  row, cell and column properties;
+- visible and canonical table width, column width, alignment, row height, cell
+  alignment, semantic sections, scope, rowspan and colspan;
+- Tab navigation, clipboard matrix behavior, Office tables and one-step history;
+- property dialogs that read current values, apply visibly, cancel cleanly, and
+  preserve the active table/cell;
+- unsupported table structures preserved without silent normalization.
+
+## Explicitly deferred
+
+- formulas, sorting, filtering, spreadsheet fill handles, charts, and arbitrary
+  nested tables unless separately approved.
+
+## Definition of Done
+
+- every table requirement in `docs/wysiwyg-editor.md` has a real UI test;
+- no Critical/High table usability defect remains;
+- table behavior passes desktop engines, mobile viewport, keyboard, zoom,
+  accessibility, Source synchronization, Preview, and lifecycle gates.
+
+# Phase 53 — Images, Files, Media, Upload, and Paste
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Provide a complete CMS asset and external-content workflow without coupling the
+editor to a backend.
+
+## Required outcomes
+
+- one image dropdown with computer upload, file manager, and URL paths;
+- host upload adapter, progress, cancellation, retry, validation, temporary
+  preview cleanup, and save boundary;
+- double-click image properties, replacement, dimensions, ratio, caption,
+  alignment, responsive sources, links, and alt requirements;
+- file-link manager and provider-neutral service contracts;
+- visible editable video/media boundary with separate playback policy;
+- internal/web/plain/Office/Google Docs/LibreOffice paste classification;
+- semantic, keep-formatting, and plain-text policies with optional cleanup
+  prompt, image policy, cleanup report, and one-step undo;
+- complete rich and matrix paste inside table cells.
+
+## Explicitly deferred
+
+- a bundled storage backend, proprietary file manager, video transcoding, and
+  arbitrary executable embeds.
+
+## Definition of Done
+
+- packed third-party upload and file-manager consumers pass;
+- paste fixture corpus, security, cancellation, offline, Source round-trip and
+  browser interaction gates pass.
+
+# Phase 54 — HTML Preservation, Source, Preview, and Mode Layouts
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Make WYSIWYG coexist predictably with direct HTML control and isolated output
+preview.
+
+## Required outcomes
+
+- explicit policy and safe presentation for comments, custom elements, CMS
+  markers, scripts, iframe/embed, templates, invalid and unsupported HTML;
+- editable boundaries before and after preserved content;
+- standard elements such as `aside` render with standard semantics;
+- CodeMirror Source with formatting, minification, find/replace, diagnostics,
+  correct height and exact canonical synchronization;
+- sandboxed Preview with templates, content CSS, web/email clients and maximize;
+- all seven WYSIWYG/Source/Preview layouts and clear writer activation icons;
+- optional measured best-effort scroll/element synchronization that can be
+  disabled without affecting authoring.
+
+## Explicitly deferred
+
+- arbitrary script execution, cross-pane simultaneous writers, and guaranteed
+  character-perfect scroll mapping.
+
+## Definition of Done
+
+- all layouts pass writer authority, focus, responsive, resize and teardown;
+- preservation and execution security corpora pass without data loss;
+- Source-only tools never appear as WYSIWYG formatting actions.
+
+# Phase 55 — WYSIWYG UI/UX, Accessibility, Localization, and Configuration
+
+## Status
+
+COMPLETE.
+
+## Goal
+
+Turn the completed editing capabilities into a coherent configurable product.
+
+## Required outcomes
+
+- consistent icon system, command labels, tooltips, active/disabled state and
+  toolbar grouping;
+- responsive overflow, keyboard roving focus, contextual placement, dialogs,
+  notifications, focus return and touch targets;
+- browser-default, article, email, and custom isolated content styles;
+- configurable plugins, toolbar, modes, paste, media, table and safety policy
+  without rebuilding the editor;
+- words, visible characters, source characters, element path and save state;
+- English, Simplified Chinese, Traditional Chinese and RTL isolation;
+- special-character presets that can be disabled;
+- WCAG A/AA automation plus documented keyboard and assistive-tech checks.
+
+## Explicitly deferred
+
+- universal locale coverage and unsupported certification claims.
+
+## Definition of Done
+
+- every visible control is functional, keyboard reachable, localized, and tied
+  to a verified command;
+- desktop, narrow, mobile, zoom, forced-colors, reduced-motion and lifecycle
+  gates pass.
+
+# Phase 56 — WYSIWYG Qualification, Demonstration, and Release Decision
+
+## Status
+
+COMPLETE — publication decision is NO-GO pending Firefox/WebKit qualification.
+
+## Goal
+
+Prove one coherent production WYSIWYG editor and present only verified behavior
+in the public demonstration.
+
+## Required outcomes
+
+- a continuous author journey covering input, selection, formatting, lists,
+  links, tables, images, upload, paste, Source, Preview, history, save and
+  teardown;
+- a truthful capability matrix linked to executable evidence;
+- root demonstration scenarios for every verified P0 feature;
+- Chromium, Firefox, WebKit, mobile viewport, IME, RTL, accessibility, security,
+  performance, memory, bundle, API, packed consumer and distribution evidence;
+- updated integration, migration, configuration, troubleshooting and security
+  documentation;
+- explicit go/no-go review with Critical = 0 and High = 0.
+
+## Explicitly deferred
+
+- publication, tags or hosted release without owner authorization;
+- collaboration, track changes, spreadsheet parity, page building, arbitrary
+  execution and advanced email-client certification.
+
+## Definition of Done
+
+- all P0 WYSIWYG items are `Verified` with direct UI evidence;
+- accepted P1/P2 limitations are listed without “complete” wording;
+- all repository and release-preparation gates pass;
+- the owner receives a release decision, not an automatic publication.

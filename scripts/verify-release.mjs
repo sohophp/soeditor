@@ -12,9 +12,9 @@ const releaseVersion = rootManifest.version;
 const releaseLicense = rootManifest.license;
 if (
     typeof releaseVersion !== 'string' ||
-    !/^1\.0\.\d+$/u.test(releaseVersion)
+    !/^1\.1\.\d+$/u.test(releaseVersion)
 ) {
-    throw new Error('The release audit only accepts an aligned 1.0.x version.');
+    throw new Error('The release audit only accepts an aligned 1.1.x version.');
 }
 const packagesRoot = join(repositoryRoot, 'packages');
 const publishable = [];
@@ -27,7 +27,7 @@ const [
 ] = await Promise.all([
     readFile(join(repositoryRoot, 'CHANGELOG.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/review-data-governance.md'), 'utf8'),
-    readFile(join(repositoryRoot, 'docs/migration-0.9-to-1.0.md'), 'utf8'),
+    readFile(join(repositoryRoot, 'docs/migration-1.0-to-1.1.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/releasing.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/status.md'), 'utf8'),
 ]);
@@ -106,9 +106,9 @@ for (const directory of await readdir(packagesRoot)) {
     }
 }
 
-if (publishable.length !== 23) {
+if (publishable.length !== 24) {
     throw new Error(
-        `Expected 23 publishable packages, found ${String(publishable.length)}.`,
+        `Expected 24 publishable packages, found ${String(publishable.length)}.`,
     );
 }
 if (new Set(publishable).size !== publishable.length) {
@@ -198,11 +198,15 @@ const globalGzip = gzipSync(globalSource).length;
 const cssRaw = (await stat(cssPath)).size;
 const esmRaw = (await stat(esmPath)).size;
 
-assertBudget('CDN global raw', globalRaw, 1_350_000);
-assertBudget('CDN global gzip', globalGzip, 430_000);
-assertBudget('standalone CSS', cssRaw, 10_000);
+assertBudget('CDN global raw', globalRaw, 2_250_000);
+assertBudget('CDN global gzip', globalGzip, 665_000);
+assertBudget('standalone CSS', cssRaw, 31_000);
 assertBudget('umbrella ESM facade', esmRaw, 2_000);
-for (const requiredSelector of ['.soeditor-split-view', '.soeditor-ui']) {
+for (const requiredSelector of [
+    '.soeditor-split-view',
+    '.soeditor-ui',
+    '.soeditor-table-widget',
+]) {
     if (!cssSource.includes(requiredSelector)) {
         throw new Error(
             `Standalone CSS is missing required selector ${requiredSelector}.`,
@@ -228,7 +232,7 @@ if (largestPlaygroundChunk === undefined) {
 assertBudget(
     'largest Playground chunk',
     largestPlaygroundChunk.size,
-    1_040_000,
+    1_080_000,
 );
 
 stdout.write(

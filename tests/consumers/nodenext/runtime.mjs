@@ -29,12 +29,14 @@ import {
     commentsServiceToken,
     createCommentsPlugin,
     createRevisionsPlugin,
+    pastePipelineServiceToken as sdkPastePipelineServiceToken,
     Plugin as SdkPlugin,
     revisionsServiceToken,
     SplitViewPlugin as SdkSplitViewPlugin,
     UiPlugin as SdkUiPlugin,
     splitViewServiceToken as sdkSplitViewServiceToken,
     uiRegistryServiceToken as sdkUiRegistryServiceToken,
+    uploadServiceToken as sdkUploadServiceToken,
 } from '@soeditor/plugin-sdk';
 import {
     developerPreset,
@@ -56,9 +58,15 @@ import { pluginTemplateVersion } from '@soeditor/plugin-tools';
 if (
     typeof useReactSoEditorWorkspace !== 'function' ||
     typeof useVueSoEditorWorkspace !== 'function' ||
-    pluginTemplateVersion !== 2
+    pluginTemplateVersion !== 3
 ) {
     throw new Error('Packed 1.0 adapter or plugin-tool import failed.');
+}
+if (
+    sdkPastePipelineServiceToken.id !== 'soeditor.paste-pipeline' ||
+    sdkUploadServiceToken.id !== 'soeditor.upload'
+) {
+    throw new Error('Packed CMS plugin SDK tokens are unavailable.');
 }
 const integrationWorkspace = await createEditorWorkspace({
     createEditor: ({ source }) => Editor.create({ data: source }),

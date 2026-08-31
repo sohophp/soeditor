@@ -51,7 +51,25 @@ describe('structured table feature', () => {
             '<unsafe text>',
         );
         expect(harness.html()).toContain('&lt;unsafe text&gt;');
+        harness.editor.execute(
+            'table.cell.setHtml',
+            range(1, 1),
+            '<strong>Rich</strong> <a href="/docs">link</a><br><img src="/cover.png" alt="Cover">',
+        );
+        expect(harness.html()).toContain(
+            '<td><strong>Rich</strong> <a href="/docs">link</a><br><img src="/cover.png" alt="Cover"></td>',
+        );
+        expect(() =>
+            harness.editor.execute(
+                'table.cell.setHtml',
+                range(1, 1),
+                '<table><tr><td>nested</td></tr></table>',
+            ),
+        ).toThrow('does not allow nested tables');
         expect(harness.replace).toHaveBeenCalled();
+        expect(harness.editor.commands.canExecute('table.remove')).toBe(true);
+        harness.editor.execute('table.remove');
+        expect(harness.remove).toHaveBeenCalledWith('soeditor.table');
         await harness.editor.destroy();
     });
 
@@ -131,12 +149,76 @@ describe('structured table feature', () => {
         expect(columns.replace).not.toHaveBeenCalled();
         await columns.editor.destroy();
     });
+
+    it('applies bounded CMS table, row, cell, section, and column properties', async () => {
+        const harness = await createTableHarness(
+            '<table data-cms="kept"><tbody><tr data-row="kept"><td>A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
+        );
+        harness.editor.execute('table.properties', range(0, 0), {
+            alignment: 'center',
+            ariaLabel: 'Quarterly results',
+            caption: 'Results',
+            responsiveClass: 'cms-table responsive',
+            width: '80%',
+        });
+        harness.editor.execute('table.row.properties', range(0, 0, 0, 1), {
+            ariaLabel: 'Header row',
+            className: 'highlight',
+            height: 48,
+            section: 'head',
+        });
+        harness.editor.execute('table.header.toggle', range(0, 0, 0, 1));
+        harness.editor.execute('table.cell.properties', range(0, 0, 0, 1), {
+            className: 'numeric',
+            horizontalAlignment: 'right',
+            scope: 'col',
+            verticalAlignment: 'middle',
+        });
+        harness.editor.execute('table.column.resize', range(0, 0, 1, 0), {
+            width: 240,
+        });
+
+        expect(harness.html()).toContain(
+            '<table data-cms="kept" data-soeditor-align="center" data-soeditor-width="80%" data-soeditor-responsive-class="cms-table responsive" aria-label="Quarterly results"><caption>Results</caption><colgroup data-soeditor-columns="true"><col data-soeditor-width="240"><col></colgroup>',
+        );
+        expect(harness.html()).toContain(
+            '<thead><tr data-row="kept" aria-label="Header row" data-soeditor-class="highlight" data-soeditor-height="48"><th data-soeditor-class="numeric" data-soeditor-align="right" data-soeditor-vertical-align="middle" scope="col">A</th>',
+        );
+        expect(harness.html()).toContain(
+            '<tbody><tr><td>C</td><td>D</td></tr></tbody>',
+        );
+
+        harness.editor.execute('table.column.insertAfter', range(0, 0));
+        expect(harness.html()).toContain(
+            '<colgroup data-soeditor-columns="true"><col data-soeditor-width="240"><col><col></colgroup>',
+        );
+        const beforeInvalid = harness.html();
+        expect(() =>
+            harness.editor.execute('table.properties', range(0, 0), {
+                width: '0%',
+            }),
+        ).toThrow('1px to 9999px, or 1% to 100%');
+        expect(() =>
+            harness.editor.execute('table.properties', range(0, 0), {
+                width: '10000px',
+            }),
+        ).toThrow('1px to 9999px, or 1% to 100%');
+        expect(harness.html()).toBe(beforeInvalid);
+        expect(() =>
+            harness.editor.execute('table.column.resize', range(0, 0), {
+                width: 5000,
+            }),
+        ).toThrow('40 to 1200');
+        expect(harness.html()).toBe(beforeInvalid);
+        await harness.editor.destroy();
+    });
 });
 
 async function createTableHarness(source: string): Promise<{
     readonly block: EditingStructuredBlock;
     readonly editor: Editor;
     readonly html: () => string;
+    readonly remove: ReturnType<typeof vi.fn>;
     readonly replace: ReturnType<typeof vi.fn>;
 }> {
     const editor = await Editor.create({ plugins: [TablePlugin] });
@@ -159,6 +241,7 @@ async function createTableHarness(source: string): Promise<{
             block = { ...block, ...content };
         },
     );
+    const remove = vi.fn();
     const service: VisualEditingService = {
         canEdit: () => true,
         getSelection: () => undefined,
@@ -171,6 +254,7 @@ async function createTableHarness(source: string): Promise<{
         isStructuredBlockSelected: (type) =>
             type === undefined || type === block.type,
         replaceStructuredBlockContent: replace,
+        removeSelectedStructuredBlock: remove,
         setBlock: vi.fn(),
         setLink: vi.fn(),
         setSelection: () => false,
@@ -189,6 +273,7 @@ async function createTableHarness(source: string): Promise<{
                 children: [tableFromBlock(block)],
                 type: 'document-fragment',
             }),
+        remove,
         replace,
     };
 }

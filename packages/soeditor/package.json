@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/editor",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "license": "MIT",
     "description": "Developer-first, HTML-first extensible content editor.",
     "keywords": [
@@ -63,7 +63,8 @@
         "@soeditor/rich-text": "workspace:*",
         "@soeditor/source": "workspace:*",
         "@soeditor/ui": "workspace:*",
-        "@soeditor/workspace": "workspace:*"
+        "@soeditor/workspace": "workspace:*",
+        "@soeditor/wysiwyg": "workspace:*"
     },
     "devDependencies": {
         "@types/node": "^22.18.0",

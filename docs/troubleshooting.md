@@ -25,6 +25,11 @@ Import `@soeditor/editor/styles.css` for the umbrella UI, or the owning package
 styles such as `@soeditor/ui/styles.css` and
 `@soeditor/layout/styles.css` for modular integrations.
 
+Chrome themes use instance-scoped `themeVariables`; site/article CSS is a
+separate application stylesheet. Theme variables and icon resources are not
+saved into canonical HTML. Icon values must be bounded printable text, not SVG
+or HTML strings.
+
 ## Startup and attachment
 
 | Error or diagnostic                        | Meaning and action                                                        |
@@ -81,6 +86,12 @@ valid metadata; cancellation intentionally leaves the document unchanged.
 
 ## Recovery and persistence
 
+An `error` save state retains local dirty source and can be retried. A
+`conflict` means the adapter deliberately rejected the revision/token; resolve
+it in the CMS workflow and do not overwrite local source implicitly. If saves
+continue after field removal, verify that the application awaits `destroy()`
+and that the adapter observes its abort signal.
+
 Workspace recovery is in-memory and rate-limited. A `recovery-limit` terminal
 diagnostic requires application action: preserve/export current source, stop
 automatic restart, report the failure, and let the user reload deliberately.
@@ -88,6 +99,14 @@ automatic restart, report the failure, and let the user reload deliberately.
 For comment/revision failures, inspect service snapshots or `lastError`, retry
 according to host policy, and reconcile against authoritative backend versions.
 Client-side permissions never replace server authorization.
+
+## Plugin package checks
+
+`REMOTE_IMPORT`, `DYNAMIC_CODE`, and `UNSAFE_DOM_OUTPUT` identify unsupported or
+risky package shapes. Install plugins through the audited application build,
+remove dynamic/remote execution, construct contributed DOM through safe node
+APIs, and run `soeditor-plugin check . --packed` only after building. A valid
+report is not a trust certificate.
 
 ## Minimal diagnostic capture
 

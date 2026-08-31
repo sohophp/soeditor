@@ -11,6 +11,8 @@ export type {
 } from './diagnostics.js';
 export {
     HtmlFormattingPlugin,
+    HtmlFormattingSourceTooLargeError,
+    HtmlFormattingTimeoutError,
     htmlFormattingServiceToken,
     InvalidHtmlFormattingSourceError,
     StaleHtmlFormattingError,

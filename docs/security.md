@@ -55,6 +55,13 @@ script-disabled packing. It is not a malware scanner, signature authority,
 sandbox, or trust verdict. Never inspect an untrusted package by installing it
 with lifecycle scripts enabled.
 
+Template version 3 additionally reports remote executable imports,
+`eval`/`Function` construction, and direct `innerHTML`/`outerHTML`/
+`insertAdjacentHTML` sinks. These are conservative packaging diagnostics, not
+a trust certificate. SoEditor does not fetch or execute plugins from remote
+URLs; applications install and audit extension code through their ordinary
+package and deployment process.
+
 ## Host-owned services and review data
 
 The host owns authentication, authorization, tenant isolation, CSRF protection,

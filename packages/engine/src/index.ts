@@ -5,6 +5,25 @@ export {
     UnsupportedVisualDocumentFormatError,
 } from './visual-editing-engine.js';
 export { HistoryPlugin } from './history.js';
+export {
+    classifyPasteInput,
+    PastePipelinePlugin,
+    PasteRejectedError,
+    pastePipelineServiceToken,
+    SOEDITOR_CLIPBOARD_MIME,
+} from './paste-pipeline.js';
+export type {
+    ExternalPastePolicy,
+    PasteDiagnostic,
+    PasteInputClassification,
+    PasteInputFile,
+    PastePipelineInput,
+    PastePipelineResult,
+    PastePipelineService,
+    PasteProcessor,
+    PasteProcessorContext,
+    PasteProcessorResult,
+} from './paste-pipeline.js';
 export { groupHistoryTransaction } from './history-metadata.js';
 export { mapEditingPoint, readEditingOperations } from './operations.js';
 export type {
@@ -15,12 +34,14 @@ export type {
 export type {
     EditingEngine,
     VisualEditingEngineOptions,
+    VisualEditingProjectionId,
 } from './visual-editing-engine.js';
 export type { EditingPoint, EditingSelection } from './model.js';
 export type {
     EditingBlock,
     EditingBlockTag,
     EditingInline,
+    EditingElementMark,
     EditingLinkMark,
     EditingMark,
     EditingModel,
@@ -54,6 +75,10 @@ export { visualEditingServiceToken } from './visual-editing-service.js';
 export type {
     VisualBlockTag,
     VisualEditingService,
+    VisualHtmlInsertionOptions,
+    VisualInlineStyle,
+    VisualInlineStyleProperty,
+    VisualListProperties,
     VisualLinkAttributes,
     VisualTextMark,
 } from './visual-editing-service.js';

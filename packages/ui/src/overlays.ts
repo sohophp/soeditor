@@ -24,12 +24,23 @@ export function createOverlayServices(
     notificationRegion: HTMLElement,
 ): OverlayServices {
     const handles = new Set<DismissibleUiHandle>();
+    const balloonAnchors = new Map<DismissibleUiHandle, Element>();
     let destroyed = false;
     const assertAlive = (): void => {
         if (destroyed) {
             throw new EditorUiDestroyedError();
         }
     };
+    const dismissBalloons = (event: Event): void => {
+        const path = event.composedPath();
+        for (const [handle, anchor] of [...balloonAnchors]) {
+            if (!path.includes(handle.element) && !path.includes(anchor)) {
+                handle.close();
+            }
+        }
+    };
+    document.addEventListener('pointerdown', dismissBalloons, true);
+    document.addEventListener('focusin', dismissBalloons, true);
 
     const notifications: NotificationService = Object.freeze({
         show: (options: NotificationOptions) => {
@@ -60,6 +71,7 @@ export function createOverlayServices(
         open: (options: DialogOptions) => {
             assertAlive();
             validateDialog(options);
+            const returnFocus = options.returnFocus ?? document.activeElement;
             const dialog = document.createElement('dialog');
             dialog.className = 'soeditor-ui__dialog';
             dialog.setAttribute('aria-label', options.title);
@@ -77,6 +89,15 @@ export function createOverlayServices(
                 }
                 dialog.remove();
                 handles.delete(handle);
+                const view = document.defaultView;
+                if (
+                    !destroyed &&
+                    view !== null &&
+                    returnFocus instanceof view.HTMLElement &&
+                    returnFocus.isConnected
+                ) {
+                    returnFocus.focus({ preventScroll: true });
+                }
             });
             const handle: DialogHandle = Object.freeze({
                 element: dialog,
@@ -157,8 +178,38 @@ export function createOverlayServices(
             appendContent(element, options.content);
             const reposition = (): void => {
                 const rectangle = options.anchor.getBoundingClientRect();
-                element.style.left = `${String(rectangle.left)}px`;
-                element.style.top = `${String(rectangle.bottom + 8)}px`;
+                const view = document.defaultView;
+                const gap = 8;
+                const margin = 8;
+                const width = element.offsetWidth;
+                const height = element.offsetHeight;
+                const viewportWidth =
+                    view?.innerWidth ?? document.documentElement.clientWidth;
+                const viewportHeight =
+                    view?.innerHeight ?? document.documentElement.clientHeight;
+                const above = rectangle.top - height - gap;
+                const below = rectangle.bottom + gap;
+                const preferAbove = options.placement === 'above';
+                const useAbove = preferAbove
+                    ? above >= margin ||
+                      below + height > viewportHeight - margin
+                    : below + height > viewportHeight - margin &&
+                      above >= margin;
+                const top = useAbove ? above : below;
+                const centered =
+                    rectangle.left + rectangle.width / 2 - width / 2;
+                const left = Math.max(
+                    margin,
+                    Math.min(centered, viewportWidth - width - margin),
+                );
+                element.dataset.placement = useAbove ? 'above' : 'below';
+                element.style.left = `${String(left)}px`;
+                element.style.top = `${String(
+                    Math.max(
+                        margin,
+                        Math.min(top, viewportHeight - height - margin),
+                    ),
+                )}px`;
             };
             const view = document.defaultView;
             const close = once(() => {
@@ -166,6 +217,7 @@ export function createOverlayServices(
                 view?.removeEventListener('scroll', reposition, true);
                 element.remove();
                 handles.delete(handle);
+                balloonAnchors.delete(handle);
             });
             const handle: DismissibleUiHandle = Object.freeze({
                 element,
@@ -176,6 +228,7 @@ export function createOverlayServices(
             view?.addEventListener('scroll', reposition, true);
             reposition();
             handles.add(handle);
+            balloonAnchors.set(handle, options.anchor);
             return handle;
         },
     });
@@ -189,6 +242,8 @@ export function createOverlayServices(
                 return;
             }
             destroyed = true;
+            document.removeEventListener('pointerdown', dismissBalloons, true);
+            document.removeEventListener('focusin', dismissBalloons, true);
             for (const handle of [...handles]) {
                 handle.close();
             }

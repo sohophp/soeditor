@@ -14,6 +14,36 @@ import {
 } from '../src/index.js';
 
 describe('structured media feature', () => {
+    it('inserts complete CMS image properties with a safe link', async () => {
+        const inserted: string[] = [];
+        const editor = await Editor.create({ plugins: [MediaPlugin] });
+        editor.services.register(
+            visualEditingServiceToken,
+            visualService(undefined, inserted, () => undefined),
+        );
+
+        editor.execute('media.insert', {
+            alignment: 'center',
+            alt: 'Hero',
+            aspectLocked: true,
+            link: '/article',
+            responsiveClass: 'img-fluid cms-image',
+            src: '/hero.jpg',
+            title: 'Article hero',
+            width: 800,
+        });
+
+        expect(inserted).toEqual([
+            '<figure data-soeditor-media="image" data-align="center" data-aspect-lock="true"><a href="/article"><img src="/hero.jpg" alt="Hero" title="Article hero" class="img-fluid cms-image" width="800"></a></figure>',
+        ]);
+        expect(() =>
+            editor.execute('media.insert', {
+                link: 'javascript:alert(1)',
+                src: '/hero.jpg',
+            }),
+        ).toThrow('safe link URL');
+        await editor.destroy();
+    });
     it('inserts a semantic figure through the visual editing service', async () => {
         const editor = await Editor.create({ plugins: [MediaPlugin] });
         const inserted: string[] = [];
@@ -41,7 +71,7 @@ describe('structured media feature', () => {
 
     it('updates controlled properties while retaining source attributes', async () => {
         const parsed = parseHtmlFragment(
-            '<figure class="hero" data-cms="42"><img src="old.jpg" alt="Old" loading="eager" data-id="7"><figcaption class="credit">Old caption</figcaption></figure>',
+            '<figure class="hero" data-cms="42"><img src="old.jpg" alt="Old" width="400" height="200" loading="eager" data-id="7"><figcaption class="credit">Old caption</figcaption></figure>',
         ).document.children[0];
         if (parsed?.type !== 'element') {
             throw new Error('A figure fixture is required.');
@@ -65,19 +95,25 @@ describe('structured media feature', () => {
             },
         );
         const editor = await Editor.create({ plugins: [MediaPlugin] });
+        const remove = vi.fn();
         editor.services.register(
             visualEditingServiceToken,
-            visualService(() => block, [], replace),
+            visualService(() => block, [], replace, remove),
         );
 
         editor.execute('media.update', {
+            alignment: 'right',
             src: 'new.webp',
             alt: 'New',
+            aspectLocked: true,
             caption: 'New caption',
+            link: '/story',
+            responsiveClass: 'img-fluid',
+            title: 'New title',
             width: 800,
         });
         expect(html(block)).toBe(
-            '<figure class="hero" data-cms="42"><img src="new.webp" alt="New" loading="eager" data-id="7" width="800"><figcaption class="credit">New caption</figcaption></figure>',
+            '<figure class="hero" data-cms="42" data-align="right" data-aspect-lock="true"><a href="/story"><img src="new.webp" alt="New" width="800" height="400" loading="eager" data-id="7" title="New title" class="img-fluid"></a><figcaption class="credit">New caption</figcaption></figure>',
         );
         editor.execute('media.update', { width: null });
         expect(html(block)).not.toContain('width=');
@@ -86,6 +122,8 @@ describe('structured media feature', () => {
         expect(html(block)).not.toContain('figcaption');
         expect(html(block)).toContain('src="new.webp"');
         expect(replace).toHaveBeenCalledTimes(3);
+        editor.execute('media.remove');
+        expect(remove).toHaveBeenCalledWith('soeditor.media');
         await editor.destroy();
     });
 
@@ -132,6 +170,9 @@ function visualService(
     inserted: string[],
     replace: VisualEditingService['replaceStructuredBlockContent'] = () =>
         undefined,
+    remove: NonNullable<
+        VisualEditingService['removeSelectedStructuredBlock']
+    > = () => undefined,
 ): VisualEditingService {
     const current = (): EditingStructuredBlock | undefined =>
         typeof selected === 'function' ? selected() : selected;
@@ -157,6 +198,7 @@ function visualService(
             );
         },
         replaceStructuredBlockContent: replace,
+        removeSelectedStructuredBlock: remove,
         setBlock: () => undefined,
         setLink: () => undefined,
         setSelection: () => false,

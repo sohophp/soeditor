@@ -4,7 +4,7 @@ const editor = '[data-testid="editor"]';
 const source = '[data-testid="source"]';
 
 test.beforeEach(async ({ page }) => {
-    await page.goto('/');
+    await page.goto('/?developer=1');
     await expect(page.locator(editor)).toHaveAttribute(
         'contenteditable',
         'true',
@@ -246,13 +246,11 @@ test('changes paragraph structures and minimal lists through commands', async ({
 test('preserves unsafe link source without exposing an executable anchor', async ({
     page,
 }) => {
-    await page.click('#hello');
+    await setEditorData(
+        page,
+        '<p>H<a href="javascript:window.__linkExecuted=true" rel="nofollow" title="preserved">ell</a>o</p>',
+    );
     await setSelection(page, 0, 1, 4);
-    await executeCommand(page, 'link.set', {
-        href: 'javascript:window.__linkExecuted=true',
-        rel: 'nofollow',
-        title: 'preserved',
-    });
 
     await expect(page.locator(source)).toContainText(
         'href="javascript:window.__linkExecuted=true"',
@@ -601,6 +599,7 @@ test('formats deliberately through a command and shares undo with source mode', 
 test('refuses to format parser-invalid exact source', async ({ page }) => {
     const invalid = '<p id="one" id="two">Text</p>';
     await setEditorData(page, invalid);
+    await page.click('#mode');
 
     const errorName = await executeCommandErrorName(page, 'document.format');
     expect(errorName).toBe('InvalidHtmlFormattingSourceError');

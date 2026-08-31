@@ -5,6 +5,7 @@ const editorHost = '[data-testid="editor"]';
 
 test.beforeEach(async ({ page }) => {
     await page.goto('/?comments=1');
+    await page.locator('body[data-ready="true"]').waitFor();
 });
 
 test('creates a safe mapped comment without serializing review data', async ({

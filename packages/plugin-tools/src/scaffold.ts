@@ -3,9 +3,14 @@ import { basename, resolve } from 'node:path';
 
 export interface ScaffoldPluginOptions {
     readonly directory: string;
+    readonly kind?: PluginTemplateKind;
     readonly packageName: string;
     readonly pluginId: string;
 }
+
+/** Focused offline contribution families supported by template version 3. */
+export type PluginTemplateKind =
+    'basic' | 'cms-widget' | 'paste' | 'theme' | 'upload';
 
 /** Creates a versioned, strict plugin package without overwriting a directory. */
 export async function scaffoldPluginPackage(
@@ -14,6 +19,7 @@ export async function scaffoldPluginPackage(
     const directory = resolve(nonEmpty(options.directory, 'directory'));
     const packageName = packageValue(options.packageName);
     const pluginId = pluginIdValue(options.pluginId);
+    const kind = kindValue(options.kind ?? 'basic');
     await mkdir(directory);
     await mkdir(resolve(directory, 'src'));
     await mkdir(resolve(directory, 'tests'));
@@ -32,18 +38,45 @@ export async function scaffoldPluginPackage(
             'README.md',
             `# ${packageName}\n\nSoEditor plugin package.\n`,
         ),
-        write(
-            directory,
-            'src/index.ts',
-            `export { ${className} } from './plugin.js';\n`,
-        ),
+        write(directory, 'src/index.ts', indexSource(className, kind)),
         write(
             directory,
             'src/plugin.ts',
-            `import { Plugin } from '@soeditor/plugin-sdk';\n\nexport class ${className} extends Plugin {\n    static readonly id = '${escapeSingle(pluginId)}';\n}\n`,
+            pluginSource(className, pluginId, kind),
         ),
     ]);
     return directory;
+}
+
+function indexSource(className: string, kind: PluginTemplateKind): string {
+    const extras =
+        kind === 'cms-widget'
+            ? `, cmsObjectDefinitions`
+            : kind === 'theme'
+              ? `, editorIcons, editorThemeVariables`
+              : '';
+    return `export { ${className}${extras} } from './plugin.js';\n`;
+}
+
+function pluginSource(
+    className: string,
+    pluginId: string,
+    kind: PluginTemplateKind,
+): string {
+    const id = escapeSingle(pluginId);
+    if (kind === 'cms-widget') {
+        return `import { CmsObjectsPlugin, Plugin, UiPlugin, uiRegistryServiceToken, type CmsObjectDefinition } from '@soeditor/plugin-sdk';\n\nexport const cmsObjectDefinitions = Object.freeze([\n    { id: 'product-card', label: 'Product card', properties: ['product-id'] },\n] satisfies readonly CmsObjectDefinition[]);\n\nexport class ${className} extends Plugin {\n    static readonly id = '${id}';\n    static readonly requires = [CmsObjectsPlugin, UiPlugin];\n    #commandRegistered = false;\n    #dispose: (() => void)[] = [];\n\n    override init(): void {\n        this.editor.commands.register({\n            id: '${id}.inspect',\n            canExecute: () => true,\n            execute: () => undefined,\n        });\n        this.#commandRegistered = true;\n        try {\n            this.#dispose.push(\n                this.editor.services.get(uiRegistryServiceToken).registerContextMenuItem('${id}.inspect', {\n                    command: '${id}.inspect',\n                    label: 'Inspect product card',\n                    when: ({ target }) => target.closest('[data-soeditor-object="product-card"]') !== null,\n                }),\n            );\n        } catch (error: unknown) {\n            this.editor.commands.unregister('${id}.inspect');\n            this.#commandRegistered = false;\n            throw error;\n        }\n    }\n\n    override destroy(): void {\n        for (const dispose of this.#dispose.reverse()) dispose();\n        this.#dispose = [];\n        if (this.#commandRegistered) this.editor.commands.unregister('${id}.inspect');\n        this.#commandRegistered = false;\n    }\n}\n`;
+    }
+    if (kind === 'paste') {
+        return `import { PastePipelinePlugin, Plugin, pastePipelineServiceToken } from '@soeditor/plugin-sdk';\n\nexport class ${className} extends Plugin {\n    static readonly id = '${id}';\n    static readonly requires = [PastePipelinePlugin];\n    #dispose: (() => void) | undefined;\n\n    override init(): void {\n        this.#dispose = this.editor.services.get(pastePipelineServiceToken).register({\n            id: '${id}.processor',\n            priority: 10,\n            process: (context) => context.classification === 'web'\n                ? { html: context.html.replaceAll(/<font\\b[^>]*>/giu, '<span>').replaceAll('</font>', '</span>') }\n                : undefined,\n        });\n    }\n\n    override destroy(): void {\n        this.#dispose?.();\n        this.#dispose = undefined;\n    }\n}\n`;
+    }
+    if (kind === 'upload') {
+        return `import { Plugin, uploadServiceToken, type UploadService } from '@soeditor/plugin-sdk';\n\nexport class ${className} extends Plugin {\n    static readonly id = '${id}';\n    #service: UploadService | undefined;\n\n    override init(): void {\n        const service = this.editor.config.get<unknown>('cms.upload.service');\n        if (!isUploadService(service)) throw new TypeError('cms.upload.service must provide create(request).');\n        this.editor.services.register(uploadServiceToken, service);\n        this.#service = service;\n    }\n\n    override destroy(): void {\n        if (this.editor.services.tryGet(uploadServiceToken) === this.#service) {\n            this.editor.services.unregister(uploadServiceToken);\n        }\n        this.#service = undefined;\n    }\n}\n\nfunction isUploadService(value: unknown): value is UploadService {\n    return typeof value === 'object' && value !== null && typeof Reflect.get(value, 'create') === 'function';\n}\n`;
+    }
+    if (kind === 'theme') {
+        return `import { Plugin, type EditorUiIconResource, type EditorUiThemeVariables } from '@soeditor/plugin-sdk';\n\nexport const editorThemeVariables = Object.freeze({\n    accent: '#005ea8',\n    focusRing: '#ffbf47',\n    radius: '0.25rem',\n} satisfies EditorUiThemeVariables);\n\nexport const editorIcons = Object.freeze({\n    'format.bold': 'B',\n    'format.italic': 'I',\n} satisfies EditorUiIconResource);\n\nexport class ${className} extends Plugin {\n    static readonly id = '${id}';\n}\n`;
+    }
+    return `import { Plugin } from '@soeditor/plugin-sdk';\n\nexport class ${className} extends Plugin {\n    static readonly id = '${id}';\n}\n`;
 }
 
 function manifest(name: string): string {
@@ -139,6 +172,21 @@ function pluginIdValue(value: string): string {
         );
     }
     return id;
+}
+
+function kindValue(value: string): PluginTemplateKind {
+    if (
+        value !== 'basic' &&
+        value !== 'cms-widget' &&
+        value !== 'paste' &&
+        value !== 'theme' &&
+        value !== 'upload'
+    ) {
+        throw new TypeError(
+            `Invalid plugin template kind "${value}"; use basic, cms-widget, paste, upload, or theme.`,
+        );
+    }
+    return value;
 }
 
 function classNameFrom(name: string): string {

@@ -9,7 +9,12 @@ export default defineConfig({
         },
         minify: false,
         rollupOptions: {
-            external: ['@soeditor/core', '@soeditor/rich-text', '@soeditor/ui'],
+            external: [
+                '@soeditor/core',
+                '@soeditor/engine',
+                '@soeditor/rich-text',
+                '@soeditor/ui',
+            ],
         },
         sourcemap: true,
     },

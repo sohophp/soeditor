@@ -2,6 +2,50 @@
 
 ## Unreleased
 
+- Established a standalone WYSIWYG HTML editor specification, conservative
+  capability requalification matrix, and Phase 49–56 completion roadmap that
+  keeps author-facing WYSIWYG behavior independent from Developer Visual and
+  uses CKEditor 5 as the primary interaction reference when design is unclear.
+- Added canonical Unicode-aware Words/Chars statistics shared by WYSIWYG,
+  Source, and Developer Visual, plus command-backed text color, background
+  color, and font-size controls for visual authoring modes.
+- Replaced ambiguous pane-count controls with seven explicit WYSIWYG, Source,
+  and Preview arrangements, including true Preview-only presentation, and
+  enabled color/background/font-size commands inside editable table cells.
+- Removed the redundant Preview Fullscreen action; Preview-only plus the normal
+  maximize action now expresses that layout without a second fullscreen state.
+- Clarified the Source/WYSIWYG toggle with target-specific labels and icons,
+  retained click-to-activate behavior in synchronized editing panes, added
+  source-character statistics, and added safe command-backed HTML minification.
+- Fixed WYSIWYG inline-format state leaking between selections and made
+  paragraph, nested-list-item, and table-cell bold ranges preserve their HTML
+  structure.
+- Kept Prettier-formatted inline HTML tag brackets on their tag lines without
+  changing whitespace in Chinese text or literal greater-than content.
+- Fixed native WYSIWYG table property projection so captions, table and column
+  widths, alignment, row height, and CMS row/cell classes visibly update while
+  the projection-only styles remain absent from canonical HTML.
+
+## 1.1.0 — CMS Classic Editor candidate
+
+- Added the lazily loaded `createClassicEditor()` application API with native
+  form synchronization, exact teardown, responsive classic chrome, localized
+  controls, semantic styles, production lists/tables, CMS objects, and Source.
+- Added bounded external paste/drop cleanup, host-owned upload and asset
+  workflows, safe link/content pickers, and conflict-aware manual/autosave.
+- Expanded the curated plugin SDK and offline tooling for CMS widgets, paste,
+  upload, themes, icons, translations, and contextual UI contributions.
+- Added a continuous CMS acceptance journey and qualified all 158 Chromium
+  scenarios plus desktop/mobile CMS projects, packed consumers, distribution,
+  API, performance, license, security, and release gates.
+- Replaced the root Playground landing route with the complete CMS showcase,
+  including visible toolbar/dialog/upload icons, polished table controls, and
+  12 executable feature tours.
+
+This is a verified local release candidate. npm publication, a `v1.1.0` tag,
+hosted release, and public registry/CDN verification require explicit owner
+authorization and have not been performed.
+
 ## 1.0.0 — Stable release
 
 - Froze and classified every declared public package entry with generated

@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/plugin-tools",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "license": "MIT",
     "description": "Offline plugin scaffolding and package checks for SoEditor.",
     "keywords": [

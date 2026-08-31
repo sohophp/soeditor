@@ -14,27 +14,35 @@ The development roadmap is defined in `docs/ROADMAP.md`.
 
 # 1. Product Vision
 
-SoEditor is a developer-first, HTML-first, extensible content editing platform.
+SoEditor is an HTML-first, extensible rich-text editor for web content
+management systems.
 
-It combines the usability of a traditional rich-text editor with developer-oriented source editing, diagnostics, preview, and extension capabilities.
+Its primary product is a classic, directly embeddable editing experience for
+content authors and CMS integrators. Developer-oriented source editing,
+diagnostics, preview, Markdown, and extension capabilities remain important
+differentiators, but they do not take priority over the ordinary CMS authoring
+workflow.
 
 The long-term product identity is:
 
 ```text
-Visual Content Editor
+Classic CMS Rich-Text Editor
         +
-HTML Developer Editor
+HTML Developer Control
         +
-Markdown Editor
-        +
-Content Preview Environment
+Safe Media and Content Workflows
         +
 Plugin Platform
 ```
 
-SoEditor is not intended to be a clone of CKEditor 4, CKEditor 5, TinyMCE, VSCode, CodeMirror, or another existing editor.
+SoEditor is not intended to be a clone of CKEditor 4, CKEditor 5, TinyMCE,
+VSCode, CodeMirror, or another existing editor.
 
 It may learn from successful architectural concepts while maintaining its own implementation and public API.
+
+The author-facing WYSIWYG product is specified separately in
+[`wysiwyg-editor.md`](wysiwyg-editor.md). Developer Visual is an HTML developer
+tool and must not be treated as, or used to qualify, the WYSIWYG editor.
 
 ---
 
@@ -52,9 +60,15 @@ Unknown custom elements and attributes must not disappear merely because an edit
 
 ---
 
-## Developer-first
+## CMS-first, developer-controlled
 
-SoEditor should remain useful to developers who need direct control over content.
+The default product path should let a CMS replace a textarea or mount a classic
+editor without manually assembling engines, UI surfaces, and lifecycle
+controllers. Ordinary authors should be able to format text, paste office
+content, manage links, images, and tables, and submit the result without using
+Source mode.
+
+Developers must still retain direct control over content and integration.
 
 Developer-oriented capabilities include:
 
@@ -127,6 +141,11 @@ Typical configuration should allow applications to choose:
 
 SoEditor is primarily intended for:
 
+## Content authors and administrators
+
+Users who create and maintain web pages, articles, product descriptions, and
+other CMS-managed HTML through a visual editor.
+
 ## CMS developers
 
 Developers integrating rich content editing into custom content-management systems.
@@ -134,10 +153,6 @@ Developers integrating rich content editing into custom content-management syste
 ## Web developers
 
 Developers who require visual editing without losing direct HTML control.
-
-## Content administrators
-
-Users who primarily work visually but occasionally need source editing or diagnostics.
 
 ## Plugin developers
 
@@ -168,6 +183,11 @@ Expected features include:
 - code blocks;
 - images;
 - tables.
+
+The complete CMS workflow also includes configurable styles, semantic external
+paste cleanup, image upload, file-manager selection, property dialogs,
+responsive toolbars, form synchronization, localization, and accessible
+keyboard operation.
 
 ---
 

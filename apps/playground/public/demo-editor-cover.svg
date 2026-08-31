@@ -1,0 +1,56 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="480" viewBox="0 0 1280 480" role="img" aria-labelledby="title description">
+  <title id="title">SoEditor CMS Classic Editor</title>
+  <desc id="description">紫色渐变背景上的编辑器工具栏和内容卡片示意图</desc>
+  <defs>
+    <linearGradient id="background" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#312e81"/>
+      <stop offset="0.55" stop-color="#5b54dc"/>
+      <stop offset="1" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="1" y2="1">
+      <stop stop-color="#ffffff" stop-opacity=".24"/>
+      <stop offset="1" stop-color="#ffffff" stop-opacity=".03"/>
+    </linearGradient>
+  </defs>
+  <rect width="1280" height="480" rx="28" fill="url(#background)"/>
+  <circle cx="1110" cy="60" r="260" fill="#ffffff" opacity=".06"/>
+  <circle cx="120" cy="450" r="240" fill="#a78bfa" opacity=".15"/>
+  <g transform="translate(130 72)">
+    <rect width="1020" height="336" rx="22" fill="#ffffff" opacity=".98"/>
+    <path d="M0 22Q0 0 22 0H998Q1020 0 1020 22V76H0Z" fill="#f4f3ff"/>
+    <g fill="#5b54dc">
+      <rect x="32" y="23" width="34" height="34" rx="9"/>
+      <rect x="82" y="28" width="92" height="9" rx="4.5" opacity=".75"/>
+      <rect x="82" y="44" width="58" height="7" rx="3.5" opacity=".28"/>
+    </g>
+    <g transform="translate(230 20)" fill="#ffffff" stroke="#daddec">
+      <rect width="38" height="38" rx="8"/>
+      <rect x="46" width="38" height="38" rx="8"/>
+      <rect x="100" width="68" height="38" rx="8"/>
+      <rect x="176" width="38" height="38" rx="8"/>
+      <rect x="222" width="38" height="38" rx="8"/>
+      <rect x="268" width="38" height="38" rx="8"/>
+      <rect x="322" width="38" height="38" rx="8"/>
+      <rect x="368" width="38" height="38" rx="8"/>
+      <rect x="414" width="38" height="38" rx="8"/>
+      <rect x="468" width="38" height="38" rx="8"/>
+      <rect x="514" width="38" height="38" rx="8"/>
+    </g>
+    <g transform="translate(248 45)" fill="#4c46c8" font-family="Arial,sans-serif" font-size="18" font-weight="700" text-anchor="middle">
+      <text x="0" y="0">↶</text><text x="46" y="0">↷</text><text x="134" y="0">¶</text><text x="195" y="0">B</text><text x="241" y="0">I</text><text x="287" y="0">U</text><text x="341" y="0">🔗</text><text x="387" y="0">•</text><text x="433" y="0">1.</text><text x="487" y="0">▧</text><text x="533" y="0">▦</text>
+    </g>
+    <g transform="translate(58 112)">
+      <rect width="560" height="22" rx="6" fill="#222944" opacity=".92"/>
+      <rect y="43" width="850" height="10" rx="5" fill="#c7cad5"/>
+      <rect y="64" width="780" height="10" rx="5" fill="#d9dbe3"/>
+      <rect y="85" width="825" height="10" rx="5" fill="#d9dbe3"/>
+      <rect y="125" width="360" height="16" rx="5" fill="#4f49ce" opacity=".82"/>
+      <rect y="158" width="904" height="98" rx="12" fill="#f7f7fc" stroke="#e0e2eb"/>
+      <path d="M0 192H904M0 224H904M300 158V256M620 158V256" stroke="#d8dae5"/>
+      <rect x="20" y="174" width="140" height="7" rx="3.5" fill="#6861dc" opacity=".7"/>
+      <rect x="322" y="174" width="90" height="7" rx="3.5" fill="#8a90a2" opacity=".6"/>
+      <rect x="642" y="174" width="120" height="7" rx="3.5" fill="#8a90a2" opacity=".6"/>
+    </g>
+  </g>
+  <rect x="44" y="40" width="1192" height="400" rx="40" fill="none" stroke="url(#glow)" stroke-width="2"/>
+</svg>

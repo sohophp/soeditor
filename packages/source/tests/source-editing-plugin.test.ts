@@ -12,6 +12,8 @@ describe('SourceEditingPlugin', () => {
         const editor = await Editor.create({ plugins: [SourceEditingPlugin] });
 
         expect(editor.commands.has('editor.source')).toBe(true);
+        expect(editor.commands.has('editor.source.find')).toBe(true);
+        expect(editor.commands.canExecute('editor.source.find')).toBe(false);
         expect(editor.commands.has('editor.visual')).toBe(true);
         expect(editor.commands.isActive('editor.visual')).toBe(true);
         expect(editor.commands.canExecute('editor.visual')).toBe(false);
@@ -61,5 +63,23 @@ describe('SourceEditingPlugin', () => {
         expect(editor.commands.canExecute('editor.source')).toBe(true);
         editor.execute('editor.source');
         expect(coordinator.snapshot.primary).toBe('source');
+    });
+
+    it('returns from Source to WYSIWYG when that authoring projection is attached', async () => {
+        const editor = await Editor.create({
+            plugins: [ProjectionCoordinatorPlugin, SourceEditingPlugin],
+        });
+        const coordinator = editor.services.get(
+            projectionCoordinatorServiceToken,
+        );
+        coordinator.attach({ id: 'wysiwyg', update: () => undefined });
+        coordinator.attach({ id: 'source', update: () => undefined });
+
+        editor.execute('editor.source');
+        expect(editor.commands.canExecute('editor.visual')).toBe(true);
+        editor.execute('editor.visual');
+
+        expect(coordinator.snapshot.primary).toBe('wysiwyg');
+        expect(editor.commands.isActive('editor.visual')).toBe(true);
     });
 });

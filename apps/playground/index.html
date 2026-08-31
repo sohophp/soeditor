@@ -4,6 +4,11 @@
         <meta charset="UTF-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>SoEditor Visual Engine Playground</title>
+        <script>
+            if (globalThis.location.search.length === 0) {
+                globalThis.location.replace('/classic.html');
+            }
+        </script>
         <style>
             body {
                 font-family: system-ui, sans-serif;
@@ -93,15 +98,15 @@
     </head>
     <body>
         <main id="editor-ui">
-            <h1>SoEditor 1.0 Candidate</h1>
+            <h1>SoEditor 1.1 Developer Playground</h1>
             <p>
                 This executable harness demonstrates the release configurations
                 and their shared command-driven architecture.
             </p>
             <nav aria-label="Playground examples">
                 <ul>
-                    <li><a href="/?preset=classic">Classic editor</a></li>
-                    <li><a href="/">Developer editor</a></li>
+                    <li><a href="/classic.html">CMS Classic editor</a></li>
+                    <li><a href="/?developer=1">Developer editor</a></li>
                     <li><a href="/?format=markdown">Markdown editor</a></li>
                     <li>
                         <a href="/workspace.html">Workspace recovery</a>

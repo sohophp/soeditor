@@ -1,4 +1,5 @@
 export { classicPreset } from './classic.js';
+export { cmsPreset } from './cms.js';
 export { developerPreset } from './developer.js';
 export { extendPreset } from './create-preset.js';
 export { markdownPreset } from './markdown.js';

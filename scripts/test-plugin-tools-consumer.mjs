@@ -31,24 +31,11 @@ function run(command, args, cwd) {
     execFileSync(command, args, { cwd, encoding: 'utf8', stdio: 'inherit' });
 }
 
-try {
-    run(
-        execPath,
-        [
-            pluginCli,
-            'create',
-            pluginRoot,
-            '--name',
-            '@example/generated',
-            '--id',
-            'example.generated',
-        ],
-        repositoryRoot,
+async function useWorkspacePackages(root) {
+    const manifest = JSON.parse(
+        await readFile(join(root, 'package.json'), 'utf8'),
     );
-    const pluginManifest = JSON.parse(
-        await readFile(join(pluginRoot, 'package.json'), 'utf8'),
-    );
-    pluginManifest.devDependencies = {
+    manifest.devDependencies = {
         '@soeditor/comments': `file:${join(repositoryRoot, 'packages/comments')}`,
         '@soeditor/core': `file:${join(repositoryRoot, 'packages/core')}`,
         '@soeditor/engine': `file:${join(repositoryRoot, 'packages/engine')}`,
@@ -66,9 +53,26 @@ try {
         vite: '7.3.6',
     };
     await writeFile(
-        join(pluginRoot, 'package.json'),
-        `${JSON.stringify(pluginManifest, null, 4)}\n`,
+        join(root, 'package.json'),
+        `${JSON.stringify(manifest, null, 4)}\n`,
     );
+}
+
+try {
+    run(
+        execPath,
+        [
+            pluginCli,
+            'create',
+            pluginRoot,
+            '--name',
+            '@example/generated',
+            '--id',
+            'example.generated',
+        ],
+        repositoryRoot,
+    );
+    await useWorkspacePackages(pluginRoot);
     run('pnpm', ['install'], pluginRoot);
     run('pnpm', ['build'], pluginRoot);
     run(execPath, [pluginCli, 'check', pluginRoot, '--packed'], repositoryRoot);
@@ -79,6 +83,33 @@ try {
     );
     if (archive === undefined)
         throw new Error('Generated plugin archive is missing.');
+
+    for (const kind of ['cms-widget', 'paste', 'upload', 'theme']) {
+        const familyRoot = join(temporaryRoot, kind);
+        run(
+            execPath,
+            [
+                pluginCli,
+                'create',
+                familyRoot,
+                '--name',
+                `@example/generated-${kind}`,
+                '--id',
+                `example.generated-${kind}`,
+                '--kind',
+                kind,
+            ],
+            repositoryRoot,
+        );
+        await useWorkspacePackages(familyRoot);
+        run('pnpm', ['install'], familyRoot);
+        run('pnpm', ['build'], familyRoot);
+        run(
+            execPath,
+            [pluginCli, 'check', familyRoot, '--packed'],
+            repositoryRoot,
+        );
+    }
 
     await mkdir(consumerRoot);
     const dependencies = {
@@ -167,7 +198,7 @@ try {
         consumerRoot,
     );
     stdout.write(
-        'Generated plugin scaffold, check, pack, NodeNext consumer, and runtime passed.\n',
+        'Generated basic and CMS-family plugin scaffolds, packed checks, NodeNext consumer, and runtime passed.\n',
     );
 } finally {
     await rm(temporaryRoot, { force: true, recursive: true });

@@ -6,6 +6,11 @@ export {
 export { EditorUiDestroyedError } from './errors.js';
 export { defaultToolbarConfiguration } from './defaults.js';
 export {
+    builtInUiTranslations,
+    resolveUiTranslation,
+    type ResolvedUiTranslation,
+} from './localization.js';
+export {
     UiContributionAlreadyRegisteredError,
     UiPlugin,
     uiRegistryServiceToken,
@@ -13,6 +18,8 @@ export {
 export type {
     BalloonOptions,
     BalloonService,
+    ContextMenuItemContext,
+    ContextMenuItemDefinition,
     CreateEditorUiOptions,
     DialogAction,
     DialogHandle,
@@ -20,7 +27,12 @@ export type {
     DialogService,
     DismissibleUiHandle,
     EditorUi,
+    EditorUiDirection,
+    EditorUiIconResource,
     EditorUiTheme,
+    EditorUiThemeVariable,
+    EditorUiThemeVariables,
+    EditorUiTranslationResource,
     KeyboardShortcutDefinition,
     NotificationOptions,
     NotificationService,
@@ -34,6 +46,7 @@ export type {
     ToolbarItemContext,
     ToolbarItemFactory,
     ToolbarItemInstance,
+    ToolbarLayoutOptions,
     UiContent,
     UiRegistryService,
 } from './types.js';

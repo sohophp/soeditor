@@ -234,7 +234,7 @@ Plugins continue to expose framework-neutral commands, services, and explicit
 attachment handles; they must not import React/Vue or assume an adapter owns
 their DOM host.
 
-The public Node-only `@soeditor/plugin-tools` package can create a versioned 0.9
+The public Node-only `@soeditor/plugin-tools` package can create a versioned 1.x
 SDK package and check its metadata, root exports, plugin IDs, public-root
 imports, tree-shaking declaration, and packed files. Run the packed check only
 after building:
@@ -243,6 +243,12 @@ after building:
 soeditor-plugin create ./my-plugin \
   --name @example/my-plugin \
   --id example.my-plugin
+
+# Choose cms-widget, paste, upload, or theme for a focused starter.
+soeditor-plugin create ./cms-theme \
+  --name @example/cms-theme \
+  --id example.cms-theme \
+  --kind theme
 cd ./my-plugin
 pnpm install
 pnpm build
@@ -269,11 +275,11 @@ safety, replace strict tests, or load code from a catalog. See
 
 ## Presets
 
-`@soeditor/presets` exports `minimalPreset`, `classicPreset`,
+`@soeditor/presets` exports `minimalPreset`, `classicPreset`, experimental `cmsPreset`,
 `developerPreset`, and `markdownPreset`. Pass `format` and `plugins` into
 `Editor.create()`, and pass `toolbar` into `createEditorUi()`.
 
-Size-sensitive packages may import `@soeditor/presets/minimal`, `/classic`,
+Size-sensitive packages may import `@soeditor/presets/minimal`, `/classic`, `/cms`,
 `/developer`, or `/markdown` instead of evaluating the aggregate preset entry.
 
 ```ts

@@ -29,7 +29,7 @@ describe('plugin package tooling', () => {
             pluginId: 'example.product-card',
         });
 
-        expect(pluginTemplateVersion).toBe(2);
+        expect(pluginTemplateVersion).toBe(3);
         expect(
             await readFile(resolve(target, 'src/plugin.ts'), 'utf8'),
         ).toContain("from '@soeditor/plugin-sdk'");
@@ -48,6 +48,63 @@ describe('plugin package tooling', () => {
                 pluginId: 'Invalid ID',
             }),
         ).rejects.toThrow('Invalid plugin ID');
+    });
+
+    it('creates deterministic focused CMS contribution families', async () => {
+        const parent = await temporaryDirectory();
+        for (const kind of [
+            'cms-widget',
+            'paste',
+            'upload',
+            'theme',
+        ] as const) {
+            const target = resolve(parent, kind);
+            await scaffoldPluginPackage({
+                directory: target,
+                kind,
+                packageName: `@example/${kind}`,
+                pluginId: `example.${kind}`,
+            });
+            const source = await readFile(
+                resolve(target, 'src/plugin.ts'),
+                'utf8',
+            );
+            expect(source).toContain("from '@soeditor/plugin-sdk'");
+            expect((await checkPluginPackage(target)).valid).toBe(true);
+        }
+    });
+
+    it('reports remote execution and unsafe DOM output', async () => {
+        const root = await temporaryDirectory();
+        await mkdir(resolve(root, 'src'));
+        await writeFile(
+            resolve(root, 'package.json'),
+            JSON.stringify({
+                name: 'unsafe',
+                version: '1.0.0',
+                type: 'module',
+                sideEffects: false,
+                exports: {
+                    '.': {
+                        import: './dist/index.js',
+                        types: './dist/index.d.ts',
+                    },
+                },
+                peerDependencies: { '@soeditor/plugin-sdk': '^1.0.0' },
+            }),
+        );
+        await writeFile(
+            resolve(root, 'src/index.ts'),
+            "import { Plugin } from '@soeditor/plugin-sdk';\nimport('https://example.test/plugin.js');\nexport { Unsafe };\nclass Unsafe extends Plugin { static readonly id = 'unsafe'; init() { document.body.innerHTML = '<b>x</b>'; eval('1'); } }\n",
+        );
+        const report = await checkPluginPackage(root);
+        expect(report.issues.map(({ code }) => code)).toEqual(
+            expect.arrayContaining([
+                'REMOTE_IMPORT',
+                'DYNAMIC_CODE',
+                'UNSAFE_DOM_OUTPUT',
+            ]),
+        );
     });
 
     it('reports manifest, duplicate-ID, internal-import, and export defects', async () => {

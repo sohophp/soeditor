@@ -249,7 +249,13 @@ export class SplitViewPlugin extends Plugin {
                 this.editor.execute('projection.activate', writer);
             }
         }
-        for (const id of ['visual', 'source', 'markdown', 'preview'] as const) {
+        for (const id of [
+            'visual',
+            'wysiwyg',
+            'source',
+            'markdown',
+            'preview',
+        ] as const) {
             if (
                 !pairIncludes(pair, id) &&
                 coordinator.isAttached(id) &&

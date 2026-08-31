@@ -50,7 +50,7 @@ export class PreviewHostNotEmptyError extends Error {
 }
 
 class DomPreviewEngine implements PreviewEngine {
-    readonly #configuration;
+    #configuration;
     readonly #disposeDocumentChange: () => void;
     readonly #disposeEditorDestroy: () => void;
     readonly #disposeModeChange: () => void;
@@ -108,6 +108,8 @@ class DomPreviewEngine implements PreviewEngine {
         const service = Object.freeze<PreviewService>({
             canRender: () => this.#canRender(),
             refresh: () => this.#refresh(),
+            setConfiguration: (configuration) =>
+                this.#setConfiguration(configuration),
         });
         this.#service = service;
         options.editor.services.register(previewServiceToken, service);
@@ -195,6 +197,19 @@ class DomPreviewEngine implements PreviewEngine {
         this.#assertAlive();
         this.#iframe.srcdoc = this.#renderCurrentSource();
         this.#stale = false;
+    }
+
+    #setConfiguration(configuration: PreviewConfiguration): void {
+        this.#assertAlive();
+        this.#configuration = normalizePreviewConfiguration(configuration);
+        this.#iframe.title = this.#configuration.title;
+        this.#stale = true;
+        if (
+            this.#projectionActivity?.visible ??
+            this.#editor.state.mode === 'preview'
+        ) {
+            this.#refresh();
+        }
     }
 
     #renderCurrentSource(): string {

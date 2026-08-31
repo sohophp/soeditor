@@ -67,15 +67,38 @@ describe('controlled editing model', () => {
         );
     });
 
-    it('keeps attributed and structurally unsupported lists opaque', () => {
+    it('edits attributed lists while preserving unsupported item content', () => {
         const source =
             '<ol start="3"><li>Three</li></ol><ul><li data-id="x">Item</li></ul><ul><li><p>Nested block</p></li></ul>';
         const model = createEditingModel(parseHtmlFragment(source).document);
 
         expect(model.blocks.map((block) => block.kind)).toEqual([
-            'opaque-block',
-            'opaque-block',
             'paragraph',
+            'paragraph',
+            'paragraph',
+        ]);
+        expect(serializeHtmlFragment(serializeEditingModel(model))).toBe(
+            source,
+        );
+    });
+
+    it('round-trips nested list depth, starts, and marker types', () => {
+        const source =
+            '<ol start="3" type="A"><li>Parent<ul type="square"><li>Child</li><li>Child 2<ol><li>Deep</li></ol></li></ul></li><li>Next</li></ol>';
+        const model = createEditingModel(parseHtmlFragment(source).document);
+
+        expect(
+            model.blocks.map((block) =>
+                block.kind === 'paragraph'
+                    ? [block.list, block.listDepth, block.listStart]
+                    : block.kind,
+            ),
+        ).toEqual([
+            ['ol', 0, true],
+            ['ul', 1, true],
+            ['ul', 1, false],
+            ['ol', 2, true],
+            ['ol', 0, false],
         ]);
         expect(serializeHtmlFragment(serializeEditingModel(model))).toBe(
             source,

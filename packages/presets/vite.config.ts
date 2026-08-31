@@ -20,6 +20,7 @@ export default defineConfig({
         lib: {
             entry: {
                 classic: 'src/classic.ts',
+                cms: 'src/cms.ts',
                 developer: 'src/developer.ts',
                 index: 'src/index.ts',
                 markdown: 'src/markdown.ts',

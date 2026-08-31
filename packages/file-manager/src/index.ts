@@ -10,3 +10,18 @@ export {
     InvalidFileManagerResultError,
     normalizeFileManagerResult,
 } from './validation.js';
+export {
+    UploadPlugin,
+    uploadServiceToken,
+    uploadWorkflowServiceToken,
+} from './upload.js';
+export type {
+    ImageUploadOptions,
+    UploadProgress,
+    UploadRecord,
+    UploadRequest,
+    UploadService,
+    UploadStatus,
+    UploadTask,
+    UploadWorkflowService,
+} from './upload.js';

@@ -16,14 +16,22 @@ import {
 export type EditingBlockTag =
     'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'blockquote' | 'pre';
 
-export type EditingTextMark = 'strong' | 'em' | 'u' | 's' | 'code';
+export type EditingTextMark =
+    'strong' | 'em' | 'u' | 's' | 'code' | 'sub' | 'sup';
 
 export interface EditingLinkMark {
     readonly kind: 'link';
     readonly attributes: readonly HtmlAttribute[];
 }
 
-export type EditingMark = EditingTextMark | EditingLinkMark;
+export interface EditingElementMark {
+    readonly kind: 'element';
+    readonly tagName: 'kbd' | 'mark' | 'small' | 'span';
+    readonly attributes: readonly HtmlAttribute[];
+}
+
+export type EditingMark =
+    EditingTextMark | EditingLinkMark | EditingElementMark;
 
 export interface EditingTextRun {
     readonly kind: 'text';
@@ -45,6 +53,10 @@ export interface EditingParagraph {
     readonly inlines: readonly EditingInline[];
     readonly list?: 'ol' | 'ul';
     readonly listStart?: boolean;
+    readonly listDepth?: number;
+    readonly listAttributes?: readonly HtmlAttribute[];
+    readonly alignment?: 'center' | 'justify' | 'left' | 'right';
+    readonly indent?: number;
 }
 
 export interface EditingOpaqueBlock {
@@ -102,22 +114,9 @@ export function serializeEditingModel(
     for (let index = 0; index < model.blocks.length; index += 1) {
         const block = model.blocks[index];
         if (block?.kind === 'paragraph' && block.list !== undefined) {
-            const items: EditingParagraph[] = [];
-            const list = block.list;
-            while (index < model.blocks.length) {
-                const item = model.blocks[index];
-                if (
-                    item?.kind !== 'paragraph' ||
-                    item.list !== list ||
-                    (items.length > 0 && item.listStart === true)
-                ) {
-                    break;
-                }
-                items.push(item);
-                index += 1;
-            }
-            index -= 1;
-            children.push(serializeList(list, items));
+            const serialized = serializeListAt(model.blocks, index, 0);
+            children.push(serialized.node);
+            index = serialized.nextIndex - 1;
         } else if (block !== undefined) {
             children.push(serializeBlock(block, schema));
         }
@@ -167,6 +166,13 @@ export function freezeModel(model: EditingModel): EditingModel {
                 return Object.freeze({
                     ...block,
                     attributes: Object.freeze([...block.attributes]),
+                    ...(block.listAttributes === undefined
+                        ? {}
+                        : {
+                              listAttributes: Object.freeze([
+                                  ...block.listAttributes,
+                              ]),
+                          }),
                     inlines: Object.freeze(
                         normalizeInlines(block.inlines).map((inline) =>
                             inline.kind === 'text'
@@ -277,12 +283,19 @@ function convertBlocks(
             appendInline(inlines, child, []);
         }
 
+        const formatting = readBlockFormatting(node.attributes);
         return [
             {
-                attributes: node.attributes,
+                attributes: formatting.attributes,
                 inlines,
                 kind: 'paragraph',
                 tagName: node.tagName,
+                ...(formatting.alignment === undefined
+                    ? {}
+                    : { alignment: formatting.alignment }),
+                ...(formatting.indent === undefined
+                    ? {}
+                    : { indent: formatting.indent }),
             },
         ];
     }
@@ -291,27 +304,12 @@ function convertBlocks(
         node.type === 'element' &&
         node.namespace === 'html' &&
         (node.tagName === 'ol' || node.tagName === 'ul') &&
-        node.attributes.length === 0 &&
-        node.children.every(isSimpleListItem)
+        isSupportedList(node, 0)
     ) {
-        const list: 'ol' | 'ul' = node.tagName;
-        return node.children.map((item, itemIndex) => {
-            if (item.type !== 'element') {
-                throw new Error('Expected a validated list item.');
-            }
-            const inlines: EditingInline[] = [];
-            for (const child of item.children) {
-                appendInline(inlines, child, []);
-            }
-            return {
-                attributes: item.attributes,
-                inlines,
-                kind: 'paragraph',
-                list,
-                listStart: itemIndex === 0,
-                tagName: 'p',
-            };
-        });
+        return convertList(
+            node as HtmlElement & { readonly tagName: 'ol' | 'ul' },
+            0,
+        );
     }
 
     return [{ kind: 'opaque-block', node }];
@@ -347,6 +345,14 @@ function supportedMark(node: HtmlChildNode): EditingMark | undefined {
 
     if (node.tagName === 'a') {
         return { attributes: node.attributes, kind: 'link' };
+    }
+
+    if (isStyleMarkTag(node.tagName)) {
+        return {
+            attributes: node.attributes,
+            kind: 'element',
+            tagName: node.tagName,
+        };
     }
 
     return node.attributes.length === 0 && isTextMark(node.tagName)
@@ -403,7 +409,7 @@ function serializeBlock(
         type: 'element',
         tagName: block.tagName,
         namespace: 'html',
-        attributes: block.attributes,
+        attributes: serializeBlockFormatting(block),
         children: Object.freeze(
             block.inlines.map((inline) => serializeInline(inline)),
         ),
@@ -423,7 +429,12 @@ function serializeInline(inline: EditingInline): HtmlChildNode {
     for (const mark of [...inline.marks].reverse()) {
         node = Object.freeze({
             type: 'element',
-            tagName: typeof mark === 'string' ? mark : 'a',
+            tagName:
+                typeof mark === 'string'
+                    ? mark
+                    : mark.kind === 'link'
+                      ? 'a'
+                      : mark.tagName,
             namespace: 'html',
             attributes:
                 typeof mark === 'string' ? Object.freeze([]) : mark.attributes,
@@ -449,9 +460,9 @@ function addMark(
 
 function markOrder(mark: EditingMark): number {
     if (typeof mark !== 'string') {
-        return 0;
+        return mark.kind === 'link' ? 0 : 1;
     }
-    return ['strong', 'em', 'u', 's', 'code'].indexOf(mark) + 1;
+    return ['strong', 'em', 'u', 's', 'code', 'sub', 'sup'].indexOf(mark) + 2;
 }
 
 function sameMarks(
@@ -472,6 +483,9 @@ function marksEqual(left: EditingMark, right: EditingMark): boolean {
         return left === right;
     }
     return (
+        left.kind === right.kind &&
+        (left.kind !== 'element' ||
+            (right.kind === 'element' && left.tagName === right.tagName)) &&
         left.attributes.length === right.attributes.length &&
         left.attributes.every((attribute, index) => {
             const candidate = right.attributes[index];
@@ -501,8 +515,7 @@ function isBuiltInBlock(node: HtmlChildNode): boolean {
         node.namespace === 'html' &&
         (isBlockTag(node.tagName) ||
             ((node.tagName === 'ol' || node.tagName === 'ul') &&
-                node.attributes.length === 0 &&
-                node.children.every(isSimpleListItem)))
+                isSupportedList(node, 0)))
     );
 }
 
@@ -512,17 +525,92 @@ function isTextMark(tagName: string): tagName is EditingTextMark {
         tagName === 'em' ||
         tagName === 'u' ||
         tagName === 's' ||
-        tagName === 'code'
+        tagName === 'code' ||
+        tagName === 'sub' ||
+        tagName === 'sup'
     );
 }
 
-function isSimpleListItem(node: HtmlChildNode): boolean {
+function isStyleMarkTag(
+    tagName: string,
+): tagName is EditingElementMark['tagName'] {
     return (
-        node.type === 'element' &&
-        node.namespace === 'html' &&
-        node.tagName === 'li' &&
-        node.attributes.length === 0
+        tagName === 'span' ||
+        tagName === 'mark' ||
+        tagName === 'small' ||
+        tagName === 'kbd'
     );
+}
+
+function isSupportedList(node: HtmlElement, depth: number): boolean {
+    return (
+        depth <= 8 &&
+        (node.tagName === 'ol' || node.tagName === 'ul') &&
+        node.children.length > 0 &&
+        node.children.every(
+            (child) =>
+                child.type === 'element' &&
+                child.namespace === 'html' &&
+                child.tagName === 'li' &&
+                child.children.every(
+                    (itemChild) =>
+                        itemChild.type !== 'element' ||
+                        (itemChild.tagName !== 'ol' &&
+                            itemChild.tagName !== 'ul') ||
+                        isSupportedList(itemChild, depth + 1),
+                ),
+        )
+    );
+}
+
+function convertList(
+    node: HtmlElement & { readonly tagName: 'ol' | 'ul' },
+    depth: number,
+): readonly EditingParagraph[] {
+    const blocks: EditingParagraph[] = [];
+    node.children.forEach((item, itemIndex) => {
+        if (item.type !== 'element') {
+            throw new Error('Expected a validated list item.');
+        }
+        const inlines: EditingInline[] = [];
+        const nested: HtmlElement[] = [];
+        for (const child of item.children) {
+            if (
+                child.type === 'element' &&
+                (child.tagName === 'ol' || child.tagName === 'ul')
+            ) {
+                nested.push(child);
+            } else {
+                appendInline(inlines, child, []);
+            }
+        }
+        const formatting = readBlockFormatting(item.attributes);
+        blocks.push({
+            attributes: formatting.attributes,
+            inlines,
+            kind: 'paragraph',
+            list: node.tagName,
+            listDepth: depth,
+            listStart: itemIndex === 0,
+            ...(itemIndex === 0 ? { listAttributes: node.attributes } : {}),
+            tagName: 'p',
+            ...(formatting.alignment === undefined
+                ? {}
+                : { alignment: formatting.alignment }),
+            ...(formatting.indent === undefined
+                ? {}
+                : { indent: formatting.indent }),
+        });
+        for (const child of nested) {
+            blocks.push(
+                ...convertList(
+                    child as HtmlElement & { readonly tagName: 'ol' | 'ul' },
+                    depth + 1,
+                ),
+            );
+        }
+    });
+    return blocks;
 }
 
 function freezeAttributes(
@@ -546,27 +634,155 @@ function freezeHtmlChild(node: HtmlChildNode): HtmlChildNode {
     });
 }
 
-function serializeList(
-    tagName: 'ol' | 'ul',
-    items: readonly EditingParagraph[],
-): HtmlChildNode {
-    return Object.freeze({
-        type: 'element',
-        tagName,
-        namespace: 'html',
-        attributes: Object.freeze([]),
-        children: Object.freeze(
-            items.map((item) =>
-                Object.freeze({
-                    type: 'element',
-                    tagName: 'li',
-                    namespace: 'html',
-                    attributes: item.attributes,
-                    children: Object.freeze(
-                        item.inlines.map((inline) => serializeInline(inline)),
-                    ),
-                }),
-            ),
-        ),
-    });
+function serializeListAt(
+    blocks: readonly EditingBlock[],
+    startIndex: number,
+    depth: number,
+): { readonly nextIndex: number; readonly node: HtmlChildNode } {
+    const first = blocks[startIndex];
+    if (
+        first?.kind !== 'paragraph' ||
+        first.list === undefined ||
+        (first.listDepth ?? 0) !== depth
+    ) {
+        throw new Error('The editing model contains an invalid nested list.');
+    }
+    const tagName = first.list;
+    const children: HtmlChildNode[] = [];
+    let index = startIndex;
+    while (index < blocks.length) {
+        const item = blocks[index];
+        if (
+            item?.kind !== 'paragraph' ||
+            item.list !== tagName ||
+            (item.listDepth ?? 0) !== depth ||
+            (index > startIndex && item.listStart === true)
+        ) {
+            break;
+        }
+        const itemChildren = item.inlines.map((inline) =>
+            serializeInline(inline),
+        );
+        index += 1;
+        while (index < blocks.length) {
+            const nested = blocks[index];
+            if (
+                nested?.kind !== 'paragraph' ||
+                nested.list === undefined ||
+                (nested.listDepth ?? 0) <= depth
+            ) {
+                break;
+            }
+            if ((nested.listDepth ?? 0) !== depth + 1) {
+                throw new Error(
+                    'Nested list depth cannot skip a parent level.',
+                );
+            }
+            const serialized = serializeListAt(blocks, index, depth + 1);
+            itemChildren.push(serialized.node);
+            index = serialized.nextIndex;
+        }
+        children.push(
+            Object.freeze({
+                type: 'element',
+                tagName: 'li',
+                namespace: 'html',
+                attributes: serializeBlockFormatting(item),
+                children: Object.freeze(itemChildren),
+            }),
+        );
+    }
+    return {
+        nextIndex: index,
+        node: Object.freeze({
+            type: 'element',
+            tagName,
+            namespace: 'html',
+            attributes: first.listAttributes ?? Object.freeze([]),
+            children: Object.freeze(children),
+        }),
+    };
+}
+
+function readBlockFormatting(attributes: readonly HtmlAttribute[]): {
+    readonly alignment?: EditingParagraph['alignment'];
+    readonly attributes: readonly HtmlAttribute[];
+    readonly indent?: number;
+} {
+    const style = attributes.find(
+        (attribute) =>
+            attribute.namespace === undefined && attribute.name === 'style',
+    );
+    if (style === undefined) return { attributes };
+    let alignment: EditingParagraph['alignment'];
+    let indent: number | undefined;
+    const retained: string[] = [];
+    for (const declaration of style.value.split(';')) {
+        const [rawName, ...rawValue] = declaration.split(':');
+        const name = rawName?.trim().toLowerCase();
+        const value = rawValue.join(':').trim().toLowerCase();
+        if (
+            name === 'text-align' &&
+            (value === 'left' ||
+                value === 'center' ||
+                value === 'right' ||
+                value === 'justify')
+        ) {
+            alignment = value;
+        } else {
+            const match =
+                name === 'margin-inline-start'
+                    ? /^(\d+)em$/u.exec(value)
+                    : null;
+            if (match?.[1] !== undefined) {
+                const parsed = Number(match[1]) / 2;
+                if (Number.isInteger(parsed) && parsed >= 1 && parsed <= 8) {
+                    indent = parsed;
+                    continue;
+                }
+            }
+            if (declaration.trim().length > 0)
+                retained.push(declaration.trim());
+        }
+    }
+    const nextAttributes = attributes.filter(
+        (attribute) => attribute !== style,
+    );
+    if (retained.length > 0) {
+        nextAttributes.push({
+            name: 'style',
+            value: `${retained.join('; ')};`,
+        });
+    }
+    return {
+        attributes: nextAttributes,
+        ...(alignment === undefined ? {} : { alignment }),
+        ...(indent === undefined ? {} : { indent }),
+    };
+}
+
+function serializeBlockFormatting(
+    block: EditingParagraph,
+): readonly HtmlAttribute[] {
+    const declarations = [
+        ...(block.alignment === undefined
+            ? []
+            : [`text-align: ${block.alignment}`]),
+        ...(block.indent === undefined
+            ? []
+            : [`margin-inline-start: ${String(block.indent * 2)}em`]),
+    ];
+    if (declarations.length === 0) return block.attributes;
+    const attributes = [...block.attributes];
+    const styleIndex = attributes.findIndex(
+        (attribute) =>
+            attribute.namespace === undefined && attribute.name === 'style',
+    );
+    const retained =
+        styleIndex < 0 ? '' : (attributes[styleIndex]?.value ?? '');
+    const value = `${retained}${retained.trim().endsWith(';') || retained.length === 0 ? '' : ';'}${declarations.join('; ')};`;
+    const style = Object.freeze({ name: 'style', value });
+    if (styleIndex < 0) attributes.push(style);
+    else attributes[styleIndex] = style;
+    return Object.freeze(attributes);
 }

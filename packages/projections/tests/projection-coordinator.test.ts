@@ -71,6 +71,60 @@ describe('ProjectionCoordinatorPlugin', () => {
         );
     });
 
+    it('allows a preview-only presentation while retaining logical write authority', async () => {
+        const editor = await Editor.create({
+            plugins: [ProjectionCoordinatorPlugin],
+        });
+        const service = editor.services.get(projectionCoordinatorServiceToken);
+        service.attach({ id: 'visual', update: () => undefined });
+        service.attach({ id: 'preview', update: () => undefined });
+
+        editor.execute('projection.show', 'preview');
+        expect(() => editor.execute('projection.hide', 'visual')).toThrow(
+            InvalidProjectionTransitionError,
+        );
+        editor.update((transaction) => transaction.setMode('preview'));
+        editor.execute('projection.hide', 'visual');
+
+        expect(service.snapshot.primary).toBe('visual');
+        expect(service.get('visual').visible).toBe(false);
+        expect(service.get('preview').visible).toBe(true);
+
+        editor.update((transaction) => transaction.setMode('visual'));
+        expect(service.get('visual').visible).toBe(true);
+    });
+
+    it('coordinates Developer Visual and WYSIWYG as separate single-writer projections', async () => {
+        const editor = await Editor.create({
+            plugins: [ProjectionCoordinatorPlugin],
+        });
+        const service = editor.services.get(projectionCoordinatorServiceToken);
+        service.attach({ id: 'visual', update: () => undefined });
+        service.attach({ id: 'wysiwyg', update: () => undefined });
+        service.attach({ id: 'source', update: () => undefined });
+        service.attach({ id: 'preview', update: () => undefined });
+
+        editor.execute('projection.show', 'wysiwyg');
+        editor.execute('projection.show', 'source');
+        editor.execute('projection.show', 'preview');
+        editor.execute('projection.activate', 'wysiwyg');
+
+        expect(editor.state.mode).toBe('wysiwyg');
+        expect(service.snapshot.activities).toHaveLength(5);
+        expect(service.get('wysiwyg')).toMatchObject({
+            primary: true,
+            readonly: false,
+            visible: true,
+        });
+        expect(service.get('visual')).toMatchObject({
+            primary: false,
+            readonly: true,
+            visible: true,
+        });
+        expect(service.get('source').readonly).toBe(true);
+        expect(service.get('preview').readonly).toBe(true);
+    });
+
     it('maps external mode changes without hiding persistent projections', async () => {
         const editor = await Editor.create({
             plugins: [ProjectionCoordinatorPlugin],

@@ -13,6 +13,7 @@
         "@soeditor/comments": "workspace:*",
         "@soeditor/core": "workspace:*",
         "@soeditor/dev-tools": "workspace:*",
+        "@soeditor/editor": "workspace:*",
         "@soeditor/engine": "workspace:*",
         "@soeditor/file-manager": "workspace:*",
         "@soeditor/html": "workspace:*",
@@ -29,6 +30,7 @@
         "@soeditor/ui": "workspace:*",
         "@soeditor/vue": "workspace:*",
         "@soeditor/workspace": "workspace:*",
+        "@soeditor/wysiwyg": "workspace:*",
         "react": "19.2.8",
         "react-dom": "19.2.8",
         "vue": "3.5.42"

@@ -1,7 +1,8 @@
 import type { EditorDocument } from './document.js';
 
 /** The active projection requested from the editor. */
-export type EditorMode = 'visual' | 'source' | 'markdown' | 'preview';
+export type EditorMode =
+    'visual' | 'wysiwyg' | 'source' | 'markdown' | 'preview';
 
 /** An immutable snapshot of editor state. */
 export interface EditorState {

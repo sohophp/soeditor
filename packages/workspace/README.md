@@ -13,4 +13,11 @@ opt-in bounded recovery from the last observed canonical source. Recovery is
 triggered explicitly with `reportFailure()`; it cannot infer every application
 or rendering failure.
 
-See [`docs/workspace.md`](../../docs/workspace.md).
+`createEditorSaveWorkflow()` optionally adds host-owned manual or debounced
+autosave around any Workspace/Core editor. It serializes only canonical source,
+supports opaque revision tokens, progress, retry and conflict results, and
+aborts owned work during cleanup. Transport and conflict policy remain outside
+the package.
+
+See [`docs/workspace.md`](../../docs/workspace.md) and
+[`docs/cms-saving.md`](../../docs/cms-saving.md).

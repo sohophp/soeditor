@@ -9,7 +9,7 @@ test('exposes the documented Classic, Developer, Markdown, and CMS examples', as
     await expect(page.locator('[data-toolbar-item="source"]')).toBeVisible();
     await expect(page.locator('[data-toolbar-item="problems"]')).toHaveCount(0);
 
-    await page.goto('/');
+    await page.goto('/?developer=1');
     await expect(page.locator('body')).toHaveAttribute(
         'data-demo',
         'developer',
@@ -80,7 +80,7 @@ test('keeps CMS markers and custom elements through SoFinder image insertion and
 test('provides accessible release surfaces and named keyboard controls', async ({
     page,
 }) => {
-    await page.goto('/');
+    await page.goto('/?developer=1');
     await expect(page.getByRole('main')).toBeVisible();
     await expect(
         page.getByRole('navigation', { name: 'Playground examples' }),
@@ -101,7 +101,7 @@ test('provides accessible release surfaces and named keyboard controls', async (
     );
     await expect(page.getByRole('textbox').first()).toHaveAttribute(
         'aria-label',
-        'Visual editor',
+        'Developer Visual editor',
     );
 
     const audit = await page.evaluate(() => {
@@ -141,7 +141,7 @@ test('has no automated WCAG A/AA violations across primary projections', async (
     page,
 }) => {
     for (const scenario of [
-        { ready: '[data-testid="editor"]', url: '/' },
+        { ready: '[data-testid="editor"]', url: '/?developer=1' },
         {
             ready: '[data-testid="markdown-editor"] .cm-content',
             url: '/?format=markdown',
@@ -152,7 +152,7 @@ test('has no automated WCAG A/AA violations across primary projections', async (
         await expectWcagScanToPass(page);
     }
 
-    await page.goto('/');
+    await page.goto('/?developer=1');
     await page.locator('[data-toolbar-item="problems"]').click();
     await expect(page.locator('.soeditor-ui__panel')).toHaveAttribute(
         'aria-label',
@@ -160,7 +160,7 @@ test('has no automated WCAG A/AA violations across primary projections', async (
     );
     await expectWcagScanToPass(page);
 
-    await page.goto('/');
+    await page.goto('/?developer=1');
     await page.locator('[data-toolbar-item="preview"]').click();
     await expect(page.locator('[data-testid="preview"] iframe')).toBeVisible();
     await expectWcagScanToPass(page, '[data-testid="preview"] iframe');
