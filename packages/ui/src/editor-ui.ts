@@ -198,6 +198,10 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
                 ),
             );
         },
+        getEditingSelectionText: () => {
+            assertAlive();
+            return editingRange?.toString() ?? '';
+        },
         refresh: () => update(),
         restoreEditingSelection: () => restoreEditingSelection(),
         setToolbarExpanded: (expanded: boolean) => {
@@ -421,11 +425,11 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
             // the primary lifecycle for pointer and overlay interactions.
             return;
         }
-        const selection = selectionTargets
-            .map((target) => selectionForTarget(target, document))
+        const range = selectionTargets
+            .map((target) => selectionRangeForTarget(target, document))
             .find((candidate) => {
-                const anchor = candidate?.anchorNode;
-                const focus = candidate?.focusNode;
+                const anchor = candidate?.startContainer;
+                const focus = candidate?.endContainer;
                 return (
                     anchor !== null &&
                     anchor !== undefined &&
@@ -435,11 +439,10 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
                     isEditingNode(focus, options.element)
                 );
             });
-        const anchor = selection?.anchorNode;
-        const focus = selection?.focusNode;
+        const anchor = range?.startContainer;
+        const focus = range?.endContainer;
         if (
-            selection === null ||
-            selection === undefined ||
+            range === undefined ||
             anchor === null ||
             anchor === undefined ||
             focus === null ||
@@ -451,14 +454,11 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
         }
         editingSelection = Object.freeze({
             anchor,
-            anchorOffset: selection.anchorOffset,
+            anchorOffset: range.startOffset,
             focus,
-            focusOffset: selection.focusOffset,
+            focusOffset: range.endOffset,
         });
-        editingRange =
-            selection.rangeCount === 0
-                ? undefined
-                : selection.getRangeAt(0).cloneRange();
+        editingRange = range.cloneRange();
         update();
     };
     const selectionHighlightFocusIn = (event: FocusEvent): void => {
@@ -1161,11 +1161,11 @@ function selectionBookmarkForNode(
     node: Node,
     document: Document,
 ): SelectionBookmark | undefined {
-    const selection = selectionForNode(node, document);
-    const anchor = selection?.anchorNode;
-    const focus = selection?.focusNode;
+    const range = selectionRangeForTarget(node.getRootNode(), document);
+    const anchor = range?.startContainer;
+    const focus = range?.endContainer;
     if (
-        selection === null ||
+        range === undefined ||
         anchor === null ||
         anchor === undefined ||
         focus === null ||
@@ -1175,9 +1175,9 @@ function selectionBookmarkForNode(
     }
     return Object.freeze({
         anchor,
-        anchorOffset: selection.anchorOffset,
+        anchorOffset: range.startOffset,
         focus,
-        focusOffset: selection.focusOffset,
+        focusOffset: range.endOffset,
     });
 }
 
@@ -1196,7 +1196,62 @@ function selectionForTarget(
             return candidate;
         }
     }
-    return target === document ? document.getSelection() : null;
+    return document.getSelection();
+}
+
+function selectionRangeForTarget(
+    target: EventTarget,
+    document: Document,
+): Range | undefined {
+    const selection = selectionForTarget(target, document);
+    if (selection === null) return undefined;
+    if (selection.rangeCount > 0) {
+        try {
+            const direct = selection.getRangeAt(0);
+            if (
+                !(target instanceof ShadowRoot) ||
+                direct.commonAncestorContainer.getRootNode() === target
+            ) {
+                return direct.cloneRange();
+            }
+        } catch {
+            // Fall through to the composed-range path.
+        }
+    }
+    if (!(target instanceof ShadowRoot)) return undefined;
+    const getter: unknown = Reflect.get(selection, 'getComposedRanges');
+    if (typeof getter !== 'function') return undefined;
+    let ranges: unknown;
+    try {
+        ranges = Reflect.apply(getter, selection, [{ shadowRoots: [target] }]);
+    } catch {
+        return undefined;
+    }
+    if (!Array.isArray(ranges) || ranges.length === 0) return undefined;
+    const candidate: unknown = ranges[0];
+    if (typeof candidate !== 'object' || candidate === null) return undefined;
+    const startContainer: unknown = Reflect.get(candidate, 'startContainer');
+    const endContainer: unknown = Reflect.get(candidate, 'endContainer');
+    const startOffset: unknown = Reflect.get(candidate, 'startOffset');
+    const endOffset: unknown = Reflect.get(candidate, 'endOffset');
+    const NodeConstructor = document.defaultView?.Node;
+    if (
+        NodeConstructor === undefined ||
+        !(startContainer instanceof NodeConstructor) ||
+        !(endContainer instanceof NodeConstructor) ||
+        typeof startOffset !== 'number' ||
+        typeof endOffset !== 'number'
+    ) {
+        return undefined;
+    }
+    const range = document.createRange();
+    try {
+        range.setStart(startContainer, startOffset);
+        range.setEnd(endContainer, endOffset);
+        return range;
+    } catch {
+        return undefined;
+    }
 }
 
 function editingHost(node: Node): HTMLElement | undefined {
@@ -1414,7 +1469,7 @@ function renderDocumentStatus(
     const text = template.content.textContent ?? '';
     const characters = Array.from(text).length;
     const sourceCharacters = Array.from(source).length;
-    const words = countWords(text, document.documentElement.lang);
+    const words = countWords(text);
     const path = selectedElementPath(document, host);
     return Object.freeze({
         characters,
@@ -1428,18 +1483,9 @@ function renderDocumentStatus(
     });
 }
 
-function countWords(text: string, locale: string): number {
+function countWords(text: string): number {
     if (text.trim().length === 0) return 0;
-    try {
-        const segmenter = new Intl.Segmenter(locale || undefined, {
-            granularity: 'word',
-        });
-        return Array.from(segmenter.segment(text)).filter(
-            (segment) => segment.isWordLike,
-        ).length;
-    } catch {
-        return text.trim().split(/\s+/u).length;
-    }
+    return text.match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu)?.length ?? 0;
 }
 
 function selectedElementPath(document: Document, host: HTMLElement): string {

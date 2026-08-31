@@ -2408,7 +2408,7 @@ Turn the completed editing capabilities into a coherent configurable product.
 
 ## Status
 
-COMPLETE — publication decision is NO-GO pending Firefox/WebKit qualification.
+COMPLETE — the remaining cross-browser release work is tracked in Phase 57.
 
 ## Goal
 
@@ -2440,3 +2440,36 @@ in the public demonstration.
 - accepted P1/P2 limitations are listed without “complete” wording;
 - all repository and release-preparation gates pass;
 - the owner receives a release decision, not an automatic publication.
+
+# Phase 57 — Cross-browser WYSIWYG Qualification
+
+## Status
+
+IN PROGRESS — Firefox and WebKit automation passes on the supported Playwright
+Linux image; reviewed CI execution and real Safari/manual assistive-technology
+sign-off remain pending.
+
+## Goal
+
+Close the browser-engine qualification gap without weakening product assertions
+or treating host launch failures as passing evidence.
+
+## Required outcomes
+
+- run the direct WYSIWYG and focused CMS journeys on Firefox and WebKit in a
+  maintained compatible environment;
+- normalize Shadow DOM selection capture, restoration, link editing, paragraph
+  boundary deletion, word counting, and synthetic paste behavior only where
+  executable cross-engine evidence demonstrates a difference;
+- add an independent Firefox/WebKit CI gate using the repository Node version;
+- record browser-tool-specific exclusions explicitly and retain equivalent
+  cross-engine composition and paste coverage;
+- keep Safari hardware, screen-reader, switch-control, and voice-control claims
+  outside automation evidence until manually executed.
+
+## Definition of Done
+
+- every applicable Firefox/WebKit CMS and direct WYSIWYG assertion passes;
+- Chromium regression, lint, type, API, package, security, and build gates pass;
+- the cross-browser workflow passes on the reviewed commit;
+- publication remains an explicit owner decision after residual manual checks.

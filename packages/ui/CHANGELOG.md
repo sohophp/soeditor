@@ -1,5 +1,13 @@
 # @soeditor/ui
 
+## Unreleased
+
+### Patch Changes
+
+- Resolve and retain editing selections through composed Shadow DOM ranges on
+  Firefox and WebKit, expose the retained selection text to command-backed
+  dialogs, and make Unicode word counts deterministic across browser engines.
+
 ## 1.1.0
 
 ### Minor Changes

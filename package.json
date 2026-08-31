@@ -26,6 +26,7 @@
         "test:browser": "playwright test",
         "test:browser:cms": "playwright test --config playwright.cms.config.ts --project chromium --project chromium-mobile",
         "test:browser:cms:all": "playwright test --config playwright.cms.config.ts",
+        "test:browser:cross": "playwright test --config playwright.cross-browser.config.ts",
         "test:consumer": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk --filter @soeditor/plugin-tools --filter @soeditor/react --filter @soeditor/vue build && node scripts/test-nodenext-consumer.mjs && node scripts/test-plugin-tools-consumer.mjs",
         "test:distribution": "node scripts/verify-distribution.mjs",
         "test:docs": "node scripts/verify-documentation.mjs",

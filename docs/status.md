@@ -4,10 +4,11 @@
 
 The `1.0.0` release is published and externally verified.
 The local `1.1.0` release is an unpublished candidate aligned across all 24
-public packages. Phases 38–56 are complete. Publication remains an explicit
-repository-owner operation and is currently NO-GO pending Firefox and
-WebKit/Safari qualification on a compatible host.
-The authorized work is the Phase 49–56 WYSIWYG completion program. Its
+public packages. Phases 38–56 are complete and Phase 57 cross-browser
+qualification is in progress. Publication remains an explicit repository-owner
+operation and is currently NO-GO pending reviewed cross-browser CI execution
+and real Safari/manual assistive-technology sign-off.
+The authorized work is the Phase 49–57 WYSIWYG completion program. Its
 contract is `docs/wysiwyg-editor.md`. Existing native WYSIWYG behavior and the
 199 Chromium scenarios are a regression baseline, not a claim that every
 author-facing WYSIWYG feature is verified. Developer Visual evidence cannot be
@@ -35,6 +36,13 @@ Phase 56 established a 189-scenario Chromium gate; the current gate contains
 available local, Chromium, mobile, performance, API, consumer, distribution,
 license and security gates and records the conditional decision in
 `docs/wysiwyg-release-decision.md`.
+Phase 57 runs the focused CMS and direct WYSIWYG suites in Firefox and WebKit.
+On the matching official Playwright Noble image, all 66 applicable assertions
+pass. Four cases are explicitly excluded because Playwright native clipboard
+permissions and CDP IME injection are Chromium-only; equivalent cross-engine
+composition and rich-paste behavior remains covered. A separate CI job now
+installs and runs Firefox and WebKit so this evidence is repeated on the
+reviewed repository commit when the workflow executes.
 The additive, lazily loaded
 `createClassicEditor()` API now mounts Workspace, UI, Visual, and Source on a
 textarea or element, synchronizes native submit/reset behavior, supports
@@ -58,7 +66,7 @@ distribution, release, license, and security gates pass.
 The root Playground route now presents the complete CMS showcase directly,
 including visible tool icons, contextual production-table controls, 12
 interactive feature tours, and 12 capability summaries. The isolated native
-WYSIWYG engine now measures 2.211 MB raw / 649.18 kB gzip with 29.11 kB
+WYSIWYG engine now measures 2.214 MB raw / 649.71 kB gzip with 29.11 kB
 standalone CSS, against reviewed 2.25 MB / 665 kB / 31 kB release guards. The
 guard still requires the table-widget selector. The largest lazily loaded
 Playground chunk measures 1.062 MB against a reviewed 1.08 MB guard.
@@ -78,8 +86,9 @@ forced-colors, mouse, Shift+F10, focus, and teardown evidence is included.
 Phase 45 delivers per-instance English, Simplified Chinese, Traditional Chinese,
 and custom RTL resources; localized dynamic chrome and embedded keyboard help;
 44px mobile controls; isolated content direction; and composition-session
-history boundaries. Chromium desktop/mobile qualification passes. Firefox and
-WebKit launch are currently blocked by documented host runtime libraries.
+history boundaries. Chromium desktop/mobile qualification passes. The Rocky
+Linux development host still cannot launch Firefox/WebKit, while Phase 57 now
+passes their applicable automation in the supported Playwright Linux image.
 
 Phase 46 delivers a framework-neutral save workflow with exact
 canonical-source requests, opaque revision tokens, progress, manual save,
@@ -374,11 +383,11 @@ deliberate and documented under SemVer principles.
   Its hashes intentionally change with public declaration signatures and may
   also require review after TypeScript declaration-emitter or formatting
   changes. Experimental entries do not receive the stable 1.x promise.
-- Firefox and WebKit projects exist, but this host lacks the native runtime
-  libraries required to launch them. Their product assertions therefore remain
-  pending on a compatible host. Chrome/Edge support follows the qualified
-  Chromium platform; Safari support requires equivalent WebKit and manual
-  platform evidence.
+- Firefox and WebKit projects pass all 66 applicable direct WYSIWYG and focused
+  CMS assertions in the supported Playwright Linux image. The Rocky Linux host
+  still lacks their launch libraries, which is an environment limitation rather
+  than product evidence. Chrome/Edge support follows the qualified Chromium
+  platform; Safari support still requires real-platform manual evidence.
 - The immutable scoped `0.5.0` artifacts remain available from an incomplete
   publication attempt, but they are not the supported complete release set.
   npm rejected the former unscoped umbrella name `soeditor` as too similar to

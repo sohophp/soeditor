@@ -8,11 +8,11 @@ use an npm identity.
 
 1. Choose and commit exactly one approved `LICENSE`, `LICENSE.md`, or
    `LICENSE.txt`. Add the same approved npm `license` expression to the root
-   manifest and all 23 public package manifests. Confirm it with
+   manifest and all 24 public package manifests. Confirm it with
    `pnpm release:check-license`.
 2. Create the npm organization named `soeditor` on the public-package plan,
    which creates the `@soeditor` scope, and confirm the publishing identity is
-   an owner or member allowed to publish all 23 packages in it.
+   an owner or member allowed to publish all 24 packages in it.
 3. Create the protected GitHub `npm` environment and require reviewer approval.
 4. Configure an environment-scoped `NPM_TOKEN` using a granular npm token with
    read/write package access and **Bypass 2FA** enabled. The bypass setting is
@@ -51,7 +51,7 @@ remain compatible; additive compatible capability belongs in a minor release,
 and an unavoidable stable API break requires a new major version with migration
 guidance.
 
-All 23 public packages use an aligned version so consumers and support reports
+All 24 public packages use an aligned version so consumers and support reports
 can identify one tested release set. Add a Changeset for each user-visible
 patch, update `CHANGELOG.md`, and let the release change deliberately advance
 the package versions.
@@ -63,11 +63,12 @@ From a clean checkout using Node from `.nvmrc`:
 ```bash
 corepack enable
 pnpm install --frozen-lockfile
-pnpm exec playwright install chromium
+pnpm exec playwright install --with-deps chromium firefox webkit
 pnpm lint
 pnpm typecheck
 pnpm test:api
 pnpm test
+pnpm test:browser:cross
 pnpm build
 pnpm security:audit
 pnpm release:dry-run
@@ -124,6 +125,6 @@ This creates a clean Vite consumer from the public npm registry and checks the
 version-pinned jsDelivr JavaScript, CSS, source map, immutable global facade,
 and basic editor lifecycle in Chromium.
 
-This command uses the current 23-package 1.1 release manifest and deliberately
+This command uses the current 24-package 1.1 release manifest and deliberately
 does not claim to re-verify the historical 15-package 0.5 release set or the
 unpublished 0.6/0.7 candidates.

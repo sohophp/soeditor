@@ -73,6 +73,41 @@ async function clickTextBoundary(
                         ? candidate
                         : document.getSelection();
                 if (selection === null || !selection.isCollapsed) return -1;
+                let anchorNode = selection.anchorNode;
+                let anchorOffset = selection.anchorOffset;
+                if (
+                    root instanceof ShadowRoot &&
+                    !element.contains(anchorNode)
+                ) {
+                    const composedGetter: unknown = Reflect.get(
+                        selection,
+                        'getComposedRanges',
+                    );
+                    const ranges: unknown =
+                        typeof composedGetter === 'function'
+                            ? Reflect.apply(composedGetter, selection, [
+                                  { shadowRoots: [root] },
+                              ])
+                            : undefined;
+                    const range = Array.isArray(ranges) ? ranges[0] : undefined;
+                    if (typeof range === 'object' && range !== null) {
+                        const composedNode: unknown = Reflect.get(
+                            range,
+                            'startContainer',
+                        );
+                        const composedOffset: unknown = Reflect.get(
+                            range,
+                            'startOffset',
+                        );
+                        if (
+                            composedNode instanceof Node &&
+                            typeof composedOffset === 'number'
+                        ) {
+                            anchorNode = composedNode;
+                            anchorOffset = composedOffset;
+                        }
+                    }
+                }
                 const walker = document.createTreeWalker(
                     element,
                     NodeFilter.SHOW_TEXT,
@@ -84,8 +119,8 @@ async function clickTextBoundary(
                     node = walker.nextNode()
                 ) {
                     if (!(node instanceof Text)) continue;
-                    if (selection.anchorNode === node) {
-                        return resolved + selection.anchorOffset;
+                    if (anchorNode === node) {
+                        return resolved + anchorOffset;
                     }
                     resolved += node.data.length;
                 }
@@ -159,6 +194,105 @@ async function selectTextByPointer(
     await page.mouse.down();
     await page.mouse.move(destination.x, destination.y, { steps: 8 });
     await page.mouse.up();
+}
+
+async function selectionSnapshot(locator: Locator): Promise<{
+    readonly collapsed: boolean;
+    readonly inside: boolean;
+    readonly text: string;
+}> {
+    return locator.evaluate((element) => {
+        const root = element.getRootNode();
+        const rootGetter: unknown = Reflect.get(root, 'getSelection');
+        const candidate: unknown =
+            typeof rootGetter === 'function'
+                ? Reflect.apply(rootGetter, root, [])
+                : null;
+        const selection =
+            candidate instanceof Selection
+                ? candidate
+                : document.getSelection();
+        if (selection === null) {
+            return { collapsed: true, inside: false, text: '' };
+        }
+        let range: Range | undefined;
+        if (selection.rangeCount > 0) {
+            const direct = selection.getRangeAt(0);
+            if (
+                !(root instanceof ShadowRoot) ||
+                direct.commonAncestorContainer.getRootNode() === root
+            ) {
+                range = direct;
+            }
+        }
+        if (range === undefined && root instanceof ShadowRoot) {
+            const composedGetter: unknown = Reflect.get(
+                selection,
+                'getComposedRanges',
+            );
+            const ranges: unknown =
+                typeof composedGetter === 'function'
+                    ? Reflect.apply(composedGetter, selection, [
+                          { shadowRoots: [root] },
+                      ])
+                    : undefined;
+            const composed = Array.isArray(ranges) ? ranges[0] : undefined;
+            if (typeof composed === 'object' && composed !== null) {
+                const startContainer: unknown = Reflect.get(
+                    composed,
+                    'startContainer',
+                );
+                const endContainer: unknown = Reflect.get(
+                    composed,
+                    'endContainer',
+                );
+                const startOffset: unknown = Reflect.get(
+                    composed,
+                    'startOffset',
+                );
+                const endOffset: unknown = Reflect.get(composed, 'endOffset');
+                if (
+                    startContainer instanceof Node &&
+                    endContainer instanceof Node &&
+                    typeof startOffset === 'number' &&
+                    typeof endOffset === 'number'
+                ) {
+                    range = document.createRange();
+                    range.setStart(startContainer, startOffset);
+                    range.setEnd(endContainer, endOffset);
+                }
+            }
+        }
+        return {
+            collapsed: range?.collapsed ?? selection.isCollapsed,
+            inside:
+                range !== undefined &&
+                element.contains(range.startContainer) &&
+                element.contains(range.endContainer),
+            text: range?.toString() ?? selection.toString(),
+        };
+    });
+}
+
+async function selectElementText(locator: Locator): Promise<void> {
+    await locator.evaluate((element) => {
+        const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT);
+        const first = walker.nextNode();
+        let last = first;
+        for (
+            let node = walker.nextNode();
+            node !== null;
+            node = walker.nextNode()
+        ) {
+            last = node;
+        }
+        if (!(first instanceof Text) || !(last instanceof Text)) {
+            throw new Error('Element has no selectable text.');
+        }
+        document
+            .getSelection()
+            ?.setBaseAndExtent(first, 0, last, last.data.length);
+    });
 }
 
 test.beforeEach(async ({ page }) => {
@@ -326,17 +460,17 @@ test('supports forward and reverse drag selection and replacement in ordinary co
     const paragraph = surface.locator('#paragraph');
     await selectByPointer(paragraph, 0, 5);
     await expect
-        .poll(() => page.evaluate(() => getSelection()?.toString()))
+        .poll(() => selectionSnapshot(paragraph).then(({ text }) => text))
         .toBe('Alpha');
     await selectByPointer(paragraph, 5, 0);
     await expect
-        .poll(() => page.evaluate(() => getSelection()?.toString()))
+        .poll(() => selectionSnapshot(paragraph).then(({ text }) => text))
         .toBe('Alpha');
 
     const cell = surface.locator('#cell-selection');
     await selectByPointer(cell, 0, 9);
     await expect
-        .poll(() => page.evaluate(() => getSelection()?.toString()))
+        .poll(() => selectionSnapshot(cell).then(({ text }) => text))
         .toBe('Selection');
     await page.keyboard.type('Chosen');
     await expect(cell).toHaveText('Chosen');
@@ -369,7 +503,7 @@ test('extends selection by keyboard and restores content through undo and redo',
     await page.keyboard.press('ArrowLeft');
     await page.keyboard.up('Shift');
     await expect
-        .poll(() => page.evaluate(() => getSelection()?.toString()))
+        .poll(() => selectionSnapshot(paragraph).then(({ text }) => text))
         .toBe('ha');
     await page.keyboard.type('XY');
     await expect(paragraph).toContainText('AlpXY');
@@ -380,9 +514,14 @@ test('extends selection by keyboard and restores content through undo and redo',
 });
 
 test('copies, cuts, and pastes through the native WYSIWYG selection', async ({
+    browserName,
     context,
     page,
 }) => {
+    test.skip(
+        browserName !== 'chromium',
+        'Playwright clipboard permissions are Chromium-only.',
+    );
     await context.grantPermissions(['clipboard-read', 'clipboard-write']);
     const paragraph = page.locator('.soeditor-classic__visual #paragraph');
     const start = await textPoint(paragraph, 0);
@@ -409,7 +548,7 @@ test('keeps double/triple-click selection and toolbar range restoration inside o
     const wordPoint = await textPoint(cell, 4);
     await page.mouse.dblclick(wordPoint.x, wordPoint.y);
     await expect
-        .poll(() => page.evaluate(() => getSelection()?.toString()))
+        .poll(() => selectionSnapshot(cell).then(({ text }) => text))
         .toBe('Selection');
     await page.locator('[data-toolbar-item="bold"]').click();
     await expect(cell.locator('strong')).toHaveText('Selection');
@@ -434,7 +573,7 @@ test('keeps double/triple-click selection and toolbar range restoration inside o
     const triplePoint = await textPoint(cell, 4);
     await page.mouse.click(triplePoint.x, triplePoint.y, { clickCount: 3 });
     await expect
-        .poll(() => page.evaluate(() => getSelection()?.toString().trim()))
+        .poll(() => selectionSnapshot(cell).then(({ text }) => text.trim()))
         .toContain('Selection');
 });
 
@@ -464,8 +603,7 @@ test('uses native Enter, Shift+Enter, Backspace, and Delete paragraph behavior',
         '<p id="backspace-a">Alpha</p><p id="backspace-b">Beta</p>',
     );
     const backspaceTarget = surface.locator('#backspace-b');
-    await backspaceTarget.click({ position: { x: 8, y: 8 } });
-    await page.keyboard.press('Home');
+    await clickTextBoundary(page, backspaceTarget, 0);
     await page.keyboard.press('Backspace');
     await expect(surface.locator('p')).toHaveCount(1);
     await expect(surface.locator('p').first()).toContainText('AlphaBeta');
@@ -475,8 +613,7 @@ test('uses native Enter, Shift+Enter, Backspace, and Delete paragraph behavior',
         '<p id="delete-a">Alpha</p><p id="delete-b">Bravo</p>',
     );
     const first = surface.locator('#delete-a');
-    await first.click({ position: { x: 8, y: 8 } });
-    await page.keyboard.press('End');
+    await clickTextBoundary(page, first, 5);
     await page.keyboard.press('Delete');
     await expect(surface.locator('p')).toHaveCount(1);
     await expect(surface.locator('p')).toContainText('Bravo');
@@ -495,8 +632,13 @@ test('preserves emoji, combining text, Chinese composition, and RTL input', asyn
 });
 
 test('commits native Chinese IME text once and keeps the following Latin input', async ({
+    browserName,
     page,
 }) => {
+    test.skip(
+        browserName !== 'chromium',
+        'Input.imeSetComposition requires a Chromium CDP session.',
+    );
     await setFixtureData(page, '<p id="native-ime"><br></p>');
     const paragraph = page.locator('.soeditor-classic__visual #native-ime');
     await paragraph.click();
@@ -603,22 +745,9 @@ test('keeps caret placement usable in a narrow 150 percent zoom viewport', async
     await expect(cell).toHaveText('ReXady');
     await expect
         .poll(() =>
-            cell.evaluate((element) => {
-                const root = element.getRootNode();
-                const getter: unknown = Reflect.get(root, 'getSelection');
-                const candidate: unknown =
-                    typeof getter === 'function'
-                        ? Reflect.apply(getter, root, [])
-                        : null;
-                const selection =
-                    candidate instanceof Selection
-                        ? candidate
-                        : document.getSelection();
-                return (
-                    selection?.isCollapsed === true &&
-                    element.contains(selection.anchorNode)
-                );
-            }),
+            selectionSnapshot(cell).then(
+                ({ collapsed, inside }) => collapsed && inside,
+            ),
         )
         .toBe(true);
 });
@@ -668,7 +797,7 @@ test('applies every semantic inline mark through the same UI path in paragraphs,
         for (const [html, selector] of contexts) {
             await setFixtureData(page, html);
             const target = surface.locator(selector);
-            await target.selectText();
+            await selectElementText(target);
             await page.locator(`[data-toolbar-item="${toolbarItem}"]`).click();
             await expect(target.locator(tagName)).toHaveText('Target');
         }
@@ -687,9 +816,9 @@ test('applies color, background, font size, and remove-format consistently in bo
     for (const html of contexts) {
         await setFixtureData(page, html);
         let target = surface.locator('#style-target');
-        await target.selectText();
+        await selectElementText(target);
         await expect
-            .poll(() => page.evaluate(() => getSelection()?.toString()))
+            .poll(() => selectionSnapshot(target).then(({ text }) => text))
             .toBe('Target');
         const color = page.locator('[data-toolbar-item="fontColor"]');
         await color.locator('summary').click();
@@ -701,7 +830,7 @@ test('applies color, background, font size, and remove-format consistently in bo
 
         await setFixtureData(page, html);
         target = surface.locator('#style-target');
-        await target.selectText();
+        await selectElementText(target);
         const background = page.locator(
             '[data-toolbar-item="fontBackgroundColor"]',
         );
@@ -714,7 +843,7 @@ test('applies color, background, font size, and remove-format consistently in bo
 
         await setFixtureData(page, html);
         target = surface.locator('#style-target');
-        await target.selectText();
+        await selectElementText(target);
         const size = page.locator('[data-toolbar-item="fontSize"]');
         await size.locator('summary').click();
         await size.locator('[data-value="24px"]').click();
@@ -728,7 +857,7 @@ test('applies color, background, font size, and remove-format consistently in bo
         );
         await setFixtureData(page, styledHtml);
         target = surface.locator('#style-target');
-        await target.selectText();
+        await selectElementText(target);
         await page.locator('[data-toolbar-item="removeFormat"]').click();
         await expect(target).toHaveText('Target');
         await expect
@@ -827,7 +956,7 @@ test('applies block, alignment, rule, and nested-list keyboard commands in WYSIW
         ) {
             throw new Error('Missing multi-block heading fixture.');
         }
-        root.getSelection()?.setBaseAndExtent(start, 1, end, 8);
+        document.getSelection()?.setBaseAndExtent(start, 1, end, 8);
     });
     await page.locator('[data-toolbar-item="heading"] summary').click();
     await page.getByRole('button', { name: 'Heading 5' }).click();
@@ -939,37 +1068,11 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
     await clickTextBoundary(page, first, 2);
     await page.keyboard.press('Tab');
     await expect
-        .poll(() =>
-            second.evaluate((element) => {
-                const root = element.getRootNode();
-                const getter: unknown = Reflect.get(root, 'getSelection');
-                const selection: unknown =
-                    typeof getter === 'function'
-                        ? Reflect.apply(getter, root, [])
-                        : document.getSelection();
-                return (
-                    selection instanceof Selection &&
-                    element.contains(selection.anchorNode)
-                );
-            }),
-        )
+        .poll(() => selectionSnapshot(second).then(({ inside }) => inside))
         .toBe(true);
     await page.keyboard.press('Shift+Tab');
     await expect
-        .poll(() =>
-            first.evaluate((element) => {
-                const root = element.getRootNode();
-                const getter: unknown = Reflect.get(root, 'getSelection');
-                const selection: unknown =
-                    typeof getter === 'function'
-                        ? Reflect.apply(getter, root, [])
-                        : document.getSelection();
-                return (
-                    selection instanceof Selection &&
-                    element.contains(selection.anchorNode)
-                );
-            }),
-        )
+        .poll(() => selectionSnapshot(first).then(({ inside }) => inside))
         .toBe(true);
 
     await toolbar.getByRole('button', { name: 'Table properties' }).click();
@@ -1209,13 +1312,16 @@ test('pastes rich semantic content inside a cell as one history step', async ({
             '<strong> Bold</strong><a href="/safe"> link</a><img src="/paste.png" alt="Paste"><ul><li>Nested</li></ul>',
         );
         transfer.setData('text/plain', ' Bold link Nested');
-        target.dispatchEvent(
-            new ClipboardEvent('paste', {
-                bubbles: true,
-                cancelable: true,
-                clipboardData: transfer,
-            }),
-        );
+        const paste = new ClipboardEvent('paste', {
+            bubbles: true,
+            cancelable: true,
+            clipboardData: transfer,
+        });
+        Object.defineProperty(paste, 'clipboardData', {
+            configurable: true,
+            value: transfer,
+        });
+        target.dispatchEvent(paste);
     });
     await expect(cell.locator('strong')).toHaveText(' Bold');
     await expect(cell.locator('a[href="/safe"]')).toHaveText(' link');
@@ -1474,7 +1580,7 @@ test('inserts preset special characters at the live caret in every content posit
         ) {
             throw new Error('Missing immediate special-character fixture.');
         }
-        root.getSelection()?.setBaseAndExtent(text, 3, text, 3);
+        document.getSelection()?.setBaseAndExtent(text, 3, text, 3);
         summary.dispatchEvent(
             new PointerEvent('pointerdown', { bubbles: true, composed: true }),
         );

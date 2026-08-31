@@ -509,6 +509,17 @@ export class WysiwygEditingEngine implements EditingEngine {
             this.#executeHistory('editor.redo');
             return;
         }
+        if (
+            (event.inputType === 'deleteContentBackward' ||
+                event.inputType === 'deleteContentForward') &&
+            this.#mergeParagraphBoundary(
+                event.inputType === 'deleteContentBackward',
+            )
+        ) {
+            event.preventDefault();
+            this.#resetInputHistory();
+            return;
+        }
         this.#prepareInputHistory(event);
         if (
             this.#pendingMark !== undefined &&
@@ -783,6 +794,41 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.#inputGroup = undefined;
         this.#inputGroupKind = undefined;
         this.#pendingInputGroup = undefined;
+    }
+
+    #mergeParagraphBoundary(backward: boolean): boolean {
+        const range = this.#range();
+        if (range === undefined || !range.collapsed) return false;
+        const block = closestElement(range.startContainer, 'p');
+        if (block === undefined || block.parentElement !== this.element) {
+            return false;
+        }
+        const boundary = this.#document.createRange();
+        boundary.selectNodeContents(block);
+        if (backward) {
+            boundary.setEnd(range.startContainer, range.startOffset);
+        } else {
+            boundary.setStart(range.startContainer, range.startOffset);
+        }
+        if (boundary.toString().length !== 0) return false;
+        const adjacent = backward
+            ? block.previousElementSibling
+            : block.nextElementSibling;
+        if (!(adjacent instanceof HTMLParagraphElement)) return false;
+        const target = backward ? adjacent : block;
+        const removed = backward ? block : adjacent;
+        const joinOffset = target.textContent?.length ?? 0;
+        this.#mutate(() => {
+            target.append(...Array.from(removed.childNodes));
+            removed.remove();
+            const point = resolveTextPoint(target, joinOffset);
+            if (point === undefined) return rangeAtEnd(this.#document, target);
+            const joined = this.#document.createRange();
+            joined.setStart(point.node, point.offset);
+            joined.collapse(true);
+            return joined;
+        });
+        return true;
     }
 
     #activateCell(cell: HTMLTableCellElement, extend = false): void {
@@ -1202,24 +1248,19 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     #range(): Range | undefined {
-        const selection = selectionFor(this.element, this.#document);
-        if (selection !== null) {
-            const range = safeSelectionRange(selection, this.#document);
-            if (
-                range !== undefined &&
-                this.element.contains(range.commonAncestorContainer)
-            ) {
-                this.#savedRange = range.cloneRange();
-                return range;
-            }
+        const range = selectionRangeFor(this.element, this.#document);
+        if (
+            range !== undefined &&
+            this.element.contains(range.commonAncestorContainer)
+        ) {
+            this.#savedRange = range.cloneRange();
+            return range;
         }
         return this.#savedRange?.cloneRange();
     }
 
     #captureRange(): void {
-        const selection = selectionFor(this.element, this.#document);
-        if (selection === null) return;
-        const range = safeSelectionRange(selection, this.#document);
+        const range = selectionRangeFor(this.element, this.#document);
         if (range === undefined) return;
         if (!this.element.contains(range.commonAncestorContainer)) return;
         this.#savedRange = range.cloneRange();
@@ -1241,8 +1282,12 @@ export class WysiwygEditingEngine implements EditingEngine {
 
     #selectRange(range: Range): void {
         const selection = selectionFor(this.element, this.#document);
-        selection?.removeAllRanges();
-        selection?.addRange(range);
+        selection?.setBaseAndExtent(
+            range.startContainer,
+            range.startOffset,
+            range.endContainer,
+            range.endOffset,
+        );
         this.#savedRange = range.cloneRange();
     }
 
@@ -2246,6 +2291,56 @@ function selectionFor(
         }
     }
     return document.getSelection();
+}
+
+function selectionRangeFor(
+    element: HTMLElement,
+    document: Document,
+): Range | undefined {
+    const selection = selectionFor(element, document);
+    if (selection === null) return undefined;
+    const direct = safeSelectionRange(selection, document);
+    if (
+        direct !== undefined &&
+        element.contains(direct.commonAncestorContainer)
+    ) {
+        return direct;
+    }
+    const root = element.getRootNode();
+    if (!(root instanceof ShadowRoot)) return direct;
+    const getter: unknown = Reflect.get(selection, 'getComposedRanges');
+    if (typeof getter !== 'function') return direct;
+    let ranges: unknown;
+    try {
+        ranges = Reflect.apply(getter, selection, [{ shadowRoots: [root] }]);
+    } catch {
+        return direct;
+    }
+    if (!Array.isArray(ranges) || ranges.length === 0) return direct;
+    const candidate: unknown = ranges[0];
+    if (typeof candidate !== 'object' || candidate === null) return direct;
+    const startContainer: unknown = Reflect.get(candidate, 'startContainer');
+    const endContainer: unknown = Reflect.get(candidate, 'endContainer');
+    const startOffset: unknown = Reflect.get(candidate, 'startOffset');
+    const endOffset: unknown = Reflect.get(candidate, 'endOffset');
+    const NodeConstructor = document.defaultView?.Node;
+    if (
+        NodeConstructor === undefined ||
+        !(startContainer instanceof NodeConstructor) ||
+        !(endContainer instanceof NodeConstructor) ||
+        typeof startOffset !== 'number' ||
+        typeof endOffset !== 'number'
+    ) {
+        return direct;
+    }
+    const range = document.createRange();
+    try {
+        range.setStart(startContainer, startOffset);
+        range.setEnd(endContainer, endOffset);
+        return range;
+    } catch {
+        return direct;
+    }
 }
 
 function safeSelectionRange(

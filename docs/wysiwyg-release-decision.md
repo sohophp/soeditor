@@ -4,8 +4,9 @@
 
 The Phase 49–56 implementation program is complete. The local `1.1.0`
 candidate is **GO for continued integration and Chromium-based CMS evaluation**
-and **NO-GO for production publication** until Firefox and WebKit/Safari
-qualification can run on a compatible host.
+and **NO-GO for production publication** until the new Firefox/WebKit CI gate
+passes on the reviewed commit and real Safari/manual assistive-technology
+qualification is signed off.
 
 No package was published, tagged, or deployed by this program.
 
@@ -32,6 +33,8 @@ and High product defects in the executed Chromium qualification are zero.
 - lint, strict TypeScript, all unit suites, and documentation audit;
 - 199/199 Chromium browser scenarios;
 - 6/6 focused Chromium desktop/mobile CMS scenarios;
+- 66/66 applicable Firefox/WebKit focused CMS and direct WYSIWYG scenarios in
+  the matching official Playwright Linux image;
 - direct axe WCAG A/AA WYSIWYG scan and existing UI accessibility corpus;
 - integration performance and explicit-GC memory budgets;
 - all 24 public package API reports and production builds;
@@ -41,10 +44,10 @@ and High product defects in the executed Chromium qualification are zero.
 - dependency audit with no known vulnerabilities.
 
 The largest Playground-only chunk remains the lazily loaded Preview/CodeMirror
-path at about 1.062 MB raw. The editor global is about 2.211 MB raw / 649.18 kB
+path at about 1.062 MB raw. The editor global is about 2.214 MB raw / 649.71 kB
 gzip. These are recorded budgets, not regressions hidden as failures.
 
-## External qualification blocker
+## Cross-browser qualification
 
 The complete 12-run CMS matrix was attempted again on 2026-08-31:
 
@@ -56,10 +59,16 @@ The complete 12-run CMS matrix was attempted again on 2026-08-31:
   reported GTK 4, Vulkan, Graphene, Event, Flite, AVIF, JPEG, and Manette
   runtime libraries.
 
-These are environment blockers, not passing results and not observed SoEditor
-failures. Publication should remain blocked until the same focused CMS journey
-and the direct WYSIWYG selection/table corpus pass Firefox and WebKit/Safari on
-a supported runner.
+These remain environment blockers on the Rocky Linux workstation, not passing
+results and not observed SoEditor failures. Phase 57 reran the focused CMS and
+direct WYSIWYG corpora in the matching official Playwright Noble image: all 66
+applicable Firefox/WebKit assertions passed. Four cases are explicitly skipped
+because native clipboard permissions and CDP IME injection are Chromium-only;
+cross-engine composition and synthetic rich-paste paths still pass.
+
+The repository now has an independent Firefox/WebKit CI job. Publication stays
+blocked until that job passes on the reviewed commit and real Safari plus the
+documented manual assistive-technology checks are completed.
 
 ## Accepted non-P0 follow-up
 

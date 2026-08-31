@@ -195,6 +195,8 @@ export interface EditorUi {
     setIcon(element: HTMLElement, id: string, fallback: string): void;
     /** Re-evaluates mounted toolbar items and the status projection. */
     refresh(): void;
+    /** Reads plain text from the latest selection captured in an editing surface. */
+    getEditingSelectionText(): string;
     /** Restores the latest selection captured inside an owned editing surface. */
     restoreEditingSelection(): boolean;
     setToolbarExpanded(expanded: boolean): void;

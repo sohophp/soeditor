@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Added Firefox and WebKit WYSIWYG qualification in CI and fixed composed
+  Shadow DOM selection, programmatic range restoration, deterministic paragraph
+  boundary deletion, cross-engine word counts, and synthetic rich-paste input.
 - Established a standalone WYSIWYG HTML editor specification, conservative
   capability requalification matrix, and Phase 49–56 completion roadmap that
   keeps author-facing WYSIWYG behavior independent from Developer Visual and

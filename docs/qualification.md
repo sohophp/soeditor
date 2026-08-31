@@ -16,7 +16,7 @@ technology, security, or performance certification.
 | Comments/revisions/review | `comments.spec.ts`, `revisions.spec.ts`, governance adapters                         |
 | Workspace recovery        | `workspace.spec.ts` and 14 focused Workspace unit tests                              |
 | React and Vue             | SSR unit tests and `framework-adapters.spec.ts` real-browser lifecycle               |
-| ESM/NodeNext/Vite/CDN     | packed 23-package consumer, narrow tree-shaking, browser global smoke                |
+| ESM/NodeNext/Vite/CDN     | packed 24-package consumer, narrow tree-shaking, browser global smoke                |
 | CMS Classic acceptance    | `cms-multibrowser.spec.ts` continuous authoring/save/security/teardown journey       |
 
 The scenarios use public package roots. Source, Markdown, Preview, framework,
@@ -47,17 +47,15 @@ Phase 48 adds one uninterrupted public-path browser scenario that proves:
 
 The repository now contains 199 Chromium scenarios. The focused CMS project
 runs all three CMS scenarios on Chromium desktop and mobile (six passing runs).
-The full 12-run matrix was also attempted. Firefox exits before page creation
-because the host `/lib64/libstdc++.so.6` lacks `GLIBCXX_3.4.26`; WebKit reports
-missing GTK 4, Vulkan, Graphene, Event, Flite, AVIF, JPEG, and Manette runtime
-libraries. These are reproducible environment gaps, not skipped or passing
-product assertions. Firefox/Safari product qualification remains pending on a
-compatible browser host.
-
-The Phase 50 WYSIWYG selection corpus independently reconfirmed the same launch
-limitations: Firefox cannot load `libmozsandbox.so` because
-`GLIBCXX_3.4.26` is unavailable, and WebKit reports the documented missing
-runtime-library set before any WYSIWYG assertion runs.
+The original full-matrix attempt could not launch Firefox or WebKit on the
+Rocky Linux development host because its C++ and desktop runtime libraries are
+too old. Phase 57 therefore reruns the focused CMS and complete direct WYSIWYG
+corpora in the matching official Playwright Noble image. All 66 applicable
+Firefox/WebKit assertions pass. Four browser-tool-specific cases are explicitly
+skipped: native clipboard permissions and CDP IME injection are Chromium-only;
+equivalent cross-engine composition and synthetic rich-paste paths still run.
+The independent CI job is configured to repeat this gate on a supported Ubuntu
+runner.
 
 ## Accessibility
 
@@ -108,6 +106,7 @@ pnpm install --frozen-lockfile
 pnpm lint
 pnpm typecheck
 pnpm test
+pnpm test:browser:cross
 pnpm build
 pnpm release:check-license
 pnpm security:audit

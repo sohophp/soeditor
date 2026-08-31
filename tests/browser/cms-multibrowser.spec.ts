@@ -205,13 +205,16 @@ test('completes the canonical CMS authoring, submit, security, and teardown jour
             '<h2 style="mso-x:1" onclick="run()">Office heading</h2><p><b>Office bold</b></p><script>run()</script>',
         );
         transfer.setData('text/plain', 'Office heading\nOffice bold');
-        host.dispatchEvent(
-            new ClipboardEvent('paste', {
-                bubbles: true,
-                cancelable: true,
-                clipboardData: transfer,
-            }),
-        );
+        const paste = new ClipboardEvent('paste', {
+            bubbles: true,
+            cancelable: true,
+            clipboardData: transfer,
+        });
+        Object.defineProperty(paste, 'clipboardData', {
+            configurable: true,
+            value: transfer,
+        });
+        host.dispatchEvent(paste);
     });
     const afterPaste = await page.evaluate(() =>
         globalThis.__classicDemo.getData(),

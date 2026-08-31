@@ -316,7 +316,7 @@ Declaration SHA-256:
 | `EditorSaveSuccess`                                   | type       | experimental   | `73935987b399a7c2` |
 | `EditorSaveWorkflow`                                  | type       | experimental   | `c804bed752ba43f8` |
 | `EditorState`                                         | type       | stable         | `5e50c65a795e772b` |
-| `EditorUi`                                            | type       | stable         | `d7a34f67cd8814ab` |
+| `EditorUi`                                            | type       | stable         | `ec40029a325686b2` |
 | `EditorUiAlreadyAttachedError`                        | type/value | stable         | `ff4fec646d257bce` |
 | `EditorUiDestroyedError`                              | type/value | stable         | `f36fc578d3ef1450` |
 | `EditorUiDirection`                                   | type       | experimental   | `4a9f02de07873b7b` |
@@ -1006,7 +1006,7 @@ Declaration SHA-256:
 | `Editor`                                              | type/value | stable         | `c08a94ea5df13778` |
 | `EditorEvents`                                        | type       | stable         | `a3eefcfe4f0ffaa7` |
 | `EditorState`                                         | type       | stable         | `5e50c65a795e772b` |
-| `EditorUi`                                            | type       | stable         | `d7a34f67cd8814ab` |
+| `EditorUi`                                            | type       | stable         | `ec40029a325686b2` |
 | `EditorUiDirection`                                   | type       | experimental   | `4a9f02de07873b7b` |
 | `EditorUiIconResource`                                | type       | experimental   | `c70444b8bfdd9c49` |
 | `EditorUiTheme`                                       | type       | stable         | `edd668b911e22704` |
@@ -1431,7 +1431,7 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`927ed623233e2608979a417309eb83d110ec06c4712b800aeed39d457eda0e61`
+`3f9c322f3eebd222c84e5ea4deb7ecc7f73edf40e01a0d63bc72b7c0ceb3d4c8`
 
 ### .
 
@@ -1453,7 +1453,7 @@ Declaration SHA-256:
 | `DialogOptions`                        | type       | stable         | `1da46417d28bf824` |
 | `DialogService`                        | type       | stable         | `a73020dcd4c251eb` |
 | `DismissibleUiHandle`                  | type       | stable         | `e5c208df79f7ccfb` |
-| `EditorUi`                             | type       | stable         | `d7a34f67cd8814ab` |
+| `EditorUi`                             | type       | stable         | `ec40029a325686b2` |
 | `EditorUiAlreadyAttachedError`         | type/value | stable         | `ff4fec646d257bce` |
 | `EditorUiDestroyedError`               | type/value | stable         | `f36fc578d3ef1450` |
 | `EditorUiDirection`                    | type       | experimental   | `4a9f02de07873b7b` |

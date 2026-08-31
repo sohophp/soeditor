@@ -1,5 +1,12 @@
 # @soeditor/editor
 
+## Unreleased
+
+### Patch Changes
+
+- Preserve programmatically selected link ranges across Shadow DOM boundaries
+  before opening the command-backed link editor.
+
 ## 1.1.0
 
 ### Minor Changes

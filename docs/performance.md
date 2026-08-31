@@ -105,7 +105,7 @@ CSS. They remain inside the reviewed 1.54 MB / 490 kB / 25 kB guards, so this
 pass does not expand a release budget.
 
 The completed CMS/WYSIWYG feature set and isolated native-browser authoring
-surface currently measure 2.211 MB / 649.18 kB with 29.11 kB standalone CSS.
+surface currently measure 2.214 MB / 649.71 kB with 29.11 kB standalone CSS.
 After reviewing that feature-owned increase, the full-global guards move to
 2.25 MB / 665 kB and the CSS guard moves to 31 kB. The minimal preset's narrow
 Vite consumer now measures

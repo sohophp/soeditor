@@ -20,6 +20,10 @@ Phase 49 established the first direct fixture at
 `apps/playground/wysiwyg.html` and its dedicated browser evidence in
 `tests/browser/wysiwyg-editor.spec.ts`. A feature remains `In progress` until
 the complete row contract, rather than only the fixture baseline, is proven.
+Phase 57 repeats the direct corpus and focused CMS journeys in Firefox and
+WebKit: all 66 applicable assertions pass in the supported Playwright Linux
+image, with four Chromium-tool-specific clipboard/CDP cases explicitly excluded
+and covered through equivalent cross-engine paths.
 
 ## Ownership map
 

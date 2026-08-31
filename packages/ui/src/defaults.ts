@@ -242,7 +242,7 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
             typeof current === 'object' && current !== null
                 ? (current as Record<string, unknown>)
                 : {};
-        const selectedText = document.getSelection()?.toString() ?? '';
+        const selectedText = ui.getEditingSelectionText();
         const editingExisting = typeof values.href === 'string';
         const body = document.createElement('div');
         const displayed = field(

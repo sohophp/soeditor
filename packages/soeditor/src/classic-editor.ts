@@ -1717,8 +1717,13 @@ function attachClassicLinkContext(
         const range = document.createRange();
         range.selectNodeContents(link);
         const selection = document.getSelection();
-        selection?.removeAllRanges();
-        selection?.addRange(range);
+        selection?.setBaseAndExtent(
+            range.startContainer,
+            range.startOffset,
+            range.endContainer,
+            range.endOffset,
+        );
+        document.dispatchEvent(new Event('selectionchange'));
     };
     const report = (error: unknown): void => {
         ui.notifications.show({
