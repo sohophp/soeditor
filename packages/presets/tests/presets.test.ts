@@ -30,18 +30,31 @@ describe('editor presets', () => {
         expect(markdownPreset.format).toBe('markdown');
         expect(cmsPreset.toolbar).toEqual(
             expect.arrayContaining([
-                'source',
-                'sourceFind',
-                'format',
-                'preview',
+                'heading',
+                'link',
+                'image-actions',
+                'table',
             ]),
         );
-        expect(cmsPreset.plugins.map((plugin) => plugin.id)).toEqual(
+        expect(cmsPreset.toolbar).not.toEqual(
             expect.arrayContaining([
+                'source',
+                'preview',
+                'video',
+                'emailAnalyze',
+            ]),
+        );
+        const cmsPluginIds = cmsPreset.plugins.map((plugin) => plugin.id);
+        expect(cmsPluginIds).toContain('projection-coordinator');
+        expect(cmsPluginIds).not.toEqual(
+            expect.arrayContaining([
+                'email-content',
                 'html-diagnostics',
                 'html-formatting',
+                'media',
                 'preview',
-                'projection-coordinator',
+                'source-editing',
+                'video',
             ]),
         );
         expect(narrowMinimalPreset).toBe(minimalPreset);

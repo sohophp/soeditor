@@ -314,15 +314,7 @@ test('mounts WYSIWYG without enabling Developer Visual', async ({ page }) => {
     ).toHaveCount(0);
     await expect(
         page.locator('[data-classic-action="workspace-view"] option'),
-    ).toHaveText([
-        'WYSIWYG',
-        'Source',
-        'WYSIWYG + Source',
-        'WYSIWYG + Preview',
-        'Source + Preview',
-        'WYSIWYG + Source + Preview',
-        'Preview',
-    ]);
+    ).toHaveText(['WYSIWYG', 'Source']);
 });
 
 test('renders the direct semantic fixture and preserves unsupported HTML', async ({
@@ -1266,33 +1258,53 @@ test('uses one image menu for URL, file manager, and computer upload', async ({
         .toContain('/uploads/qualification%20upload.png');
 });
 
-test('edits inserted images and videos by double click in WYSIWYG', async ({
+test('completes image properties by double click in WYSIWYG', async ({
     page,
 }) => {
     const surface = page.locator('.soeditor-classic__visual');
     await setFixtureData(
         page,
-        '<p><img src="/before.png" alt="Before"></p><video src="/before.mp4" title="Before video"></video>',
+        '<p><img src="/before.png" alt="Before" width="200" height="100"></p>',
     );
     await surface.locator('img').dblclick();
-    let dialog = page.getByRole('dialog', { name: 'Image properties' });
+    const dialog = page.getByRole('dialog', { name: 'Image properties' });
     await dialog.getByLabel('Alternative text').fill('After image');
     await dialog.getByLabel('Width').fill('420');
+    await dialog.getByLabel('Caption').fill('CMS image caption');
+    await dialog.getByLabel('Link URL').fill('/image-details');
+    await dialog.getByLabel('Responsive CSS classes').fill('responsive-image');
+    await dialog
+        .getByLabel('Responsive sources')
+        .fill('/before.png 1x, /before@2x.png 2x');
+    await dialog
+        .getByLabel('Responsive sizes')
+        .fill('(max-width: 600px) 100vw, 420px');
+    await dialog.getByLabel('Alignment').selectOption('center');
+    await dialog.getByLabel('Lock aspect ratio').check();
     await dialog.getByRole('button', { name: 'Update image' }).click();
     await expect(surface.locator('img')).toHaveAttribute('alt', 'After image');
     await expect(surface.locator('img')).toHaveAttribute('width', '420');
-
-    const video = surface.locator('video');
-    await video.dblclick({ position: { x: 2, y: 2 } });
-    dialog = page.getByRole('dialog', { name: 'Video properties' });
-    await expect(dialog.getByLabel('Video URL')).toHaveValue('/before.mp4');
-    await dialog.getByLabel('Video URL').fill('/after.mp4');
-    await dialog.getByLabel('Poster URL').fill('/poster.png');
-    await dialog.getByLabel('Title').fill('After video');
-    await dialog.getByRole('button', { name: 'Update video' }).click();
-    await expect(video).toHaveAttribute('src', '/after.mp4');
-    await expect(video).toHaveAttribute('poster', '/poster.png');
-    await expect(video).toHaveAttribute('title', 'After video');
+    await expect(surface.locator('img')).toHaveAttribute('height', '210');
+    await expect(surface.locator('img')).toHaveAttribute(
+        'class',
+        'responsive-image',
+    );
+    await expect(surface.locator('figure')).toHaveAttribute(
+        'data-align',
+        'center',
+    );
+    await expect(surface.locator('figure')).toHaveAttribute(
+        'data-aspect-lock',
+        'true',
+    );
+    await expect(surface.locator('figcaption')).toHaveText('CMS image caption');
+    await expect(surface.locator('a')).toHaveAttribute(
+        'href',
+        '/image-details',
+    );
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(surface.locator('figure')).toHaveCount(0);
+    await expect(surface.locator('img')).toHaveAttribute('alt', 'Before');
 });
 
 test('pastes rich semantic content inside a cell as one history step', async ({
@@ -1335,21 +1347,10 @@ test('pastes rich semantic content inside a cell as one history step', async ({
     await expect(surface.locator('td').nth(1)).toHaveText('Keep');
 });
 
-test('presents all seven explicit WYSIWYG, Source, and Preview layouts', async ({
-    page,
-}) => {
+test('switches between one WYSIWYG or Source writer', async ({ page }) => {
     const editor = page.locator('.soeditor-classic');
     const view = editor.getByLabel('Editing view');
-    const layouts = [
-        ['wysiwyg', 'wysiwyg', 1],
-        ['source', 'source', 1],
-        ['wysiwyg-source', 'wysiwyg source', 2],
-        ['wysiwyg-preview', 'wysiwyg preview', 2],
-        ['source-preview', 'source preview', 2],
-        ['wysiwyg-source-preview', 'wysiwyg source preview', 3],
-        ['preview', 'preview', 1],
-    ] as const;
-    for (const [value, projections, panes] of layouts) {
+    for (const value of ['wysiwyg', 'source'] as const) {
         await view.selectOption(value);
         await expect(editor).toHaveAttribute(
             'data-soeditor-workspace-view',
@@ -1357,87 +1358,34 @@ test('presents all seven explicit WYSIWYG, Source, and Preview layouts', async (
         );
         await expect(editor).toHaveAttribute(
             'data-soeditor-projections',
-            projections,
+            value,
         );
-        await expect(editor).toHaveAttribute(
-            'data-soeditor-pane-count',
-            String(panes),
-        );
+        await expect(editor).toHaveAttribute('data-soeditor-pane-count', '1');
     }
 
-    await view.selectOption('wysiwyg-source');
     const toggle = editor.locator('[data-toolbar-item="source"]');
     await editor.locator('.soeditor-classic__source .cm-content').click();
     await expect(toggle).toHaveAttribute('data-switch-target', 'wysiwyg');
-    await editor.locator('.soeditor-classic__visual h1').dblclick();
+    await toggle.click();
+    await editor.locator('.soeditor-classic__visual h1').click();
     await expect(toggle).toHaveAttribute('data-switch-target', 'source');
-
-    await view.selectOption('preview');
-    const frame = editor.locator('iframe').contentFrame();
-    await expect(frame.getByText('Direct WYSIWYG preview')).toBeVisible();
     await editor.locator('[data-classic-action="maximize"]').click();
     await expect(editor).toHaveClass(/is-maximized/u);
-    await expect(editor.locator('.soeditor-classic__preview')).toBeVisible();
 });
 
-test('formats and minifies only Source while preserving inert unsupported HTML', async ({
+test('keeps document formatting tools out of the CMS editing surface', async ({
     page,
 }) => {
     const editor = page.locator('.soeditor-classic');
-    await setFixtureData(
-        page,
-        '<main><h1>Source</h1><p>Text <strong>bold</strong></p><!--marker--><product-card data-id="7"></product-card><script>parent.__unsafeExecuted=true</script></main>',
-    );
     await editor.getByLabel('Editing view').selectOption('source');
-    const format = editor.locator('[data-toolbar-item="format"]');
-    const minify = editor.locator('[data-toolbar-item="minify"]');
-    await expect(format).toBeVisible();
-    await expect(minify).toBeVisible();
-    await format.click();
-    const readData = () =>
-        page.evaluate(() => {
-            const fixture = Reflect.get(globalThis, '__wysiwygFixture') as {
-                getData(): string;
-            };
-            return fixture.getData();
-        });
-    await expect.poll(readData).toContain('\n');
-    const formatted = await readData();
-    expect(formatted).toContain('\n');
-    expect(formatted).not.toMatch(/\r?\n[ \t]*>/u);
-    expect(formatted).toContain('<!--marker-->');
-    expect(formatted).toContain('<product-card data-id="7">');
-
-    await editor.getByLabel('Editing view').selectOption('preview');
+    await expect(editor.locator('[data-toolbar-item="format"]')).toHaveCount(0);
+    await expect(editor.locator('[data-toolbar-item="minify"]')).toHaveCount(0);
     await expect(
-        editor.locator('iframe').contentFrame().getByRole('heading', {
-            name: 'Source',
-        }),
-    ).toBeVisible();
-    expect(
-        await page.evaluate(() => Reflect.get(globalThis, '__unsafeExecuted')),
-    ).toBeUndefined();
-
-    await editor.getByLabel('Editing view').selectOption('source');
-    await setFixtureData(
-        page,
-        '<main>\n  <h1>Compact</h1>\n  <p>HTML</p>\n</main>',
-    );
-    await expect(minify).toBeEnabled();
-    await page.evaluate(async () => {
-        const fixture = Reflect.get(globalThis, '__wysiwygFixture') as {
-            editor: { editor: { execute(command: string): unknown } };
-        };
-        await fixture.editor.editor.execute('document.minify');
-    });
-    await expect
-        .poll(readData)
-        .toBe('<main><h1>Compact</h1><p>HTML</p></main>');
-    const minified = await readData();
-    expect(minified).toBe('<main><h1>Compact</h1><p>HTML</p></main>');
+        editor.locator('[data-toolbar-item="sourceFind"]'),
+    ).toHaveCount(0);
 });
 
-test('reports document counts, switches isolated styles, and inserts a preset character', async ({
+test('reports document counts, uses neutral styles, and inserts a preset character', async ({
     page,
 }) => {
     const editor = page.locator('.soeditor-classic');
@@ -1448,19 +1396,7 @@ test('reports document counts, switches isolated styles, and inserts a preset ch
     await expect(status).toHaveAttribute('data-characters', '8');
     await expect(status).toHaveAttribute('data-source-characters', '33');
 
-    const styles = editor.getByLabel('Content style');
-    await expect(styles.locator('option')).toHaveText([
-        'Browser default',
-        'Minimal',
-        'Article',
-        'Email',
-    ]);
-    await styles.selectOption('article');
-    await expect(surface).toHaveAttribute(
-        'data-soeditor-content-style',
-        'article',
-    );
-    await styles.selectOption('browser');
+    await expect(editor.getByLabel('Content style')).toHaveCount(0);
     await expect(surface).toHaveAttribute(
         'data-soeditor-content-style',
         'browser',

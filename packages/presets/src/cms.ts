@@ -1,6 +1,5 @@
 import { HistoryPlugin, PastePipelinePlugin } from '@soeditor/engine';
 import { FileManagerPlugin, UploadPlugin } from '@soeditor/file-manager';
-import { DiagnosticsPlugin, HtmlFormattingPlugin } from '@soeditor/html-tools';
 import {
     AlignmentPlugin,
     BlockquotePlugin,
@@ -10,7 +9,6 @@ import {
     CmsPastePlugin,
     HtmlCleanupPlugin,
     HeadingPlugin,
-    EmailContentPlugin,
     FontPlugin,
     HorizontalRulePlugin,
     ImagePlugin,
@@ -19,7 +17,6 @@ import {
     ItalicPlugin,
     LinkPlugin,
     ListPropertiesPlugin,
-    MediaPlugin,
     OrderedListPlugin,
     ParagraphPlugin,
     RemoveFormatPlugin,
@@ -30,11 +27,8 @@ import {
     TablePlugin,
     UnderlinePlugin,
     UnorderedListPlugin,
-    VideoPlugin,
 } from '@soeditor/rich-text';
-import { SourceEditingPlugin } from '@soeditor/source';
 import { UiPlugin } from '@soeditor/ui';
-import { PreviewPlugin } from '@soeditor/preview';
 import { ProjectionCoordinatorPlugin } from '@soeditor/projections';
 
 import { createPreset } from './create-preset.js';
@@ -45,12 +39,9 @@ export const cmsPreset = createPreset(
     [
         HistoryPlugin,
         ProjectionCoordinatorPlugin,
-        DiagnosticsPlugin,
-        HtmlFormattingPlugin,
         PastePipelinePlugin,
         CmsPastePlugin,
         HtmlCleanupPlugin,
-        EmailContentPlugin,
         ParagraphPlugin,
         HeadingPlugin,
         BoldPlugin,
@@ -74,11 +65,7 @@ export const cmsPreset = createPreset(
         InlineCodePlugin,
         CodeBlockPlugin,
         ImagePlugin,
-        MediaPlugin,
-        VideoPlugin,
         TablePlugin,
-        SourceEditingPlugin,
-        PreviewPlugin,
         UiPlugin,
         FileManagerPlugin,
         UploadPlugin,
@@ -120,20 +107,8 @@ export const cmsPreset = createPreset(
         'specialCharacter',
         'anchor',
         'placeholder',
-        'embed',
         '|',
         'image-actions',
-        'media',
-        'video',
         'table',
-        '|',
-        'source',
-        'sourceFind',
-        'format',
-        'minify',
-        'cleanHtml',
-        'emailAnalyze',
-        'emailOptimize',
-        'preview',
     ],
 );

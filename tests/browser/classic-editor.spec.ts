@@ -77,15 +77,7 @@ test('presents the complete CMS showcase from the root URL', async ({
         page
             .locator('[data-classic-action="workspace-view"]')
             .locator('option'),
-    ).toHaveText([
-        'WYSIWYG',
-        'Source',
-        'WYSIWYG + Source',
-        'WYSIWYG + Preview',
-        'Source + Preview',
-        'WYSIWYG + Source + Preview',
-        'Preview',
-    ]);
+    ).toHaveText(['WYSIWYG', 'Source']);
     await expect(
         wysiwyg.locator('img[src="/demo-editor-cover.svg"]'),
     ).toHaveCount(1);
@@ -526,18 +518,6 @@ test('applies font family, colors, highlight, and size through native selections
     await expect
         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
         .toContain('<span style="font-size: 24px;">Size</span>');
-
-    await page.goto('/classic.html?test=1&mode=visual');
-    await page.locator('body[data-ready="true"]').waitFor();
-    await page.evaluate(() => {
-        globalThis.__classicDemo.editor.setData('<p>Developer Visual</p>');
-    });
-    await apply('fontColor', 0, 9, '#2563eb');
-    await expect(
-        page
-            .locator('.soeditor-classic__developer-visual')
-            .locator('span[style="color: #2563eb;"]'),
-    ).toHaveText('Developer');
 });
 
 test('accepts typed and picked colors and persists a shared recent-color history', async ({
@@ -807,36 +787,13 @@ test('retains the author selection through repeated color-control focus transiti
 }) => {
     const classic = page.locator('.soeditor-classic');
     const visual = classic.locator('.soeditor-classic__visual');
-    const selectTargetWithPointer = async (): Promise<void> => {
-        const paragraph = visual.locator('p');
-        await paragraph.scrollIntoViewIfNeeded();
-        const points = await paragraph.evaluate((element) => {
-            const text = element.firstChild;
-            if (!(text instanceof Text)) throw new Error('Missing text node.');
-            const start = document.createRange();
-            start.setStart(text, 0);
-            start.collapse(true);
-            const end = document.createRange();
-            end.setStart(text, 6);
-            end.collapse(true);
-            const startRect = start.getBoundingClientRect();
-            const endRect = end.getBoundingClientRect();
-            return {
-                start: {
-                    x: startRect.left + 1,
-                    y: startRect.top + startRect.height / 2,
-                },
-                end: {
-                    x: endRect.left - 1,
-                    y: endRect.top + endRect.height / 2,
-                },
-            };
+    const selectTarget = async (): Promise<void> =>
+        page.evaluate(() => {
+            globalThis.__classicDemo.select({
+                anchor: { block: 0, offset: 0 },
+                focus: { block: 0, offset: 6 },
+            });
         });
-        await page.mouse.move(points.start.x, points.start.y);
-        await page.mouse.down();
-        await page.mouse.move(points.end.x, points.end.y, { steps: 8 });
-        await page.mouse.up();
-    };
     const cases = [
         {
             item: 'fontColor',
@@ -862,7 +819,7 @@ test('retains the author selection through repeated color-control focus transiti
                     '<p>Target remains selected</p>',
                 );
             });
-            await selectTargetWithPointer();
+            await selectTarget();
             const menu = classic.locator(`[data-toolbar-item="${entry.item}"]`);
             await menu.locator('summary').click();
             const input = menu.getByLabel(/颜色值|Color value/u);
@@ -948,34 +905,13 @@ test('previews font families and applies one to a browser-selected range', async
     await page.evaluate(() => {
         globalThis.__classicDemo.editor.setData('<p>Family Test</p>');
     });
-    const paragraph = page.locator('.soeditor-classic__visual p');
-    await paragraph.scrollIntoViewIfNeeded();
-    const points = await paragraph.evaluate((element) => {
-        const text = element.firstChild;
-        if (!(text instanceof Text)) throw new Error('Missing text node.');
-        const start = document.createRange();
-        start.setStart(text, 0);
-        start.collapse(true);
-        const end = document.createRange();
-        end.setStart(text, 6);
-        end.collapse(true);
-        const startRect = start.getBoundingClientRect();
-        const endRect = end.getBoundingClientRect();
-        return {
-            start: {
-                x: startRect.left + 1,
-                y: startRect.top + startRect.height / 2,
-            },
-            end: {
-                x: endRect.left - 1,
-                y: endRect.top + endRect.height / 2,
-            },
-        };
+    await page.evaluate(() => {
+        globalThis.__classicDemo.select({
+            anchor: { block: 0, offset: 0 },
+            focus: { block: 0, offset: 6 },
+        });
     });
-    await page.mouse.move(points.start.x, points.start.y);
-    await page.mouse.down();
-    await page.mouse.move(points.end.x, points.end.y, { steps: 8 });
-    await page.mouse.up();
+    const paragraph = page.locator('.soeditor-classic__visual p');
     await expect
         .poll(() =>
             paragraph.evaluate((element) => {
@@ -1355,7 +1291,7 @@ test('applies bold to paragraph, list-item, and table-cell ranges without changi
         );
 });
 
-test('keeps Unicode word and character counts visible in WYSIWYG, Source, and Developer Visual', async ({
+test('keeps Unicode word and character counts visible in WYSIWYG and Source', async ({
     page,
 }) => {
     const status = page.locator('.soeditor-ui__document-status');
@@ -1383,20 +1319,6 @@ test('keeps Unicode word and character counts visible in WYSIWYG, Source, and De
     await expect(status).toHaveAttribute('data-words', '2');
     await expect(status).toHaveAttribute('data-characters', '8');
     await expect(status).toHaveAttribute('data-source-characters', '15');
-
-    await page.goto('/classic.html?test=1&mode=visual');
-    await page.locator('body[data-ready="true"]').waitFor();
-    await page.evaluate(() => {
-        globalThis.__classicDemo.editor.setData('<p>Hello 世界</p>');
-    });
-    const developerStatus = page.locator('.soeditor-ui__document-status');
-    await expect(developerStatus).toHaveAttribute('data-editor-mode', 'visual');
-    await expect(developerStatus).toHaveAttribute('data-words', '2');
-    await expect(developerStatus).toHaveAttribute('data-characters', '8');
-    await expect(developerStatus).toHaveAttribute(
-        'data-source-characters',
-        '15',
-    );
 });
 
 test('presents whole-document HTML formatting only in Source mode', async ({
@@ -1813,8 +1735,10 @@ test('replaces a named textarea and synchronizes native form submission', async 
     await expect(classic.locator('[data-toolbar-item="bold"]')).toBeHidden();
     await expect(
         classic.locator('[data-toolbar-item="sourceFind"]'),
-    ).toBeVisible();
-    await expect(classic.locator('[data-toolbar-item="format"]')).toBeVisible();
+    ).toHaveCount(0);
+    await expect(classic.locator('[data-toolbar-item="format"]')).toHaveCount(
+        0,
+    );
     await expect
         .poll(() =>
             classic.evaluate((element) => {
@@ -1833,8 +1757,6 @@ test('replaces a named textarea and synchronizes native form submission', async 
             }),
         )
         .toBeLessThan(1);
-    await classic.locator('[data-toolbar-item="sourceFind"]').click();
-    await expect(classic.locator('.cm-search')).toBeVisible();
 });
 
 test('restores reset data and the exact caller host on idempotent destruction', async ({

@@ -142,6 +142,7 @@ const [
 );
 if (
     umbrellaManifest.dependencies?.['@soeditor/workspace'] !== 'workspace:*' ||
+    umbrellaManifest.exports?.['./cms']?.import !== './dist/cms.js' ||
     umbrellaManifest.dependencies?.react !== undefined ||
     umbrellaManifest.dependencies?.vue !== undefined ||
     umbrellaManifest.dependencies?.['@soeditor/plugin-tools'] !== undefined ||
@@ -192,21 +193,34 @@ const globalPath = join(umbrellaDist, 'soeditor.global.js');
 const cssPath = join(umbrellaDist, 'soeditor.css');
 const esmPath = join(umbrellaDist, 'index.js');
 const globalSource = await readFile(globalPath);
+const globalText = globalSource.toString('utf8');
 const cssSource = await readFile(cssPath, 'utf8');
 const globalRaw = (await stat(globalPath)).size;
 const globalGzip = gzipSync(globalSource).length;
 const cssRaw = (await stat(cssPath)).size;
 const esmRaw = (await stat(esmPath)).size;
 
-assertBudget('CDN global raw', globalRaw, 2_250_000);
-assertBudget('CDN global gzip', globalGzip, 665_000);
-assertBudget('standalone CSS', cssRaw, 31_000);
+assertBudget('CMS global raw', globalRaw, 500_000);
+assertBudget('CMS global gzip', globalGzip, 150_000);
+assertBudget('standalone CSS', cssRaw, 27_000);
 assertBudget('umbrella ESM facade', esmRaw, 2_000);
-for (const requiredSelector of [
-    '.soeditor-split-view',
-    '.soeditor-ui',
-    '.soeditor-table-widget',
+for (const excludedMarker of [
+    'Developer Visual',
+    'Markdown',
+    'commentsServiceToken',
+    'emailAnalyze',
+    'emailOptimize',
+    'preview.refresh',
+    'revisionsServiceToken',
+    'video.insert',
 ]) {
+    if (globalText.includes(excludedMarker)) {
+        throw new Error(
+            `CMS global unexpectedly contains excluded product marker ${excludedMarker}.`,
+        );
+    }
+}
+for (const requiredSelector of ['.soeditor-ui', '.soeditor-table-widget']) {
     if (!cssSource.includes(requiredSelector)) {
         throw new Error(
             `Standalone CSS is missing required selector ${requiredSelector}.`,
@@ -238,7 +252,7 @@ assertBudget(
 stdout.write(
     [
         `Release audit passed for ${String(publishable.length)} packages at ${releaseVersion}.`,
-        `CDN global: ${formatBytes(globalRaw)} raw / ${formatBytes(globalGzip)} gzip.`,
+        `CMS global: ${formatBytes(globalRaw)} raw / ${formatBytes(globalGzip)} gzip.`,
         `Standalone CSS: ${formatBytes(cssRaw)}; ESM facade: ${formatBytes(esmRaw)}.`,
         `Largest Playground chunk: ${largestPlaygroundChunk.name} (${formatBytes(largestPlaygroundChunk.size)}).`,
         '',

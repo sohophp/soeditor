@@ -27,12 +27,7 @@ export const defaultToolbarConfiguration = Object.freeze([
     'link',
     '|',
     'image',
-    'media',
     'table',
-    '|',
-    'source',
-    'preview',
-    'format',
 ] as const);
 
 export const defaultShortcuts: readonly KeyboardShortcutDefinition[] =
@@ -125,43 +120,6 @@ const sourceButton: ToolbarItemFactory = ({ document, editor, ui }) => {
             button.setAttribute('aria-label', ui.translate(target));
             button.dataset.switchTarget = target.toLowerCase();
             button.setAttribute('aria-pressed', String(sourceMode));
-            updateCommandAvailability(button, editor, command());
-        },
-        destroy: () => button.removeEventListener('click', click),
-    };
-};
-
-const previewButton: ToolbarItemFactory = ({ document, editor, ui }) => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'soeditor-ui__button';
-    const command = (): 'editor.preview' | 'editor.preview.close' =>
-        editor.state.mode === 'preview'
-            ? 'editor.preview.close'
-            : 'editor.preview';
-    const click = (): void => {
-        execute(editor, ui, command(), []);
-    };
-    button.addEventListener('click', click);
-    return {
-        element: button,
-        update: () => {
-            const previewMode = editor.state.mode === 'preview';
-            const state = String(previewMode);
-            if (button.dataset.previewMode !== state) {
-                ui.setIcon(
-                    button,
-                    previewMode ? 'editor.preview.close' : 'editor.preview',
-                    previewMode ? 'Edit' : 'Preview',
-                );
-            }
-            button.dataset.previewMode = state;
-            button.title = previewMode ? 'Close preview' : 'Preview content';
-            button.setAttribute(
-                'aria-label',
-                ui.translate(previewMode ? 'Edit' : 'Preview'),
-            );
-            button.setAttribute('aria-pressed', String(previewMode));
             updateCommandAvailability(button, editor, command());
         },
         destroy: () => button.removeEventListener('click', click),
@@ -690,13 +648,6 @@ const placeholderButton = textDialogButton(
     'Placeholder name',
 );
 
-const embedButton = textDialogButton(
-    'Embed',
-    'embed.insert',
-    'Provider URL',
-    'url',
-);
-
 const imageButton = dialogCommandButton(
     'Image',
     'image.insert',
@@ -848,68 +799,6 @@ function imageAction(
     button.append(text);
     return button;
 }
-
-const mediaButton = dialogCommandButton(
-    'Media',
-    'media.insert',
-    (document, run) => {
-        let src: HTMLInputElement;
-        let alt: HTMLInputElement;
-        let caption: HTMLInputElement;
-        let width: HTMLInputElement;
-        let height: HTMLInputElement;
-        return {
-            content: (container) => {
-                src = field(document, container, 'Media URL', 'url', true);
-                alt = field(document, container, 'Alternative text', 'text');
-                caption = field(document, container, 'Caption', 'text');
-                width = field(document, container, 'Width', 'number');
-                height = field(document, container, 'Height', 'number');
-                width.max = '10000';
-                height.max = '10000';
-            },
-            run: () =>
-                run({
-                    src: src.value,
-                    alt: alt.value,
-                    ...(caption.value.length === 0
-                        ? {}
-                        : { caption: caption.value }),
-                    ...(width.value.length === 0
-                        ? {}
-                        : { width: Number(width.value) }),
-                    ...(height.value.length === 0
-                        ? {}
-                        : { height: Number(height.value) }),
-                }),
-        };
-    },
-);
-
-const videoButton = dialogCommandButton(
-    'Video',
-    'video.insert',
-    (document, run) => {
-        let src: HTMLInputElement;
-        let poster: HTMLInputElement;
-        let title: HTMLInputElement;
-        return {
-            content: (container) => {
-                src = field(document, container, 'Video URL', 'url', true);
-                poster = field(document, container, 'Poster URL', 'url');
-                title = field(document, container, 'Title', 'text');
-            },
-            run: () =>
-                run({
-                    src: src.value,
-                    ...(poster.value.length === 0
-                        ? {}
-                        : { poster: poster.value }),
-                    ...(title.value.length === 0 ? {} : { title: title.value }),
-                }),
-        };
-    },
-);
 
 const tableButton: ToolbarItemFactory = ({ document, editor, ui }) => {
     const button = document.createElement('button');
@@ -1731,11 +1620,8 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
         ['anchor', anchorButton],
         ['pageBreak', commandButton('Page break', 'pageBreak.insert')],
         ['placeholder', placeholderButton],
-        ['embed', embedButton],
         ['image', imageButton],
         ['image-actions', imageActionsMenu],
-        ['media', mediaButton],
-        ['video', videoButton],
         ['table', tableButton],
         ['tableProperties', tablePropertiesButton],
         ['tableRowProperties', tableRowPropertiesButton],
@@ -1745,8 +1631,6 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
             'sourceFind',
             commandButton('Find/Replace', 'editor.source.find', [], 'Find'),
         ],
-        ['markdown', commandButton('Markdown', 'editor.markdown')],
-        ['preview', previewButton],
         [
             'format',
             sourceOnlyCommandButton('Format source HTML', 'document.format'),
@@ -1756,8 +1640,6 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
             sourceOnlyCommandButton('Minify source HTML', 'document.minify'),
         ],
         ['cleanHtml', commandButton('Clean HTML', 'html.cleanup')],
-        ['emailAnalyze', commandButton('Check email', 'email.analyze')],
-        ['emailOptimize', commandButton('Optimize email', 'email.optimize')],
     ]);
 
 function textDialogButton(

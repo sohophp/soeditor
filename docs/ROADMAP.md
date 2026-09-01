@@ -2,7 +2,8 @@
 
 ## Status
 
-Active roadmap, reset on 2026-09-01.
+Implementation roadmap, reset on 2026-09-01 and completed through automated
+qualification on 2026-09-01.
 
 Phases 1–57 are implementation and release history. They remain useful evidence
 but no longer define future product breadth. The active roadmap starts at Phase
@@ -26,7 +27,7 @@ building, email authoring, or IDE-like developer tooling.
 
 ### Status
 
-IN PROGRESS.
+COMPLETE.
 
 ### Goal
 
@@ -58,6 +59,10 @@ Make the default installation and bundle represent only the CMS WYSIWYG product.
 
 ## Phase 59 — Editing Stability Consolidation
 
+### Status
+
+COMPLETE.
+
 ### Goal
 
 Consolidate duplicated Visual/WYSIWYG behavior around one production authoring
@@ -86,6 +91,10 @@ surface and eliminate fragile edge cases.
 - transaction and DOM ownership are documented and tested.
 
 ## Phase 60 — CMS Feature Completion and Simplification
+
+### Status
+
+COMPLETE.
 
 ### Goal
 
@@ -117,6 +126,11 @@ controls.
 
 ## Phase 61 — Classic CMS UX, Accessibility and Integration Polish
 
+### Status
+
+COMPLETE for implementation and automated qualification. Manual assistive
+technology evidence remains a release sign-off item.
+
 ### Goal
 
 Make common CMS tasks fast and unsurprising without adding new product families.
@@ -145,6 +159,13 @@ Make common CMS tasks fast and unsurprising without adding new product families.
 
 ## Phase 62 — Lightweight Performance and Release Qualification
 
+### Status
+
+IMPLEMENTED. Chromium desktop/mobile gates and budgets are complete. Firefox
+and WebKit require the maintained CI image because the current host lacks their
+runtime libraries. Real Safari and manual assistive-technology sign-off remain
+external qualification items and are not represented as completed here.
+
 ### Goal
 
 Freeze a measured lightweight CMS release rather than an all-features platform
@@ -163,11 +184,12 @@ release.
 - run real Safari and manual keyboard/screen-reader qualification;
 - update the release, support and migration documents to the reduced product.
 
-### Initial budgets
+### Frozen budgets
 
-Phase 58 must measure the new artifact before freezing final limits. Until then:
-
-- no default CMS bundle may grow from its measured Phase 58 baseline;
+- CMS global: at most 500 kB raw and 150 kB gzip;
+- CMS CSS: at most 27 kB raw;
+- no default CMS bundle may grow from its measured baseline without explicit
+  product review;
 - no ordinary input operation may adopt a new full-document render path;
 - repeated create/destroy must not show retained instance-owned listeners,
   observers, tasks or DOM;

@@ -1,26 +1,12 @@
-import {
-    SoEditor,
-    createEditorSaveWorkflow,
-    minimalPreset,
-} from '@soeditor/editor';
+import { createClassicEditor } from '@soeditor/editor/cms';
 import '@soeditor/editor/styles.css';
 
-const editor = await SoEditor.create({
-    data: '<p>Vite consumer</p>',
-    format: minimalPreset.format,
-    plugins: minimalPreset.plugins,
+const host = document.querySelector<HTMLTextAreaElement>('#content');
+if (host === null) throw new Error('Missing CMS textarea.');
+
+const editor = await createClassicEditor(host, {
+    locale: 'zh-CN',
+    placeholder: 'Write CMS content',
 });
 document.body.dataset.editorSource = editor.getData();
-const saving = createEditorSaveWorkflow({
-    adapter: {
-        save: async ({ source }) => {
-            document.body.dataset.savedSource = source;
-            return { revisionToken: 'vite-v1', status: 'saved' };
-        },
-    },
-    editor,
-});
-editor.setData('<p>Vite saved consumer</p>');
-await saving.save();
-saving.destroy();
 await editor.destroy();

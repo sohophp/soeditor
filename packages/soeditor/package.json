@@ -2,7 +2,7 @@
     "name": "@soeditor/editor",
     "version": "1.1.0",
     "license": "MIT",
-    "description": "Developer-first, HTML-first extensible content editor.",
+    "description": "Lightweight HTML WYSIWYG editor for website CMS administration.",
     "keywords": [
         "content-editor",
         "html",
@@ -37,6 +37,10 @@
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/index.js"
+        },
+        "./cms": {
+            "types": "./dist/cms.d.ts",
+            "import": "./dist/cms.js"
         },
         "./styles.css": "./dist/soeditor.css"
     },

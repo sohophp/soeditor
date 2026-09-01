@@ -107,7 +107,6 @@ const experimentalNames = new Set([
     'TableSection',
     'TablePlugin',
     'ToolbarLayoutOptions',
-    'UnsupportedContentDisplay',
     'TextAlignment',
     'SubscriptPlugin',
     'SuperscriptPlugin',

@@ -37,16 +37,6 @@
     padding: 0.8rem 1rem;
 }
 
-.soeditor-wysiwyg-content[data-soeditor-content-style='email'] {
-    background: #fff;
-    color: #222;
-    font:
-        14px/1.45 Arial,
-        sans-serif;
-    margin-inline: auto;
-    max-width: 680px;
-}
-
 .soeditor-wysiwyg-content[data-soeditor-empty='true'][data-soeditor-placeholder]::before {
     color: var(--soeditor-muted, #59636e);
     content: attr(data-soeditor-placeholder);
@@ -169,17 +159,4 @@
 
 .soeditor-wysiwyg-content .soeditor-wysiwyg-preserved-inline {
     display: inline;
-}
-
-.soeditor-wysiwyg-content .soeditor-video-widget video {
-    background: #111;
-    display: block;
-    max-width: 100%;
-}
-
-.soeditor-wysiwyg-content .soeditor-video-placeholder {
-    background: #111;
-    color: #fff;
-    min-height: 8rem;
-    padding: 2rem;
 }

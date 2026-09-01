@@ -30,17 +30,6 @@ const instance = await createClassicEditor(host, {
     initialHeight: 520,
     maxHeight: 720,
     minHeight: 320,
-    preview: {
-        context: { fixtureName: 'Direct WYSIWYG preview' },
-        styles: [
-            'body{max-width:760px;margin:0 auto;padding:24px;font-family:system-ui,sans-serif}',
-            'img{max-width:100%;height:auto} table{border-collapse:collapse;width:100%}',
-            'th,td{border:1px solid #c8cad8;padding:8px}',
-        ],
-        template:
-            '<!doctype html><html><head><meta charset="utf-8"><title>{{ fixtureName }}</title></head><body><header>{{ fixtureName }}</header><main>{{ content }}</main></body></html>',
-        title: 'WYSIWYG qualification preview',
-    },
 });
 
 instance.editor.services.register(fileManagerServiceToken, {

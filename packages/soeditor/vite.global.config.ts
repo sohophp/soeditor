@@ -13,6 +13,7 @@ export default defineConfig({
         },
         minify: true,
         rollupOptions: {
+            external: ['@soeditor/source'],
             output: {
                 exports: 'default',
                 footer: "Object.defineProperty(globalThis, 'SoEditor', { configurable: false, enumerable: true, value: SoEditor, writable: false });",

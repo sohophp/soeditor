@@ -643,12 +643,31 @@ export class WysiwygEditingEngine implements EditingEngine {
     readonly #handleDrop = (event: DragEvent): void => {
         this.#resetInputHistory();
         const transfer = event.dataTransfer;
-        if (!this.#canEdit() || transfer === null) return;
-        const caret = this.#document.caretRangeFromPoint?.(
-            event.clientX,
-            event.clientY,
-        );
-        if (caret !== null && caret !== undefined) this.#selectRange(caret);
+        if (
+            this.#destroyed ||
+            this.#locked ||
+            !this.element.isContentEditable ||
+            transfer === null
+        ) {
+            return;
+        }
+        let caret: Range | undefined =
+            this.#document.caretRangeFromPoint?.(
+                event.clientX,
+                event.clientY,
+            ) ?? undefined;
+        if (
+            caret === undefined ||
+            !this.element.contains(caret.commonAncestorContainer)
+        ) {
+            const target = event.target;
+            caret =
+                target instanceof Element && this.element.contains(target)
+                    ? rangeAtEnd(this.#document, target)
+                    : undefined;
+        }
+        if (caret !== undefined) this.#selectRange(caret);
+        if (this.#range() === undefined) return;
         const input = {
             files: Object.freeze(
                 Array.from(transfer.files, (file) =>
@@ -732,28 +751,6 @@ export class WysiwygEditingEngine implements EditingEngine {
             );
             return;
         }
-        const video = target.closest<HTMLVideoElement>('video');
-        if (video === null || !this.element.contains(video)) return;
-        event.preventDefault();
-        video.pause();
-        this.#selectedElement = video;
-        const EventConstructor =
-            this.#document.defaultView?.CustomEvent ?? CustomEvent;
-        video.dispatchEvent(
-            new EventConstructor('soeditor:video-activate', {
-                bubbles: true,
-                detail: Object.freeze({
-                    element: video,
-                    remove: () => {
-                        video.remove();
-                        this.#selectedElement = undefined;
-                        this.#commit();
-                    },
-                    update: (values: unknown) =>
-                        this.#updateVideo(video, values),
-                }),
-            }),
-        );
     };
 
     readonly #handleSelectionChange = (): void => this.#captureRange();
@@ -1870,40 +1867,204 @@ export class WysiwygEditingEngine implements EditingEngine {
             : undefined;
     }
 
+    #editingFeedback(message: string, severity: 'error' | 'warning'): void {
+        const EventConstructor =
+            this.#document.defaultView?.CustomEvent ?? CustomEvent;
+        this.element.dispatchEvent(
+            new EventConstructor('soeditor:editing-feedback', {
+                bubbles: true,
+                detail: Object.freeze({ message, severity }),
+            }),
+        );
+    }
+
     #updateImage(image: HTMLImageElement, candidate: unknown): void {
         if (typeof candidate !== 'object' || candidate === null) return;
         const value = candidate as Record<string, unknown>;
+        const source = readImageString(value.src);
+        if (
+            source !== undefined &&
+            (source.length === 0 || !safeUrl(source, true))
+        ) {
+            this.#editingFeedback('Image URL is not safe.', 'error');
+            return;
+        }
+        const linkValue = readImageString(value.link);
+        if (
+            linkValue !== undefined &&
+            linkValue.length > 0 &&
+            !safeUrl(linkValue, false)
+        ) {
+            this.#editingFeedback('Image link URL is not safe.', 'error');
+            return;
+        }
+        const sourceSet = readImageString(value.srcset);
+        if (sourceSet !== undefined && !safeSourceSet(sourceSet)) {
+            this.#editingFeedback(
+                'Responsive image sources are not safe.',
+                'error',
+            );
+            return;
+        }
+        const responsiveClass = readImageString(value.responsiveClass);
+        if (
+            responsiveClass !== undefined &&
+            responsiveClass.length > 0 &&
+            !/^[a-z][a-z0-9_-]*(?:\s+[a-z][a-z0-9_-]*){0,7}$/iu.test(
+                responsiveClass,
+            )
+        ) {
+            this.#editingFeedback('Image CSS classes are invalid.', 'error');
+            return;
+        }
+        const requestedAlignment = readImageString(value.alignment);
+        if (
+            requestedAlignment !== undefined &&
+            !['', 'left', 'center', 'right', 'wide'].includes(
+                requestedAlignment,
+            )
+        ) {
+            this.#editingFeedback('Image alignment is invalid.', 'error');
+            return;
+        }
         this.#mutate(() => {
-            for (const name of ['src', 'alt', 'title', 'width', 'height']) {
-                const next = value[name];
-                if (typeof next === 'string' && next.length > 0) {
-                    image.setAttribute(name, next);
-                } else if (next === '' || next === null) {
-                    image.removeAttribute(name);
+            const originalWidth = positiveImageDimension(
+                image.getAttribute('width'),
+            );
+            const originalHeight = positiveImageDimension(
+                image.getAttribute('height'),
+            );
+            const widthChanged =
+                value.width !== undefined &&
+                String(value.width) !== String(originalWidth ?? '');
+            const heightChanged =
+                value.height !== undefined &&
+                String(value.height) !== String(originalHeight ?? '');
+            setImageAttribute(image, 'src', source, false);
+            setImageAttribute(image, 'alt', readImageString(value.alt), true);
+            setImageAttribute(
+                image,
+                'title',
+                readImageString(value.title),
+                false,
+            );
+            setImageDimension(image, 'width', value.width);
+            setImageDimension(image, 'height', value.height);
+            if (
+                value.aspectLocked === true &&
+                originalWidth !== undefined &&
+                originalHeight !== undefined
+            ) {
+                const width = positiveImageDimension(
+                    image.getAttribute('width'),
+                );
+                const height = positiveImageDimension(
+                    image.getAttribute('height'),
+                );
+                if (widthChanged && !heightChanged && width !== undefined) {
+                    image.setAttribute(
+                        'height',
+                        String(
+                            Math.max(
+                                1,
+                                Math.round(
+                                    (width * originalHeight) / originalWidth,
+                                ),
+                            ),
+                        ),
+                    );
+                } else if (
+                    heightChanged &&
+                    !widthChanged &&
+                    height !== undefined
+                ) {
+                    image.setAttribute(
+                        'width',
+                        String(
+                            Math.max(
+                                1,
+                                Math.round(
+                                    (height * originalWidth) / originalHeight,
+                                ),
+                            ),
+                        ),
+                    );
+                }
+            }
+            setImageAttribute(image, 'srcset', sourceSet, false);
+            setImageAttribute(
+                image,
+                'sizes',
+                readImageString(value.sizes),
+                false,
+            );
+            setImageAttribute(image, 'class', responsiveClass, false);
+
+            let figure = image.closest('figure');
+            const captionValue = readImageString(value.caption);
+            const alignment = requestedAlignment;
+            const needsFigure =
+                captionValue !== undefined ||
+                (alignment !== undefined && alignment.length > 0) ||
+                typeof value.aspectLocked === 'boolean';
+            if (figure === null && needsFigure) {
+                figure = this.#document.createElement('figure');
+                figure.dataset.soeditorMedia = 'image';
+                const wrapper =
+                    image.parentElement?.tagName === 'A'
+                        ? image.parentElement
+                        : image;
+                const paragraph = wrapper.parentElement;
+                if (
+                    paragraph?.tagName === 'P' &&
+                    paragraph.textContent?.trim().length === 0 &&
+                    paragraph.children.length === 1
+                ) {
+                    paragraph.replaceWith(figure);
+                } else {
+                    wrapper.replaceWith(figure);
+                }
+                figure.append(wrapper);
+            }
+            if (figure !== null) {
+                setOptional(figure, 'data-align', alignment);
+                if (typeof value.aspectLocked === 'boolean') {
+                    setOptional(
+                        figure,
+                        'data-aspect-lock',
+                        value.aspectLocked ? 'true' : undefined,
+                    );
+                }
+                if (captionValue !== undefined) {
+                    let caption = figure.querySelector(':scope > figcaption');
+                    if (captionValue.length === 0) {
+                        caption?.remove();
+                    } else {
+                        caption ??= this.#document.createElement('figcaption');
+                        caption.textContent = captionValue;
+                        figure.append(caption);
+                    }
+                }
+            }
+            if (linkValue !== undefined) {
+                const currentLink =
+                    image.parentElement?.tagName === 'A'
+                        ? (image.parentElement as HTMLAnchorElement)
+                        : undefined;
+                if (linkValue.length === 0) {
+                    currentLink?.replaceWith(image);
+                } else if (currentLink === undefined) {
+                    const link = this.#document.createElement('a');
+                    link.href = linkValue;
+                    image.replaceWith(link);
+                    link.append(image);
+                } else {
+                    currentLink.setAttribute('href', linkValue);
                 }
             }
             this.#selectedElement = image;
             const range = this.#document.createRange();
             range.selectNode(image);
-            return range;
-        });
-    }
-
-    #updateVideo(video: HTMLVideoElement, candidate: unknown): void {
-        if (typeof candidate !== 'object' || candidate === null) return;
-        const value = candidate as Record<string, unknown>;
-        this.#mutate(() => {
-            for (const name of ['src', 'poster', 'title', 'width', 'height']) {
-                const next = value[name];
-                if (typeof next === 'string' && next.length > 0) {
-                    video.setAttribute(name, next);
-                } else if (next === '' || next === null) {
-                    video.removeAttribute(name);
-                }
-            }
-            this.#selectedElement = video;
-            const range = this.#document.createRange();
-            range.selectNode(video);
             return range;
         });
     }
@@ -2153,6 +2314,57 @@ function safeUrl(value: string, image: boolean): boolean {
         return true;
     }
     return /^(?!\/\/)(?![a-z][a-z\d+.-]*:)[^\s]*$/iu.test(source);
+}
+
+function safeSourceSet(value: string): boolean {
+    if (value.trim().length === 0) return true;
+    return value.split(',').every((candidate) => {
+        const source = candidate.trim().split(/\s+/u, 1)[0];
+        return (
+            source !== undefined && source.length > 0 && safeUrl(source, true)
+        );
+    });
+}
+
+function readImageString(value: unknown): string | undefined {
+    if (value === undefined) return undefined;
+    if (value === null) return '';
+    return typeof value === 'string' ? value : undefined;
+}
+
+function setImageAttribute(
+    image: HTMLImageElement,
+    name: string,
+    value: string | undefined,
+    preserveEmpty: boolean,
+): void {
+    if (value === undefined) return;
+    if (value.length === 0 && !preserveEmpty) image.removeAttribute(name);
+    else image.setAttribute(name, value);
+}
+
+function setImageDimension(
+    image: HTMLImageElement,
+    name: 'height' | 'width',
+    value: unknown,
+): void {
+    if (value === undefined) return;
+    const normalized = typeof value === 'number' ? String(value) : value;
+    if (
+        typeof normalized === 'string' &&
+        /^\d+$/u.test(normalized) &&
+        Number(normalized) > 0
+    ) {
+        image.setAttribute(name, normalized);
+    } else if (normalized === '' || normalized === null) {
+        image.removeAttribute(name);
+    }
+}
+
+function positiveImageDimension(value: string | null): number | undefined {
+    if (value === null || !/^\d+$/u.test(value)) return undefined;
+    const dimension = Number(value);
+    return dimension > 0 ? dimension : undefined;
 }
 
 function applyAttributes(

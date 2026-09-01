@@ -10,104 +10,93 @@ const stylesheet = fileURLToPath(
     new URL('../../packages/soeditor/dist/soeditor.css', import.meta.url),
 );
 
-test('loads the self-contained immutable CDN facade in Chromium', async ({
+test('loads the self-contained CMS CDN editor in Chromium', async ({
     page,
 }) => {
     await access(globalMap);
     await access(stylesheet);
+    await page.setContent(
+        '<form><textarea id="content" name="content"><p>CDN</p></textarea></form>',
+    );
     await page.addStyleTag({ path: stylesheet });
     await page.addScriptTag({ path: globalBundle });
 
     const result = await page.evaluate(async () => {
         const api = Reflect.get(globalThis, 'SoEditor') as {
-            SoEditor: { create(options: { data: string }): Promise<unknown> };
-            create(options: { data: string }): Promise<{
+            createClassicEditor(host: HTMLTextAreaElement): Promise<{
                 destroy(): Promise<void>;
                 getData(): string;
+                setData(source: string): void;
             }>;
-            minimalPreset: { format: string };
         };
-        const editor = await api.create({ data: '<p>CDN</p>' });
+        const host = document.querySelector<HTMLTextAreaElement>('#content');
+        if (host === null) throw new Error('Missing CDN textarea.');
+        const editor = await api.createClassicEditor(host);
+        editor.setData('<p>Updated CDN</p>');
         const data = editor.getData();
+        const synchronized = host.value;
+        const mounted = document.querySelector('.soeditor-classic') !== null;
         await editor.destroy();
-        const styled = document.createElement('div');
-        styled.className = 'soeditor-ui';
-        document.body.append(styled);
         return {
-            alias: api.SoEditor.create === undefined ? 'missing' : 'available',
             bindingWritable: Object.getOwnPropertyDescriptor(
                 globalThis,
                 'SoEditor',
             )?.writable,
-            cssBackground:
-                getComputedStyle(styled).getPropertyValue('--soeditor-bg'),
             data,
+            excludedDiagnostics: !Reflect.has(
+                api,
+                'AccessibilityDiagnosticsPlugin',
+            ),
+            excludedMarkdown: !Reflect.has(api, 'MarkdownPlugin'),
             extraGlobal: Reflect.has(globalThis, 'SoEditorBundle'),
             frozen: Object.isFrozen(api),
-            format: api.minimalPreset.format,
+            mounted,
+            restored: host.hidden === false,
+            synchronized,
         };
     });
 
     expect(result).toEqual({
-        alias: 'available',
         bindingWritable: false,
-        cssBackground: '#ffffff',
-        data: '<p>CDN</p>',
+        data: '<p>Updated CDN</p>',
+        excludedDiagnostics: true,
+        excludedMarkdown: true,
         extraGlobal: false,
-        format: 'html',
         frozen: true,
+        mounted: true,
+        restored: true,
+        synchronized: '<p>Updated CDN</p>',
     });
     const stylesheetSource = await readFile(stylesheet, 'utf8');
     expect(stylesheetSource).toContain('--soeditor-bg');
-    expect(stylesheetSource).toContain('.soeditor-split-view');
+    expect(stylesheetSource).toContain('.soeditor-table-widget');
     expect(await readFile(globalMap, 'utf8')).toContain('sources');
 });
 
-test('runs accessibility and SEO diagnostics from the browser global', async ({
-    page,
-}) => {
+test('keeps Source outside the standalone CMS global', async ({ page }) => {
+    await page.setContent(
+        '<textarea id="content"><p>Source boundary</p></textarea>',
+    );
     await page.addScriptTag({ path: globalBundle });
 
-    const result = await page.evaluate(async () => {
+    const message = await page.evaluate(async () => {
         const api = Reflect.get(globalThis, 'SoEditor') as {
-            AccessibilityDiagnosticsPlugin: new (...args: never[]) => unknown;
-            SeoDiagnosticsPlugin: new (...args: never[]) => unknown;
-            diagnosticsServiceToken: unknown;
-            create(options: {
-                data: string;
-                plugins: readonly unknown[];
-            }): Promise<{
-                destroy(): Promise<void>;
-                services: {
-                    get(token: unknown): {
-                        validate(): Promise<
-                            readonly { code: string; provider: string }[]
-                        >;
-                    };
-                };
-            }>;
+            createClassicEditor(
+                host: HTMLTextAreaElement,
+                options: { editingModes: readonly string[] },
+            ): Promise<unknown>;
         };
-        const editor = await api.create({
-            data: '<!doctype html><html><head></head><body><button></button></body></html>',
-            plugins: [
-                api.AccessibilityDiagnosticsPlugin,
-                api.SeoDiagnosticsPlugin,
-            ],
-        });
-        const problems = await editor.services
-            .get(api.diagnosticsServiceToken)
-            .validate();
-        await editor.destroy();
-        return problems.map(({ code, provider }) => ({ code, provider }));
+        const host = document.querySelector<HTMLTextAreaElement>('#content');
+        if (host === null) throw new Error('Missing CDN textarea.');
+        try {
+            await api.createClassicEditor(host, {
+                editingModes: ['wysiwyg', 'source'],
+            });
+            return 'unexpected success';
+        } catch (error) {
+            return error instanceof Error ? error.message : String(error);
+        }
     });
 
-    expect(result).toEqual(
-        expect.arrayContaining([
-            {
-                code: 'a11y.interactive-name',
-                provider: 'html.accessibility',
-            },
-            { code: 'seo.document-title', provider: 'html.seo' },
-        ]),
-    );
+    expect(message).toContain('does not bundle HTML Source');
 });

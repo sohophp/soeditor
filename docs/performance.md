@@ -2,8 +2,7 @@
 
 ## Status
 
-Active performance policy for the CMS-only roadmap. Historical measurements are
-retained below only as the starting point for Phase 58.
+Active and enforced performance policy for the CMS-only roadmap.
 
 ## Product measurement boundary
 
@@ -20,17 +19,27 @@ costs are measured separately and cannot be hidden inside its budget:
 Tree shaking is useful but is not a substitute for a narrow default package and
 CMS-specific browser global.
 
-## Current baseline
+## Frozen distribution baseline
 
-Before the product reset, the complete global measures approximately:
+| Artifact                       |       Raw |      Gzip |    Enforced ceiling |
+| ------------------------------ | --------: | --------: | ------------------: |
+| packed `/cms` Vite startup JS  | 485.44 kB | 145.02 kB |        500 / 150 kB |
+| optional Source/CodeMirror     | 574.36 kB | 198.38 kB | measured separately |
+| CMS browser global             | 482.60 kB | 143.89 kB |        500 / 150 kB |
+| CMS CSS                        |  25.58 kB |   4.71 kB |           27 kB raw |
+| CMS ESM facade                 |   0.68 kB |   0.30 kB |            measured |
+| lazy Classic implementation    |  64.98 kB |  14.45 kB |            measured |
+| historical all-features global |  2,214 kB | 649.71 kB |            rejected |
 
-| Artifact                       |      Raw |      Gzip |          CSS |
-| ------------------------------ | -------: | --------: | -----------: |
-| historical all-features global | 2.214 MB | 649.71 kB | 29.11 kB raw |
+The ESM Classic implementation still resolves workspace packages from the
+consumer graph. Optional Source adds `@soeditor/source` and CodeMirror only when
+configured; it is external to the standalone browser global, so no Source cost
+is disguised inside the default number.
 
-That artifact includes product families no longer in scope and is not an
-acceptable future CMS target. Phase 58 must record the new default CMS and
-Source-enabled baselines before final numeric budgets are frozen.
+The packed-consumer gate reads the Vite manifest and counts the entry, the
+immediately invoked Classic chunk and their static imports. Nested dynamic
+Source imports are measured separately. Excluded feature markers are rejected
+from the startup graph.
 
 ## Required measurements
 
@@ -67,8 +76,8 @@ Use real semantic CMS fixtures, not repeated empty paragraphs only:
 
 ## Budget rules
 
-- Phase 58 establishes a reproducible CMS baseline; subsequent changes may not
-  increase it without an owner-reviewed product justification.
+- The recorded CMS baseline is frozen; subsequent changes may not increase it
+  without an owner-reviewed product justification.
 - A new feature does not automatically receive a larger budget.
 - Ordinary local typing must not introduce a complete-document reparse or
   surface rebuild.
@@ -89,10 +98,10 @@ Run:
 pnpm test:performance
 ```
 
-The existing Node gate covers Core startup/teardown, canonical input, table
-operations and historical compatibility scenarios. Phase 58 will add the
-CMS-specific artifact inventory; Phases 59–62 will replace overly generous
-four-second interaction ceilings with measured CMS budgets.
+The Node gate covers Core startup/teardown, canonical input, projection updates,
+recovery, table operations, annotation mapping and retained memory. Browser
+tests cover CMS interaction and lifecycle paths. Release verification enforces
+the CMS artifact ceilings and rejects excluded product markers.
 
 Release distribution remains checked by:
 
@@ -102,9 +111,8 @@ pnpm test:distribution
 pnpm test:release
 ```
 
-Until the new CMS global exists, the legacy 2.25 MB raw / 665 kB gzip guard is
-only a compatibility regression check. It is not evidence that SoEditor is
-lightweight.
+The release ceiling is 500 kB raw / 150 kB gzip for the CMS global and 27 kB raw
+for CSS. The legacy 2.25 MB / 665 kB guard has been removed.
 
 ## Performance review checklist
 

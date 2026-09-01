@@ -1,23 +1,27 @@
 # Getting started
 
-SoEditor is an ESM-first 1.0 release. It separates the canonical document
-(`Editor`) from browser surfaces so a CMS can mount exactly the UI it needs.
-The public registry reference is `@soeditor/editor@1.0.0`.
+SoEditor is an ESM-first CMS HTML WYSIWYG editor. The supported application
+entry is `@soeditor/editor/cms`; it exposes the Classic Editor without exporting
+historical Markdown, Preview, review, layout or developer-tool product families.
 
-## CMS Classic Editor
+## Install
 
-The experimental 1.1 development API assembles the existing Core, Workspace,
-Visual, Source, and UI capabilities around a textarea:
+```bash
+pnpm add @soeditor/editor
+```
+
+Import the editor and its stylesheet:
 
 ```ts
-import { createClassicEditor } from '@soeditor/editor';
+import { createClassicEditor } from '@soeditor/editor/cms';
 import '@soeditor/editor/styles.css';
 
 const textarea = document.querySelector<HTMLTextAreaElement>('#content');
 if (textarea === null) throw new Error('Missing #content textarea.');
 
-const classic = await createClassicEditor(textarea, {
-    placeholder: 'Write article content',
+const editor = await createClassicEditor(textarea, {
+    locale: 'zh-CN',
+    placeholder: '请输入网页内容',
     minHeight: 240,
     toolbarLayout: {
         collapsible: true,
@@ -30,72 +34,42 @@ const classic = await createClassicEditor(textarea, {
 });
 ```
 
-The original textarea remains the successful form control while hidden. Its
-value is synchronized with canonical HTML, refreshed before form submission,
-and reset through the editor when its form resets. Destroying the handle
-restores the caller-owned host. This API is experimental until the CMS release
-qualification; the underlying stable 1.0 APIs remain unchanged.
+WYSIWYG is the only default editing mode. The original textarea remains the
+successful form control: its value follows canonical HTML, is refreshed before
+form submission and is restored through the editor on form reset.
 
-The default classic chrome exposes keyboard-operable toolbar grouping,
-collapse, maximize, bounded pointer/keyboard height resizing, element path,
-word/character counts, dirty state, and command-backed contextual menus. These
-surfaces are instance scoped and destruction restores both the original host
-and any document overflow changed by maximize.
+## Optional HTML Source
 
-## Install and create
-
-```bash
-pnpm add @soeditor/editor
-```
+Source is explicit and lazy in ESM applications:
 
 ```ts
-import {
-    SoEditor,
-    createEditorUi,
-    createVisualEditingEngine,
-    minimalPreset,
-} from '@soeditor/editor';
-import '@soeditor/editor/styles.css';
-
-const editor = await SoEditor.create({
-    data: '<p>Hello <strong>SoEditor</strong>.</p>',
-    format: minimalPreset.format,
-    plugins: minimalPreset.plugins,
-});
-
-const visual = createVisualEditingEngine({
-    editor,
-    element: document.querySelector<HTMLElement>('#editor')!,
-});
-const ui = createEditorUi({
-    editor,
-    element: document.querySelector<HTMLElement>('#editor-ui')!,
-    toolbar: minimalPreset.toolbar,
+const editor = await createClassicEditor(textarea, {
+    editingModes: ['wysiwyg', 'source'],
+    initialEditingMode: 'wysiwyg',
 });
 ```
 
-Read and replace canonical source through the editor, not through projected DOM:
+This configuration dynamically loads `@soeditor/source` and CodeMirror. The
+standalone browser global intentionally supports WYSIWYG only so Source cost is
+never hidden in the default CDN artifact.
+
+## Read, write and save
+
+Use the Classic handle rather than reading projected DOM:
 
 ```ts
 const html = editor.getData();
-editor.setData('<p>Loaded from the CMS.</p>');
-editor.events.on('document:change', ({ current }) => {
-    console.log(current.source);
-});
+editor.setData('<p>从 CMS 加载的内容。</p>');
+
+await editor.execute('save'); // when a save adapter is configured
 ```
 
-## Teardown
+Normal form posts need no custom synchronization. For Ajax saving, configure a
+host-owned adapter as described in [CMS saving](cms-saving.md).
 
-Destroy explicitly when a page, tab, or CMS field unmounts:
+## CMS semantic styles
 
-```ts
-ui.destroy();
-visual.destroy();
-await editor.destroy();
-```
-
-Instance-scoped CMS styles are configuration, not global DOM rules or computed
-style capture:
+Styles are instance configuration rather than global editor state:
 
 ```ts
 const editor = await createClassicEditor(textarea, {
@@ -104,14 +78,14 @@ const editor = await createClassicEditor(textarea, {
             styles: [
                 {
                     id: 'lead',
-                    label: 'Lead text',
+                    label: '导语',
                     target: 'inline',
                     element: 'span',
                     attributes: [{ name: 'class', value: 'cms-lead' }],
                 },
                 {
                     id: 'callout',
-                    label: 'Callout',
+                    label: '提示框',
                     target: 'block',
                     element: 'blockquote',
                     attributes: [{ name: 'class', value: 'cms-callout' }],
@@ -122,28 +96,21 @@ const editor = await createClassicEditor(textarea, {
 });
 ```
 
-Applications provide the matching content CSS. Style definitions reject event
-handlers and CSS outside the bounded color, background-color, font-family, and
-font-size policy.
+The CMS supplies matching content CSS. Definitions reject event handlers and
+CSS outside the bounded style policy.
 
-Editor destruction is terminal and also asks attached SoEditor surfaces to
-clean up. Explicit surface teardown keeps application ownership obvious.
+## Teardown
 
-## Choose a configuration
+Destroy each editor when its CMS field or page unmounts:
 
-- `minimalPreset`: paragraphs, bold/italic, history, and basic UI.
-- `classicPreset`: common rich text, Source, diagnostics/formatting, and Preview.
-- `developerPreset`: Classic plus quality diagnostics, projection/split
-  infrastructure, Problems, Inspector, Outline, command palette, Find/Replace,
-  and FileManager browsing.
-- `markdownPreset`: canonical Markdown editing and isolated preview.
+```ts
+await editor.destroy();
+```
 
-Presets supply format/plugins/toolbar only. Source, visual, Markdown, Preview,
-and UI hosts remain explicit. Continue with the
-[configuration guide](configuration.md) or run the Playground links for each
-release configuration.
+This removes owned DOM, listeners, observers and async work, restores the host
+and releases document overflow changed by maximize mode.
 
-Continue with the task-oriented [API overview](api-overview.md),
-[deployment and operations](deployment-operations.md), and the complete
-[0.9-to-1.0 migration guide](migration-0.9-to-1.0.md). Public 0.5.1 consumers
-must follow each versioned migration guide in order.
+Continue with [configuration](configuration.md),
+[CMS integration](cms-integration.md), [classic UI](classic-ui.md),
+[uploads](uploads.md), [paste](paste.md), and the
+[CKEditor 4 migration guide](ckeditor4-migration.md).

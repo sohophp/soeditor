@@ -7,7 +7,7 @@ symbol list or declaration hash requires explicit API review. CSS exports and
 CLI bins are listed as stable resources. Undeclared `src`/`dist` subpaths and
 implementation modules are internal even when present in a checkout or tarball.
 
-Summary: 24 packages; 831 stable, 368 experimental, and 0 deprecated symbol
+Summary: 24 packages; 832 stable, 375 experimental, and 0 deprecated symbol
 entries.
 
 ## @soeditor/adapter-sofinder
@@ -159,12 +159,12 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`3370a6f108a30c18703b6b20b1c9e43d80fbe27ddb7396a8f9b454e65ef32cd9`
+`9f334753f0f7d45fd7997373323dccef57a37ea739193a3e0c70fcda408f01fb`
 
 ### .
 
 Declaration SHA-256:
-`8d9a074338b170af0c2bff0dbb783cca0eba9049112c9889eb2114c96fe578ed`
+`5b1721e1c11ca4945476646650f9c6e3642af2b80038e8077f2e5a007eb08966`
 
 | Export                                                | Kind       | Classification | Signature SHA-256  |
 | ----------------------------------------------------- | ---------- | -------------- | ------------------ |
@@ -179,14 +179,14 @@ Declaration SHA-256:
 | `BlockquotePlugin`                                    | type/value | stable         | `057726cf4923a7b5` |
 | `BoldPlugin`                                          | type/value | stable         | `80e810f75ff4e330` |
 | `builtInUiTranslations`                               | value      | experimental   | `a83547fa9b47531e` |
-| `ClassicEditingMode`                                  | type       | experimental   | `36f01d4a14141071` |
-| `ClassicEditor`                                       | type       | experimental   | `c59b73e6534e8cf0` |
+| `ClassicEditingMode`                                  | type       | experimental   | `66351b7c3ba6bbd0` |
+| `ClassicEditor`                                       | type       | experimental   | `b78f8117e0444f94` |
 | `ClassicEditorAlreadyAttachedError`                   | type/value | experimental   | `5168db0f6ce77de0` |
 | `ClassicEditorChange`                                 | type       | experimental   | `07ca0f0d4bc6a499` |
 | `ClassicEditorDestroyedError`                         | type/value | experimental   | `27394a56a2762fe6` |
 | `ClassicEditorSaveOptions`                            | type       | experimental   | `84d1e35562192eeb` |
 | `classicPreset`                                       | value      | stable         | `530b94f1c5748e37` |
-| `ClassicWorkspaceView`                                | type       | stable         | `689f2618d93b3d05` |
+| `ClassicWorkspaceView`                                | type       | stable         | `83a19325762b50c1` |
 | `classifyPasteInput`                                  | value      | experimental   | `c16090d233d8f690` |
 | `cleanupHtml`                                         | value      | experimental   | `ca418444d3270b91` |
 | `CmsEmbedMetadata`                                    | type       | experimental   | `ddb533dc36bcec66` |
@@ -224,7 +224,7 @@ Declaration SHA-256:
 | `ControlledWorkspaceValue`                            | type       | stable         | `9e3aaa705c6a70e3` |
 | `CoreEventMap`                                        | type       | stable         | `281f660668ce273c` |
 | `createClassicEditor`                                 | value      | experimental   | `0f31728333355113` |
-| `CreateClassicEditorOptions`                          | type       | experimental   | `59a1f69502a34ffd` |
+| `CreateClassicEditorOptions`                          | type       | experimental   | `bc935949edb6ac9d` |
 | `createCommentsPlugin`                                | value      | stable         | `3673444dcdbacbef` |
 | `createDeveloperToolsEngine`                          | value      | stable         | `b7a8625bc9ba88d3` |
 | `createDocumentOutline`                               | value      | stable         | `45f17dd716fab72c` |
@@ -247,7 +247,7 @@ Declaration SHA-256:
 | `createWysiwygEditingEngine`                          | value      | experimental   | `4f1684f192033fe5` |
 | `CyclicConfigurationError`                            | type/value | stable         | `32828726c5a8ff1f` |
 | `defaultPreviewTemplate`                              | value      | stable         | `3068004fcbddc89a` |
-| `defaultToolbarConfiguration`                         | value      | stable         | `c606b3751a08ba91` |
+| `defaultToolbarConfiguration`                         | value      | stable         | `f11a78c87bf29923` |
 | `DeletedCommentThread`                                | type       | stable         | `2f2a0336f9f2c99e` |
 | `developerPreset`                                     | value      | stable         | `67a1dacf3f2a58dd` |
 | `DeveloperToolsEngineDestroyedError`                  | type/value | stable         | `bc46cf0557fc302d` |
@@ -619,7 +619,6 @@ Declaration SHA-256:
 | `UnlinkedCommentThread`                               | type       | stable         | `7dae0514c6b0957a` |
 | `UnorderedListPlugin`                                 | type/value | stable         | `d6b801758a5bb5c7` |
 | `UnsupportedConfigValueError`                         | type/value | stable         | `cbaed5265889a1f7` |
-| `UnsupportedContentDisplay`                           | type       | experimental   | `7581cb630f7f230d` |
 | `UnsupportedDeveloperToolsDocumentFormatError`        | type/value | stable         | `0881bf0a38d92ca2` |
 | `UnsupportedDocumentFormatError`                      | type/value | stable         | `a04171790a5cc546` |
 | `UnsupportedMarkdownDocumentFormatError`              | type/value | stable         | `545254a6e2a5f867` |
@@ -679,6 +678,23 @@ Declaration SHA-256:
 | `WysiwygEditingEngine`                                | type/value | stable         | `b91de0e12a6a1942` |
 | `WysiwygEditingEngineDestroyedError`                  | type/value | stable         | `8497fc65b325c3a8` |
 | `WysiwygEditingEngineOptions`                         | type       | experimental   | `31d00c8fcdfa6643` |
+
+### ./cms
+
+Declaration SHA-256:
+`44e5c2c08cf53bd964da64efda86d7cb3c828f0f624b8ba65aa59a9a46d30426`
+
+| Export                              | Kind       | Classification | Signature SHA-256  |
+| ----------------------------------- | ---------- | -------------- | ------------------ |
+| `ClassicEditingMode`                | type       | experimental   | `66351b7c3ba6bbd0` |
+| `ClassicEditor`                     | type       | experimental   | `b78f8117e0444f94` |
+| `ClassicEditorAlreadyAttachedError` | type/value | experimental   | `5168db0f6ce77de0` |
+| `ClassicEditorChange`               | type       | experimental   | `07ca0f0d4bc6a499` |
+| `ClassicEditorDestroyedError`       | type/value | experimental   | `27394a56a2762fe6` |
+| `ClassicEditorSaveOptions`          | type       | experimental   | `84d1e35562192eeb` |
+| `ClassicWorkspaceView`              | type       | stable         | `83a19325762b50c1` |
+| `createClassicEditor`               | value      | experimental   | `0f31728333355113` |
+| `CreateClassicEditorOptions`        | type       | experimental   | `bc935949edb6ac9d` |
 
 - `./styles.css` — stable resource (./dist/soeditor.css)
 
@@ -1431,7 +1447,7 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`3f9c322f3eebd222c84e5ea4deb7ecc7f73edf40e01a0d63bc72b7c0ceb3d4c8`
+`dfb7f12952e4b21a9e161821bca104889ae48a633dc17685734f0617271217f3`
 
 ### .
 
@@ -1447,7 +1463,7 @@ Declaration SHA-256:
 | `ContextMenuItemDefinition`            | type       | experimental   | `4448fa1f4e1c1986` |
 | `createEditorUi`                       | value      | stable         | `901a347f76278407` |
 | `CreateEditorUiOptions`                | type       | stable         | `f8ef2dfebdced65b` |
-| `defaultToolbarConfiguration`          | value      | stable         | `c606b3751a08ba91` |
+| `defaultToolbarConfiguration`          | value      | stable         | `f11a78c87bf29923` |
 | `DialogAction`                         | type       | stable         | `040288bfea786d4e` |
 | `DialogHandle`                         | type       | stable         | `69d8c3df12657d5a` |
 | `DialogOptions`                        | type       | stable         | `1da46417d28bf824` |

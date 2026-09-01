@@ -3,8 +3,9 @@
 ## Current direction
 
 On 2026-09-01 the active product was reset to one lightweight, stable CMS HTML
-WYSIWYG editor. Phase 58, default product-surface and dependency reduction, is
-in progress.
+WYSIWYG editor. Phases 58-61 are implemented. Phase 62 automated release
+qualification is implemented; real Safari and manual assistive-technology
+sign-off remain external release checks.
 
 The prior roadmap through Phase 57 produced a broad editor platform. That work
 is retained as implementation and compatibility evidence, but Markdown,
@@ -14,35 +15,37 @@ adapters and plugin tooling are no longer active product directions.
 ## Current release state
 
 - `@soeditor/*@1.0.0` is the published historical stable package set.
-- the local aligned `1.1.0` candidate is unpublished;
+- the local aligned `1.1.0` release candidate is unpublished;
 - Chromium CMS/WYSIWYG qualification passes;
-- applicable Firefox and WebKit automation passes in the maintained CI image;
+- Chromium desktop/mobile CMS qualification passes locally; current Firefox and
+  WebKit execution is blocked by host runtime libraries and requires the
+  maintained CI image;
 - real Safari and manual assistive-technology sign-off remain pending;
 - no publication, tag or version move is authorized by the product reset.
 
 ## Current implementation facts
 
-- `createClassicEditor()` provides textarea/element mounting, form
-  synchronization, WYSIWYG, optional modes, UI, uploads, paste, tables, images,
-  links, localization, save workflow and teardown.
-- the current default preset still imports nonessential email, media, Preview,
-  diagnostics and projection capabilities;
-- the umbrella package still re-exports multiple compatibility product families;
-- the historical global measures 2.214 MB raw / 649.71 kB gzip with 29.11 kB
-  raw CSS;
-- the WYSIWYG capability matrix still records incomplete direct UI proof for
-  the complete image-properties workflow.
-
-These are Phase 58 inputs, not accepted final product boundaries.
+- `@soeditor/editor/cms` is the documented narrow ESM entry and
+  `createClassicEditor()` defaults to WYSIWYG only;
+- Source is an explicit ESM lazy import and the standalone global rejects Source
+  configuration because CodeMirror is not bundled;
+- the CMS preset and global exclude Markdown, Preview, comments, revisions,
+  layouts, developer tools, email, generic media and video;
+- released compatibility exports remain at the package root rather than being
+  broken in a 1.1 candidate;
+- the CMS global measures 482.60 kB raw / 143.89 kB gzip with 25.58 kB raw CSS;
+- complete image properties, including a single-step undo, have direct browser
+  coverage.
+- the active Chromium product gate contains 81 CMS scenarios; the historical
+  199-scenario suite remains available as `pnpm test:browser:compat` and is not
+  a CMS release gate.
 
 ## Active work order
 
-1. narrow the default package and preset;
-2. measure the actual CMS artifact and dependency graph;
-3. consolidate editing stability and remove default Developer Visual ownership;
-4. complete and simplify images, links, tables, paste and classic UI;
-5. qualify accessibility, performance, browsers and real CMS integration;
-6. make a separate owner-reviewed release decision.
+1. retain the frozen CMS artifact and interaction budgets;
+2. obtain real Safari and manual keyboard/screen-reader qualification;
+3. review compatibility-package deprecation for a future major version;
+4. make a separate owner-reviewed publication decision.
 
 See [PRODUCT.md](PRODUCT.md), [ROADMAP.md](ROADMAP.md),
 [wysiwyg-editor.md](wysiwyg-editor.md), and [performance.md](performance.md).

@@ -45,7 +45,6 @@ const modeElement = requiredElement<HTMLElement>('demo-mode');
 const toast = requiredElement<HTMLElement>('demo-toast');
 const demoParameters = new URLSearchParams(globalThis.location.search);
 const testMode = demoParameters.has('test');
-const developerVisualMode = demoParameters.get('mode') === 'visual';
 document.body.classList.toggle('demo-test-mode', testMode);
 if (testMode) {
     requiredElement<HTMLButtonElement>('reset').ariaLabel = 'Reset article';
@@ -86,10 +85,8 @@ const editor = await createClassicEditor(textarea, {
         },
     },
     ...(testMode ? {} : { data: showcaseHtml }),
-    editingModes: developerVisualMode
-        ? (['visual', 'source'] as const)
-        : (['wysiwyg', 'source'] as const),
-    initialEditingMode: developerVisualMode ? 'visual' : 'wysiwyg',
+    editingModes: ['wysiwyg', 'source'],
+    initialEditingMode: 'wysiwyg',
     initialHeight: testMode ? 192 : 560,
     ...(testMode ? {} : { locale: 'zh-CN' }),
     maxHeight: testMode ? 480 : 900,
@@ -109,21 +106,6 @@ const editor = await createClassicEditor(textarea, {
         readyCount += 1;
     },
     placeholder: testMode ? 'Write article content' : '开始撰写文章内容…',
-    preview: {
-        context: {
-            siteName: testMode ? 'SoEditor Test' : 'SoEditor 内容预览',
-        },
-        styles: [
-            ':root{color-scheme:light;font-family:Inter,system-ui,sans-serif}',
-            'body{max-width:760px;margin:0 auto;padding:32px;color:#202136;line-height:1.7}',
-            'header{border-bottom:1px solid #dddaf8;margin-bottom:28px;color:#5951df;font-weight:700}',
-            'img{height:auto;max-width:100%} table{border-collapse:collapse;width:100%}',
-            'th,td{border:1px solid #d7d8e5;padding:8px;text-align:left}',
-        ],
-        template:
-            '<!doctype html><html><head><meta charset="utf-8"><title>{{ siteName }}</title></head><body><header>{{ siteName }} · 自定义模板</header><main>{{ content }}</main></body></html>',
-        title: testMode ? 'Article preview' : '文章实时预览',
-    },
     ...(testMode
         ? {}
         : {
@@ -472,12 +454,12 @@ async function runTourAction(action: string | undefined): Promise<void> {
             updateMode();
             return;
         case 'preview':
-            editor.setWorkspaceView('source-preview');
-            showToast('已打开 HTML 源码与自定义模板实时预览');
+            editor.setWorkspaceView('source');
+            showToast('已打开 HTML 源码');
             return;
         case 'triple':
-            editor.setWorkspaceView('wysiwyg-source-preview');
-            showToast('WYSIWYG、Source、Preview 已三屏同步');
+            editor.setWorkspaceView('wysiwyg');
+            showToast('已返回所见即所得编辑');
             return;
         case 'assets':
             ensureVisualMode();
@@ -541,13 +523,7 @@ function updateMode(): void {
         '[data-classic-action="workspace-view"]',
     )?.selectedOptions[0]?.textContent;
     const fallback =
-        editor.editor.state.mode === 'source'
-            ? 'Source'
-            : editor.editor.state.mode === 'preview'
-              ? 'Preview'
-              : developerVisualMode
-                ? 'Developer Visual'
-                : 'WYSIWYG';
+        editor.editor.state.mode === 'source' ? 'Source' : 'WYSIWYG';
     modeElement.innerHTML = `<i></i> ${selected ?? fallback}`;
 }
 

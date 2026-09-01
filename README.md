@@ -20,17 +20,19 @@ email design or IDE-like editor modes.
 
 `@soeditor/*@1.0.0` is the published historical package set. The unpublished
 local `1.1.0` candidate contains the completed CMS/WYSIWYG implementation.
-Phase 58 is now reducing the default product surface and measuring a genuinely
-CMS-focused artifact before another release decision.
+The CMS product-surface reset is implemented in the unpublished local `1.1.0`
+candidate. Its supported entry is `@soeditor/editor/cms`; compatibility exports
+remain available from the package root for SemVer safety but are excluded from
+the CMS global and default preset.
 
-The current all-features browser global is not the lightweight target. Optional
-and historical product families are being removed from the default import path
-with deliberate SemVer compatibility handling.
+The measured CMS browser global is 482.60 kB raw / 143.89 kB gzip with 25.58 kB
+raw CSS. HTML Source is explicit and lazy in ESM builds and is not included in
+the standalone browser global.
 
 ## Basic integration
 
 ```ts
-import { createClassicEditor } from '@soeditor/editor';
+import { createClassicEditor } from '@soeditor/editor/cms';
 
 const textarea = document.querySelector<HTMLTextAreaElement>('#content');
 if (textarea === null) throw new Error('Missing #content textarea.');

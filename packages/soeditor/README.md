@@ -1,12 +1,11 @@
 # @soeditor/editor
 
-Convenience npm and browser distribution for SoEditor. Modern applications
-can mount the experimental CMS Classic Editor in one call or explicitly attach
-only the editing/UI surfaces they need. Direct browser builds expose the same public API through
-`globalThis.SoEditor` without a global plugin registry.
+Lightweight CMS HTML WYSIWYG distribution for SoEditor. Modern applications
+mount the Classic Editor through the narrow `/cms` entry. The direct browser
+build exposes the WYSIWYG-only CMS API through `globalThis.SoEditor`.
 
 ```ts
-import { createClassicEditor } from '@soeditor/editor';
+import { createClassicEditor } from '@soeditor/editor/cms';
 import '@soeditor/editor/styles.css';
 
 const editor = await createClassicEditor(
@@ -39,7 +38,7 @@ CMS plugins, instance-scoped themes, and plain-text icon replacement are
 documented in
 [`docs/cms-plugin-ecosystem.md`](../../docs/cms-plugin-ecosystem.md).
 
-Lower-level assembly remains available:
+Historical lower-level assembly remains available from the compatibility root:
 
 ```ts
 import { SoEditor, minimalPreset } from '@soeditor/editor';
@@ -52,9 +51,6 @@ const editor = await SoEditor.create({
 });
 ```
 
-The repository distribution guide contains classic, visual-surface, and direct-browser
-examples. The umbrella also exports the public comments and revisions
-packages; applications still supply identity, permissions, persistence,
-retention, and audit behavior. The 1.0 umbrella additionally exports the
-framework-neutral Workspace lifecycle; React, Vue, and Node-only plugin tools
-remain separate packages.
+The package root retains released 1.0 compatibility exports. They are excluded
+from the `/cms` entry and standalone CMS global and receive compatibility fixes,
+not active product development.

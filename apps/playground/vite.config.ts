@@ -96,6 +96,9 @@ export default defineConfig({
                     import.meta.url,
                 ),
             ),
+            '@soeditor/presets/cms': fileURLToPath(
+                new URL('../../packages/presets/src/cms.ts', import.meta.url),
+            ),
             '@soeditor/presets': fileURLToPath(
                 new URL('../../packages/presets/src/index.ts', import.meta.url),
             ),

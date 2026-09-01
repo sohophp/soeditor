@@ -8,13 +8,13 @@ import {
     readFile,
     readdir,
     rm,
-    stat,
     writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { extname, join, resolve, sep } from 'node:path';
 import { stdout } from 'node:process';
 import { fileURLToPath, URL } from 'node:url';
+import { gzipSync } from 'node:zlib';
 import AxeBuilder from '@axe-core/playwright';
 import { chromium } from '@playwright/test';
 
@@ -585,15 +585,55 @@ try {
             'Vite packed-package consumer did not emit JS, CSS, and source maps.',
         );
     }
-    const viteJavaScriptSize = (
-        await stat(join(viteFixtureDirectory, 'dist/assets', viteJavaScript))
-    ).size;
-    if (viteJavaScriptSize > 100_000) {
+    const viteManifest = JSON.parse(
+        await readFile(
+            join(viteFixtureDirectory, 'dist/.vite/manifest.json'),
+            'utf8',
+        ),
+    );
+    const viteEntry = viteManifest['index.html'];
+    if (viteEntry === undefined || viteEntry.isEntry !== true) {
+        throw new Error('CMS Vite consumer has no manifest entry.');
+    }
+    const startupKeys = collectStaticManifestEntries(viteManifest, [
+        'index.html',
+        ...(viteEntry.dynamicImports ?? []),
+    ]);
+    const startupSources = await Promise.all(
+        [...startupKeys]
+            .map((key) => viteManifest[key]?.file)
+            .filter((file) => typeof file === 'string' && file.endsWith('.js'))
+            .map((file) =>
+                readFile(join(viteFixtureDirectory, 'dist', file), 'utf8'),
+            ),
+    );
+    const viteJavaScriptSize = startupSources.reduce(
+        (total, source) => total + Buffer.byteLength(source),
+        0,
+    );
+    const viteJavaScriptGzip = gzipSync(startupSources.join('\n')).length;
+    if (viteJavaScriptSize > 500_000 || viteJavaScriptGzip > 150_000) {
         throw new Error(
-            `Minimal Vite consumer exceeds its 100 kB tree-shaking guard (${String(viteJavaScriptSize)} bytes).`,
+            `CMS Vite startup exceeds its 500/150 kB guard (${String(viteJavaScriptSize)} raw / ${String(viteJavaScriptGzip)} gzip).`,
         );
     }
-    stdout.write('Vite packed-package production build passed.\n');
+    for (const excludedMarker of [
+        'Developer Visual',
+        'Markdown scroll area',
+        'SoEditor content preview',
+        'commentsServiceToken',
+        'revisionsServiceToken',
+        'video.insert',
+    ]) {
+        if (startupSources.some((source) => source.includes(excludedMarker))) {
+            throw new Error(
+                `CMS Vite startup retained excluded marker "${excludedMarker}".`,
+            );
+        }
+    }
+    stdout.write(
+        `CMS Vite packed-package build passed (${String(viteJavaScriptSize)} raw / ${String(viteJavaScriptGzip)} gzip).\n`,
+    );
 
     await cp(widgetFixtureSource, widgetFixtureDirectory, { recursive: true });
     const widgetPackagePath = join(widgetFixtureDirectory, 'package.json');
@@ -678,6 +718,20 @@ try {
     );
 } finally {
     await rm(temporaryRoot, { force: true, recursive: true });
+}
+
+function collectStaticManifestEntries(manifest, roots) {
+    const collected = new Set();
+    const pending = [...roots];
+    while (pending.length > 0) {
+        const key = pending.pop();
+        if (typeof key !== 'string' || collected.has(key)) continue;
+        const entry = manifest[key];
+        if (entry === undefined) continue;
+        collected.add(key);
+        pending.push(...(entry.imports ?? []));
+    }
+    return collected;
 }
 
 async function verifyPackedWidget(directory) {

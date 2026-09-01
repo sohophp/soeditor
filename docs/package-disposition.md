@@ -2,8 +2,8 @@
 
 ## Status
 
-Initial Phase 58 inventory. Classification describes the target product boundary,
-not an immediate deletion or compatibility promise.
+Completed Phase 58 inventory. Classification describes the enforced product
+boundary, not an immediate deletion or compatibility promise.
 
 ## Default CMS runtime
 
