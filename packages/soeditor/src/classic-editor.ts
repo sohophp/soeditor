@@ -162,10 +162,18 @@ interface Heights {
 }
 
 interface TableContextField {
+    readonly advanced?: boolean;
     readonly key: string;
     readonly label: string;
     readonly options?: readonly string[];
-    readonly type: 'number' | 'select' | 'text';
+    readonly type: 'number' | 'select' | 'text' | 'width';
+}
+
+interface TableWidthControl {
+    readonly element: HTMLElement;
+    focus(): void;
+    validate(): boolean;
+    value(): string;
 }
 
 type TableContextPropertyKind = 'cell' | 'row' | 'table';
@@ -1492,28 +1500,61 @@ function attachClassicTableContext(
         anchor: HTMLElement,
         activate: () => void,
     ): void => {
+        anchor.focus();
+        activate();
+        let inspected: unknown;
+        try {
+            inspected = editor.execute('table.cell.inspect');
+        } catch (error: unknown) {
+            ui.notifications.show({
+                message: error instanceof Error ? error.message : String(error),
+                severity: 'error',
+            });
+            return;
+        }
         close();
+        const body = document.createElement('div');
+        body.className = 'soeditor-table-cell-editor';
+        const help = document.createElement('p');
+        help.className = 'soeditor-table-cell-editor__help';
+        help.textContent =
+            'Edit the HTML inside this cell. Nested tables are not allowed.';
         const input = document.createElement('textarea');
         input.className = 'soeditor-table-context__editor';
-        input.value = anchor.dataset.cellHtml ?? '';
-        input.rows = 8;
+        input.value = tableContextProperty(inspected, 'contentHtml');
+        input.rows = 6;
+        input.spellcheck = false;
         input.setAttribute('aria-label', 'Cell HTML');
+        body.append(help, input);
+        const apply = (): void => {
+            anchor.focus();
+            activate();
+            if (execute('table.cell.setHtml', input.value)) {
+                dialog.close();
+            }
+        };
         const dialog = ui.dialogs.open({
-            title: 'Edit table cell',
-            content: input,
+            title: 'Edit cell HTML',
+            content: body,
             actions: [
                 {
                     kind: 'primary',
                     label: 'Apply',
-                    run: () => {
-                        anchor.focus();
-                        activate();
-                        if (execute('table.cell.setHtml', input.value)) {
-                            dialog.close();
-                        }
-                    },
+                    run: apply,
                 },
             ],
+        });
+        dialog.element.classList.add('soeditor-ui__link-dialog');
+        input.addEventListener('keydown', (event) => {
+            if (
+                event.key !== 'Enter' ||
+                event.isComposing ||
+                (!event.ctrlKey && !event.metaKey)
+            ) {
+                return;
+            }
+            event.preventDefault();
+            apply();
         });
         input.focus();
         input.select();
@@ -1542,7 +1583,7 @@ function attachClassicTableContext(
             kind === 'table'
                 ? [
                       { key: 'caption', label: 'Caption', type: 'text' },
-                      { key: 'width', label: 'Width (px or %)', type: 'text' },
+                      { key: 'width', label: 'Table width', type: 'width' },
                       {
                           key: 'alignment',
                           label: 'Alignment',
@@ -1550,11 +1591,13 @@ function attachClassicTableContext(
                           type: 'select',
                       },
                       {
+                          advanced: true,
                           key: 'responsiveClass',
                           label: 'Responsive classes',
                           type: 'text',
                       },
                       {
+                          advanced: true,
                           key: 'ariaLabel',
                           label: 'Accessible label',
                           type: 'text',
@@ -1570,11 +1613,13 @@ function attachClassicTableContext(
                         },
                         { key: 'height', label: 'Height', type: 'number' },
                         {
+                            advanced: true,
                             key: 'className',
                             label: 'Row classes',
                             type: 'text',
                         },
                         {
+                            advanced: true,
                             key: 'ariaLabel',
                             label: 'Accessible label',
                             type: 'text',
@@ -1600,11 +1645,13 @@ function attachClassicTableContext(
                             type: 'select',
                         },
                         {
+                            advanced: true,
                             key: 'className',
                             label: 'Cell classes',
                             type: 'text',
                         },
                         {
+                            advanced: true,
                             key: 'ariaLabel',
                             label: 'Accessible label',
                             type: 'text',
@@ -1614,15 +1661,48 @@ function attachClassicTableContext(
             string,
             HTMLInputElement | HTMLSelectElement
         >();
-        let tableWidthFeedback: HTMLElement | undefined;
+        let tableWidthControl: TableWidthControl | undefined;
         const body = document.createElement('div');
         body.className = 'soeditor-table-properties';
+        if (kind === 'cell') {
+            const selectionHelp = document.createElement('p');
+            selectionHelp.className = 'soeditor-table-properties__help';
+            selectionHelp.textContent = 'Changes apply to all selected cells.';
+            body.append(selectionHelp);
+        }
+        const primaryFields = document.createElement('div');
+        primaryFields.className =
+            'soeditor-ui__link-target-controls soeditor-table-properties__primary';
+        const advanced = document.createElement('details');
+        advanced.className =
+            'soeditor-ui__link-advanced soeditor-table-properties__advanced';
+        const advancedSummary = document.createElement('summary');
+        advancedSummary.textContent = 'Advanced settings';
+        const advancedFields = document.createElement('div');
+        advancedFields.className =
+            'soeditor-ui__link-target-controls soeditor-ui__link-advanced-fields soeditor-table-properties__advanced-fields';
+        let hasAdvancedFields = false;
         for (const field of fields) {
+            const existing = tableContextProperty(inspected, field.key);
+            const target = field.advanced ? advancedFields : primaryFields;
+            if (field.advanced) {
+                hasAdvancedFields = true;
+                if (existing.length > 0) advanced.open = true;
+            }
+            if (field.type === 'width') {
+                tableWidthControl = createTableWidthControl(
+                    document,
+                    existing,
+                    ui.translate,
+                );
+                target.append(tableWidthControl.element);
+                continue;
+            }
             const label = document.createElement('label');
             label.className = 'soeditor-ui__field';
+            label.dataset.tableField = field.key;
             const caption = document.createElement('span');
             caption.textContent = field.label;
-            const existing = tableContextProperty(inspected, field.key);
             let control: HTMLInputElement | HTMLSelectElement;
             if (field.type === 'select') {
                 const select = document.createElement('select');
@@ -1633,7 +1713,7 @@ function attachClassicTableContext(
                 for (const value of field.options ?? []) {
                     const option = document.createElement('option');
                     option.value = value;
-                    option.textContent = value;
+                    option.textContent = tablePropertyOptionLabel(value);
                     select.append(option);
                 }
                 select.value = existing;
@@ -1643,29 +1723,16 @@ function attachClassicTableContext(
                 input.type = field.type;
                 input.value = existing;
                 if (field.type === 'number') input.min = '1';
-                if (kind === 'table' && field.key === 'width') {
-                    input.inputMode = 'text';
-                    input.placeholder = ui.translate(
-                        'For example: 640, 640px, or 70%',
-                    );
-                    const feedback = document.createElement('small');
-                    feedback.className = 'soeditor-table-properties__feedback';
-                    tableWidthFeedback = feedback;
-                    const refreshWidthFeedback = (): void => {
-                        updateTableWidthFeedback(input, feedback, ui.translate);
-                    };
-                    input.addEventListener('input', refreshWidthFeedback);
-                    input.addEventListener('blur', refreshWidthFeedback);
-                    refreshWidthFeedback();
-                }
                 control = input;
             }
             controls.set(field.key, control);
             label.append(caption, control);
-            if (field.key === 'width' && tableWidthFeedback !== undefined) {
-                label.append(tableWidthFeedback);
-            }
-            body.append(label);
+            target.append(label);
+        }
+        body.append(primaryFields);
+        if (hasAdvancedFields) {
+            advanced.append(advancedSummary, advancedFields);
+            body.append(advanced);
         }
         const title =
             kind === 'table'
@@ -1683,27 +1750,21 @@ function attachClassicTableContext(
                     kind: 'primary',
                     label: 'Apply',
                     run: () => {
-                        const widthControl = controls.get('width');
                         if (
-                            widthControl instanceof HTMLInputElement &&
-                            tableWidthFeedback !== undefined &&
-                            !updateTableWidthFeedback(
-                                widthControl,
-                                tableWidthFeedback,
-                                ui.translate,
-                            )
+                            tableWidthControl !== undefined &&
+                            !tableWidthControl.validate()
                         ) {
-                            widthControl.focus();
+                            tableWidthControl.focus();
                             return;
                         }
                         const properties: Record<string, unknown> = {};
                         for (const field of fields) {
                             const rawValue =
-                                controls.get(field.key)?.value.trim() ?? '';
-                            const value =
-                                kind === 'table' && field.key === 'width'
-                                    ? normalizeTableWidth(rawValue)
-                                    : rawValue;
+                                field.type === 'width'
+                                    ? (tableWidthControl?.value() ?? '')
+                                    : (controls.get(field.key)?.value.trim() ??
+                                      '');
+                            const value = rawValue;
                             properties[field.key] =
                                 field.type === 'number'
                                     ? value.length === 0
@@ -1724,7 +1785,10 @@ function attachClassicTableContext(
                 },
             ],
         });
-        controls.values().next().value?.focus();
+        dialog.element.classList.add('soeditor-ui__link-dialog');
+        const firstControl = controls.values().next().value;
+        if (firstControl !== undefined) firstControl.focus();
+        else tableWidthControl?.focus();
     };
     const selection = (event: Event): void => {
         const origin = event.target;
@@ -1776,6 +1840,23 @@ function attachClassicTableContext(
                     });
                     container.append(button);
                 }
+                const editCellHtml = document.createElement('button');
+                editCellHtml.type = 'button';
+                editCellHtml.className = 'soeditor-table-context__button';
+                ui.setIcon(editCellHtml, 'editor.source', 'Edit cell HTML');
+                editCellHtml.title = 'Edit cell HTML';
+                editCellHtml.setAttribute('aria-label', 'Edit cell HTML');
+                editCellHtml.disabled =
+                    !editor.commands.canExecute('table.cell.setHtml');
+                commandButtons.set('table.cell.setHtml', editCellHtml);
+                editCellHtml.addEventListener('click', () => {
+                    const current = activeTarget;
+                    const select = activeSelection;
+                    if (current !== undefined && select !== undefined) {
+                        openCellEditor(current, select);
+                    }
+                });
+                container.append(editCellHtml);
                 const actions = [
                     ['table.row.insertAfter', 'Add row'],
                     ['table.row.remove', 'Delete row'],
@@ -1921,30 +2002,151 @@ function tableContextProperty(value: unknown, key: string): string {
         : '';
 }
 
-function normalizeTableWidth(value: string): string {
-    return /^[1-9][0-9]{0,3}$/u.test(value) ? `${value}px` : value;
+function tablePropertyOptionLabel(value: string): string {
+    const labels: Readonly<Record<string, string>> = {
+        baseline: 'Baseline',
+        body: 'Body',
+        bottom: 'Bottom',
+        center: 'Center',
+        col: 'Column',
+        colgroup: 'Column group',
+        foot: 'Footer',
+        head: 'Header',
+        left: 'Left',
+        middle: 'Middle',
+        right: 'Right',
+        row: 'Row',
+        rowgroup: 'Row group',
+        top: 'Top',
+    };
+    return labels[value] ?? value;
 }
 
-function updateTableWidthFeedback(
-    input: HTMLInputElement,
-    feedback: HTMLElement,
+function createTableWidthControl(
+    document: Document,
+    currentValue: string,
     translate: (message: string) => string,
-): boolean {
-    const value = input.value.trim();
-    const valid =
-        value.length === 0 ||
-        /^(?:[1-9][0-9]{0,3})(?:px)?$/u.test(value) ||
-        /^(?:100|[1-9][0-9]?)%$/u.test(value);
-    const message = translate(
-        valid
-            ? 'Enter 1–9999 px (px is optional) or 1%–100%.'
-            : 'Width must be 1–9999 px or 1%–100%.',
-    );
-    input.setAttribute('aria-invalid', String(!valid));
-    input.setAttribute('aria-description', message);
-    feedback.classList.toggle('is-error', !valid);
-    feedback.textContent = message;
-    return valid;
+): TableWidthControl {
+    const normalized = /^[1-9][0-9]{0,3}$/u.test(currentValue)
+        ? `${currentValue}px`
+        : currentValue;
+    const presets = new Set(['25%', '50%', '75%', '100%']);
+    const wrapper = document.createElement('div');
+    wrapper.className = 'soeditor-ui__field soeditor-table-properties__width';
+    wrapper.dataset.tableField = 'width';
+    const caption = document.createElement('span');
+    caption.textContent = 'Table width';
+    const mode = document.createElement('select');
+    mode.setAttribute('aria-label', 'Table width');
+    const options = [
+        ['auto', 'Automatic'],
+        ['25%', '25%'],
+        ['50%', '50%'],
+        ['75%', '75%'],
+        ['100%', '100%'],
+        ['custom', 'Custom'],
+    ] as const;
+    for (const [value, label] of options) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        mode.append(option);
+    }
+    mode.value =
+        normalized.length === 0
+            ? 'auto'
+            : presets.has(normalized)
+              ? normalized
+              : 'custom';
+
+    const custom = document.createElement('div');
+    custom.className =
+        'soeditor-ui__link-rel-custom soeditor-table-properties__custom-width';
+    const amount = document.createElement('input');
+    amount.type = 'number';
+    amount.inputMode = 'numeric';
+    amount.min = '1';
+    amount.step = '1';
+    amount.setAttribute('aria-label', 'Custom width');
+    const unit = document.createElement('select');
+    unit.setAttribute('aria-label', 'Width unit');
+    for (const [value, label] of [
+        ['%', 'Percent'],
+        ['px', 'Pixels'],
+    ] as const) {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = label;
+        unit.append(option);
+    }
+    const parsed = /^(\d+)(px|%)$/u.exec(normalized);
+    amount.value = parsed?.[1] ?? '';
+    unit.value = parsed?.[2] ?? '%';
+    const feedback = document.createElement('small');
+    feedback.className = 'soeditor-table-properties__feedback';
+    const refresh = (): boolean => {
+        custom.hidden = mode.value !== 'custom';
+        feedback.hidden = custom.hidden;
+        if (custom.hidden) {
+            amount.setCustomValidity('');
+            amount.setAttribute('aria-invalid', 'false');
+            feedback.classList.remove('is-error');
+            feedback.textContent = '';
+            return true;
+        }
+        const percent = unit.value === '%';
+        const maximum = percent ? 100 : 9999;
+        amount.max = String(maximum);
+        const numeric = Number(amount.value);
+        const valid =
+            /^\d+$/u.test(amount.value) &&
+            Number.isInteger(numeric) &&
+            numeric >= 1 &&
+            numeric <= maximum;
+        const message = translate(
+            percent
+                ? 'Enter a whole number from 1 to 100.'
+                : 'Enter a whole number from 1 to 9999.',
+        );
+        amount.setCustomValidity(valid ? '' : message);
+        amount.setAttribute('aria-invalid', String(!valid));
+        feedback.classList.toggle('is-error', !valid);
+        feedback.textContent = message;
+        return valid;
+    };
+    let previousMode = mode.value;
+    mode.addEventListener('change', () => {
+        if (
+            mode.value === 'custom' &&
+            presets.has(previousMode) &&
+            amount.value.length === 0
+        ) {
+            amount.value = previousMode.slice(0, -1);
+            unit.value = '%';
+        }
+        previousMode = mode.value;
+        refresh();
+        if (!custom.hidden) amount.focus();
+    });
+    amount.addEventListener('input', refresh);
+    unit.addEventListener('change', refresh);
+    custom.append(amount, unit);
+    wrapper.append(caption, mode, custom, feedback);
+    refresh();
+    return Object.freeze({
+        element: wrapper,
+        focus: () => mode.focus(),
+        validate: () => {
+            if (refresh()) return true;
+            amount.reportValidity();
+            return false;
+        },
+        value: () => {
+            if (mode.value === 'auto') return '';
+            if (mode.value !== 'custom') return mode.value;
+            return `${String(Number(amount.value))}${unit.value}`;
+        },
+    });
 }
 
 function enterMaximizedDocument(document: Document, owner: object): void {

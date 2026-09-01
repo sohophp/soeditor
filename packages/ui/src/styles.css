@@ -525,6 +525,7 @@
 
 .soeditor-ui__link-target-controls,
 .soeditor-ui__link-rel-custom {
+    align-items: start;
     display: grid;
     gap: 0.4rem;
     grid-template-columns: minmax(10rem, 0.9fr) minmax(12rem, 1.1fr);

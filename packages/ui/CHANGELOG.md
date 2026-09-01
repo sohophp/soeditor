@@ -4,6 +4,8 @@
 
 ### Patch Changes
 
+- Complete Simplified and Traditional Chinese labels for the redesigned CMS
+  table, row, cell-property, width, and cell-HTML controls.
 - Rework the CMS link dialog around a focused URL workflow, collapsible advanced
   attributes, responsive scrolling, localized labels, keyboard submission, and
   a distinct destructive remove action while retaining relative URL support.

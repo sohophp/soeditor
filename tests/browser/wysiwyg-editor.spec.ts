@@ -1078,7 +1078,9 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
         'Initial caption',
     );
     await tableDialog.getByLabel('Caption').fill('Qualified caption');
-    await tableDialog.getByLabel('Width (px or %)').fill('65%');
+    await tableDialog.getByLabel('Table width').selectOption('custom');
+    await tableDialog.getByLabel('Custom width').fill('65');
+    await tableDialog.getByLabel('Width unit').selectOption('%');
     await tableDialog.getByLabel('Alignment').selectOption('center');
     await tableDialog.getByRole('button', { name: 'Apply' }).click();
     const table = surface.locator('table');
@@ -1091,6 +1093,7 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
     const rowDialog = page.getByRole('dialog', { name: 'Row properties' });
     await rowDialog.getByLabel('Section').selectOption('head');
     await rowDialog.getByLabel('Height').fill('48');
+    await rowDialog.getByText('Advanced settings').click();
     await rowDialog.getByLabel('Row classes').fill('featured-row');
     await rowDialog.getByRole('button', { name: 'Apply' }).click();
     await expect(surface.locator('thead tr')).toHaveAttribute(
@@ -1107,6 +1110,7 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
     await cellDialog.getByLabel('Horizontal alignment').selectOption('center');
     await cellDialog.getByLabel('Vertical alignment').selectOption('middle');
     await cellDialog.getByLabel('Header scope').selectOption('col');
+    await cellDialog.getByText('Advanced settings').click();
     await cellDialog.getByLabel('Cell classes').fill('featured-cell');
     await cellDialog.getByRole('button', { name: 'Apply' }).click();
     const updatedCell = surface.locator('thead th').first();
@@ -1117,6 +1121,21 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
         /vertical-align:\s*middle/u,
     );
     await expect(updatedCell).toHaveAttribute('scope', 'col');
+
+    await updatedCell.click();
+    await toolbar.getByRole('button', { name: 'Edit cell HTML' }).click();
+    const cellHtmlDialog = page.getByRole('dialog', {
+        name: 'Edit cell HTML',
+    });
+    await expect(cellHtmlDialog).toContainText(
+        'Nested tables are not allowed.',
+    );
+    await expect(cellHtmlDialog.getByLabel('Cell HTML')).toHaveValue('Alpha');
+    await cellHtmlDialog
+        .getByLabel('Cell HTML')
+        .fill('<strong>Qualified cell</strong>');
+    await cellHtmlDialog.getByLabel('Cell HTML').press('Control+Enter');
+    await expect(updatedCell.locator('strong')).toHaveText('Qualified cell');
 
     await updatedCell.click();
     await toolbar.getByLabel('Column width').fill('240');

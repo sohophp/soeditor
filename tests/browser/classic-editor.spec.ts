@@ -164,28 +164,33 @@ test('presents the complete CMS showcase from the root URL', async ({
     const caption = tableDialog.getByLabel(/标题|Caption/u);
     await expect(caption).toHaveValue('CMS 功能交付状态');
     await caption.fill('可配置的表格标题');
-    const tableWidth = tableDialog.getByLabel(/宽度|Width/u);
+    await tableDialog
+        .getByLabel(/表格宽度|Table width/u)
+        .selectOption('custom');
+    const tableWidth = tableDialog.getByLabel(/自定义宽度|Custom width/u);
+    await tableDialog.getByLabel(/宽度单位|Width unit/u).selectOption('px');
     await expect(
         tableDialog.locator('.soeditor-table-properties__feedback'),
-    ).toContainText(/1–9999 px.*1%–100%/u);
+    ).toContainText(/1.*9999/u);
     await tableWidth.fill('10000');
     await expect(tableWidth).toHaveAttribute('aria-invalid', 'true');
     await expect(
         tableDialog.locator('.soeditor-table-properties__feedback.is-error'),
-    ).toContainText(/1–9999 px.*1%–100%/u);
-    await tableDialog.getByRole('button', { name: 'Apply' }).click();
+    ).toContainText(/1.*9999/u);
+    await tableDialog.getByRole('button', { name: /应用|Apply/u }).click();
     await expect(tableDialog).toBeVisible();
     await expect(page.locator('#content')).not.toHaveValue(/可配置的表格标题/u);
     await tableWidth.fill('640');
     await expect(tableWidth).toHaveAttribute('aria-invalid', 'false');
-    await tableDialog.getByLabel('Alignment').selectOption('right');
+    await tableDialog.getByLabel(/对齐方式|Alignment/u).selectOption('right');
+    await tableDialog.getByText(/高级设置|Advanced settings/u).click();
     await tableDialog
         .getByLabel(/响应式类名|Responsive classes/u)
         .fill('cms-table responsive-table');
     await tableDialog
         .getByLabel(/无障碍标签|Accessible label/u)
         .fill('CMS 功能验证结果');
-    await tableDialog.getByRole('button', { name: 'Apply' }).click();
+    await tableDialog.getByRole('button', { name: /应用|Apply/u }).click();
     await expect(page.locator('#content')).toHaveValue(/可配置的表格标题/u);
     await expect(
         wysiwyg.locator('table').first().locator('caption'),

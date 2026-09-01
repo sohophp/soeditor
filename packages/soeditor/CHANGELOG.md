@@ -4,6 +4,9 @@
 
 ### Patch Changes
 
+- Redesign CMS table and cell editing with preset or unit-based widths,
+  collapsible advanced properties, responsive dialogs, and a discoverable cell
+  HTML editor that reads canonical content before applying changes.
 - Preserve programmatically selected link ranges across Shadow DOM boundaries
   before opening the command-backed link editor.
 
