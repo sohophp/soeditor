@@ -1499,13 +1499,11 @@ function attachClassicTableContext(
             (Math.abs(Number(rows[0]) - Number(rows[1])) + 1) *
             (Math.abs(Number(columns[0]) - Number(columns[1])) + 1);
         if (selectedCount < 2 || activeTable === undefined) return false;
-        return Array.from(
-            activeTable.querySelectorAll<HTMLElement>('.soeditor-table-cell'),
-        ).every(
-            (cell) =>
-                (cell.getAttribute('rowspan') ?? '1') === '1' &&
-                (cell.getAttribute('colspan') ?? '1') === '1',
-        );
+        try {
+            return editor.execute('table.cells.canMerge', range) === true;
+        } catch {
+            return false;
+        }
     };
     const close = (): void => {
         balloon?.close();
@@ -2023,18 +2021,29 @@ function selectedTableRange(table: HTMLElement): unknown {
         ),
     );
     if (cells.length === 0) return undefined;
-    const positions = cells.map((cell) => ({
-        column:
-            cell instanceof HTMLTableCellElement
-                ? cell.cellIndex
-                : Number(cell.dataset.column),
-        row:
-            cell instanceof HTMLTableCellElement
-                ? cell.parentElement instanceof HTMLTableRowElement
-                    ? cell.parentElement.rowIndex
-                    : Number.NaN
-                : Number(cell.dataset.row),
-    }));
+    const tableRows = Array.from(table.querySelectorAll('tr'));
+    const positions = cells.map((cell) => {
+        const nativeCell = cell.matches('td,th')
+            ? cell
+            : cell.closest<HTMLElement>('td,th');
+        const nativeRow = nativeCell?.closest('tr');
+        const row =
+            nativeRow === null || nativeRow === undefined
+                ? Number(cell.dataset.row)
+                : tableRows.indexOf(nativeRow);
+        const rowCells =
+            nativeRow === null || nativeRow === undefined
+                ? []
+                : Array.from(nativeRow.children).filter(
+                      (child) =>
+                          child.localName === 'td' || child.localName === 'th',
+                  );
+        const column =
+            nativeCell === null || nativeCell === undefined
+                ? Number(cell.dataset.column)
+                : rowCells.indexOf(nativeCell);
+        return { column, row };
+    });
     if (
         positions.some(
             ({ column, row }) =>

@@ -866,6 +866,15 @@ export class WysiwygEditingEngine implements EditingEngine {
                 detail: Object.freeze({
                     ...(selected?.focus ?? { column: 0, row: 0 }),
                     activate,
+                    range:
+                        selected === undefined
+                            ? undefined
+                            : Object.freeze({
+                                  anchor: Object.freeze({
+                                      ...selected.anchor,
+                                  }),
+                                  focus: Object.freeze({ ...selected.focus }),
+                              }),
                 }),
             }),
         );
