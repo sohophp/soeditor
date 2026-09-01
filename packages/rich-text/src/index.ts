@@ -78,6 +78,15 @@ export type {
     TableColumnResizeOptions,
     TableInsertOptions,
     TableProperties,
+    TableDimension,
     TableRowProperties,
+    TableSectionProperties,
     TableSection,
 } from './table.js';
+export { tableEditorServiceToken } from './table-editor-service.js';
+export type {
+    TableEditorDiagnostic,
+    TableEditorService,
+    TableEditorSnapshot,
+    TableStructuralAction,
+} from './table-editor-service.js';

@@ -15,6 +15,7 @@ import { describe, expect, it, vi } from 'vitest';
 import {
     RichTextArgumentError,
     TablePlugin,
+    tableEditorServiceToken,
     type TableCellRange,
 } from '../src/index.js';
 
@@ -185,10 +186,10 @@ describe('structured table feature', () => {
         });
 
         expect(harness.html()).toContain(
-            '<table data-soeditor-align="center" data-soeditor-width="80%" data-soeditor-responsive-class="cms-table responsive" aria-label="Quarterly results" data-cms="table" role="grid"><caption>Results</caption><colgroup data-soeditor-columns="true"><col data-soeditor-width="240"><col></colgroup>',
+            '<table data-soeditor-align="center" width="80%" data-soeditor-responsive-class="cms-table responsive" aria-label="Quarterly results" data-cms="table" role="grid"><caption>Results</caption><colgroup data-soeditor-columns="true"><col data-soeditor-width="240"><col></colgroup>',
         );
         expect(harness.html()).toContain(
-            '<thead><tr aria-label="Header row" data-soeditor-class="highlight" data-soeditor-height="48" data-row="header"><th data-soeditor-class="numeric" data-soeditor-align="right" data-soeditor-vertical-align="middle" scope="col" headers="amount">A</th>',
+            '<thead><tr aria-label="Header row" data-soeditor-class="highlight" height="48" data-row="header"><th data-soeditor-class="numeric" data-soeditor-align="right" data-soeditor-vertical-align="middle" scope="col" headers="amount">A</th>',
         );
         expect(harness.html()).toContain(
             '<tbody><tr><td>C</td><td>D</td></tr></tbody>',
@@ -224,6 +225,48 @@ describe('structured table feature', () => {
         expect(harness.html()).toBe(beforeInvalid);
         await harness.editor.destroy();
     });
+
+    it('exposes a diagnostic service and safely recovers an empty table', async () => {
+        const harness = await createTableHarness(
+            '<table data-cms="kept"><caption>Empty</caption><tbody></tbody></table>',
+        );
+        const service = harness.editor.services.get(tableEditorServiceToken);
+
+        expect(service.inspect()).toMatchObject({
+            diagnostic: { code: 'no-rows', recoverable: true },
+            editable: true,
+        });
+        service.recover();
+        expect(harness.html()).toBe(
+            '<table data-cms="kept"><caption>Empty</caption><tbody><tr><td></td></tr></tbody></table>',
+        );
+        expect(harness.replace).toHaveBeenCalledTimes(1);
+        expect(service.inspect().diagnostic).toBeUndefined();
+        await harness.editor.destroy();
+    });
+
+    it('applies native dimensions and tag-specific attributes through the service', async () => {
+        const harness = await createTableHarness(
+            '<table><tbody data-cms="body"><tr><th>A</th><th>B</th></tr></tbody></table>',
+        );
+        const service = harness.editor.services.get(tableEditorServiceToken);
+        service.updateTable({ height: '320px', width: '75%' });
+        service.updateSection({
+            customAttributes: [{ name: 'data-cms', value: 'updated' }],
+        });
+        service.updateCells({ height: '40', width: '25%' });
+
+        expect(harness.html()).toContain(
+            '<table width="75%" height="320"><tbody data-cms="updated"><tr><th height="40" width="25%">A</th>',
+        );
+        expect(harness.html()).not.toContain('<colgroup');
+        expect(() =>
+            service.updateCells({
+                customAttributes: [{ name: 'href', value: '/invalid' }],
+            }),
+        ).toThrow('invalid or reserved');
+        await harness.editor.destroy();
+    });
 });
 
 async function createTableHarness(source: string): Promise<{
@@ -257,6 +300,7 @@ async function createTableHarness(source: string): Promise<{
     const service: VisualEditingService = {
         canEdit: () => true,
         getSelection: () => undefined,
+        getStructuredSelection: () => range(0, 0),
         getSelectedStructuredBlock: () => block,
         insertHtml: vi.fn(),
         isBlockActive: () => false,

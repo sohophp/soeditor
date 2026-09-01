@@ -12,6 +12,7 @@ import {
 } from '@soeditor/wysiwyg';
 
 import wysiwygContentStyles from './wysiwyg-content.css?inline';
+import type * as TableEditorAttributes from './table-editor-attributes.js';
 import { cmsPreset } from '@soeditor/presets/cms';
 import type { EditorPreset } from '@soeditor/presets';
 import {
@@ -161,22 +162,7 @@ interface Heights {
     readonly minimum?: number;
 }
 
-interface TableContextField {
-    readonly advanced?: boolean;
-    readonly key: string;
-    readonly label: string;
-    readonly options?: readonly string[];
-    readonly type: 'number' | 'select' | 'text' | 'width';
-}
-
-interface TableWidthControl {
-    readonly element: HTMLElement;
-    focus(): void;
-    validate(): boolean;
-    value(): string;
-}
-
-type TableContextPropertyKind = 'cell' | 'row' | 'table';
+type TableContextPropertyKind = 'cell' | 'row' | 'section' | 'table';
 
 /** Mounts one complete classic HTML editor on a textarea or ordinary element. */
 export async function createClassicEditor(
@@ -1496,10 +1482,10 @@ function attachClassicTableContext(
             return false;
         }
     };
-    const openCellEditor = (
+    const openCellEditor = async (
         anchor: HTMLElement,
         activate: () => void,
-    ): void => {
+    ): Promise<void> => {
         anchor.focus();
         activate();
         let inspected: unknown;
@@ -1513,57 +1499,23 @@ function attachClassicTableContext(
             return;
         }
         close();
-        const body = document.createElement('div');
-        body.className = 'soeditor-table-cell-editor';
-        const help = document.createElement('p');
-        help.className = 'soeditor-table-cell-editor__help';
-        help.textContent =
-            'Edit the HTML inside this cell. Nested tables are not allowed.';
-        const input = document.createElement('textarea');
-        input.className = 'soeditor-table-context__editor';
-        input.value = tableContextProperty(inspected, 'contentHtml');
-        input.rows = 6;
-        input.spellcheck = false;
-        input.setAttribute('aria-label', 'Cell HTML');
-        body.append(help, input);
-        const apply = (): void => {
-            anchor.focus();
-            activate();
-            if (execute('table.cell.setHtml', input.value)) {
-                dialog.close();
-            }
-        };
-        const dialog = ui.dialogs.open({
-            title: 'Edit cell HTML',
-            content: body,
-            actions: [
-                {
-                    kind: 'primary',
-                    label: 'Apply',
-                    run: apply,
-                },
-            ],
-        });
-        dialog.element.classList.add('soeditor-ui__link-dialog');
-        input.addEventListener('keydown', (event) => {
-            if (
-                event.key !== 'Enter' ||
-                event.isComposing ||
-                (!event.ctrlKey && !event.metaKey)
-            ) {
-                return;
-            }
-            event.preventDefault();
-            apply();
-        });
-        input.focus();
-        input.select();
+        const module = await import('./table-editor-attributes.js');
+        module.openTableCellHtmlDialog(
+            document,
+            (options) => ui.dialogs.open(options),
+            tableContextProperty(inspected, 'contentHtml'),
+            (value) => {
+                anchor.focus();
+                activate();
+                return execute('table.cell.setHtml', value);
+            },
+        );
     };
-    const openProperties = (
+    const openProperties = async (
         anchor: HTMLElement,
         activate: () => void,
         kind: TableContextPropertyKind,
-    ): void => {
+    ): Promise<void> => {
         anchor.focus();
         activate();
         const inspectCommand =
@@ -1579,89 +1531,25 @@ function attachClassicTableContext(
             return;
         }
         close();
-        const fields: readonly TableContextField[] =
-            kind === 'table'
-                ? [
-                      { key: 'caption', label: 'Caption', type: 'text' },
-                      { key: 'width', label: 'Table width', type: 'width' },
-                      {
-                          key: 'alignment',
-                          label: 'Alignment',
-                          options: ['left', 'center', 'right'],
-                          type: 'select',
-                      },
-                      {
-                          advanced: true,
-                          key: 'responsiveClass',
-                          label: 'Responsive classes',
-                          type: 'text',
-                      },
-                      {
-                          advanced: true,
-                          key: 'ariaLabel',
-                          label: 'Accessible label',
-                          type: 'text',
-                      },
-                  ]
-                : kind === 'row'
-                  ? [
-                        {
-                            key: 'section',
-                            label: 'Section',
-                            options: ['head', 'body', 'foot'],
-                            type: 'select',
-                        },
-                        { key: 'height', label: 'Height', type: 'number' },
-                        {
-                            advanced: true,
-                            key: 'className',
-                            label: 'Row classes',
-                            type: 'text',
-                        },
-                        {
-                            advanced: true,
-                            key: 'ariaLabel',
-                            label: 'Accessible label',
-                            type: 'text',
-                        },
-                    ]
-                  : [
-                        {
-                            key: 'horizontalAlignment',
-                            label: 'Horizontal alignment',
-                            options: ['left', 'center', 'right'],
-                            type: 'select',
-                        },
-                        {
-                            key: 'verticalAlignment',
-                            label: 'Vertical alignment',
-                            options: ['top', 'middle', 'bottom', 'baseline'],
-                            type: 'select',
-                        },
-                        {
-                            key: 'scope',
-                            label: 'Header scope',
-                            options: ['col', 'colgroup', 'row', 'rowgroup'],
-                            type: 'select',
-                        },
-                        {
-                            advanced: true,
-                            key: 'className',
-                            label: 'Cell classes',
-                            type: 'text',
-                        },
-                        {
-                            advanced: true,
-                            key: 'ariaLabel',
-                            label: 'Accessible label',
-                            type: 'text',
-                        },
-                    ];
+        let attributeModule: typeof TableEditorAttributes;
+        try {
+            attributeModule = await import('./table-editor-attributes.js');
+        } catch {
+            ui.notifications.show({
+                message: '表格附加属性编辑器加载失败，请重试。',
+                severity: 'error',
+            });
+            return;
+        }
+        const fields = attributeModule.tablePropertyFields(kind);
         const controls = new Map<
             string,
             HTMLInputElement | HTMLSelectElement
         >();
-        let tableWidthControl: TableWidthControl | undefined;
+        const dimensionControls = new Map<
+            string,
+            TableEditorAttributes.TableDimensionControl
+        >();
         const body = document.createElement('div');
         body.className = 'soeditor-table-properties';
         if (kind === 'cell') {
@@ -1689,13 +1577,16 @@ function attachClassicTableContext(
                 hasAdvancedFields = true;
                 if (existing.length > 0) advanced.open = true;
             }
-            if (field.type === 'width') {
-                tableWidthControl = createTableWidthControl(
+            if (field.type === 'dimension') {
+                const dimension = attributeModule.createTableDimensionControl(
                     document,
                     existing,
                     ui.translate,
+                    field.label,
+                    field.key,
                 );
-                target.append(tableWidthControl.element);
+                dimensionControls.set(field.key, dimension);
+                target.append(dimension.element);
                 continue;
             }
             const label = document.createElement('label');
@@ -1713,16 +1604,17 @@ function attachClassicTableContext(
                 for (const value of field.options ?? []) {
                     const option = document.createElement('option');
                     option.value = value;
-                    option.textContent = tablePropertyOptionLabel(value);
+                    option.textContent =
+                        attributeModule.tablePropertyOptionLabel(value);
                     select.append(option);
                 }
                 select.value = existing;
                 control = select;
             } else {
                 const input = document.createElement('input');
-                input.type = field.type;
+                input.type = 'text';
                 input.value = existing;
-                if (field.type === 'number') input.min = '1';
+                input.readOnly = field.type === 'readonly';
                 control = input;
             }
             controls.set(field.key, control);
@@ -1734,12 +1626,26 @@ function attachClassicTableContext(
             advanced.append(advancedSummary, advancedFields);
             body.append(advanced);
         }
+        const customAttributes = attributeModule.createTableTagAttributeEditor(
+            document,
+            attributeModule.readTableTagAttributes(
+                tableContextValue(inspected, 'customAttributes'),
+            ),
+            attributeModule.tableAttributeSuggestions(
+                kind,
+                tableContextProperty(inspected, 'tagName'),
+            ),
+            attributeModule.managedTableAttributes(kind),
+        );
+        body.append(customAttributes.element);
         const title =
             kind === 'table'
                 ? 'Table properties'
                 : kind === 'row'
                   ? 'Row properties'
-                  : 'Cell properties';
+                  : kind === 'section'
+                    ? 'Section properties'
+                    : 'Cell properties';
         const command =
             kind === 'table' ? 'table.properties' : `table.${kind}.properties`;
         const dialog = ui.dialogs.open({
@@ -1750,32 +1656,33 @@ function attachClassicTableContext(
                     kind: 'primary',
                     label: 'Apply',
                     run: () => {
-                        if (
-                            tableWidthControl !== undefined &&
-                            !tableWidthControl.validate()
-                        ) {
-                            tableWidthControl.focus();
-                            return;
+                        for (const dimension of dimensionControls.values()) {
+                            if (!dimension.validate()) {
+                                dimension.focus();
+                                return;
+                            }
                         }
+                        const attributes = customAttributes.value();
+                        if (attributes === undefined) return;
                         const properties: Record<string, unknown> = {};
                         for (const field of fields) {
+                            if (field.type === 'readonly') continue;
                             const rawValue =
-                                field.type === 'width'
-                                    ? (tableWidthControl?.value() ?? '')
+                                field.type === 'dimension'
+                                    ? (dimensionControls
+                                          .get(field.key)
+                                          ?.value() ?? '')
                                     : (controls.get(field.key)?.value.trim() ??
                                       '');
                             const value = rawValue;
                             properties[field.key] =
-                                field.type === 'number'
-                                    ? value.length === 0
-                                        ? null
-                                        : Number(value)
-                                    : field.key === 'section'
-                                      ? value
-                                      : value.length === 0
-                                        ? null
-                                        : value;
+                                field.key === 'section'
+                                    ? value
+                                    : value.length === 0
+                                      ? null
+                                      : value;
                         }
+                        properties.customAttributes = attributes;
                         anchor.focus();
                         activate();
                         if (execute(command, properties)) {
@@ -1788,7 +1695,53 @@ function attachClassicTableContext(
         dialog.element.classList.add('soeditor-ui__link-dialog');
         const firstControl = controls.values().next().value;
         if (firstControl !== undefined) firstControl.focus();
-        else tableWidthControl?.focus();
+        else dimensionControls.values().next().value?.focus();
+    };
+    const openTableEditor = (
+        anchor: HTMLElement,
+        activate: () => void,
+    ): void => {
+        anchor.focus();
+        activate();
+        const body = document.createElement('div');
+        body.className = 'soeditor-table-editor-layers';
+        const help = document.createElement('p');
+        help.textContent = '选择要编辑的表格层级。';
+        body.append(help);
+        const dialog = ui.dialogs.open({
+            title: '表格编辑',
+            content: body,
+            actions: [],
+        });
+        for (const [kind, label] of [
+            ['table', '表格'],
+            ['section', '分区'],
+            ['row', '行'],
+            ['cell', '单元格'],
+        ] as const) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'soeditor-ui__dialog-action';
+            button.textContent = label;
+            if (kind === 'section') {
+                try {
+                    const section = editor.execute('table.section.inspect');
+                    button.disabled =
+                        tableContextValue(section, 'explicit') !== true;
+                    if (button.disabled) {
+                        button.title =
+                            '当前行直接位于 table 下，没有可编辑的显式分区。';
+                    }
+                } catch {
+                    button.disabled = true;
+                }
+            }
+            button.addEventListener('click', () => {
+                dialog.close();
+                void openProperties(anchor, activate, kind);
+            });
+            body.append(button);
+        }
     };
     const selection = (event: Event): void => {
         const origin = event.target;
@@ -1819,27 +1772,20 @@ function attachClassicTableContext(
             content: (container) => {
                 container.classList.add('soeditor-table-context');
                 container.setAttribute('aria-label', 'Table tools');
-                const propertyActions = [
-                    ['table.properties', 'Table properties', 'table'],
-                    ['table.row.properties', 'Row properties', 'row'],
-                    ['table.cell.properties', 'Cell properties', 'cell'],
-                ] as const;
-                for (const [iconId, label, kind] of propertyActions) {
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'soeditor-table-context__button';
-                    ui.setIcon(button, iconId, label);
-                    button.title = label;
-                    button.setAttribute('aria-label', label);
-                    button.addEventListener('click', () => {
-                        const current = activeTarget;
-                        const select = activeSelection;
-                        if (current !== undefined && select !== undefined) {
-                            openProperties(current, select, kind);
-                        }
-                    });
-                    container.append(button);
-                }
+                const properties = document.createElement('button');
+                properties.type = 'button';
+                properties.className = 'soeditor-table-context__button';
+                ui.setIcon(properties, 'table.properties', 'Table editor');
+                properties.title = 'Table editor';
+                properties.setAttribute('aria-label', 'Table editor');
+                properties.addEventListener('click', () => {
+                    const current = activeTarget;
+                    const select = activeSelection;
+                    if (current !== undefined && select !== undefined) {
+                        openTableEditor(current, select);
+                    }
+                });
+                container.append(properties);
                 const editCellHtml = document.createElement('button');
                 editCellHtml.type = 'button';
                 editCellHtml.className = 'soeditor-table-context__button';
@@ -1853,7 +1799,7 @@ function attachClassicTableContext(
                     const current = activeTarget;
                     const select = activeSelection;
                     if (current !== undefined && select !== undefined) {
-                        openCellEditor(current, select);
+                        void openCellEditor(current, select);
                     }
                 });
                 container.append(editCellHtml);
@@ -1883,27 +1829,6 @@ function attachClassicTableContext(
                     });
                     container.append(button);
                 }
-                const resizeLabel = document.createElement('label');
-                resizeLabel.className = 'soeditor-table-context__resize';
-                const resizeText = document.createElement('span');
-                resizeText.textContent = 'Column width';
-                const resize = document.createElement('input');
-                resize.type = 'range';
-                resize.min = '40';
-                resize.max = '1200';
-                resize.step = '10';
-                resize.value = '120';
-                resize.disabled = !editor.commands.canExecute(
-                    'table.column.resize',
-                );
-                resize.addEventListener('change', () => {
-                    activeSelection?.();
-                    execute('table.column.resize', {
-                        width: Number(resize.value),
-                    });
-                });
-                resizeLabel.append(resizeText, resize);
-                container.append(resizeLabel);
             },
         });
         balloon.element.classList.add('soeditor-ui__table-balloon');
@@ -2002,151 +1927,10 @@ function tableContextProperty(value: unknown, key: string): string {
         : '';
 }
 
-function tablePropertyOptionLabel(value: string): string {
-    const labels: Readonly<Record<string, string>> = {
-        baseline: 'Baseline',
-        body: 'Body',
-        bottom: 'Bottom',
-        center: 'Center',
-        col: 'Column',
-        colgroup: 'Column group',
-        foot: 'Footer',
-        head: 'Header',
-        left: 'Left',
-        middle: 'Middle',
-        right: 'Right',
-        row: 'Row',
-        rowgroup: 'Row group',
-        top: 'Top',
-    };
-    return labels[value] ?? value;
-}
-
-function createTableWidthControl(
-    document: Document,
-    currentValue: string,
-    translate: (message: string) => string,
-): TableWidthControl {
-    const normalized = /^[1-9][0-9]{0,3}$/u.test(currentValue)
-        ? `${currentValue}px`
-        : currentValue;
-    const presets = new Set(['25%', '50%', '75%', '100%']);
-    const wrapper = document.createElement('div');
-    wrapper.className = 'soeditor-ui__field soeditor-table-properties__width';
-    wrapper.dataset.tableField = 'width';
-    const caption = document.createElement('span');
-    caption.textContent = 'Table width';
-    const mode = document.createElement('select');
-    mode.setAttribute('aria-label', 'Table width');
-    const options = [
-        ['auto', 'Automatic'],
-        ['25%', '25%'],
-        ['50%', '50%'],
-        ['75%', '75%'],
-        ['100%', '100%'],
-        ['custom', 'Custom'],
-    ] as const;
-    for (const [value, label] of options) {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = label;
-        mode.append(option);
-    }
-    mode.value =
-        normalized.length === 0
-            ? 'auto'
-            : presets.has(normalized)
-              ? normalized
-              : 'custom';
-
-    const custom = document.createElement('div');
-    custom.className =
-        'soeditor-ui__link-rel-custom soeditor-table-properties__custom-width';
-    const amount = document.createElement('input');
-    amount.type = 'number';
-    amount.inputMode = 'numeric';
-    amount.min = '1';
-    amount.step = '1';
-    amount.setAttribute('aria-label', 'Custom width');
-    const unit = document.createElement('select');
-    unit.setAttribute('aria-label', 'Width unit');
-    for (const [value, label] of [
-        ['%', 'Percent'],
-        ['px', 'Pixels'],
-    ] as const) {
-        const option = document.createElement('option');
-        option.value = value;
-        option.textContent = label;
-        unit.append(option);
-    }
-    const parsed = /^(\d+)(px|%)$/u.exec(normalized);
-    amount.value = parsed?.[1] ?? '';
-    unit.value = parsed?.[2] ?? '%';
-    const feedback = document.createElement('small');
-    feedback.className = 'soeditor-table-properties__feedback';
-    const refresh = (): boolean => {
-        custom.hidden = mode.value !== 'custom';
-        feedback.hidden = custom.hidden;
-        if (custom.hidden) {
-            amount.setCustomValidity('');
-            amount.setAttribute('aria-invalid', 'false');
-            feedback.classList.remove('is-error');
-            feedback.textContent = '';
-            return true;
-        }
-        const percent = unit.value === '%';
-        const maximum = percent ? 100 : 9999;
-        amount.max = String(maximum);
-        const numeric = Number(amount.value);
-        const valid =
-            /^\d+$/u.test(amount.value) &&
-            Number.isInteger(numeric) &&
-            numeric >= 1 &&
-            numeric <= maximum;
-        const message = translate(
-            percent
-                ? 'Enter a whole number from 1 to 100.'
-                : 'Enter a whole number from 1 to 9999.',
-        );
-        amount.setCustomValidity(valid ? '' : message);
-        amount.setAttribute('aria-invalid', String(!valid));
-        feedback.classList.toggle('is-error', !valid);
-        feedback.textContent = message;
-        return valid;
-    };
-    let previousMode = mode.value;
-    mode.addEventListener('change', () => {
-        if (
-            mode.value === 'custom' &&
-            presets.has(previousMode) &&
-            amount.value.length === 0
-        ) {
-            amount.value = previousMode.slice(0, -1);
-            unit.value = '%';
-        }
-        previousMode = mode.value;
-        refresh();
-        if (!custom.hidden) amount.focus();
-    });
-    amount.addEventListener('input', refresh);
-    unit.addEventListener('change', refresh);
-    custom.append(amount, unit);
-    wrapper.append(caption, mode, custom, feedback);
-    refresh();
-    return Object.freeze({
-        element: wrapper,
-        focus: () => mode.focus(),
-        validate: () => {
-            if (refresh()) return true;
-            amount.reportValidity();
-            return false;
-        },
-        value: () => {
-            if (mode.value === 'auto') return '';
-            if (mode.value !== 'custom') return mode.value;
-            return `${String(Number(amount.value))}${unit.value}`;
-        },
-    });
+function tableContextValue(value: unknown, key: string): unknown {
+    return typeof value === 'object' && value !== null
+        ? Reflect.get(value, key)
+        : undefined;
 }
 
 function enterMaximizedDocument(document: Document, owner: object): void {

@@ -7,7 +7,7 @@ symbol list or declaration hash requires explicit API review. CSS exports and
 CLI bins are listed as stable resources. Undeclared `src`/`dist` subpaths and
 implementation modules are internal even when present in a checkout or tarball.
 
-Summary: 24 packages; 832 stable, 375 experimental, and 0 deprecated symbol
+Summary: 24 packages; 846 stable, 375 experimental, and 0 deprecated symbol
 entries.
 
 ## @soeditor/adapter-sofinder
@@ -159,7 +159,7 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`9f334753f0f7d45fd7997373323dccef57a37ea739193a3e0c70fcda408f01fb`
+`a4799c64cb65a21bb25e203967da62779b8f2f4a3e83d21aba122bda5e5887a8`
 
 ### .
 
@@ -588,14 +588,21 @@ Declaration SHA-256:
 | `SuperscriptPlugin`                                   | type/value | experimental   | `e9df29f8df5b6550` |
 | `TableAlignment`                                      | type       | experimental   | `0163c5b74b87512c` |
 | `TableCellPosition`                                   | type       | experimental   | `6e350e9e0f7a1a25` |
-| `TableCellProperties`                                 | type       | experimental   | `af031555f8b8f8fc` |
+| `TableCellProperties`                                 | type       | experimental   | `e4d05b4c297897ab` |
 | `TableCellRange`                                      | type       | experimental   | `da6561db30f9826f` |
 | `TableColumnResizeOptions`                            | type       | experimental   | `02199ee9f93561d3` |
+| `TableDimension`                                      | type       | stable         | `bcff90480c4744d2` |
+| `TableEditorDiagnostic`                               | type       | stable         | `556615d7e3a2913f` |
+| `TableEditorService`                                  | type       | stable         | `7990b3f2add0d230` |
+| `tableEditorServiceToken`                             | value      | stable         | `9d7c1c036a688f11` |
+| `TableEditorSnapshot`                                 | type       | stable         | `daa84923c98e4084` |
 | `TableInsertOptions`                                  | type       | experimental   | `19957619ac6da0f5` |
 | `TablePlugin`                                         | type/value | experimental   | `348f19c98fe256ac` |
-| `TableProperties`                                     | type       | experimental   | `d464909cca24bc4a` |
-| `TableRowProperties`                                  | type       | experimental   | `b718ef934c71d669` |
+| `TableProperties`                                     | type       | experimental   | `85559724ab5d4332` |
+| `TableRowProperties`                                  | type       | experimental   | `4a402e707e1f7e6e` |
 | `TableSection`                                        | type       | experimental   | `ea29ff9aee721f94` |
+| `TableSectionProperties`                              | type       | stable         | `3e1f2c96ebd35d08` |
+| `TableStructuralAction`                               | type       | stable         | `c3ec5e87d1458b15` |
 | `TextAlignment`                                       | type       | experimental   | `dda880ee7c63d1fb` |
 | `ToolbarConfiguration`                                | type       | stable         | `622e54f7531e5711` |
 | `ToolbarItemContext`                                  | type       | stable         | `19bd4fe781eb4c79` |
@@ -1346,12 +1353,12 @@ Declaration SHA-256:
 ## @soeditor/rich-text
 
 Declaration tree SHA-256:
-`ee4ad4d5b4504733c874b1eac32ec170fc56460e9d26e97ac25d7dbbc86b72b3`
+`cc9b846dacd5552301b0ebc1aa45d0e1b07ef190b2de0ea5685ad3ae1581cb86`
 
 ### .
 
 Declaration SHA-256:
-`cfe0d926c38b31a04b5614554a61679a60702a6e1fdc6493ad3e23b523678908`
+`f5d67ada767619843dadcb731ef05236bd554b818051590d2d057118e27afe46`
 
 | Export                            | Kind       | Classification | Signature SHA-256  |
 | --------------------------------- | ---------- | -------------- | ------------------ |
@@ -1408,14 +1415,21 @@ Declaration SHA-256:
 | `SuperscriptPlugin`               | type/value | experimental   | `e9df29f8df5b6550` |
 | `TableAlignment`                  | type       | experimental   | `0163c5b74b87512c` |
 | `TableCellPosition`               | type       | experimental   | `6e350e9e0f7a1a25` |
-| `TableCellProperties`             | type       | experimental   | `af031555f8b8f8fc` |
+| `TableCellProperties`             | type       | experimental   | `e4d05b4c297897ab` |
 | `TableCellRange`                  | type       | experimental   | `da6561db30f9826f` |
 | `TableColumnResizeOptions`        | type       | experimental   | `02199ee9f93561d3` |
+| `TableDimension`                  | type       | stable         | `bcff90480c4744d2` |
+| `TableEditorDiagnostic`           | type       | stable         | `556615d7e3a2913f` |
+| `TableEditorService`              | type       | stable         | `7990b3f2add0d230` |
+| `tableEditorServiceToken`         | value      | stable         | `9d7c1c036a688f11` |
+| `TableEditorSnapshot`             | type       | stable         | `daa84923c98e4084` |
 | `TableInsertOptions`              | type       | experimental   | `19957619ac6da0f5` |
 | `TablePlugin`                     | type/value | experimental   | `348f19c98fe256ac` |
-| `TableProperties`                 | type       | experimental   | `d464909cca24bc4a` |
-| `TableRowProperties`              | type       | experimental   | `b718ef934c71d669` |
+| `TableProperties`                 | type       | experimental   | `85559724ab5d4332` |
+| `TableRowProperties`              | type       | experimental   | `4a402e707e1f7e6e` |
 | `TableSection`                    | type       | experimental   | `ea29ff9aee721f94` |
+| `TableSectionProperties`          | type       | stable         | `3e1f2c96ebd35d08` |
+| `TableStructuralAction`           | type       | stable         | `c3ec5e87d1458b15` |
 | `TextAlignment`                   | type       | experimental   | `dda880ee7c63d1fb` |
 | `UnderlinePlugin`                 | type/value | stable         | `21664954a83929a4` |
 | `UnorderedListPlugin`             | type/value | stable         | `d6b801758a5bb5c7` |

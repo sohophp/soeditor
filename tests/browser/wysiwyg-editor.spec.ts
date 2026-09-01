@@ -1117,40 +1117,48 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
         .poll(() => selectionSnapshot(first).then(({ inside }) => inside))
         .toBe(true);
 
-    await toolbar.getByRole('button', { name: 'Table properties' }).click();
+    await toolbar.getByRole('button', { name: 'Table editor' }).click();
+    await page
+        .getByRole('dialog', { name: '表格编辑' })
+        .getByRole('button', { name: '表格', exact: true })
+        .click();
     const tableDialog = page.getByRole('dialog', { name: 'Table properties' });
     await expect(tableDialog.getByLabel('Caption')).toHaveValue(
         'Initial caption',
     );
     await tableDialog.getByLabel('Caption').fill('Qualified caption');
-    await tableDialog.getByLabel('Table width').selectOption('custom');
-    await tableDialog.getByLabel('Custom width').fill('65');
-    await tableDialog.getByLabel('Width unit').selectOption('%');
+    await tableDialog.getByLabel('Table width', { exact: true }).fill('65');
+    await tableDialog.getByLabel('Table width unit').selectOption('%');
     await tableDialog.getByLabel('Alignment').selectOption('center');
     await tableDialog.getByRole('button', { name: 'Apply' }).click();
     const table = surface.locator('table');
     await expect(table.locator('caption')).toHaveText('Qualified caption');
-    await expect(table).toHaveAttribute('style', /width:\s*65%/u);
+    await expect(table).toHaveAttribute('width', '65%');
     await expect(table).toHaveAttribute('style', /margin-inline:\s*auto/u);
 
     await first.click();
-    await toolbar.getByRole('button', { name: 'Row properties' }).click();
+    await toolbar.getByRole('button', { name: 'Table editor' }).click();
+    await page
+        .getByRole('dialog', { name: '表格编辑' })
+        .getByRole('button', { name: '行', exact: true })
+        .click();
     const rowDialog = page.getByRole('dialog', { name: 'Row properties' });
     await rowDialog.getByLabel('Section').selectOption('head');
-    await rowDialog.getByLabel('Height').fill('48');
+    await rowDialog.getByLabel('Height', { exact: true }).fill('48');
     await rowDialog.getByText('Advanced settings').click();
     await rowDialog.getByLabel('Row classes').fill('featured-row');
     await rowDialog.getByRole('button', { name: 'Apply' }).click();
-    await expect(surface.locator('thead tr')).toHaveAttribute(
-        'style',
-        /height:\s*48px/u,
-    );
+    await expect(surface.locator('thead tr')).toHaveAttribute('height', '48');
     await expect(surface.locator('thead tr')).toHaveClass(/featured-row/u);
 
     await surface.locator('thead td, thead th').first().click();
     await toolbar.getByRole('button', { name: 'Toggle header' }).click();
     await surface.locator('thead th').first().click();
-    await toolbar.getByRole('button', { name: 'Cell properties' }).click();
+    await toolbar.getByRole('button', { name: 'Table editor' }).click();
+    await page
+        .getByRole('dialog', { name: '表格编辑' })
+        .getByRole('button', { name: '单元格', exact: true })
+        .click();
     const cellDialog = page.getByRole('dialog', { name: 'Cell properties' });
     await cellDialog.getByLabel('Horizontal alignment').selectOption('center');
     await cellDialog.getByLabel('Vertical alignment').selectOption('middle');
@@ -1183,11 +1191,7 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
     await expect(updatedCell.locator('strong')).toHaveText('Qualified cell');
 
     await updatedCell.click();
-    await toolbar.getByLabel('Column width').fill('240');
-    await expect(surface.locator('col').first()).toHaveAttribute(
-        'style',
-        /width:\s*240px/u,
-    );
+    await expect(toolbar.getByLabel('Column width')).toHaveCount(0);
 });
 
 test('uses explicit Shift-click rectangular table selection for merge, split, and clear', async ({

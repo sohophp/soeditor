@@ -25,6 +25,12 @@ import {
     nestedEditingBridgeToken,
     type NestedEditingBridge,
 } from './nested-editing.js';
+import {
+    tableEditorServiceToken,
+    type TableEditorService,
+    type TableEditorSnapshot,
+    type TableStructuralAction,
+} from './table-editor-service.js';
 
 const tableType = 'soeditor.table';
 const maximumRows = 100;
@@ -75,6 +81,7 @@ export interface TableCellRange {
 
 export type TableAlignment = 'center' | 'left' | 'right';
 export type TableSection = 'body' | 'foot' | 'head';
+export type TableDimension = `${number}` | `${number}px` | `${number}%`;
 
 /** Partial table-level CMS properties accepted by `table.properties`. */
 export interface TableProperties {
@@ -83,6 +90,7 @@ export interface TableProperties {
     readonly caption?: string | null;
     readonly responsiveClass?: string | null;
     readonly width?: string | null;
+    readonly height?: string | null;
     readonly customAttributes?: readonly HtmlAttribute[];
 }
 
@@ -90,7 +98,7 @@ export interface TableProperties {
 export interface TableRowProperties {
     readonly ariaLabel?: string | null;
     readonly className?: string | null;
-    readonly height?: number | null;
+    readonly height?: number | string | null;
     readonly section?: TableSection;
     readonly customAttributes?: readonly HtmlAttribute[];
 }
@@ -103,6 +111,12 @@ export interface TableCellProperties {
     readonly scope?: 'col' | 'colgroup' | 'row' | 'rowgroup' | null;
     readonly verticalAlignment?:
         'baseline' | 'bottom' | 'middle' | 'top' | null;
+    readonly customAttributes?: readonly HtmlAttribute[];
+    readonly height?: string | null;
+    readonly width?: string | null;
+}
+
+export interface TableSectionProperties {
     readonly customAttributes?: readonly HtmlAttribute[];
 }
 
@@ -158,11 +172,29 @@ export class TablePlugin extends Plugin {
                 : undefined,
     });
     #selections = new WeakMap<EditingStructuredBlock, TableCellRange>();
+    readonly #tableEditorService: TableEditorService = Object.freeze({
+        executeStructuralAction: (action: TableStructuralAction) =>
+            this.editor.execute(structuralCommand(action)),
+        inspect: () => this.#inspectEditor(),
+        recover: () => this.#recoverEmptyTable(),
+        updateCells: (properties: TableCellProperties) =>
+            this.editor.execute('table.cell.properties', properties),
+        updateRows: (properties: TableRowProperties) =>
+            this.editor.execute('table.row.properties', properties),
+        updateSection: (properties: TableSectionProperties) =>
+            this.editor.execute('table.section.properties', properties),
+        updateTable: (properties: TableProperties) =>
+            this.editor.execute('table.properties', properties),
+    });
 
     override init(): void {
         this.editor.services.register(
             nestedEditingBridgeToken,
             this.#nestedEditingBridge,
+        );
+        this.editor.services.register(
+            tableEditorServiceToken,
+            this.#tableEditorService,
         );
         const registry = this.editor.services.get(
             structuredEditingRegistryToken,
@@ -389,6 +421,17 @@ export class TablePlugin extends Plugin {
                 ),
         );
         this.#registerTableCommand(
+            'table.section.properties',
+            'Set table section properties',
+            (table, parsed, range, args) =>
+                setSectionProperties(
+                    table,
+                    parsed,
+                    normalizedRange(range),
+                    readSectionProperties(args),
+                ),
+        );
+        this.#registerTableCommand(
             'table.column.resize',
             'Resize table columns',
             (table, parsed, range, args) =>
@@ -422,10 +465,19 @@ export class TablePlugin extends Plugin {
                             'data-soeditor-responsive-class',
                         ) ?? '',
                     width:
+                        attributeValue(table.attributes, 'width') ??
                         attributeValue(
                             table.attributes,
                             'data-soeditor-width',
-                        ) ?? '',
+                        ) ??
+                        '',
+                    height:
+                        attributeValue(table.attributes, 'height') ??
+                        attributeValue(
+                            table.attributes,
+                            'data-soeditor-height',
+                        ) ??
+                        '',
                     customAttributes: inspectCustomAttributes(table.attributes),
                 }),
         );
@@ -449,8 +501,13 @@ export class TablePlugin extends Plugin {
                     height:
                         attributeValue(
                             row?.element.attributes ?? [],
+                            'height',
+                        ) ??
+                        attributeValue(
+                            row?.element.attributes ?? [],
                             'data-soeditor-height',
-                        ) ?? '',
+                        ) ??
+                        '',
                     section:
                         tableRowSections(table.children)[normalized.top] ??
                         'body',
@@ -468,6 +525,7 @@ export class TablePlugin extends Plugin {
                 const cell = parsed.grid[normalized.top]?.[normalized.left];
                 const attributes = cell?.element.attributes ?? [];
                 return Object.freeze({
+                    tagName: cell?.element.tagName ?? '',
                     ariaLabel: attributeValue(attributes, 'aria-label') ?? '',
                     className:
                         attributeValue(attributes, 'data-soeditor-class') ?? '',
@@ -479,6 +537,16 @@ export class TablePlugin extends Plugin {
                             attributes,
                             'data-soeditor-vertical-align',
                         ) ?? '',
+                    height:
+                        attributeValue(attributes, 'height') ??
+                        attributeValue(attributes, 'data-soeditor-height') ??
+                        '',
+                    width:
+                        attributeValue(attributes, 'width') ??
+                        attributeValue(attributes, 'data-soeditor-width') ??
+                        '',
+                    rowspan: attributeValue(attributes, 'rowspan') ?? '1',
+                    colspan: attributeValue(attributes, 'colspan') ?? '1',
                     contentHtml:
                         cell === undefined
                             ? ''
@@ -490,6 +558,31 @@ export class TablePlugin extends Plugin {
                 });
             },
         );
+        this.#registerTableInspection(
+            'table.section.inspect',
+            'Inspect table section properties',
+            (table, parsed, range) =>
+                inspectSectionProperties(table, parsed, normalizedRange(range)),
+        );
+        this.editor.commands.register({
+            id: 'table.recover',
+            label: 'Repair empty table',
+            canExecute: ({ editor }) => {
+                const service = editor.services.tryGet(
+                    visualEditingServiceToken,
+                );
+                const block = service?.getSelectedStructuredBlock(tableType);
+                return (
+                    service?.canEdit() === true &&
+                    block !== undefined &&
+                    canRecoverEmptyTable(tableElement(block))
+                );
+            },
+            execute: (_context, ...args) => {
+                assertNoArguments('table.recover', args);
+                this.#recoverEmptyTable();
+            },
+        });
         this.editor.commands.register({
             id: 'table.remove',
             label: 'Remove table',
@@ -532,7 +625,91 @@ export class TablePlugin extends Plugin {
         ) {
             this.editor.services.unregister(nestedEditingBridgeToken);
         }
+        if (
+            this.editor.services.tryGet(tableEditorServiceToken) ===
+            this.#tableEditorService
+        ) {
+            this.editor.services.unregister(tableEditorServiceToken);
+        }
         this.#selections = new WeakMap();
+    }
+
+    #inspectEditor(): TableEditorSnapshot {
+        const service = this.editor.services.tryGet(visualEditingServiceToken);
+        const block = service?.getSelectedStructuredBlock(tableType);
+        if (service === undefined || block === undefined)
+            return { editable: false };
+        const table = tableElement(block);
+        try {
+            const parsed = parseTable(table);
+            const selection =
+                readServiceTableRange(service) ?? this.#selections.get(block);
+            if (selection === undefined) return { editable: service.canEdit() };
+            assertRange(parsed, selection, 'table editor');
+            return Object.freeze({
+                cell: this.editor.execute('table.cell.inspect') as Readonly<
+                    Record<string, unknown>
+                >,
+                editable: service.canEdit(),
+                row: this.editor.execute('table.row.inspect') as Readonly<
+                    Record<string, unknown>
+                >,
+                section: this.editor.execute(
+                    'table.section.inspect',
+                ) as Readonly<Record<string, unknown>>,
+                selection,
+                table: this.editor.execute('table.inspect') as Readonly<
+                    Record<string, unknown>
+                >,
+            });
+        } catch {
+            const noRows = hasNoRows(table);
+            return Object.freeze({
+                diagnostic: Object.freeze({
+                    code: noRows ? 'no-rows' : 'invalid-structure',
+                    message: noRows
+                        ? '表格没有可编辑的行。'
+                        : '表格结构异常，请使用源码模式修复或删除表格。',
+                    recoverable: noRows && canRecoverEmptyTable(table),
+                }),
+                editable: service.canEdit(),
+            });
+        }
+    }
+
+    #recoverEmptyTable(): void {
+        const service = requireTableService(
+            this.editor.services.tryGet(visualEditingServiceToken),
+            'table.recover',
+        );
+        const block = service.getSelectedStructuredBlock(tableType);
+        if (block === undefined) {
+            throw new RichTextArgumentError(
+                'table.recover',
+                'requires a selected table.',
+            );
+        }
+        const table = tableElement(block);
+        if (!canRecoverEmptyTable(table)) {
+            throw new RichTextArgumentError(
+                'table.recover',
+                'cannot safely repair this table.',
+            );
+        }
+        const row = htmlElement('tr', [], [htmlElement('td', [], [])]);
+        const emptyBody = directElement(table.children, 'tbody');
+        const children =
+            emptyBody === undefined
+                ? [...table.children, htmlElement('tbody', [], [row])]
+                : table.children.map((child) =>
+                      child === emptyBody
+                          ? { ...emptyBody, children: [row] }
+                          : child,
+                  );
+        service.replaceStructuredBlockContent(tableType, {
+            attributes: table.attributes,
+            children,
+        });
     }
 
     #registerInsert(): void {
@@ -654,6 +831,42 @@ function readServiceTableRange(
     return value === undefined ? undefined : readOptionalRange(value);
 }
 
+function structuralCommand(action: TableStructuralAction): string {
+    return {
+        'add-column': 'table.column.insertAfter',
+        'add-row': 'table.row.insertAfter',
+        'clear-cells': 'table.cells.clear',
+        'delete-column': 'table.column.remove',
+        'delete-row': 'table.row.remove',
+        'delete-table': 'table.remove',
+        'merge-cells': 'table.cells.merge',
+        'split-cell': 'table.cell.split',
+        'toggle-header': 'table.header.toggle',
+    }[action];
+}
+
+function hasNoRows(table: HtmlElement): boolean {
+    return !table.children.some(
+        (child) =>
+            isElement(child, 'tr') ||
+            (child.type === 'element' &&
+                ['thead', 'tbody', 'tfoot'].includes(child.tagName) &&
+                child.children.some((candidate) => isElement(candidate, 'tr'))),
+    );
+}
+
+function canRecoverEmptyTable(table: HtmlElement): boolean {
+    if (!hasNoRows(table)) return false;
+    return table.children.every(
+        (child) =>
+            isWhitespaceText(child) ||
+            (child.type === 'element' &&
+                (['caption', 'colgroup'].includes(child.tagName) ||
+                    (['thead', 'tbody', 'tfoot'].includes(child.tagName) &&
+                        child.children.every(isWhitespaceText)))),
+    );
+}
+
 function createTableNodeView(
     context: StructuredNodeViewContext,
     selectRange: (range: TableCellRange) => void,
@@ -678,12 +891,44 @@ function createTableNodeView(
     let parsed: ParsedTable;
     try {
         parsed = parseTable(tableElement(context.node));
-    } catch (error: unknown) {
-        root.setAttribute('role', 'note');
-        root.textContent =
-            error instanceof Error
-                ? `Unsupported table preserved: ${error.message}`
-                : 'Unsupported table preserved.';
+    } catch {
+        const source = tableElement(context.node);
+        const noRows = hasNoRows(source);
+        root.classList.add('soeditor-table-widget--invalid');
+        root.setAttribute('role', 'group');
+        const message = context.document.createElement('p');
+        message.textContent = noRows
+            ? '此表格没有可编辑的行。原始 HTML 已保留。'
+            : '此表格结构异常。原始 HTML 已保留，请使用源码模式修复。';
+        root.append(message);
+        const select = (): void => context.actions.select({ focus: true });
+        if (noRows && canRecoverEmptyTable(source)) {
+            const recover = context.document.createElement('button');
+            recover.type = 'button';
+            recover.textContent = '添加首行首列';
+            recover.disabled = readonly;
+            recover.addEventListener('click', () => {
+                select();
+                context.actions.execute('table.recover');
+            });
+            root.append(recover);
+        }
+        const editSource = context.document.createElement('button');
+        editSource.type = 'button';
+        editSource.textContent = '编辑源码';
+        editSource.addEventListener('click', () => {
+            select();
+            context.actions.execute('editor.source');
+        });
+        const remove = context.document.createElement('button');
+        remove.type = 'button';
+        remove.textContent = '删除表格';
+        remove.disabled = readonly;
+        remove.addEventListener('click', () => {
+            select();
+            context.actions.execute('table.remove');
+        });
+        root.append(editSource, remove);
         return { element: root };
     }
 
@@ -694,11 +939,22 @@ function createTableNodeView(
         attributeValue(context.node.attributes, 'aria-label') ??
             'Editable table',
     );
-    const tableWidth = attributeValue(
-        context.node.attributes,
-        'data-soeditor-width',
-    );
-    if (tableWidth !== undefined) table.style.width = tableWidth;
+    const tableWidth =
+        attributeValue(context.node.attributes, 'width') ??
+        attributeValue(context.node.attributes, 'data-soeditor-width');
+    if (tableWidth !== undefined) {
+        table.style.width = /^\d+$/u.test(tableWidth)
+            ? `${tableWidth}px`
+            : tableWidth;
+    }
+    const tableHeight =
+        attributeValue(context.node.attributes, 'height') ??
+        attributeValue(context.node.attributes, 'data-soeditor-height');
+    if (tableHeight !== undefined) {
+        table.style.height = /^\d+$/u.test(tableHeight)
+            ? `${tableHeight}px`
+            : tableHeight;
+    }
     const tableAlignment = attributeValue(
         context.node.attributes,
         'data-soeditor-align',
@@ -1953,11 +2209,10 @@ function setTableProperties(
         );
     }
     if (properties.width !== undefined) {
-        attributes = updateAttribute(
-            attributes,
-            'data-soeditor-width',
-            properties.width,
-        );
+        attributes = updateAttribute(attributes, 'width', properties.width);
+    }
+    if (properties.height !== undefined) {
+        attributes = updateAttribute(attributes, 'height', properties.height);
     }
     if (properties.responsiveClass !== undefined) {
         attributes = updateAttribute(
@@ -2011,12 +2266,10 @@ function setRowProperties(
                               ['aria-label', properties.ariaLabel],
                               ['data-soeditor-class', properties.className],
                               [
-                                  'data-soeditor-height',
-                                  properties.height === undefined
-                                      ? undefined
-                                      : properties.height === null
-                                        ? null
-                                        : String(properties.height),
+                                  'height',
+                                  typeof properties.height === 'number'
+                                      ? String(properties.height)
+                                      : properties.height,
                               ],
                           ]),
                           properties.customAttributes,
@@ -2038,13 +2291,14 @@ function setCellProperties(
 ): HtmlElement {
     const selected = selectedCells(parsed, range);
     if (
-        properties.scope !== undefined &&
-        properties.scope !== null &&
+        ((properties.scope !== undefined && properties.scope !== null) ||
+            properties.customAttributes?.some(({ name }) => name === 'abbr') ===
+                true) &&
         selected.some((cell) => cell.element.tagName !== 'th')
     ) {
         throw new RichTextArgumentError(
             'table.cell.properties',
-            'applies scope only to header cells.',
+            'applies scope and abbr only to header cells.',
         );
     }
     return replaceCells(
@@ -2067,12 +2321,72 @@ function setCellProperties(
                                 properties.verticalAlignment,
                             ],
                             ['scope', properties.scope],
+                            ['height', properties.height],
+                            ['width', properties.width],
                         ]),
                         properties.customAttributes,
                     ),
                 },
             ]),
         ),
+    );
+}
+
+function setSectionProperties(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    range: NormalizedRange,
+    properties: TableSectionProperties,
+): HtmlElement {
+    const row = parsed.rows[range.top]?.element;
+    const section =
+        row === undefined ? undefined : findParentSection(table, row);
+    if (section === undefined) {
+        throw new RichTextArgumentError(
+            'table.section.properties',
+            'requires an explicit thead, tbody, or tfoot section.',
+        );
+    }
+    return {
+        ...table,
+        children: table.children.map((child) =>
+            child === section
+                ? {
+                      ...section,
+                      attributes: replaceCustomAttributes(
+                          section.attributes,
+                          properties.customAttributes,
+                      ),
+                  }
+                : child,
+        ),
+    };
+}
+
+function inspectSectionProperties(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    range: NormalizedRange,
+): Readonly<Record<string, unknown>> {
+    const row = parsed.rows[range.top]?.element;
+    const section =
+        row === undefined ? undefined : findParentSection(table, row);
+    return Object.freeze({
+        explicit: section !== undefined,
+        tagName: section?.tagName ?? '',
+        customAttributes: inspectCustomAttributes(section?.attributes ?? []),
+    });
+}
+
+function findParentSection(
+    table: HtmlElement,
+    row: HtmlElement,
+): HtmlElement | undefined {
+    return table.children.find(
+        (child): child is HtmlElement =>
+            child.type === 'element' &&
+            ['thead', 'tbody', 'tfoot'].includes(child.tagName) &&
+            child.children.includes(row),
     );
 }
 
@@ -2254,36 +2568,52 @@ function optionalCustomAttributes(
             'customAttributes must be an array with at most 32 entries.',
         );
     }
+    const globalAttributes = [
+        'contenteditable',
+        'dir',
+        'draggable',
+        'hidden',
+        'id',
+        'lang',
+        'role',
+        'spellcheck',
+        'tabindex',
+        'title',
+        'translate',
+    ];
     const allowed =
         commandId === 'table.properties'
             ? new Set([
-                  'id',
-                  'role',
-                  'title',
+                  ...globalAttributes,
                   'aria-describedby',
                   'aria-labelledby',
+                  'aria-colcount',
+                  'aria-rowcount',
               ])
-            : commandId === 'table.row.properties'
+            : commandId === 'table.section.properties'
               ? new Set([
-                    'id',
-                    'role',
-                    'title',
+                    ...globalAttributes,
                     'aria-describedby',
                     'aria-labelledby',
-                    'aria-rowindex',
-                    'aria-selected',
                 ])
-              : new Set([
-                    'id',
-                    'role',
-                    'title',
-                    'headers',
-                    'aria-colindex',
-                    'aria-describedby',
-                    'aria-labelledby',
-                    'aria-rowindex',
-                    'aria-selected',
-                ]);
+              : commandId === 'table.row.properties'
+                ? new Set([
+                      ...globalAttributes,
+                      'aria-describedby',
+                      'aria-labelledby',
+                      'aria-rowindex',
+                      'aria-selected',
+                  ])
+                : new Set([
+                      ...globalAttributes,
+                      'abbr',
+                      'headers',
+                      'aria-colindex',
+                      'aria-describedby',
+                      'aria-labelledby',
+                      'aria-rowindex',
+                      'aria-selected',
+                  ]);
     const names = new Set<string>();
     const customAttributes = input.map(
         (entry: unknown, index): HtmlAttribute => {
@@ -2332,10 +2662,24 @@ function optionalCustomAttributes(
                     !/^[a-z][a-z0-9-]*(?:\s+[a-z][a-z0-9-]*)*$/u.test(
                         attributeValue,
                     )) ||
-                (['aria-colindex', 'aria-rowindex'].includes(name) &&
+                ([
+                    'aria-colcount',
+                    'aria-colindex',
+                    'aria-rowcount',
+                    'aria-rowindex',
+                ].includes(name) &&
                     !/^[1-9][0-9]*$/u.test(attributeValue)) ||
                 (name === 'aria-selected' &&
-                    !['false', 'true'].includes(attributeValue))
+                    !['false', 'true'].includes(attributeValue)) ||
+                (name === 'dir' &&
+                    !['auto', 'ltr', 'rtl'].includes(attributeValue)) ||
+                (['contenteditable', 'draggable', 'spellcheck'].includes(
+                    name,
+                ) &&
+                    !['false', 'true'].includes(attributeValue)) ||
+                (name === 'translate' &&
+                    !['no', 'yes'].includes(attributeValue)) ||
+                (name === 'tabindex' && !/^-?[0-9]+$/u.test(attributeValue))
             ) {
                 throw new RichTextArgumentError(
                     commandId,
@@ -2707,6 +3051,7 @@ function readTableProperties(args: readonly unknown[]): TableProperties {
         'caption',
         'responsiveClass',
         'width',
+        'height',
         'customAttributes',
     ]);
     const alignment = nullableChoice('table.properties', value.alignment, [
@@ -2714,16 +3059,12 @@ function readTableProperties(args: readonly unknown[]): TableProperties {
         'left',
         'right',
     ] as const);
-    const width = nullableString('table.properties', value.width, 16);
-    if (
-        typeof width === 'string' &&
-        !/^(?:[1-9][0-9]{0,3}px|(?:100|[1-9][0-9]?)%)$/u.test(width)
-    ) {
-        throw new RichTextArgumentError(
-            'table.properties',
-            'requires width from 1px to 9999px, or 1% to 100%.',
-        );
-    }
+    const width = nullableDimension('table.properties', 'width', value.width);
+    const height = nullableDimension(
+        'table.properties',
+        'height',
+        value.height,
+    );
     const responsiveClass = nullableClassTokens(
         'table.properties',
         value.responsiveClass,
@@ -2734,6 +3075,7 @@ function readTableProperties(args: readonly unknown[]): TableProperties {
         ...nullableStringProperty('table.properties', value, 'caption', 2048),
         ...(responsiveClass === undefined ? {} : { responsiveClass }),
         ...(width === undefined ? {} : { width }),
+        ...(height === undefined ? {} : { height }),
         ...optionalCustomAttributes('table.properties', value),
     });
 }
@@ -2746,19 +3088,11 @@ function readRowProperties(args: readonly unknown[]): TableRowProperties {
         'section',
         'customAttributes',
     ]);
-    const height = value.height;
-    if (
-        height !== undefined &&
-        height !== null &&
-        (!Number.isInteger(height) ||
-            Number(height) < 20 ||
-            Number(height) > 2000)
-    ) {
-        throw new RichTextArgumentError(
-            'table.row.properties',
-            'requires height from 20 to 2000 pixels.',
-        );
-    }
+    const height = nullableDimension(
+        'table.row.properties',
+        'height',
+        value.height,
+    );
     const section = optionalChoice('table.row.properties', value.section, [
         'body',
         'foot',
@@ -2776,9 +3110,7 @@ function readRowProperties(args: readonly unknown[]): TableRowProperties {
             512,
         ),
         ...(className === undefined ? {} : { className }),
-        ...(height === undefined
-            ? {}
-            : { height: height === null ? null : Number(height) }),
+        ...(height === undefined ? {} : { height }),
         ...(section === undefined ? {} : { section }),
         ...optionalCustomAttributes('table.row.properties', value),
     });
@@ -2792,6 +3124,8 @@ function readCellProperties(args: readonly unknown[]): TableCellProperties {
         'scope',
         'verticalAlignment',
         'customAttributes',
+        'height',
+        'width',
     ]);
     const className = nullableClassTokens(
         'table.cell.properties',
@@ -2813,6 +3147,16 @@ function readCellProperties(args: readonly unknown[]): TableCellProperties {
         value.verticalAlignment,
         ['baseline', 'bottom', 'middle', 'top'] as const,
     );
+    const height = nullableDimension(
+        'table.cell.properties',
+        'height',
+        value.height,
+    );
+    const width = nullableDimension(
+        'table.cell.properties',
+        'width',
+        value.width,
+    );
     return Object.freeze({
         ...nullableStringProperty(
             'table.cell.properties',
@@ -2824,8 +3168,49 @@ function readCellProperties(args: readonly unknown[]): TableCellProperties {
         ...(horizontalAlignment === undefined ? {} : { horizontalAlignment }),
         ...(scope === undefined ? {} : { scope }),
         ...(verticalAlignment === undefined ? {} : { verticalAlignment }),
+        ...(height === undefined ? {} : { height }),
+        ...(width === undefined ? {} : { width }),
         ...optionalCustomAttributes('table.cell.properties', value),
     });
+}
+
+function readSectionProperties(
+    args: readonly unknown[],
+): TableSectionProperties {
+    const value = propertiesRecord('table.section.properties', args, [
+        'customAttributes',
+    ]);
+    return Object.freeze({
+        ...optionalCustomAttributes('table.section.properties', value),
+    });
+}
+
+function nullableDimension(
+    command: string,
+    name: string,
+    value: unknown,
+): string | null | undefined {
+    if (typeof value === 'number') {
+        if (!Number.isInteger(value) || value < 1 || value > 9999) {
+            throw new RichTextArgumentError(
+                command,
+                `requires ${name} from 1px to 9999px, or 1% to 100%.`,
+            );
+        }
+        return String(value);
+    }
+    const candidate = nullableString(command, value, 16);
+    if (candidate === undefined || candidate === null) return candidate;
+    const match = /^([1-9][0-9]{0,3})(px|%)?$/u.exec(candidate);
+    const amount = Number(match?.[1]);
+    const unit = match?.[2] ?? 'px';
+    if (match === null || amount > (unit === '%' ? 100 : 9999)) {
+        throw new RichTextArgumentError(
+            command,
+            `requires ${name} from 1px to 9999px, or 1% to 100%.`,
+        );
+    }
+    return unit === '%' ? `${String(amount)}%` : String(amount);
 }
 
 function readColumnResize(args: readonly unknown[]): TableColumnResizeOptions {
@@ -3701,11 +4086,19 @@ function applyProjectedProperties(
     if (ariaLabel !== undefined) element.setAttribute('aria-label', ariaLabel);
     const className = attributeValue(attributes, 'data-soeditor-class');
     if (className !== undefined) element.className = className;
-    const height = attributeValue(attributes, 'data-soeditor-height');
-    if (kind === 'row' && height !== undefined) {
-        element.style.height = `${height}px`;
+    const height =
+        attributeValue(attributes, 'height') ??
+        attributeValue(attributes, 'data-soeditor-height');
+    if (height !== undefined) {
+        element.style.height = /^\d+$/u.test(height) ? `${height}px` : height;
     }
     if (kind === 'cell') {
+        const width =
+            attributeValue(attributes, 'width') ??
+            attributeValue(attributes, 'data-soeditor-width');
+        if (width !== undefined) {
+            element.style.width = /^\d+$/u.test(width) ? `${width}px` : width;
+        }
         const alignment = attributeValue(attributes, 'data-soeditor-align');
         if (
             alignment === 'center' ||

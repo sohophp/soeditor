@@ -156,7 +156,11 @@ test('presents the complete CMS showcase from the root URL', async ({
     await wysiwyg.locator('.soeditor-table-cell').first().click();
     await page
         .locator('.soeditor-ui__balloon')
-        .getByRole('button', { name: /表格属性|Table properties/u })
+        .getByRole('button', { name: /表格编辑|Table editor/u })
+        .click();
+    await page
+        .getByRole('dialog', { name: /表格编辑|Table editor/u })
+        .getByRole('button', { name: /表格|Table/u, exact: true })
         .click();
     const tableDialog = page.getByRole('dialog', {
         name: /表格属性|Table properties/u,
@@ -164,18 +168,18 @@ test('presents the complete CMS showcase from the root URL', async ({
     const caption = tableDialog.getByLabel(/标题|Caption/u);
     await expect(caption).toHaveValue('CMS 功能交付状态');
     await caption.fill('可配置的表格标题');
+    const tableWidth = tableDialog.getByRole('spinbutton', {
+        name: /表格宽度|Table width/u,
+    });
     await tableDialog
-        .getByLabel(/表格宽度|Table width/u)
-        .selectOption('custom');
-    const tableWidth = tableDialog.getByLabel(/自定义宽度|Custom width/u);
-    await tableDialog.getByLabel(/宽度单位|Width unit/u).selectOption('px');
-    await expect(
-        tableDialog.locator('.soeditor-table-properties__feedback'),
-    ).toContainText(/1.*9999/u);
+        .getByLabel(/表格宽度单位|Table width unit/u)
+        .selectOption('px');
     await tableWidth.fill('10000');
     await expect(tableWidth).toHaveAttribute('aria-invalid', 'true');
     await expect(
-        tableDialog.locator('.soeditor-table-properties__feedback.is-error'),
+        tableDialog.locator(
+            '[data-table-field="width"] .soeditor-table-properties__feedback.is-error',
+        ),
     ).toContainText(/1.*9999/u);
     await tableDialog.getByRole('button', { name: /应用|Apply/u }).click();
     await expect(tableDialog).toBeVisible();
@@ -196,8 +200,8 @@ test('presents the complete CMS showcase from the root URL', async ({
         wysiwyg.locator('table').first().locator('caption'),
     ).toHaveText('可配置的表格标题');
     await expect(wysiwyg.locator('table').first()).toHaveAttribute(
-        'style',
-        /width: 640px/u,
+        'width',
+        '640',
     );
     await expect(wysiwyg.locator('table').first()).toHaveAttribute(
         'style',
@@ -208,9 +212,7 @@ test('presents the complete CMS showcase from the root URL', async ({
         'aria-label',
         'CMS 功能验证结果',
     );
-    await expect(page.locator('#content')).toHaveValue(
-        /data-soeditor-width="640px"/u,
-    );
+    await expect(page.locator('#content')).toHaveValue(/width="640"/u);
     await expect(page.locator('#content')).toHaveValue(
         /data-soeditor-align="right"/u,
     );
@@ -235,17 +237,7 @@ test('presents the complete CMS showcase from the root URL', async ({
     await expect(
         tableBalloon.getByRole('button', { name: 'Insert image in cell' }),
     ).toHaveCount(0);
-    await tableBalloon.getByLabel('Column width').fill('260');
-    await expect(page.locator('#content')).toHaveValue(
-        /data-soeditor-width="260"/u,
-    );
-    await expect(wysiwyg.locator('col').nth(1)).toHaveAttribute(
-        'style',
-        /width: 260px/u,
-    );
-    await expect(page.locator('#content')).not.toHaveValue(
-        /<col[^>]*\sstyle=/u,
-    );
+    await expect(tableBalloon.getByLabel('Column width')).toHaveCount(0);
 
     await secondRowSecondCell.dblclick();
     await expect

@@ -1,77 +1,40 @@
-# CMS tables and lists
+# CMS 表格与列表
 
-The CMS preset keeps tables as atomic structured blocks and lists as controlled
-paragraph metadata. Every accepted edit reaches canonical HTML through a
-command and transaction; projected table DOM and browser list normalization are
-never authoritative.
+CMS 预设把表格作为原子结构块编辑。所有结构与属性修改都通过命令和单次事务写回规范 HTML；投影 DOM 不是数据源。
 
-## Table properties
+## 表格编辑服务
 
-`TablePlugin` provides these bounded command families:
+`@soeditor/rich-text` 公开 `TableEditorService` 与 `tableEditorServiceToken`。集成方可通过 `inspect()` 获取当前表格、显式分区、行、单元格、选择范围、可编辑状态和中文诊断，并使用以下接口修改内容：
 
-- `table.insert`, row/column insertion and removal, header toggle, merge,
-  split, clear, and text replacement;
-- `table.properties` for caption, accessible label, width, alignment, and
-  responsive class tokens;
-- `table.row.properties` for section, height, accessible label, and class
-  tokens;
-- `table.cell.properties` for header scope, horizontal/vertical alignment,
-  accessible label, and class tokens;
-- `table.column.resize` for 40–1200 pixel column widths.
+- `updateTable()`、`updateSection()`、`updateRows()`、`updateCells()`；
+- `executeStructuralAction()`，统一执行增删行列、表头切换、合并、拆分、清空和删除；
+- `recover()`，只为可安全恢复的零行表格添加首行首列。
 
-Table, row, and cell presentation values serialize as bounded
-`data-soeditor-*` attributes so they do not overwrite unrelated source styles
-or classes. Captions and header scopes use native HTML. SoEditor-owned column
-widths use a marked `colgroup`; foreign `colgroup` metadata is preserved and
-column-changing commands refuse it rather than guessing.
+旧表格命令继续可用。`table.column.resize` 仅作为废弃兼容命令保留，不再由 ClassicEditor 界面暴露。
 
-The structured node view projects captions, sections, properties, and one
-native range control per column. Range controls support pointer, touch, and
-keyboard input and commit one command when their value changes. Readonly mode
-disables every table control.
+## ClassicEditor 表格界面
 
-Clicking or focusing any cell immediately makes it a normal rich editing area.
-The browser owns caret placement, double-click word selection, pointer-drag
-selection, Shift+Arrow, Tab, Escape, and ordinary copy/cut/paste. Text,
-semantic marks, safe links, and safe images are retained. Moving among cells
-does not rebuild the table; all dirty cells commit together in one transaction
-when focus leaves the table or a structural table command runs. The main
-editor toolbar routes supported inline, link, image, and special-character
-commands into the active cell.
+表格上下文工具只提供一个“表格编辑”入口，再按表格、分区、行、单元格四层编辑：
 
-One stable contextual balloon is anchored to the whole table, prefers the
-space above it, and flips below when the upper viewport space is insufficient.
-It contains only table, row, column, merge/split, clear, resize, and property
-actions. It is not recreated while the caret moves between cells. Rectangular
-cell selection is an explicit table operation (`Alt+Shift+Arrow`); normal
-Shift+Arrow remains native text selection. Controlled paste is used only for
-files, internal table matrices, Office HTML, tables, or executable markup that
-requires sanitization.
+- 表格：标题、宽高、对齐、无障碍名称、响应式类及附加属性；
+- 分区：当前 `thead`、`tbody` 或 `tfoot` 的附加属性。直接位于 `table` 下的行不会被自动包进分区；
+- 行：分区、行高、类、无障碍名称及附加属性；
+- 单元格：宽高、水平/垂直对齐、表头 `scope`、跨度只读信息及附加属性。矩形多选会应用到每个选中单元格。
 
-## Matrix clipboard
+宽高统一使用“整数＋单位”，允许 `1–9999px` 或 `1–100%`；清空即删除属性。像素值写为原生整数属性（如 `width="320"`），百分比保留 `%`。新的尺寸编辑不会创建或修改 `colgroup`，已有外部 `colgroup`、`style`、`class` 和 CMS 元数据会保留。
 
-Copy and cut emit semantic HTML, tab/newline plain text, and the versioned
-SoEditor internal clipboard MIME value. Internal matrix paste retains cell
-source fidelity. When a cell is in text-editing mode, native selected-text
-copy/cut is left to the browser instead. External table/Excel-style paste first passes through the
-instance PastePipeline and then through a cell allowlist that removes scripts,
-event handlers, executable links, and unsupported markup while retaining safe
-images and semantic inline content. A paste is
-bounded to 100 rows, 100 columns, 1,000 cells, and 1,000,000 input characters
-and creates one history step.
+附加属性按 `table`、分区、`tr`、`td`、`th` 分别列出。事件属性、内部 `data-soeditor-*`、危险属性、重复的专用属性和不适用于当前标签的属性会在界面与命令层同时拒绝。已有废弃属性不会被主动删除，但界面不推荐新增。
 
-Malformed, nested, nonrectangular, oversized, or attributed ambiguous table
-structures remain preserved but are shown inertly. Formula evaluation,
-spreadsheet selection parity, and arbitrary nested-table editing are not
-provided.
+`rowspan` 与 `colspan` 不能在属性页直接修改；合并和拆分命令是唯一结构入口。
 
-## Nested lists
+## 异常与恢复
 
-Ordered/unordered lists retain bounded depth, start, and marker attributes.
-Enter splits a nonempty item; Enter on an empty nested item outdents it, and on
-an empty top-level item exits and splits the surrounding list. Backspace at a
-list boundary merges a compatible previous item, outdents a nested start, or
-exits the first top-level item. Tab/Shift+Tab, selection formatting, clipboard,
-and undo/redo use the same model operations.
+零行表格不再把内部解析异常显示给用户。仅包含标题、列组、空分区或空白内容的零行表格可安全添加首行首列，并可通过编辑器历史撤销。
 
-Unsupported list structures remain opaque rather than being silently flattened.
+非矩形、跨度冲突、嵌套表格或含不支持子节点的表格保持原 HTML 不变，投影为诊断占位界面，只提供源码修复和删除。上下文结构命令不会在异常状态下反复执行同一失败操作。
+
+## 单元格内容与剪贴板
+
+单元格仍支持普通富文本编辑、键盘移动、矩形选择、复制粘贴和单元格 HTML 编辑。嵌套表格不受支持。表格矩阵粘贴限制为 100 行、100 列、1,000 个单元格及 1,000,000 个输入字符，并经过粘贴管线和安全过滤。
+
+列表继续使用受控段落元数据，保留有界层级、起始序号和标记属性；不支持的列表结构保持不透明，不会被静默扁平化。
