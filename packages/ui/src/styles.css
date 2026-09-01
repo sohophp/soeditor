@@ -570,6 +570,7 @@
 }
 
 .soeditor-ui__link-rel-custom {
+    align-items: end;
     grid-template-columns: minmax(12rem, 1fr) auto;
     margin-block-start: 0.5rem;
 }

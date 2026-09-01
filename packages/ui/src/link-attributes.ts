@@ -175,7 +175,6 @@ export function linkCustomAttributeField(
         name.value = list.value;
         value.value = attributes.get(list.value) ?? '';
         updateValueSuggestions();
-        name.focus();
     });
     remove.addEventListener('click', () => {
         attributes.delete(list.value);

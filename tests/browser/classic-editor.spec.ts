@@ -1672,7 +1672,9 @@ test('prefills selected link text and edits or removes a clicked link', async ({
             .getByLabel('Added attributes')
             .locator('option[value="data-cms-id"]'),
     ).toContainText('data-cms-id = article-42');
-    await dialog.getByLabel('Added attributes').click();
+    const addedAttributes = dialog.getByLabel('Added attributes');
+    await addedAttributes.click();
+    await expect(addedAttributes).toBeFocused();
     await expect(dialog.getByLabel('Attribute name')).toHaveValue(
         'data-cms-id',
     );
