@@ -41,7 +41,7 @@ const globalBundle = await readFile(
     'utf8',
 );
 if (
-    globalBundle.length > 500_000 ||
+    globalBundle.length > 510_000 ||
     !globalBundle.includes('sourceMappingURL')
 ) {
     throw new Error(

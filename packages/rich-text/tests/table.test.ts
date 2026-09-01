@@ -160,12 +160,17 @@ describe('structured table feature', () => {
             caption: 'Results',
             responsiveClass: 'cms-table responsive',
             width: '80%',
+            customAttributes: [
+                { name: 'data-cms', value: 'table' },
+                { name: 'role', value: 'grid' },
+            ],
         });
         harness.editor.execute('table.row.properties', range(0, 0, 0, 1), {
             ariaLabel: 'Header row',
             className: 'highlight',
             height: 48,
             section: 'head',
+            customAttributes: [{ name: 'data-row', value: 'header' }],
         });
         harness.editor.execute('table.header.toggle', range(0, 0, 0, 1));
         harness.editor.execute('table.cell.properties', range(0, 0, 0, 1), {
@@ -173,16 +178,17 @@ describe('structured table feature', () => {
             horizontalAlignment: 'right',
             scope: 'col',
             verticalAlignment: 'middle',
+            customAttributes: [{ name: 'headers', value: 'amount' }],
         });
         harness.editor.execute('table.column.resize', range(0, 0, 1, 0), {
             width: 240,
         });
 
         expect(harness.html()).toContain(
-            '<table data-cms="kept" data-soeditor-align="center" data-soeditor-width="80%" data-soeditor-responsive-class="cms-table responsive" aria-label="Quarterly results"><caption>Results</caption><colgroup data-soeditor-columns="true"><col data-soeditor-width="240"><col></colgroup>',
+            '<table data-soeditor-align="center" data-soeditor-width="80%" data-soeditor-responsive-class="cms-table responsive" aria-label="Quarterly results" data-cms="table" role="grid"><caption>Results</caption><colgroup data-soeditor-columns="true"><col data-soeditor-width="240"><col></colgroup>',
         );
         expect(harness.html()).toContain(
-            '<thead><tr data-row="kept" aria-label="Header row" data-soeditor-class="highlight" data-soeditor-height="48"><th data-soeditor-class="numeric" data-soeditor-align="right" data-soeditor-vertical-align="middle" scope="col">A</th>',
+            '<thead><tr aria-label="Header row" data-soeditor-class="highlight" data-soeditor-height="48" data-row="header"><th data-soeditor-class="numeric" data-soeditor-align="right" data-soeditor-vertical-align="middle" scope="col" headers="amount">A</th>',
         );
         expect(harness.html()).toContain(
             '<tbody><tr><td>C</td><td>D</td></tr></tbody>',
@@ -203,6 +209,12 @@ describe('structured table feature', () => {
                 width: '10000px',
             }),
         ).toThrow('1px to 9999px, or 1% to 100%');
+        expect(harness.html()).toBe(beforeInvalid);
+        expect(() =>
+            harness.editor.execute('table.cell.properties', range(0, 0), {
+                customAttributes: [{ name: 'href', value: '/invalid' }],
+            }),
+        ).toThrow('invalid or reserved');
         expect(harness.html()).toBe(beforeInvalid);
         expect(() =>
             harness.editor.execute('table.column.resize', range(0, 0), {

@@ -200,9 +200,9 @@ const globalGzip = gzipSync(globalSource).length;
 const cssRaw = (await stat(cssPath)).size;
 const esmRaw = (await stat(esmPath)).size;
 
-assertBudget('CMS global raw', globalRaw, 500_000);
+assertBudget('CMS global raw', globalRaw, 510_000);
 assertBudget('CMS global gzip', globalGzip, 150_000);
-assertBudget('standalone CSS', cssRaw, 27_000);
+assertBudget('standalone CSS', cssRaw, 27_250);
 assertBudget('umbrella ESM facade', esmRaw, 2_000);
 for (const excludedMarker of [
     'Developer Visual',

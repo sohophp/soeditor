@@ -588,13 +588,13 @@ Declaration SHA-256:
 | `SuperscriptPlugin`                                   | type/value | experimental   | `e9df29f8df5b6550` |
 | `TableAlignment`                                      | type       | experimental   | `0163c5b74b87512c` |
 | `TableCellPosition`                                   | type       | experimental   | `6e350e9e0f7a1a25` |
-| `TableCellProperties`                                 | type       | experimental   | `d6193217dda356d3` |
+| `TableCellProperties`                                 | type       | experimental   | `af031555f8b8f8fc` |
 | `TableCellRange`                                      | type       | experimental   | `da6561db30f9826f` |
 | `TableColumnResizeOptions`                            | type       | experimental   | `02199ee9f93561d3` |
 | `TableInsertOptions`                                  | type       | experimental   | `19957619ac6da0f5` |
 | `TablePlugin`                                         | type/value | experimental   | `348f19c98fe256ac` |
-| `TableProperties`                                     | type       | experimental   | `3cf3b500b6cffd03` |
-| `TableRowProperties`                                  | type       | experimental   | `38576cc1b317df87` |
+| `TableProperties`                                     | type       | experimental   | `d464909cca24bc4a` |
+| `TableRowProperties`                                  | type       | experimental   | `b718ef934c71d669` |
 | `TableSection`                                        | type       | experimental   | `ea29ff9aee721f94` |
 | `TextAlignment`                                       | type       | experimental   | `dda880ee7c63d1fb` |
 | `ToolbarConfiguration`                                | type       | stable         | `622e54f7531e5711` |
@@ -1346,7 +1346,7 @@ Declaration SHA-256:
 ## @soeditor/rich-text
 
 Declaration tree SHA-256:
-`5d1239e9bb8346e114face1c70fb742d5c91b401db6e5ff601c292a40c553fe2`
+`ee4ad4d5b4504733c874b1eac32ec170fc56460e9d26e97ac25d7dbbc86b72b3`
 
 ### .
 
@@ -1408,13 +1408,13 @@ Declaration SHA-256:
 | `SuperscriptPlugin`               | type/value | experimental   | `e9df29f8df5b6550` |
 | `TableAlignment`                  | type       | experimental   | `0163c5b74b87512c` |
 | `TableCellPosition`               | type       | experimental   | `6e350e9e0f7a1a25` |
-| `TableCellProperties`             | type       | experimental   | `d6193217dda356d3` |
+| `TableCellProperties`             | type       | experimental   | `af031555f8b8f8fc` |
 | `TableCellRange`                  | type       | experimental   | `da6561db30f9826f` |
 | `TableColumnResizeOptions`        | type       | experimental   | `02199ee9f93561d3` |
 | `TableInsertOptions`              | type       | experimental   | `19957619ac6da0f5` |
 | `TablePlugin`                     | type/value | experimental   | `348f19c98fe256ac` |
-| `TableProperties`                 | type       | experimental   | `3cf3b500b6cffd03` |
-| `TableRowProperties`              | type       | experimental   | `38576cc1b317df87` |
+| `TableProperties`                 | type       | experimental   | `d464909cca24bc4a` |
+| `TableRowProperties`              | type       | experimental   | `b718ef934c71d669` |
 | `TableSection`                    | type       | experimental   | `ea29ff9aee721f94` |
 | `TextAlignment`                   | type       | experimental   | `dda880ee7c63d1fb` |
 | `UnderlinePlugin`                 | type/value | stable         | `21664954a83929a4` |
@@ -1447,7 +1447,7 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`5e5bd5537b63a0eaea85a2e6f101c6ed052a9d30395c6fd9feddbd93a1e31e4d`
+`e010d3cecf2dd264ec187cc0602c6744c525c0a1197d6ab370e00d6ba52c5a48`
 
 ### .
 

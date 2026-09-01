@@ -1,18 +1,17 @@
-interface LinkCustomAttributeValue {
+export interface TagCustomAttributeValue {
     readonly name: string;
     readonly value: string;
 }
 
-interface LinkAttributeSuggestion {
+interface TagAttributeSuggestion {
     readonly name: string;
     readonly values?: readonly string[];
 }
 
-const managedNames = new Set(['href', 'rel', 'target', 'title']);
 const blockedNames = new Set(['is', 'nonce', 'srcdoc', 'style', 'xmlns']);
 export function readInspectedCustomAttributes(
     values: Record<string, unknown>,
-): readonly LinkCustomAttributeValue[] {
+): readonly TagCustomAttributeValue[] {
     if (!Array.isArray(values.customAttributes)) return [];
     return values.customAttributes.flatMap((entry: unknown) => {
         const name =
@@ -32,13 +31,31 @@ export function readInspectedCustomAttributes(
 export function linkCustomAttributeField(
     document: Document,
     container: HTMLElement,
-    initial: readonly LinkCustomAttributeValue[],
+    initial: readonly TagCustomAttributeValue[],
     suggestionsValue: unknown,
     translate: (message: string) => string,
 ): {
-    readonly value: () => readonly LinkCustomAttributeValue[] | undefined;
+    readonly value: () => readonly TagCustomAttributeValue[] | undefined;
 } {
-    const suggestions: readonly LinkAttributeSuggestion[] = Array.isArray(
+    return tagCustomAttributeField(
+        document,
+        container,
+        initial,
+        suggestionsValue,
+        translate,
+        ['href', 'rel', 'target', 'title'],
+    );
+}
+
+export function tagCustomAttributeField(
+    document: Document,
+    container: HTMLElement,
+    initial: readonly TagCustomAttributeValue[],
+    suggestionsValue: unknown,
+    translate: (message: string) => string,
+    managed: readonly string[],
+): { readonly value: () => readonly TagCustomAttributeValue[] | undefined } {
+    const suggestions: readonly TagAttributeSuggestion[] = Array.isArray(
         suggestionsValue,
     )
         ? suggestionsValue.flatMap((entry: unknown) => {
@@ -57,6 +74,7 @@ export function linkCustomAttributeField(
           })
         : [];
     const supportedNames = new Set(suggestions.map(({ name }) => name));
+    const managedNames = new Set(managed);
     const attributes = new Map(initial.map(({ name, value }) => [name, value]));
     const suffix = String(
         document.querySelectorAll('.soeditor-ui__link-attributes').length,

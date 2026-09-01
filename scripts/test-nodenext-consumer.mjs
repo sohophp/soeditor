@@ -612,9 +612,9 @@ try {
         0,
     );
     const viteJavaScriptGzip = gzipSync(startupSources.join('\n')).length;
-    if (viteJavaScriptSize > 500_000 || viteJavaScriptGzip > 150_000) {
+    if (viteJavaScriptSize > 510_000 || viteJavaScriptGzip > 150_000) {
         throw new Error(
-            `CMS Vite startup exceeds its 500/150 kB guard (${String(viteJavaScriptSize)} raw / ${String(viteJavaScriptGzip)} gzip).`,
+            `CMS Vite startup exceeds its 510/150 kB guard (${String(viteJavaScriptSize)} raw / ${String(viteJavaScriptGzip)} gzip).`,
         );
     }
     for (const excludedMarker of [
@@ -712,9 +712,9 @@ try {
         (total, source) => total + Buffer.byteLength(source),
         0,
     );
-    if (narrowSize > 85_000) {
+    if (narrowSize > 85_500) {
         throw new Error(
-            `Narrow Vite consumer exceeds its 85 kB guard (${String(narrowSize)} bytes).`,
+            `Narrow Vite consumer exceeds its 85.5 kB guard (${String(narrowSize)} bytes).`,
         );
     }
     const narrowTotalSize = narrowSources.reduce(

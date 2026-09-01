@@ -83,6 +83,7 @@ export interface TableProperties {
     readonly caption?: string | null;
     readonly responsiveClass?: string | null;
     readonly width?: string | null;
+    readonly customAttributes?: readonly HtmlAttribute[];
 }
 
 /** Partial selected-row properties accepted by `table.row.properties`. */
@@ -91,6 +92,7 @@ export interface TableRowProperties {
     readonly className?: string | null;
     readonly height?: number | null;
     readonly section?: TableSection;
+    readonly customAttributes?: readonly HtmlAttribute[];
 }
 
 /** Partial selected-cell properties accepted by `table.cell.properties`. */
@@ -101,6 +103,7 @@ export interface TableCellProperties {
     readonly scope?: 'col' | 'colgroup' | 'row' | 'rowgroup' | null;
     readonly verticalAlignment?:
         'baseline' | 'bottom' | 'middle' | 'top' | null;
+    readonly customAttributes?: readonly HtmlAttribute[];
 }
 
 /** Bounded pixel width accepted by `table.column.resize`. */
@@ -423,6 +426,7 @@ export class TablePlugin extends Plugin {
                             table.attributes,
                             'data-soeditor-width',
                         ) ?? '',
+                    customAttributes: inspectCustomAttributes(table.attributes),
                 }),
         );
         this.#registerTableInspection(
@@ -450,6 +454,9 @@ export class TablePlugin extends Plugin {
                     section:
                         tableRowSections(table.children)[normalized.top] ??
                         'body',
+                    customAttributes: inspectCustomAttributes(
+                        row?.element.attributes ?? [],
+                    ),
                 });
             },
         );
@@ -479,6 +486,7 @@ export class TablePlugin extends Plugin {
                                   children: cell.element.children,
                                   type: 'document-fragment',
                               }),
+                    customAttributes: inspectCustomAttributes(attributes),
                 });
             },
         );
@@ -1965,6 +1973,12 @@ function setTableProperties(
             properties.ariaLabel,
         );
     }
+    if (properties.customAttributes !== undefined) {
+        attributes = replaceCustomAttributes(
+            attributes,
+            properties.customAttributes,
+        );
+    }
     let children = table.children;
     if (properties.caption !== undefined) {
         const existing = directElement(children, 'caption');
@@ -1992,18 +2006,21 @@ function setRowProperties(
                 ? row
                 : {
                       ...row,
-                      attributes: updateProperties(row.attributes, [
-                          ['aria-label', properties.ariaLabel],
-                          ['data-soeditor-class', properties.className],
-                          [
-                              'data-soeditor-height',
-                              properties.height === undefined
-                                  ? undefined
-                                  : properties.height === null
-                                    ? null
-                                    : String(properties.height),
-                          ],
-                      ]),
+                      attributes: replaceCustomAttributes(
+                          updateProperties(row.attributes, [
+                              ['aria-label', properties.ariaLabel],
+                              ['data-soeditor-class', properties.className],
+                              [
+                                  'data-soeditor-height',
+                                  properties.height === undefined
+                                      ? undefined
+                                      : properties.height === null
+                                        ? null
+                                        : String(properties.height),
+                              ],
+                          ]),
+                          properties.customAttributes,
+                      ),
                   },
         ]),
     };
@@ -2037,16 +2054,22 @@ function setCellProperties(
                 cell,
                 {
                     ...cell.element,
-                    attributes: updateProperties(cell.element.attributes, [
-                        ['aria-label', properties.ariaLabel],
-                        ['data-soeditor-class', properties.className],
-                        ['data-soeditor-align', properties.horizontalAlignment],
-                        [
-                            'data-soeditor-vertical-align',
-                            properties.verticalAlignment,
-                        ],
-                        ['scope', properties.scope],
-                    ]),
+                    attributes: replaceCustomAttributes(
+                        updateProperties(cell.element.attributes, [
+                            ['aria-label', properties.ariaLabel],
+                            ['data-soeditor-class', properties.className],
+                            [
+                                'data-soeditor-align',
+                                properties.horizontalAlignment,
+                            ],
+                            [
+                                'data-soeditor-vertical-align',
+                                properties.verticalAlignment,
+                            ],
+                            ['scope', properties.scope],
+                        ]),
+                        properties.customAttributes,
+                    ),
                 },
             ]),
         ),
@@ -2177,6 +2200,153 @@ function updateProperties(
         if (value !== undefined) next = updateAttribute(next, name, value);
     }
     return next;
+}
+
+const managedTableAttributeNames = new Set([
+    'align',
+    'aria-label',
+    'class',
+    'colspan',
+    'height',
+    'rowspan',
+    'scope',
+    'style',
+    'valign',
+    'width',
+]);
+
+function inspectCustomAttributes(
+    attributes: readonly HtmlAttribute[],
+): readonly HtmlAttribute[] {
+    return Object.freeze(
+        attributes.filter(
+            ({ name }) =>
+                !managedTableAttributeNames.has(name) &&
+                !name.startsWith('data-soeditor-'),
+        ),
+    );
+}
+
+function replaceCustomAttributes(
+    attributes: readonly HtmlAttribute[],
+    customAttributes: readonly HtmlAttribute[] | undefined,
+): readonly HtmlAttribute[] {
+    if (customAttributes === undefined) return attributes;
+    return Object.freeze([
+        ...attributes.filter(
+            ({ name }) =>
+                managedTableAttributeNames.has(name) ||
+                name.startsWith('data-soeditor-'),
+        ),
+        ...customAttributes,
+    ]);
+}
+
+function optionalCustomAttributes(
+    commandId: string,
+    value: Record<string, unknown>,
+): Readonly<{ customAttributes?: readonly HtmlAttribute[] }> {
+    if (!Object.hasOwn(value, 'customAttributes')) return {};
+    const input = value.customAttributes;
+    if (!Array.isArray(input) || input.length > 32) {
+        throw new RichTextArgumentError(
+            commandId,
+            'customAttributes must be an array with at most 32 entries.',
+        );
+    }
+    const allowed =
+        commandId === 'table.properties'
+            ? new Set([
+                  'id',
+                  'role',
+                  'title',
+                  'aria-describedby',
+                  'aria-labelledby',
+              ])
+            : commandId === 'table.row.properties'
+              ? new Set([
+                    'id',
+                    'role',
+                    'title',
+                    'aria-describedby',
+                    'aria-labelledby',
+                    'aria-rowindex',
+                    'aria-selected',
+                ])
+              : new Set([
+                    'id',
+                    'role',
+                    'title',
+                    'headers',
+                    'aria-colindex',
+                    'aria-describedby',
+                    'aria-labelledby',
+                    'aria-rowindex',
+                    'aria-selected',
+                ]);
+    const names = new Set<string>();
+    const customAttributes = input.map(
+        (entry: unknown, index): HtmlAttribute => {
+            if (
+                typeof entry !== 'object' ||
+                entry === null ||
+                Array.isArray(entry)
+            ) {
+                throw new RichTextArgumentError(
+                    commandId,
+                    `customAttributes[${String(index)}] is invalid.`,
+                );
+            }
+            const nameValue = Reflect.get(entry, 'name');
+            const attributeValue = Reflect.get(entry, 'value');
+            const name =
+                typeof nameValue === 'string'
+                    ? nameValue.trim().toLowerCase()
+                    : '';
+            if (
+                typeof attributeValue !== 'string' ||
+                attributeValue.length > 4096 ||
+                Array.from(attributeValue).some((character) => {
+                    const code = character.codePointAt(0);
+                    return code !== undefined && (code < 32 || code === 127);
+                }) ||
+                !/^[a-z][a-z0-9_.:-]{0,63}$/u.test(name) ||
+                (!allowed.has(name) && !/^data-[a-z0-9_.:-]+$/u.test(name)) ||
+                name.startsWith('data-soeditor-') ||
+                names.has(name)
+            ) {
+                throw new RichTextArgumentError(
+                    commandId,
+                    `custom attribute "${name}" is invalid or reserved.`,
+                );
+            }
+            const tokenList = /^(?:[A-Za-z][\w:.-]*)(?:\s+[A-Za-z][\w:.-]*)*$/u;
+            if (
+                (name === 'id' &&
+                    !/^[A-Za-z][\w:.-]*$/u.test(attributeValue)) ||
+                (['headers', 'aria-describedby', 'aria-labelledby'].includes(
+                    name,
+                ) &&
+                    !tokenList.test(attributeValue)) ||
+                (name === 'role' &&
+                    !/^[a-z][a-z0-9-]*(?:\s+[a-z][a-z0-9-]*)*$/u.test(
+                        attributeValue,
+                    )) ||
+                (['aria-colindex', 'aria-rowindex'].includes(name) &&
+                    !/^[1-9][0-9]*$/u.test(attributeValue)) ||
+                (name === 'aria-selected' &&
+                    !['false', 'true'].includes(attributeValue))
+            ) {
+                throw new RichTextArgumentError(
+                    commandId,
+                    `custom attribute "${name}" has an invalid value.`,
+                );
+            }
+            names.add(name);
+            return Object.freeze({ name, value: attributeValue });
+        },
+    );
+    return { customAttributes: Object.freeze(customAttributes) };
 }
 
 function updateAttribute(
@@ -2537,6 +2707,7 @@ function readTableProperties(args: readonly unknown[]): TableProperties {
         'caption',
         'responsiveClass',
         'width',
+        'customAttributes',
     ]);
     const alignment = nullableChoice('table.properties', value.alignment, [
         'center',
@@ -2563,6 +2734,7 @@ function readTableProperties(args: readonly unknown[]): TableProperties {
         ...nullableStringProperty('table.properties', value, 'caption', 2048),
         ...(responsiveClass === undefined ? {} : { responsiveClass }),
         ...(width === undefined ? {} : { width }),
+        ...optionalCustomAttributes('table.properties', value),
     });
 }
 
@@ -2572,6 +2744,7 @@ function readRowProperties(args: readonly unknown[]): TableRowProperties {
         'className',
         'height',
         'section',
+        'customAttributes',
     ]);
     const height = value.height;
     if (
@@ -2607,6 +2780,7 @@ function readRowProperties(args: readonly unknown[]): TableRowProperties {
             ? {}
             : { height: height === null ? null : Number(height) }),
         ...(section === undefined ? {} : { section }),
+        ...optionalCustomAttributes('table.row.properties', value),
     });
 }
 
@@ -2617,6 +2791,7 @@ function readCellProperties(args: readonly unknown[]): TableCellProperties {
         'horizontalAlignment',
         'scope',
         'verticalAlignment',
+        'customAttributes',
     ]);
     const className = nullableClassTokens(
         'table.cell.properties',
@@ -2649,6 +2824,7 @@ function readCellProperties(args: readonly unknown[]): TableCellProperties {
         ...(horizontalAlignment === undefined ? {} : { horizontalAlignment }),
         ...(scope === undefined ? {} : { scope }),
         ...(verticalAlignment === undefined ? {} : { verticalAlignment }),
+        ...optionalCustomAttributes('table.cell.properties', value),
     });
 }
 

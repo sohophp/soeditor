@@ -98,7 +98,7 @@ const sourceButton: ToolbarItemFactory = ({ document, editor, ui }) => {
     button.className = 'soeditor-ui__button';
     const command = (): 'editor.source' | 'editor.visual' =>
         editor.state.mode === 'source' ? 'editor.visual' : 'editor.source';
-    const click = (): void => {
+    const click = async (): Promise<void> => {
         execute(editor, ui, command(), []);
     };
     button.addEventListener('click', click);
@@ -982,39 +982,94 @@ const tableButton: ToolbarItemFactory = ({ document, editor, ui }) => {
     };
 };
 
+const commonTagAttributeCatalog = [
+    { name: 'id' },
+    { name: 'title' },
+    { name: 'role' },
+    { name: 'aria-describedby' },
+    { name: 'aria-labelledby' },
+] as const;
+const tableAttributeCatalog = commonTagAttributeCatalog;
+const rowAttributeCatalog = [
+    ...commonTagAttributeCatalog,
+    { name: 'aria-rowindex' },
+    { name: 'aria-selected', values: ['true', 'false'] },
+] as const;
+const cellAttributeCatalog = [
+    ...commonTagAttributeCatalog,
+    { name: 'headers' },
+    { name: 'aria-colindex' },
+    { name: 'aria-rowindex' },
+    { name: 'aria-selected', values: ['true', 'false'] },
+] as const;
+
 const tablePropertiesButton = dialogCommandButton(
     'Table properties',
     'table.properties',
-    (document, run) => {
+    async (document, run, editor) => {
+        const { readInspectedCustomAttributes, tagCustomAttributeField } =
+            await import('./link-attributes.js');
         let caption: HTMLInputElement;
         let width: HTMLInputElement;
         let alignment: HTMLInputElement;
         let responsiveClass: HTMLInputElement;
         let ariaLabel: HTMLInputElement;
+        let customAttributes: ReturnType<typeof tagCustomAttributeField>;
         return {
             content: (container) => {
-                caption = field(document, container, 'Caption', 'text');
-                width = field(document, container, 'Width (px or %)', 'text');
+                const values = inspectedValues(editor, 'table.inspect');
+                caption = field(
+                    document,
+                    container,
+                    'Caption',
+                    'text',
+                    false,
+                    stringValue(values.caption),
+                );
+                width = field(
+                    document,
+                    container,
+                    'Width (px or %)',
+                    'text',
+                    false,
+                    stringValue(values.width),
+                );
                 alignment = field(
                     document,
                     container,
                     'Alignment (left, center, right)',
                     'text',
+                    false,
+                    stringValue(values.alignment),
                 );
                 responsiveClass = field(
                     document,
                     container,
                     'Responsive classes',
                     'text',
+                    false,
+                    stringValue(values.responsiveClass),
                 );
                 ariaLabel = field(
                     document,
                     container,
                     'Accessible label',
                     'text',
+                    false,
+                    stringValue(values.ariaLabel),
+                );
+                customAttributes = tagCustomAttributeField(
+                    document,
+                    container,
+                    readInspectedCustomAttributes(values),
+                    tableAttributeCatalog,
+                    (message) => message,
+                    ['aria-label', 'class', 'style', 'width'],
                 );
             },
-            run: () =>
+            run: () => {
+                const attributes = customAttributes.value();
+                if (attributes === undefined) return;
                 run({
                     caption: caption.value.length === 0 ? null : caption.value,
                     width: width.value.length === 0 ? null : width.value,
@@ -1026,7 +1081,9 @@ const tablePropertiesButton = dialogCommandButton(
                             : responsiveClass.value,
                     ariaLabel:
                         ariaLabel.value.length === 0 ? null : ariaLabel.value,
-                }),
+                    customAttributes: attributes,
+                });
+            },
         };
     },
 );
@@ -1034,24 +1091,54 @@ const tablePropertiesButton = dialogCommandButton(
 const tableRowPropertiesButton = dialogCommandButton(
     'Table row properties',
     'table.row.properties',
-    (document, run) => {
+    async (document, run, editor) => {
+        const { readInspectedCustomAttributes, tagCustomAttributeField } =
+            await import('./link-attributes.js');
         let section: HTMLInputElement;
         let className: HTMLInputElement;
         let height: HTMLInputElement;
+        let customAttributes: ReturnType<typeof tagCustomAttributeField>;
         return {
             content: (container) => {
+                const values = inspectedValues(editor, 'table.row.inspect');
                 section = field(
                     document,
                     container,
                     'Section (head, body, foot)',
                     'text',
+                    false,
+                    stringValue(values.section),
                 );
-                className = field(document, container, 'Row classes', 'text');
-                height = field(document, container, 'Height', 'number');
+                className = field(
+                    document,
+                    container,
+                    'Row classes',
+                    'text',
+                    false,
+                    stringValue(values.className),
+                );
+                height = field(
+                    document,
+                    container,
+                    'Height',
+                    'number',
+                    false,
+                    stringValue(values.height),
+                );
                 height.min = '20';
                 height.max = '2000';
+                customAttributes = tagCustomAttributeField(
+                    document,
+                    container,
+                    readInspectedCustomAttributes(values),
+                    rowAttributeCatalog,
+                    (message) => message,
+                    ['aria-label', 'class', 'height', 'style'],
+                );
             },
-            run: () =>
+            run: () => {
+                const attributes = customAttributes.value();
+                if (attributes === undefined) return;
                 run({
                     ...(section.value.length === 0
                         ? {}
@@ -1060,7 +1147,9 @@ const tableRowPropertiesButton = dialogCommandButton(
                         className.value.length === 0 ? null : className.value,
                     height:
                         height.value.length === 0 ? null : Number(height.value),
-                }),
+                    customAttributes: attributes,
+                });
+            },
         };
     },
 );
@@ -1068,29 +1157,68 @@ const tableRowPropertiesButton = dialogCommandButton(
 const tableCellPropertiesButton = dialogCommandButton(
     'Table cell properties',
     'table.cell.properties',
-    (document, run) => {
+    async (document, run, editor) => {
+        const { readInspectedCustomAttributes, tagCustomAttributeField } =
+            await import('./link-attributes.js');
         let horizontal: HTMLInputElement;
         let vertical: HTMLInputElement;
         let scope: HTMLInputElement;
         let className: HTMLInputElement;
+        let customAttributes: ReturnType<typeof tagCustomAttributeField>;
         return {
             content: (container) => {
+                const values = inspectedValues(editor, 'table.cell.inspect');
                 horizontal = field(
                     document,
                     container,
                     'Alignment (left, center, right)',
                     'text',
+                    false,
+                    stringValue(values.horizontalAlignment),
                 );
                 vertical = field(
                     document,
                     container,
                     'Vertical alignment',
                     'text',
+                    false,
+                    stringValue(values.verticalAlignment),
                 );
-                scope = field(document, container, 'Header scope', 'text');
-                className = field(document, container, 'Cell classes', 'text');
+                scope = field(
+                    document,
+                    container,
+                    'Header scope',
+                    'text',
+                    false,
+                    stringValue(values.scope),
+                );
+                className = field(
+                    document,
+                    container,
+                    'Cell classes',
+                    'text',
+                    false,
+                    stringValue(values.className),
+                );
+                customAttributes = tagCustomAttributeField(
+                    document,
+                    container,
+                    readInspectedCustomAttributes(values),
+                    cellAttributeCatalog,
+                    (message) => message,
+                    [
+                        'aria-label',
+                        'class',
+                        'colspan',
+                        'rowspan',
+                        'scope',
+                        'style',
+                    ],
+                );
             },
-            run: () =>
+            run: () => {
+                const attributes = customAttributes.value();
+                if (attributes === undefined) return;
                 run({
                     horizontalAlignment:
                         horizontal.value.length === 0 ? null : horizontal.value,
@@ -1099,7 +1227,9 @@ const tableCellPropertiesButton = dialogCommandButton(
                     scope: scope.value.length === 0 ? null : scope.value,
                     className:
                         className.value.length === 0 ? null : className.value,
-                }),
+                    customAttributes: attributes,
+                });
+            },
         };
     },
 );
@@ -1727,10 +1857,15 @@ function dialogCommandButton(
         document: Document,
         run: (...args: readonly unknown[]) => void,
         editor: Editor,
-    ) => {
-        readonly content: (container: HTMLElement) => void;
-        readonly run: () => void;
-    },
+    ) =>
+        | {
+              readonly content: (container: HTMLElement) => void;
+              readonly run: () => void;
+          }
+        | Promise<{
+              readonly content: (container: HTMLElement) => void;
+              readonly run: () => void;
+          }>,
     fallbackIcon = label,
 ): ToolbarItemFactory {
     return ({ document, editor, ui }) => {
@@ -1740,17 +1875,24 @@ function dialogCommandButton(
         ui.setIcon(button, command, fallbackIcon);
         button.title = label;
         button.setAttribute('aria-label', label);
-        const click = (): void => {
-            const fields = create(
-                document,
-                (...args) => {
-                    if (execute(editor, ui, command, args)) {
-                        handle.close();
-                    }
-                },
-                editor,
-            );
-            const handle: DialogHandle = ui.dialogs.open({
+        const click = async (): Promise<void> => {
+            const state: { handle?: DialogHandle } = {};
+            const fields = await Promise.resolve(
+                create(
+                    document,
+                    (...args) => {
+                        if (execute(editor, ui, command, args)) {
+                            state.handle?.close();
+                        }
+                    },
+                    editor,
+                ),
+            ).catch((error: unknown) => {
+                reportError(ui, error);
+                return undefined;
+            });
+            if (fields === undefined || !button.isConnected) return;
+            state.handle = ui.dialogs.open({
                 title: label,
                 content: fields.content,
                 actions: [
@@ -1794,6 +1936,24 @@ function field(
     label.append(caption, input);
     container.append(label);
     return input;
+}
+
+function inspectedValues(
+    editor: Editor,
+    command: string,
+): Record<string, unknown> {
+    if (!editor.commands.has(command) || !editor.commands.canExecute(command))
+        return {};
+    const value = editor.execute(command);
+    return typeof value === 'object' && value !== null
+        ? (value as Record<string, unknown>)
+        : {};
+}
+
+function stringValue(value: unknown): string {
+    return typeof value === 'string' || typeof value === 'number'
+        ? String(value)
+        : '';
 }
 
 function updateCommandButton(
