@@ -895,13 +895,20 @@ test('creates, edits, and removes a selected-text link without losing its range'
     const customName = attributeRows.getByLabel('Attribute name', {
         exact: true,
     });
+    await customName.fill('hreflang2');
+    await attributeRows.getByLabel('Attribute value').fill('zhtw');
+    await dialog.getByRole('button', { name: 'Add attribute' }).click();
+    await expect(dialog).toBeVisible();
+    await expect
+        .poll(() => customName.evaluate((input) => input.validationMessage))
+        .toContain('Invalid attribute');
     await customName.fill('href');
     await attributeRows.getByLabel('Attribute value').fill('/bypass');
     await dialog.getByRole('button', { name: 'Add attribute' }).click();
     await expect(dialog).toBeVisible();
     await expect
         .poll(() => customName.evaluate((input) => input.validationMessage))
-        .toContain('reserved');
+        .toContain('Invalid attribute');
     await customName.fill('data-cms-id');
     await attributeRows.getByLabel('Attribute value').fill('article-42');
     await dialog.getByRole('button', { name: 'Add attribute' }).click();

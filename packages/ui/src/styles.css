@@ -523,21 +523,16 @@
     padding-block-start: 0.25rem;
 }
 
-.soeditor-ui__link-attributes {
-    border-block-start: 1px solid var(--soeditor-border);
-    margin-block-start: 0.75rem;
-    padding-block-start: 0.75rem;
-}
-
-.soeditor-ui__link-attribute-list {
-    width: 100%;
-}
-
 .soeditor-ui__link-attribute-row {
+    align-items: end;
     display: grid;
     gap: 0.5rem;
-    grid-template-columns: minmax(13rem, 1.2fr) minmax(10rem, 1fr) auto;
+    grid-template-columns: 1fr 1fr auto;
     margin-block-start: 0.7rem;
+}
+
+.soeditor-ui__link-attribute-row > .soeditor-ui__field {
+    margin-block-end: 0;
 }
 
 .soeditor-ui__link-target-controls,

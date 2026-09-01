@@ -34,6 +34,7 @@ export function linkCustomAttributeField(
     container: HTMLElement,
     initial: readonly LinkCustomAttributeValue[],
     suggestionsValue: unknown,
+    translate: (message: string) => string,
 ): {
     readonly value: () => readonly LinkCustomAttributeValue[] | undefined;
 } {
@@ -55,6 +56,7 @@ export function linkCustomAttributeField(
                   : [];
           })
         : [];
+    const supportedNames = new Set(suggestions.map(({ name }) => name));
     const attributes = new Map(initial.map(({ name, value }) => [name, value]));
     const suffix = String(
         document.querySelectorAll('.soeditor-ui__link-attributes').length,
@@ -65,20 +67,26 @@ export function linkCustomAttributeField(
     // This is a closed, static UI template. User values are added below with
     // DOM text/value properties and never interpolated into markup.
     section.innerHTML = `
-<div class="soeditor-ui__link-attributes-heading"><div><strong>Additional attributes</strong><span>Add standard or CMS attributes. Reserved names are blocked.</span></div></div>
+<div><strong>Additional attributes</strong><p>Add standard or CMS attributes. Reserved names are blocked.</p></div>
 <div class="soeditor-ui__link-attribute-row">
 <label class="soeditor-ui__field"><span>Attribute name</span><input data-role="name" aria-label="Attribute name" list="${prefix}-names" maxlength="64" autocomplete="off" placeholder="Choose or enter an attribute name"></label>
 <label class="soeditor-ui__field"><span>Attribute value</span><input data-role="value" aria-label="Attribute value" maxlength="4096" autocomplete="off"></label>
 <button data-role="add" type="button" class="soeditor-ui__dialog-action">Add attribute</button>
 </div>
-<select data-role="list" class="soeditor-ui__link-attribute-list" size="3" aria-label="Added attributes"></select>
-<button data-role="remove" type="button" class="soeditor-ui__dialog-action is-danger" aria-label="Remove attribute">Remove</button>
+<div class="soeditor-ui__link-rel-custom">
+<label class="soeditor-ui__field"><span>Added attributes</span><select data-role="list"></select></label>
+<button data-role="remove" type="button" class="soeditor-ui__dialog-action is-danger">Remove attribute</button>
+</div>
 <p data-role="empty" class="soeditor-ui__link-attributes-empty">No additional attributes.</p>
 <datalist id="${prefix}-names"></datalist><datalist id="${prefix}-values"></datalist>`;
     const name = required<HTMLInputElement>(section, '[data-role="name"]');
     const value = required<HTMLInputElement>(section, '[data-role="value"]');
     const add = required<HTMLButtonElement>(section, '[data-role="add"]');
     const list = required<HTMLSelectElement>(section, '[data-role="list"]');
+    const listControls = required<HTMLElement>(
+        section,
+        '.soeditor-ui__link-rel-custom',
+    );
     const remove = required<HTMLButtonElement>(section, '[data-role="remove"]');
     const empty = required<HTMLElement>(section, '[data-role="empty"]');
     const nameSuggestions = required<HTMLDataListElement>(
@@ -102,12 +110,12 @@ export function linkCustomAttributeField(
             ...Array.from(attributes, ([attributeName, attributeValue]) => {
                 const option = document.createElement('option');
                 option.value = attributeName;
-                option.textContent = `${attributeName}=${attributeValue || '""'}`;
+                option.textContent = `${attributeName} = ${attributeValue || '""'}`;
                 return option;
             }),
         );
         empty.hidden = attributes.size > 0;
-        list.hidden = remove.hidden = attributes.size === 0;
+        listControls.hidden = attributes.size === 0;
     };
     const updateValueSuggestions = (): void => {
         const values = suggestions.find(
@@ -125,26 +133,39 @@ export function linkCustomAttributeField(
     };
     const commit = (): boolean => {
         const attributeName = name.value.trim().toLowerCase();
+        const supported =
+            supportedNames.has(attributeName) ||
+            /^data-[a-z0-9_.:-]+$/u.test(attributeName);
         const invalid =
             !/^[a-z][a-z0-9_.:-]{0,63}$/u.test(attributeName) ||
             managedNames.has(attributeName) ||
             blockedNames.has(attributeName) ||
             attributeName.startsWith('on') ||
             attributeName.startsWith('data-soeditor-') ||
+            !supported ||
             (attributes.size >= 32 && !attributes.has(attributeName));
-        name.setCustomValidity(
-            invalid
-                ? 'This attribute name is invalid, reserved, or unsafe.'
+        name.setCustomValidity(invalid ? translate('Invalid attribute.') : '');
+        if (!name.reportValidity()) return false;
+        const listedValues = suggestions.find(
+            ({ name: candidate }) => candidate === attributeName,
+        )?.values;
+        value.setCustomValidity(
+            listedValues !== undefined && !listedValues.includes(value.value)
+                ? translate('Invalid attribute.')
                 : '',
         );
-        if (!name.reportValidity()) return false;
+        if (!value.reportValidity()) return false;
         attributes.set(attributeName, value.value);
         name.value = value.value = '';
         updateValueSuggestions();
         render();
         return true;
     };
-    name.addEventListener('input', updateValueSuggestions);
+    name.addEventListener('input', () => {
+        name.setCustomValidity('');
+        updateValueSuggestions();
+    });
+    value.addEventListener('input', () => value.setCustomValidity(''));
     name.addEventListener('change', () => {
         name.value = name.value.trim().toLowerCase();
         updateValueSuggestions();

@@ -281,6 +281,7 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
             advancedFields,
             readInspectedCustomAttributes(values),
             attributeSuggestions,
+            ui.translate,
         );
         advanced.append(advancedSummary, advancedFields);
         body.append(essentials, advanced);

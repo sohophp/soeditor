@@ -416,7 +416,12 @@ interface LinkPolicy {
     readonly protocols: readonly string[];
 }
 
-const linkAttributeCatalog = Object.freeze([
+interface LinkAttributeDefinition {
+    readonly name: string;
+    readonly values?: readonly string[];
+}
+
+const linkAttributeCatalog: readonly LinkAttributeDefinition[] = Object.freeze([
     ...[
         'download',
         'hreflang',
@@ -1035,7 +1040,6 @@ const linkReferrerPolicies = new Set([
     'strict-origin-when-cross-origin',
     'unsafe-url',
 ]);
-
 function optionalLinkCustomAttributes(
     commandId: string,
     value: Record<string, unknown>,
@@ -1106,6 +1110,17 @@ function normalizeLinkCustomAttributes(
                 throw new RichTextArgumentError(
                     commandId,
                     `custom attribute name "${name}" is reserved or unsafe.`,
+                );
+            }
+            if (
+                !linkAttributeCatalog.some(
+                    ({ name: allowed }) => allowed === name,
+                ) &&
+                !/^data-[a-z0-9_.:-]+$/u.test(name)
+            ) {
+                throw new RichTextArgumentError(
+                    commandId,
+                    `custom attribute name "${name}" is not supported for links.`,
                 );
             }
             if (names.has(name)) {

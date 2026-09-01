@@ -1671,7 +1671,7 @@ test('prefills selected link text and edits or removes a clicked link', async ({
         dialog
             .getByLabel('Added attributes')
             .locator('option[value="data-cms-id"]'),
-    ).toHaveText('data-cms-id=article-42');
+    ).toContainText('data-cms-id = article-42');
     await dialog.getByLabel('Link URL').fill('/articles/updated');
     await dialog.getByRole('button', { name: 'Update link' }).click();
     projectedLink = visual.locator('a[href="/articles/updated"]');

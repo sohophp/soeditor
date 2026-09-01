@@ -317,6 +317,8 @@ describe('rich-text feature plugins', () => {
 
         for (const customAttributes of [
             [{ name: 'href', value: '/bypass' }],
+            [{ name: 'hreflang2', value: 'zh-TW' }],
+            [{ name: 'aria-made-up', value: 'x' }],
             [{ name: 'onclick', value: 'alert(1)' }],
             [{ name: 'style', value: 'display:none' }],
             [{ name: 'data-soeditor-private', value: 'x' }],
