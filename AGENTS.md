@@ -2,765 +2,205 @@
 
 # SoEditor Repository Instructions
 
-This repository contains **SoEditor**, a developer-first, HTML-first, extensible content editing platform written in TypeScript.
-
-These instructions apply to the entire repository unless a more specific `AGENTS.md` exists in a subdirectory.
-
-Treat these rules as persistent architectural constraints, not temporary task suggestions.
-
----
-
-# 1. Product Direction
-
-SoEditor is intended to become a modern extensible content editor combining:
-
-- HTML-first content freedom
-- plugin-based architecture
-- command-driven behavior
-- modern TypeScript APIs
-- visual editing
-- source editing
-- Markdown editing
-- HTML diagnostics
-- formatting
-- preview environments
-- third-party extension support
-- npm and CDN distribution
-
-SoEditor is not intended to be a clone of CKEditor 4, CKEditor 5, TinyMCE, VSCode, or any other editor.
-
-Architectural ideas may be studied, but implementation must remain independent.
-
----
-
-# 2. Core Principles
-
-The following principles are architectural constraints.
-
-## HTML-first
-
-HTML is a first-class content format.
-
-Unknown or unsupported HTML must not be silently removed merely because SoEditor does not understand it visually.
-
-Preservation and execution are different concerns.
-
-Potentially unsafe HTML may be prevented from executing while still being preserved as source data where appropriate.
-
----
-
-## Plugin-first
-
-Editor features should normally be implemented as plugins.
-
-Examples:
-
-- bold
-- italic
-- heading
-- links
-- images
-- tables
-- source editing
-- Markdown
-- preview
-- diagnostics
-- formatting
-- file managers
-
-Do not add feature-specific behavior directly into the editor core unless it is genuinely infrastructure required by multiple independent features.
-
----
-
-## Command-driven
-
-User-triggerable editor behavior should normally be represented by commands.
-
-Preferred flow:
-
-```text
-UI / Shortcut / Plugin
-        ↓
-     Command
-        ↓
-   Transaction
-        ↓
-   Editor State
-```
-
-Avoid:
-
-```text
-Toolbar button
-        ↓
-direct DOM/state mutation
-```
-
-Toolbar, menus, shortcuts, command palettes, and third-party plugins should be able to invoke the same command.
-
----
-
-## Small Core
-
-`@soeditor/core` must remain small and framework-independent.
-
-Core responsibilities include infrastructure such as:
-
-- Editor lifecycle
-- EditorState
-- EditorDocument
-- Transactions
-- Commands
-- Plugins
-- Events
-- Services
-- Configuration
-- Errors
-
-Core must not accumulate feature implementations.
-
----
-
-# 3. Dependency Rules
-
-`@soeditor/core` must not depend on:
-
-- browser DOM APIs
-- React
-- Vue
-- Svelte
-- Angular
-- CodeMirror
-- Monaco
-- Prettier
-- Markdown parsers
-- HTML formatting libraries
-- file managers
-- preview implementations
-- UI component libraries
-
-Core should be usable in Node.js and browser environments where practical.
-
----
-
-# 4. UI Framework Policy
-
-SoEditor core and primary editor architecture must remain framework-agnostic.
-
-Do not introduce React, Vue, Svelte, Angular, or another application UI framework into the editor core.
-
-Framework adapters may eventually exist as separate packages, for example:
-
-```text
-@soeditor/react
-@soeditor/vue
-```
-
-but those packages must not become architectural dependencies of the editor itself.
-
----
-
-# 5. State Rules
-
-Editor state must not be freely mutable from arbitrary features.
-
-State changes should flow through explicit APIs and transactions.
-
-Prefer immutable editor state.
-
-Do not expose internal mutable structures as public APIs.
-
-Avoid global mutable state.
-
-Each editor instance must have independent:
-
-- state
-- commands
-- plugins
-- services
-- events
-- configuration
-
----
-
-# 6. Transaction Rules
-
-Document-changing operations should be representable through transactions.
-
-Do not allow plugins or UI components to bypass the transaction layer simply because direct mutation is easier.
-
-When designing transaction APIs:
-
-- start small
-- implement only operations required by current behavior
-- avoid speculative AST operation systems
-- keep room for future selection/history integration
-
-Do not build hypothetical abstractions without a demonstrated requirement.
-
----
-
-# 7. Plugin Rules
-
-Plugins must use explicit lifecycle APIs.
-
-Expected lifecycle conceptually:
-
-```text
-construct
-    ↓
-init
-    ↓
-all plugins initialized
-    ↓
-ready
-    ↓
-editor running
-    ↓
-destroy
-```
-
-Plugin dependencies must be explicitly declared.
-
-Plugin loading must detect:
-
-- duplicate IDs
-- dependency cycles
-- missing/incompatible requirements where applicable
-
-Plugins should communicate through stable editor APIs, commands, events, services, or documented extension points.
-
-Avoid direct access to private implementation details of another plugin.
-
----
-
-# 8. Service Rules
-
-Cross-feature capabilities should use service abstractions instead of hard dependencies when appropriate.
-
-Example:
-
-```text
-Image Plugin
-     ↓
-FileManager service
-     ↑
-SoFinder Adapter
-```
-
-The Image plugin must not need to know whether the implementation is:
-
-- SoFinder
-- CKFinder
-- S3
-- Cloudflare R2
-- a CMS file manager
-- another custom implementation
-
-Prefer typed service tokens when practical.
-
----
-
-# 9. HTML Preservation
-
-SoEditor must distinguish between:
-
-```text
-unknown
-invalid
-unsafe
-unsupported visually
-```
-
-These are not equivalent.
-
-An unknown custom element such as:
-
-```html
-<product-card product-id="123"></product-card>
-```
-
-must not automatically be deleted.
-
-A feature may provide a richer visual representation later through a plugin.
-
-Do not silently normalize away meaningful attributes, custom elements, comments, or CMS markers unless an explicitly documented normalization policy requires it.
-
-SoEditor does not need to guarantee byte-for-byte HTML preservation.
-
-The intended goal is semantic preservation.
-
----
-
-# 10. Security
-
-HTML preservation does not mean arbitrary HTML execution.
-
-Treat these as separate concerns:
-
-```text
-preservation
-rendering
-execution
-```
-
-Potentially dangerous content such as scripts, event-handler attributes, unsafe URLs, or executable embeds must not be allowed to execute simply because the source is preserved.
-
-Preview and rendered environments must eventually have explicit security boundaries.
-
-Do not weaken browser security controls for convenience.
-
----
-
-# 11. Source Editing
-
-Source editing is a first-class feature, not a fallback textarea.
-
-When source editing is implemented, use a mature code editor engine rather than rebuilding syntax editing infrastructure.
-
-Current preferred direction:
-
-```text
-CodeMirror 6
-```
-
-Do not add CodeMirror until the milestone explicitly requires source editing.
-
----
-
-# 12. Visual Editing
-
-Do not build the architecture around deprecated `document.execCommand()` behavior.
-
-Do not make raw DOM mutation the authoritative document model.
-
-Visual editing will eventually require an intermediate editing representation and controlled synchronization.
-
-Do not prematurely implement the complete visual editing engine during unrelated milestones.
-
----
-
-# 13. Markdown
-
-Markdown is intended to become a first-class document format.
-
-Do not treat Markdown merely as an HTML export utility.
-
-When implemented, use a mature parser.
-
-Do not implement a custom Markdown parser unless there is a compelling documented architectural reason.
-
-HTML ↔ Markdown is not required to be perfectly lossless.
-
-Raw HTML passthrough may be used where appropriate.
-
----
-
-# 14. Preview
-
-Preview is intended to support:
-
-- custom CSS
-- content CSS
-- preview templates
-- CMS-like page rendering
-
-Preview content must eventually be isolated from the editor UI.
-
-Preferred architecture:
-
-```text
-Document
-    ↓
-Preview Renderer
-    ↓
-Template
-    ↓
-sandboxed iframe
-```
-
-Do not inject arbitrary preview HTML/CSS directly into the main editor UI DOM.
-
----
-
-# 15. Public API Discipline
-
-Explicitly distinguish:
-
-```text
-public
-internal
-experimental
-```
-
-Only intentionally supported API should be exported from package roots.
-
-Do not use broad barrel exports that accidentally expose internal modules.
-
-Avoid:
-
-```ts
-export * from './everything';
-```
-
-when it would expose implementation details.
-
-Public APIs should have stable TypeScript types and appropriate TSDoc.
-
----
-
-# 16. TypeScript Rules
-
-Use strict TypeScript.
-
-Avoid `any`.
-
-Prefer:
-
-```ts
-unknown
-```
-
-and explicit narrowing.
-
-Do not weaken TypeScript compiler settings to make an implementation compile.
-
-Do not introduce unchecked type assertions as a substitute for proper design.
-
-Use generics when they provide actual type safety, not merely abstraction.
-
----
-
-# 17. Code Quality
-
-Prefer:
-
-- small focused modules
-- explicit dependencies
-- composition
-- immutable state
-- clear ownership
-- predictable lifecycles
-- simple APIs
-- deterministic behavior
-
-Avoid:
-
-- God objects
-- global registries
-- hidden singleton state
-- circular dependencies
-- clever metaprogramming
-- premature abstraction
-- deep inheritance hierarchies
-
-Optimize architecture for long-term maintainability rather than minimizing lines of code.
-
----
-
-# 18. Runtime Dependencies
-
-Do not add a new runtime dependency without a clear need for the current milestone.
-
-Before adding one:
-
-1. verify that existing dependencies or platform APIs cannot reasonably provide the capability;
-2. prefer focused, maintained packages;
-3. avoid large framework dependencies for small functionality;
-4. consider bundle-size impact;
-5. document why it is required.
-
-Do not introduce speculative dependencies for future milestones.
-
-Development dependencies may be added when necessary for testing, linting, building, or repository tooling.
-
----
-
-# 19. Scope Discipline
-
-Every implementation task should follow the currently assigned milestone or prompt.
-
-If a task explicitly defers a feature, do not implement it.
-
-Do not expand scope because another feature appears easy to add.
-
-For example, if the current phase is Core Architecture, do not add:
-
-- toolbar UI
-- image editing
-- source editing
-- Markdown
-- preview
-- formatting
-
-unless explicitly requested.
-
-A smaller correct architecture is preferred to a larger partially-designed implementation.
-
----
-
-# 20. Architecture Decisions
-
-Important architectural decisions should be documented under:
-
-```text
-docs/decisions/
-```
-
-Use ADR-style documents.
-
-Example:
-
-```text
-0001-html-first-document-model.md
-0002-command-driven-actions.md
-0003-plugin-first-features.md
-0004-framework-agnostic-core.md
-```
-
-Do not silently reverse an accepted architectural decision.
-
-If implementation evidence suggests an accepted decision is wrong:
-
-1. document the conflict;
-2. explain alternatives and tradeoffs;
-3. propose a new ADR or superseding decision;
-4. avoid large architectural rewrites unless the task explicitly authorizes them.
-
----
-
-# 21. Documentation
-
-Keep architectural documentation synchronized with major implementation decisions.
-
-Primary documentation locations:
-
-```text
-README.md
-AGENTS.md
-docs/architecture.md
-docs/decisions/
-docs/prompts/
-```
-
-`AGENTS.md` contains long-lived repository rules.
-
-`docs/architecture.md` describes the current system architecture.
-
-`docs/decisions/` explains why significant architectural choices were made.
-
-`docs/prompts/` stores milestone implementation instructions.
-
-Do not duplicate large amounts of documentation unnecessarily.
-
----
-
-# 22. Tests
-
-Core infrastructure must be thoroughly tested.
-
-Tests should focus on behavior and architectural guarantees.
-
-Important categories include:
-
-- lifecycle
-- state transitions
-- transactions
-- command execution
-- plugin dependencies
-- dependency cycles
-- event ordering
-- service registration
-- destruction and cleanup
-- error propagation
-
-Do not write meaningless tests solely to increase coverage percentages.
-
-Do not remove or weaken valid tests simply to make a change pass.
-
----
-
-# 23. Verification
-
-Before completing an implementation task, run all repository verification commands relevant to the project.
-
-Expected commands will generally include:
-
-```bash
-pnpm lint
-pnpm typecheck
-pnpm test
-pnpm build
-```
-
-If any command fails because of the implementation:
-
-fix it before reporting completion.
-
-Do not leave known compilation or test failures unless the external environment makes them impossible to resolve.
-
-When an environmental limitation prevents verification, report it explicitly.
-
----
-
-# 24. Error Handling
-
-Errors should be:
-
-- typed where useful
-- descriptive
-- actionable
-- searchable
-
-Prefer:
-
-```text
-Command "image.insert" is not registered.
-```
-
-instead of:
-
-```text
-Command failed.
-```
-
-Do not silently swallow exceptions.
-
-Cleanup operations may isolate failures so remaining cleanup can continue, but errors must remain observable.
-
----
-
-# 25. Backward Compatibility
-
-Once a public API has been released, assume users may depend on it.
-
-Do not make unnecessary breaking API changes.
-
-Before stable 1.0 releases, APIs may evolve, but changes should still be deliberate and documented.
-
-Use SemVer principles.
-
----
-
-# 26. Distribution Direction
-
-SoEditor is intended to support:
-
-```text
-npm
-ES modules
-tree shaking
-TypeScript declarations
-CDN builds
-```
-
-Do not design public APIs that only work through bundlers.
-
-Do not design public APIs that only work through browser globals.
-
-Both modern module usage and eventual CDN usage should remain possible.
-
----
-
-# 27. File Manager Integration
-
-SoEditor must not depend directly on SoFinder.
-
-Future integration should be adapter/service based.
-
-Preferred relationship:
-
-```text
-SoEditor
-    ↓
-FileManager interface
-    ↑
-SoFinder adapter
-```
-
-This allows other file managers to be substituted.
-
----
-
-# 28. Forbidden Architectural Shortcuts
-
-Unless a task explicitly changes these rules, do not:
-
-- add React/Vue/Svelte to core;
-- use `document.execCommand()` as the core editing mechanism;
-- mutate EditorState directly;
-- allow UI code to bypass commands for editor actions;
-- let plugins depend on private internals;
-- silently delete unknown HTML;
-- treat unsafe HTML preservation as permission to execute it;
-- add large runtime dependencies without justification;
-- create global mutable editor registries;
-- expose internal modules accidentally;
-- weaken TypeScript strictness;
-- use `any` to bypass architectural typing problems;
-- copy code from CKEditor, VSCode, TinyMCE, or other editors;
-- implement explicitly deferred features.
-
----
-
-# 29. Decision Priority
-
-When several implementations are possible, prioritize in this order:
-
-1. correctness
-2. clear architecture
-3. stable extension points
-4. maintainability
-5. testability
-6. small core
-7. performance appropriate to current requirements
-8. implementation convenience
-
-Avoid optimizing hypothetical performance bottlenecks before measuring them.
-
----
-
-# 30. Working Method
-
-Before making significant changes:
-
-1. inspect the current repository;
-2. read this `AGENTS.md`;
-3. read the current milestone prompt;
-4. inspect relevant architecture and ADR documents;
-5. understand existing tests;
-6. implement only the requested scope.
-
-After implementation:
-
-1. review the diff;
-2. remove accidental scope expansion;
-3. run lint;
-4. run typecheck;
-5. run tests;
-6. run build;
-7. report architectural risks honestly.
-
----
-
-# 31. Current Architectural Identity
-
-The intended long-term identity of SoEditor is:
-
-```text
-Visual Content Editor
-        +
-HTML Developer Tool
-        +
-Source Editor
-        +
-Markdown Editor
-        +
-Content Preview Environment
-        +
-Plugin Platform
-```
-
-The project should remain useful both to ordinary CMS users and to developers who need direct control over their content.
-
-When an implementation choice conflicts with that identity, favor preserving extensibility, content freedom, and developer control.
+These instructions apply to the whole repository unless a more specific
+`AGENTS.md` exists below a directory.
+
+## 1. Product boundary
+
+SoEditor is a lightweight, stable HTML WYSIWYG editor for website CMS
+administration. Its primary use is replacing a textarea or mounting on an
+element so authors can edit the HTML body of articles, pages, products, and
+similar CMS records.
+
+Product references have distinct purposes:
+
+- Jodit 4: lightweight packaging, quick startup, direct integration, and a
+  complete practical toolbar;
+- CKEditor 4: mature CMS behavior, predictable forms, stable selection, paste,
+  links, images, tables, dialogs, and long-running editor instances;
+- CKEditor 5: internal separation of model, view, commands, conversion, plugins,
+  and testable transactions.
+
+Study public behavior and architecture. Do not copy implementation source.
+
+SoEditor is not a page builder, office suite, Markdown product, developer IDE,
+collaboration platform, review system, email designer, or AI writing product.
+Those directions must not influence the default editor or active roadmap.
+
+## 2. Product priorities
+
+When choices conflict, use this order:
+
+1. editing correctness and content safety;
+2. stability over repeated real CMS use;
+3. complete ordinary author workflows;
+4. low startup, input, memory, and bundle cost;
+5. simple integration and configuration;
+6. maintainability and testability;
+7. optional extensibility;
+8. implementation convenience.
+
+A smaller dependable editor is preferred to a broad platform.
+
+## 3. Default CMS feature set
+
+The default editor may include only capabilities required for CMS HTML body
+editing:
+
+- paragraphs, headings, inline styles, alignment, indentation and blockquote;
+- ordered and unordered lists;
+- links, anchors, and file links;
+- images, upload, and a replaceable asset picker;
+- production HTML tables;
+- horizontal rules, page breaks, special characters, and configured CMS
+  placeholders;
+- semantic external paste cleanup, including common office content;
+- undo/redo, keyboard operation, localization, IME, responsive UI, readonly,
+  form submit/reset, dirty state, and safe teardown;
+- optional HTML Source mode, loaded only when requested;
+- preservation of unknown CMS HTML without executing it.
+
+Features such as video, arbitrary embeds, templates, diagnostics, preview, or
+save adapters may exist as focused optional plugins when a real CMS integration
+requires them. They must not increase the default path.
+
+## 4. Explicit non-goals
+
+Do not add or expand these capabilities without a new owner-approved product
+decision that supersedes this file:
+
+- AI authoring or AI review;
+- real-time collaboration, comments, track changes, or revision workflows;
+- Markdown editing or HTML/Markdown conversion;
+- Developer Visual, IDE-like inspectors, command palettes, or arbitrary docking;
+- page building, page-layout simulation, spreadsheets, formulas, or charts;
+- email-client authoring and optimization;
+- framework-specific UI architecture;
+- hosted plugin marketplaces or speculative plugin tooling.
+
+Existing packages for historical compatibility may be maintained while they are
+publicly supported, but receive only security, compatibility, and critical bug
+fixes. They must be tree-shakeable or separately imported and must not be loaded
+by the default CMS editor.
+
+## 5. HTML and security contract
+
+HTML is the canonical persisted format. Preserve meaningful elements,
+attributes, classes, comments, custom elements, CMS markers, and configured
+placeholders whenever the user did not intentionally remove them.
+
+Distinguish unknown, invalid, unsafe, readonly, and unsupported-visually. These
+states are not equivalent.
+
+Preservation never grants execution. Scripts, event handlers, unsafe URLs,
+iframes, and executable embeds must remain inert in the authoring surface. Paste
+cleanup applies to external input, not silently to already stored CMS content.
+
+Semantic preservation is required; byte-for-byte serialization is not.
+
+## 6. Architecture constraints
+
+- Keep `@soeditor/core` small, DOM-free, framework-independent, and free of
+  feature implementations.
+- User actions flow through commands and transactions. Toolbar and dialogs must
+  not mutate canonical content directly.
+- Use a controlled editing representation; do not base the editor on deprecated
+  `document.execCommand()` behavior.
+- Plugins use explicit lifecycle APIs and stable services. Avoid global mutable
+  state and access to another plugin's private internals.
+- Each editor instance owns its state, selection, services, UI, tasks, and
+  cleanup.
+- Public APIs must be deliberate, typed, documented, and narrow. Avoid broad
+  package-root exports that pull optional products into the default bundle.
+- Use strict TypeScript. Avoid `any`, unchecked assertions, and weakened compiler
+  settings.
+- Do not add runtime dependencies unless the current CMS requirement cannot be
+  met reasonably with existing code or platform APIs.
+
+## 7. Lightweight distribution rules
+
+The supported default entry must contain only the CMS WYSIWYG path.
+
+- Source editing and other optional capabilities must use explicit entry points
+  and lazy loading.
+- The default entry must not import Markdown, comments, revisions, Preview,
+  developer tools, React, Vue, or plugin scaffolding.
+- CDN builds must provide a CMS-focused artifact; a historical all-features
+  global is not the product performance reference.
+- Do not raise a bundle or latency budget simply because a feature was added.
+  First remove duplication, split optional code, or justify the regression with
+  measured CMS value.
+- Performance tests must cover startup, typing, selection, paste, tables,
+  source toggling when enabled, repeated create/destroy, and large real HTML.
+
+## 8. UI and behavior rules
+
+- The default UI is a conventional CMS toolbar, editing area, optional element
+  path/status, and focused dialogs/context tools.
+- Every visible control must work, be keyboard reachable, localizable, and have
+  a real command behind it.
+- Prefer fewer clear controls over duplicated entry points.
+- Dialogs must preserve selection, read current values, validate input, support
+  cancel, return focus, and create one undo step.
+- Context UI must not obstruct selection or ordinary cell/image/link editing.
+- Mobile and narrow layouts may collapse or overflow controls without changing
+  content semantics.
+- Do not add fashionable interaction patterns unless they improve measured CMS
+  tasks without making the classic path harder.
+
+## 9. Compatibility and cleanup
+
+Released public APIs require deliberate SemVer handling. Removing a feature from
+the default preset does not require deleting its compatibility package in the
+same change.
+
+For every cleanup:
+
+1. identify whether it is default, optional, internal, or public compatibility;
+2. measure bundle/runtime effect;
+3. remove default imports and UI first;
+4. add migration or deprecation notes for public behavior;
+5. delete code only when the compatibility policy permits it;
+6. verify no CMS capability regressed.
+
+Do not preserve accidental complexity merely because tests encode it. Rewrite
+tests when the approved product contract has intentionally changed, but never
+weaken valid HTML, security, lifecycle, or editing-correctness guarantees.
+
+## 10. Documentation authority
+
+Current product authority, in order, is:
+
+1. `AGENTS.md`;
+2. `docs/PRODUCT.md`;
+3. `docs/ROADMAP.md`;
+4. `docs/wysiwyg-editor.md`;
+5. accepted ADRs not superseded by a later ADR.
+
+Old prompts, migration guides, release histories, and feature-specific documents
+describe historical behavior. They do not authorize new scope when they conflict
+with the current authority above.
+
+Keep important decisions under `docs/decisions/`. Do not silently reverse HTML
+preservation, security, command, transaction, lifecycle, or framework-neutral
+Core guarantees.
+
+## 11. Working method
+
+Before significant changes:
+
+1. inspect `git status` and preserve unrelated user changes;
+2. read the current authoritative documents;
+3. inspect the actual default import graph, generated bundle, tests, and public
+   compatibility surface;
+4. define the CMS task being improved and its measurable acceptance criteria;
+5. keep the change within that task.
+
+After changes:
+
+1. review the diff for accidental feature growth;
+2. run focused tests;
+3. run `pnpm lint`, `pnpm typecheck`, `pnpm test`, and `pnpm build` when relevant;
+4. record bundle and interaction measurements for runtime changes;
+5. report remaining browser, accessibility, performance, and compatibility
+   limitations honestly.
