@@ -78,6 +78,8 @@ export interface VisualEditingService {
     ): EditingStructuredBlock | undefined;
     /** Projection-owned selection metadata for one structured feature. */
     getStructuredSelection?(type: string): unknown;
+    /** Updates projection-owned selection metadata for one structured feature. */
+    setStructuredSelection?(type: string, selection: unknown): boolean;
     isStructuredBlockSelected(type?: string): boolean;
     replaceStructuredBlockContent(
         type: string,

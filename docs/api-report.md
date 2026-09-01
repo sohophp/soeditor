@@ -7,7 +7,7 @@ symbol list or declaration hash requires explicit API review. CSS exports and
 CLI bins are listed as stable resources. Undeclared `src`/`dist` subpaths and
 implementation modules are internal even when present in a checkout or tarball.
 
-Summary: 24 packages; 846 stable, 375 experimental, and 0 deprecated symbol
+Summary: 24 packages; 854 stable, 375 experimental, and 0 deprecated symbol
 entries.
 
 ## @soeditor/adapter-sofinder
@@ -589,20 +589,24 @@ Declaration SHA-256:
 | `TableAlignment`                                      | type       | experimental   | `0163c5b74b87512c` |
 | `TableCellPosition`                                   | type       | experimental   | `6e350e9e0f7a1a25` |
 | `TableCellProperties`                                 | type       | experimental   | `e4d05b4c297897ab` |
-| `TableCellRange`                                      | type       | experimental   | `da6561db30f9826f` |
+| `TableCellRange`                                      | type       | experimental   | `8760dcd08dc356d2` |
 | `TableColumnResizeOptions`                            | type       | experimental   | `02199ee9f93561d3` |
 | `TableDimension`                                      | type       | stable         | `bcff90480c4744d2` |
+| `TableEditorCapabilities`                             | type       | stable         | `edaef2ea12a51717` |
 | `TableEditorDiagnostic`                               | type       | stable         | `556615d7e3a2913f` |
 | `TableEditorService`                                  | type       | stable         | `7990b3f2add0d230` |
 | `tableEditorServiceToken`                             | value      | stable         | `9d7c1c036a688f11` |
-| `TableEditorSnapshot`                                 | type       | stable         | `daa84923c98e4084` |
+| `TableEditorSnapshot`                                 | type       | stable         | `adef07f34e2b0a01` |
 | `TableInsertOptions`                                  | type       | experimental   | `19957619ac6da0f5` |
+| `TableOperationCapability`                            | type       | stable         | `3a384505674706b5` |
 | `TablePlugin`                                         | type/value | experimental   | `348f19c98fe256ac` |
 | `TableProperties`                                     | type       | experimental   | `85559724ab5d4332` |
 | `TableRowProperties`                                  | type       | experimental   | `4a402e707e1f7e6e` |
 | `TableSection`                                        | type       | experimental   | `ea29ff9aee721f94` |
 | `TableSectionProperties`                              | type       | stable         | `3e1f2c96ebd35d08` |
-| `TableStructuralAction`                               | type       | stable         | `c3ec5e87d1458b15` |
+| `TableSelectionKind`                                  | type       | stable         | `2f2e75388c8f207c` |
+| `TableStructuralAction`                               | type       | stable         | `ead2cdbc657c755f` |
+| `TableStructureInsertOptions`                         | type       | stable         | `0bc67cd85dbed8f8` |
 | `TextAlignment`                                       | type       | experimental   | `dda880ee7c63d1fb` |
 | `ToolbarConfiguration`                                | type       | stable         | `622e54f7531e5711` |
 | `ToolbarItemContext`                                  | type       | stable         | `19bd4fe781eb4c79` |
@@ -655,7 +659,7 @@ Declaration SHA-256:
 | `VisualEditingEngineDestroyedError`                   | type/value | stable         | `523514eedad22095` |
 | `VisualEditingEngineOptions`                          | type       | stable         | `c1c33942454e69d0` |
 | `VisualEditingProjectionId`                           | type       | experimental   | `6937366562e62be8` |
-| `VisualEditingService`                                | type       | stable         | `e7acbcd076c6bf99` |
+| `VisualEditingService`                                | type       | stable         | `e845d0155b3e506a` |
 | `visualEditingServiceToken`                           | value      | stable         | `9a32f2a648a6b57e` |
 | `VisualHtmlInsertionOptions`                          | type       | stable         | `e6b7905f86115990` |
 | `VisualInlineStyle`                                   | type       | experimental   | `ceb328a291e63d66` |
@@ -708,7 +712,7 @@ Declaration SHA-256:
 ## @soeditor/engine
 
 Declaration tree SHA-256:
-`f285b391700aa58e583fe542b7c9f2ceaca1a65f50be855df018c3160ae0262f`
+`0888e0baa6f03550925736ac1eaa8aac860652db0fb332fd3cc8f1cc5dec1841`
 
 ### .
 
@@ -782,7 +786,7 @@ Declaration SHA-256:
 | `VisualEditingEngineDestroyedError`                   | type/value | stable         | `523514eedad22095` |
 | `VisualEditingEngineOptions`                          | type       | stable         | `c1c33942454e69d0` |
 | `VisualEditingProjectionId`                           | type       | experimental   | `6937366562e62be8` |
-| `VisualEditingService`                                | type       | stable         | `e7acbcd076c6bf99` |
+| `VisualEditingService`                                | type       | stable         | `e845d0155b3e506a` |
 | `visualEditingServiceToken`                           | value      | stable         | `9a32f2a648a6b57e` |
 | `VisualHtmlInsertionOptions`                          | type       | stable         | `e6b7905f86115990` |
 | `VisualInlineStyle`                                   | type       | experimental   | `ceb328a291e63d66` |
@@ -1143,7 +1147,7 @@ Declaration SHA-256:
 | `VisualDecorationsService`                            | type       | experimental   | `b0f4a46896dbabd9` |
 | `visualDecorationsServiceToken`                       | value      | experimental   | `66a822aac44b8c56` |
 | `VisualDecorationStatus`                              | type       | experimental   | `5d1e88a2c73eb2f7` |
-| `VisualEditingService`                                | type       | stable         | `e7acbcd076c6bf99` |
+| `VisualEditingService`                                | type       | stable         | `e845d0155b3e506a` |
 | `visualEditingServiceToken`                           | value      | stable         | `9a32f2a648a6b57e` |
 | `VisualLinkAttributes`                                | type       | stable         | `ef7fac9e12d16ddb` |
 | `VisualTextMark`                                      | type       | stable         | `e771736e78ddaf53` |
@@ -1353,12 +1357,12 @@ Declaration SHA-256:
 ## @soeditor/rich-text
 
 Declaration tree SHA-256:
-`cc9b846dacd5552301b0ebc1aa45d0e1b07ef190b2de0ea5685ad3ae1581cb86`
+`37121b45cad1dbbd64035ce13738461f49ab61ddf93b0ca680ab389ea443930d`
 
 ### .
 
 Declaration SHA-256:
-`f5d67ada767619843dadcb731ef05236bd554b818051590d2d057118e27afe46`
+`c0a09dbeb065f42593e3a46a8f9a0c3d174d2fd4c5e9d90e4fdb4331b0037691`
 
 | Export                            | Kind       | Classification | Signature SHA-256  |
 | --------------------------------- | ---------- | -------------- | ------------------ |
@@ -1416,20 +1420,24 @@ Declaration SHA-256:
 | `TableAlignment`                  | type       | experimental   | `0163c5b74b87512c` |
 | `TableCellPosition`               | type       | experimental   | `6e350e9e0f7a1a25` |
 | `TableCellProperties`             | type       | experimental   | `e4d05b4c297897ab` |
-| `TableCellRange`                  | type       | experimental   | `da6561db30f9826f` |
+| `TableCellRange`                  | type       | experimental   | `8760dcd08dc356d2` |
 | `TableColumnResizeOptions`        | type       | experimental   | `02199ee9f93561d3` |
 | `TableDimension`                  | type       | stable         | `bcff90480c4744d2` |
+| `TableEditorCapabilities`         | type       | stable         | `edaef2ea12a51717` |
 | `TableEditorDiagnostic`           | type       | stable         | `556615d7e3a2913f` |
 | `TableEditorService`              | type       | stable         | `7990b3f2add0d230` |
 | `tableEditorServiceToken`         | value      | stable         | `9d7c1c036a688f11` |
-| `TableEditorSnapshot`             | type       | stable         | `daa84923c98e4084` |
+| `TableEditorSnapshot`             | type       | stable         | `adef07f34e2b0a01` |
 | `TableInsertOptions`              | type       | experimental   | `19957619ac6da0f5` |
+| `TableOperationCapability`        | type       | stable         | `3a384505674706b5` |
 | `TablePlugin`                     | type/value | experimental   | `348f19c98fe256ac` |
 | `TableProperties`                 | type       | experimental   | `85559724ab5d4332` |
 | `TableRowProperties`              | type       | experimental   | `4a402e707e1f7e6e` |
 | `TableSection`                    | type       | experimental   | `ea29ff9aee721f94` |
 | `TableSectionProperties`          | type       | stable         | `3e1f2c96ebd35d08` |
-| `TableStructuralAction`           | type       | stable         | `c3ec5e87d1458b15` |
+| `TableSelectionKind`              | type       | stable         | `2f2e75388c8f207c` |
+| `TableStructuralAction`           | type       | stable         | `ead2cdbc657c755f` |
+| `TableStructureInsertOptions`     | type       | stable         | `0bc67cd85dbed8f8` |
 | `TextAlignment`                   | type       | experimental   | `dda880ee7c63d1fb` |
 | `UnderlinePlugin`                 | type/value | stable         | `21664954a83929a4` |
 | `UnorderedListPlugin`             | type/value | stable         | `d6b801758a5bb5c7` |

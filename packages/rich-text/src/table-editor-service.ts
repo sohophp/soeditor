@@ -14,10 +14,26 @@ export interface TableEditorDiagnostic {
     readonly recoverable: boolean;
 }
 
+export type TableSelectionKind =
+    'caret' | 'cells' | 'rows' | 'columns' | 'table';
+
+export interface TableOperationCapability {
+    readonly enabled: boolean;
+    readonly reason?: string;
+}
+
+export interface TableEditorCapabilities {
+    readonly clear: TableOperationCapability;
+    readonly merge: TableOperationCapability;
+    readonly split: TableOperationCapability;
+}
+
 export interface TableEditorSnapshot {
     readonly editable: boolean;
     readonly diagnostic?: TableEditorDiagnostic;
     readonly selection?: TableCellRange;
+    readonly selectionKind?: TableSelectionKind;
+    readonly capabilities?: TableEditorCapabilities;
     readonly table?: Readonly<Record<string, unknown>>;
     readonly section?: Readonly<Record<string, unknown>>;
     readonly row?: Readonly<Record<string, unknown>>;
@@ -32,6 +48,8 @@ export type TableStructuralAction =
     | 'delete-row'
     | 'delete-table'
     | 'merge-cells'
+    | 'split-columns'
+    | 'split-rows'
     | 'split-cell'
     | 'toggle-header';
 

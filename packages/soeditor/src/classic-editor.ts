@@ -12,7 +12,6 @@ import {
 } from '@soeditor/wysiwyg';
 
 import wysiwygContentStyles from './wysiwyg-content.css?inline';
-import type * as TableEditorAttributes from './table-editor-attributes.js';
 import { cmsPreset } from '@soeditor/presets/cms';
 import type { EditorPreset } from '@soeditor/presets';
 import {
@@ -161,8 +160,6 @@ interface Heights {
     readonly maximum?: number;
     readonly minimum?: number;
 }
-
-type TableContextPropertyKind = 'cell' | 'row' | 'section' | 'table';
 
 /** Mounts one complete classic HTML editor on a textarea or ordinary element. */
 export async function createClassicEditor(
@@ -1160,6 +1157,21 @@ function registerClassicContextMenu(
         label: 'Insert row after',
         when: ({ target }) => within(target, 'table'),
     });
+    registry.registerContextMenuItem('classic.table.select-row', {
+        command: 'table.selection.row',
+        label: 'Select row',
+        when: ({ target }) => within(target, 'table'),
+    });
+    registry.registerContextMenuItem('classic.table.select-column', {
+        command: 'table.selection.column',
+        label: 'Select column',
+        when: ({ target }) => within(target, 'table'),
+    });
+    registry.registerContextMenuItem('classic.table.select-table', {
+        command: 'table.selection.table',
+        label: 'Select table',
+        when: ({ target }) => within(target, 'table'),
+    });
     registry.registerContextMenuItem('classic.table.column-after', {
         command: 'table.column.insertAfter',
         label: 'Insert column after',
@@ -1457,636 +1469,46 @@ function attachClassicTableContext(
     ui: EditorUi,
     visual: HTMLElement,
 ): () => void {
-    const document = visual.ownerDocument;
-    let balloon: DismissibleUiHandle | undefined;
-    let activeTable: HTMLElement | undefined;
-    let activeTarget: HTMLElement | undefined;
-    let activeSelection: (() => void) | undefined;
-    let activeRange: unknown;
-    let selectionObserver: MutationObserver | undefined;
-    const commandButtons = new Map<string, HTMLButtonElement>();
-    const refreshCommandButtons = (): void => {
-        for (const [command, button] of commandButtons) {
-            button.disabled =
-                command === 'table.cells.merge'
-                    ? !canMerge(
-                          activeTable === undefined
-                              ? activeRange
-                              : (selectedTableRange(activeTable) ??
-                                    activeRange),
-                      )
-                    : !editor.commands.canExecute(command);
-        }
-    };
-    const canMerge = (
-        range: unknown,
-        table: HTMLElement | undefined = activeTable,
-    ): boolean => {
-        if (typeof range !== 'object' || range === null) return false;
-        const anchor = Reflect.get(range, 'anchor');
-        const focus = Reflect.get(range, 'focus');
-        if (
-            typeof anchor !== 'object' ||
-            anchor === null ||
-            typeof focus !== 'object' ||
-            focus === null
-        )
-            return false;
-        const rows = [Reflect.get(anchor, 'row'), Reflect.get(focus, 'row')];
-        const columns = [
-            Reflect.get(anchor, 'column'),
-            Reflect.get(focus, 'column'),
-        ];
-        if (![...rows, ...columns].every(Number.isInteger)) return false;
-        const selectedCount =
-            (Math.abs(Number(rows[0]) - Number(rows[1])) + 1) *
-            (Math.abs(Number(columns[0]) - Number(columns[1])) + 1);
-        if (selectedCount < 2 || table === undefined) return false;
-        const selectedCells = Array.from(
-            table.querySelectorAll<HTMLElement>(
-                '.soeditor-table-cell.is-structurally-selected',
-            ),
-        );
-        if (selectedCells.length !== selectedCount) return false;
-        return Array.from(
-            table.querySelectorAll<HTMLElement>('.soeditor-table-cell'),
-        ).every((cell) => {
-            const nativeCell = cell.matches('td,th')
-                ? cell
-                : cell.closest<HTMLElement>('td,th');
-            return (
-                (nativeCell?.getAttribute('rowspan') ?? '1') === '1' &&
-                (nativeCell?.getAttribute('colspan') ?? '1') === '1'
-            );
-        });
-    };
-    const close = (): void => {
-        balloon?.close();
-        balloon = undefined;
-        commandButtons.clear();
-    };
-    const execute = (command: string, ...args: readonly unknown[]): boolean => {
-        const EventConstructor = document.defaultView?.Event ?? Event;
-        activeTarget?.dispatchEvent(
-            new EventConstructor('soeditor:table-commit-request', {
-                bubbles: true,
-            }),
-        );
-        close();
-        try {
-            activeSelection?.();
-            editor.execute(command, ...args);
-            return true;
-        } catch (error: unknown) {
-            ui.notifications.show({
-                message: error instanceof Error ? error.message : String(error),
-                severity: 'error',
-            });
-            return false;
-        }
-    };
-    const openCellEditor = async (
-        anchor: HTMLElement,
-        activate: () => void,
-    ): Promise<void> => {
-        anchor.focus();
-        activate();
-        let inspected: unknown;
-        try {
-            inspected = editor.execute('table.cell.inspect');
-        } catch (error: unknown) {
-            ui.notifications.show({
-                message: error instanceof Error ? error.message : String(error),
-                severity: 'error',
-            });
-            return;
-        }
-        close();
-        const module = await import('./table-editor-attributes.js');
-        module.openTableCellHtmlDialog(
-            document,
-            (options) => ui.dialogs.open(options),
-            tableContextProperty(inspected, 'contentHtml'),
-            (value) => {
-                anchor.focus();
-                activate();
-                return execute('table.cell.setHtml', value);
-            },
-        );
-    };
-    const openProperties = async (
-        anchor: HTMLElement,
-        activate: () => void,
-        kind: TableContextPropertyKind,
-    ): Promise<void> => {
-        anchor.focus();
-        activate();
-        const inspectCommand =
-            kind === 'table' ? 'table.inspect' : `table.${kind}.inspect`;
-        let inspected: unknown;
-        try {
-            inspected = editor.execute(inspectCommand);
-        } catch (error: unknown) {
-            ui.notifications.show({
-                message: error instanceof Error ? error.message : String(error),
-                severity: 'error',
-            });
-            return;
-        }
-        close();
-        let attributeModule: typeof TableEditorAttributes;
-        try {
-            attributeModule = await import('./table-editor-attributes.js');
-        } catch {
-            ui.notifications.show({
-                message: '表格附加属性编辑器加载失败，请重试。',
-                severity: 'error',
-            });
-            return;
-        }
-        const fields = attributeModule.tablePropertyFields(kind);
-        const controls = new Map<
-            string,
-            HTMLInputElement | HTMLSelectElement
-        >();
-        const dimensionControls = new Map<
-            string,
-            TableEditorAttributes.TableDimensionControl
-        >();
-        const body = document.createElement('div');
-        body.className = 'soeditor-table-properties';
-        if (kind === 'cell') {
-            const selectionHelp = document.createElement('p');
-            selectionHelp.className = 'soeditor-table-properties__help';
-            selectionHelp.textContent = 'Changes apply to all selected cells.';
-            body.append(selectionHelp);
-        }
-        const primaryFields = document.createElement('div');
-        primaryFields.className =
-            'soeditor-ui__link-target-controls soeditor-table-properties__primary';
-        const advanced = document.createElement('details');
-        advanced.className =
-            'soeditor-ui__link-advanced soeditor-table-properties__advanced';
-        const advancedSummary = document.createElement('summary');
-        advancedSummary.textContent = 'Advanced settings';
-        const advancedFields = document.createElement('div');
-        advancedFields.className =
-            'soeditor-ui__link-target-controls soeditor-ui__link-advanced-fields soeditor-table-properties__advanced-fields';
-        let hasAdvancedFields = false;
-        for (const field of fields) {
-            const existing = tableContextProperty(inspected, field.key);
-            const target = field.advanced ? advancedFields : primaryFields;
-            if (field.advanced) {
-                hasAdvancedFields = true;
-                if (existing.length > 0) advanced.open = true;
-            }
-            if (field.type === 'dimension') {
-                const dimension = attributeModule.createTableDimensionControl(
-                    document,
-                    existing,
-                    ui.translate,
-                    field.label,
-                    field.key,
+    let destroyed = false;
+    let dispose: (() => void) | undefined;
+    let loading = false;
+    const activate = (event: Event): void => {
+        if (loading || dispose !== undefined) return;
+        loading = true;
+        const target = event.target;
+        const detail: unknown = Reflect.get(event, 'detail');
+        visual.removeEventListener('soeditor:table-selection', activate);
+        void import('./classic-table-context.js')
+            .then((module) => {
+                if (destroyed) return;
+                dispose = module.attachClassicTableContext(editor, ui, visual);
+                if (!(target instanceof Element)) return;
+                const EventConstructor =
+                    visual.ownerDocument.defaultView?.CustomEvent ??
+                    CustomEvent;
+                target.dispatchEvent(
+                    new EventConstructor('soeditor:table-selection', {
+                        bubbles: true,
+                        detail,
+                    }),
                 );
-                dimensionControls.set(field.key, dimension);
-                target.append(dimension.element);
-                continue;
-            }
-            const label = document.createElement('label');
-            label.className = 'soeditor-ui__field';
-            label.dataset.tableField = field.key;
-            const caption = document.createElement('span');
-            caption.textContent = field.label;
-            let control: HTMLInputElement | HTMLSelectElement;
-            if (field.type === 'select') {
-                const select = document.createElement('select');
-                const empty = document.createElement('option');
-                empty.value = '';
-                empty.textContent = 'Default';
-                select.append(empty);
-                for (const value of field.options ?? []) {
-                    const option = document.createElement('option');
-                    option.value = value;
-                    option.textContent =
-                        attributeModule.tablePropertyOptionLabel(value);
-                    select.append(option);
-                }
-                select.value = existing;
-                control = select;
-            } else {
-                const input = document.createElement('input');
-                input.type = 'text';
-                input.value = existing;
-                input.readOnly = field.type === 'readonly';
-                control = input;
-            }
-            controls.set(field.key, control);
-            label.append(caption, control);
-            target.append(label);
-        }
-        body.append(primaryFields);
-        if (hasAdvancedFields) {
-            advanced.append(advancedSummary, advancedFields);
-            body.append(advanced);
-        }
-        const customAttributes = attributeModule.createTableTagAttributeEditor(
-            document,
-            attributeModule.readTableTagAttributes(
-                tableContextValue(inspected, 'customAttributes'),
-            ),
-            attributeModule.tableAttributeSuggestions(
-                kind,
-                tableContextProperty(inspected, 'tagName'),
-            ),
-            attributeModule.managedTableAttributes(kind),
-        );
-        body.append(customAttributes.element);
-        const title =
-            kind === 'table'
-                ? 'Table properties'
-                : kind === 'row'
-                  ? 'Row properties'
-                  : kind === 'section'
-                    ? 'Section properties'
-                    : 'Cell properties';
-        const command =
-            kind === 'table' ? 'table.properties' : `table.${kind}.properties`;
-        const dialog = ui.dialogs.open({
-            title,
-            content: body,
-            actions: [
-                {
-                    kind: 'primary',
-                    label: 'Apply',
-                    run: () => {
-                        for (const dimension of dimensionControls.values()) {
-                            if (!dimension.validate()) {
-                                dimension.focus();
-                                return;
-                            }
-                        }
-                        const attributes = customAttributes.value();
-                        if (attributes === undefined) return;
-                        const properties: Record<string, unknown> = {};
-                        for (const field of fields) {
-                            if (field.type === 'readonly') continue;
-                            const rawValue =
-                                field.type === 'dimension'
-                                    ? (dimensionControls
-                                          .get(field.key)
-                                          ?.value() ?? '')
-                                    : (controls.get(field.key)?.value.trim() ??
-                                      '');
-                            const value = rawValue;
-                            properties[field.key] =
-                                field.key === 'section'
-                                    ? value
-                                    : value.length === 0
-                                      ? null
-                                      : value;
-                        }
-                        properties.customAttributes = attributes;
-                        anchor.focus();
-                        activate();
-                        if (execute(command, properties)) {
-                            dialog.close();
-                        }
-                    },
-                },
-            ],
-        });
-        dialog.element.classList.add('soeditor-ui__link-dialog');
-        const firstControl = controls.values().next().value;
-        if (firstControl !== undefined) firstControl.focus();
-        else dimensionControls.values().next().value?.focus();
-    };
-    const openTableEditor = (
-        anchor: HTMLElement,
-        activate: () => void,
-    ): void => {
-        anchor.focus();
-        activate();
-        const body = document.createElement('div');
-        body.className = 'soeditor-table-editor-layers';
-        const help = document.createElement('p');
-        help.textContent = '选择要编辑的表格层级。';
-        body.append(help);
-        const dialog = ui.dialogs.open({
-            title: '表格编辑',
-            content: body,
-            actions: [],
-        });
-        for (const [kind, label] of [
-            ['table', '表格'],
-            ['section', '分区'],
-            ['row', '行'],
-            ['cell', '单元格'],
-        ] as const) {
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.className = 'soeditor-ui__dialog-action';
-            button.textContent = label;
-            if (kind === 'section') {
-                try {
-                    const section = editor.execute('table.section.inspect');
-                    button.disabled =
-                        tableContextValue(section, 'explicit') !== true;
-                    if (button.disabled) {
-                        button.title =
-                            '当前行直接位于 table 下，没有可编辑的显式分区。';
-                    }
-                } catch {
-                    button.disabled = true;
-                }
-            }
-            button.addEventListener('click', () => {
-                dialog.close();
-                void openProperties(anchor, activate, kind);
-            });
-            body.append(button);
-        }
-    };
-    const selection = (event: Event): void => {
-        const origin = event.target;
-        if (!(origin instanceof Element)) return;
-        const target = origin.closest<HTMLElement>('.soeditor-table-cell');
-        if (target === null) return;
-        if (
-            !target.classList.contains('soeditor-table-cell') ||
-            !visual.contains(target)
-        ) {
-            return;
-        }
-        const activate = tableSelectionActivation(event);
-        const selectedRange = tableSelectionRange(event);
-        if (activate === undefined) return;
-        const table = target.closest<HTMLElement>('.soeditor-table-widget');
-        if (table === null) return;
-        activeTarget = target;
-        activeSelection = activate;
-        activeRange = selectedTableRange(table) ?? selectedRange;
-        if (activeTable !== table) {
-            selectionObserver?.disconnect();
-            selectionObserver = new MutationObserver(() => {
-                activeRange = selectedTableRange(table) ?? activeRange;
-                refreshCommandButtons();
-            });
-            selectionObserver.observe(table, {
-                attributeFilter: ['class'],
-                attributes: true,
-                subtree: true,
-            });
-        }
-        globalThis.queueMicrotask(() => {
-            if (activeTable !== table) return;
-            activeRange = selectedTableRange(table) ?? activeRange;
-            refreshCommandButtons();
-        });
-        if (balloon !== undefined && activeTable === table) {
-            refreshCommandButtons();
-            return;
-        }
-        close();
-        activeTable = table;
-        balloon = ui.balloons.show({
-            anchor: table,
-            placement: 'above',
-            content: (container) => {
-                container.classList.add('soeditor-table-context');
-                container.setAttribute('aria-label', 'Table tools');
-                const properties = document.createElement('button');
-                properties.type = 'button';
-                properties.className = 'soeditor-table-context__button';
-                ui.setIcon(properties, 'table.properties', 'Table editor');
-                properties.title = 'Table editor';
-                properties.setAttribute('aria-label', 'Table editor');
-                properties.addEventListener('click', () => {
-                    const current = activeTarget;
-                    const select = activeSelection;
-                    if (current !== undefined && select !== undefined) {
-                        openTableEditor(current, select);
-                    }
+            })
+            .catch(() => {
+                if (destroyed) return;
+                loading = false;
+                visual.addEventListener('soeditor:table-selection', activate);
+                ui.notifications.show({
+                    message: '表格操作工具加载失败，请重试。',
+                    severity: 'error',
                 });
-                container.append(properties);
-                const editCellHtml = document.createElement('button');
-                editCellHtml.type = 'button';
-                editCellHtml.className = 'soeditor-table-context__button';
-                ui.setIcon(editCellHtml, 'editor.source', 'Edit cell HTML');
-                editCellHtml.title = 'Edit cell HTML';
-                editCellHtml.setAttribute('aria-label', 'Edit cell HTML');
-                editCellHtml.disabled =
-                    !editor.commands.canExecute('table.cell.setHtml');
-                commandButtons.set('table.cell.setHtml', editCellHtml);
-                editCellHtml.addEventListener('click', () => {
-                    const current = activeTarget;
-                    const select = activeSelection;
-                    if (current !== undefined && select !== undefined) {
-                        void openCellEditor(current, select);
-                    }
-                });
-                container.append(editCellHtml);
-                const actions = [
-                    ['table.row.insertAfter', 'Add row'],
-                    ['table.row.remove', 'Delete row'],
-                    ['table.column.insertAfter', 'Add column'],
-                    ['table.column.remove', 'Delete column'],
-                    ['table.header.toggle', 'Toggle header'],
-                    ['table.cells.merge', 'Merge cells'],
-                    ['table.cell.split', 'Split cell'],
-                    ['table.cells.clear', 'Clear cells'],
-                    ['table.remove', 'Delete table'],
-                ] as const;
-                for (const [command, label] of actions) {
-                    const button = document.createElement('button');
-                    button.type = 'button';
-                    button.className = 'soeditor-table-context__button';
-                    ui.setIcon(button, command, label);
-                    button.title = label;
-                    button.setAttribute('aria-label', label);
-                    button.disabled =
-                        command === 'table.cells.merge'
-                            ? !canMerge(activeRange, table)
-                            : !editor.commands.canExecute(command);
-                    commandButtons.set(command, button);
-                    button.addEventListener('click', () => {
-                        if (
-                            activeRange !== undefined &&
-                            command !== 'table.remove'
-                        ) {
-                            execute(command, activeRange);
-                        } else {
-                            execute(command);
-                        }
-                    });
-                    container.append(button);
-                }
-            },
-        });
-        balloon.element.classList.add('soeditor-ui__table-balloon');
+            });
     };
-    const edit = (event: Event): void => {
-        const origin = event.target;
-        const target =
-            origin instanceof Element
-                ? origin.closest<HTMLElement>('.soeditor-table-cell')
-                : null;
-        const activate = tableSelectionActivation(event);
-        if (
-            target !== null &&
-            target.classList.contains('soeditor-table-cell') &&
-            visual.contains(target) &&
-            activate !== undefined
-        ) {
-            openCellEditor(target, activate);
-        }
-    };
-    const editingStart = (): void => ui.refresh();
-    const editingEnd = (): void => ui.refresh();
-    const refreshSelectionState = (): void => {
-        globalThis.queueMicrotask(() => {
-            if (activeTable === undefined) return;
-            activeRange = selectedTableRange(activeTable) ?? activeRange;
-            refreshCommandButtons();
-        });
-    };
-    const pointerDown = (event: PointerEvent): void => {
-        const path = event.composedPath();
-        const target = path.find(
-            (candidate): candidate is Node => candidate instanceof Node,
-        );
-        if (!(target instanceof Node)) return;
-        if (
-            balloon !== undefined &&
-            path.some(
-                (candidate) =>
-                    candidate instanceof Node &&
-                    balloon?.element.contains(candidate) === true,
-            )
-        ) {
-            return;
-        }
-        if (
-            path.some(
-                (candidate) =>
-                    candidate instanceof Element &&
-                    candidate.closest('.soeditor-table-cell') !== null,
-            )
-        ) {
-            return;
-        }
-        close();
-        activeTable = undefined;
-        activeTarget = undefined;
-        activeSelection = undefined;
-        activeRange = undefined;
-        selectionObserver?.disconnect();
-        selectionObserver = undefined;
-    };
-    const keydown = (event: KeyboardEvent): void => {
-        if (event.key === 'Escape' && balloon !== undefined) {
-            event.preventDefault();
-            close();
-            visual.focus();
-        }
-    };
-    visual.addEventListener('soeditor:table-selection', selection);
-    visual.addEventListener('soeditor:table-edit', edit);
-    visual.addEventListener('soeditor:table-editing-start', editingStart);
-    visual.addEventListener('soeditor:table-editing-end', editingEnd);
-    visual.addEventListener('click', refreshSelectionState);
-    document.addEventListener('pointerdown', pointerDown, true);
-    document.addEventListener('keydown', keydown);
+    visual.addEventListener('soeditor:table-selection', activate);
     return () => {
-        close();
-        selectionObserver?.disconnect();
-        visual.removeEventListener('soeditor:table-selection', selection);
-        visual.removeEventListener('soeditor:table-edit', edit);
-        visual.removeEventListener(
-            'soeditor:table-editing-start',
-            editingStart,
-        );
-        visual.removeEventListener('soeditor:table-editing-end', editingEnd);
-        visual.removeEventListener('click', refreshSelectionState);
-        document.removeEventListener('pointerdown', pointerDown, true);
-        document.removeEventListener('keydown', keydown);
+        destroyed = true;
+        visual.removeEventListener('soeditor:table-selection', activate);
+        dispose?.();
     };
-}
-
-function tableSelectionActivation(event: Event): (() => void) | undefined {
-    const detail: unknown = Reflect.get(event, 'detail');
-    if (typeof detail !== 'object' || detail === null) return undefined;
-    const activate: unknown = Reflect.get(detail, 'activate');
-    return typeof activate === 'function'
-        ? () => {
-              Reflect.apply(activate, undefined, []);
-          }
-        : undefined;
-}
-
-function tableSelectionRange(event: Event): unknown {
-    const detail: unknown = Reflect.get(event, 'detail');
-    return typeof detail === 'object' && detail !== null
-        ? Reflect.get(detail, 'range')
-        : undefined;
-}
-
-function selectedTableRange(table: HTMLElement): unknown {
-    const cells = Array.from(
-        table.querySelectorAll<HTMLElement>(
-            '.soeditor-table-cell.is-structurally-selected',
-        ),
-    );
-    if (cells.length === 0) return undefined;
-    const tableRows = Array.from(table.querySelectorAll('tr'));
-    const positions = cells.map((cell) => {
-        const nativeCell = cell.matches('td,th')
-            ? cell
-            : cell.closest<HTMLElement>('td,th');
-        const nativeRow = nativeCell?.closest('tr');
-        const row =
-            nativeRow === null || nativeRow === undefined
-                ? Number(cell.dataset.row)
-                : tableRows.indexOf(nativeRow);
-        const rowCells =
-            nativeRow === null || nativeRow === undefined
-                ? []
-                : Array.from(nativeRow.children).filter(
-                      (child) =>
-                          child.localName === 'td' || child.localName === 'th',
-                  );
-        const column =
-            nativeCell === null || nativeCell === undefined
-                ? Number(cell.dataset.column)
-                : rowCells.indexOf(nativeCell);
-        return { column, row };
-    });
-    if (
-        positions.some(
-            ({ column, row }) =>
-                !Number.isInteger(column) || !Number.isInteger(row),
-        )
-    )
-        return undefined;
-    const rows = positions.map(({ row }) => row);
-    const columns = positions.map(({ column }) => column);
-    return {
-        anchor: { column: Math.min(...columns), row: Math.min(...rows) },
-        focus: { column: Math.max(...columns), row: Math.max(...rows) },
-    };
-}
-
-function tableContextProperty(value: unknown, key: string): string {
-    if (typeof value !== 'object' || value === null) return '';
-    const candidate: unknown = Reflect.get(value, key);
-    return typeof candidate === 'string' || typeof candidate === 'number'
-        ? String(candidate)
-        : '';
-}
-
-function tableContextValue(value: unknown, key: string): unknown {
-    return typeof value === 'object' && value !== null
-        ? Reflect.get(value, key)
-        : undefined;
 }
 
 function enterMaximizedDocument(document: Document, owner: object): void {

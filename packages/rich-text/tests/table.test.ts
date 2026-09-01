@@ -74,6 +74,46 @@ describe('structured table feature', () => {
         await harness.editor.destroy();
     });
 
+    it('inserts multiple rows and columns in one command transaction', async () => {
+        const harness = await createTableHarness(
+            '<table><tbody><tr><td>A</td><td>B</td></tr></tbody></table>',
+        );
+        harness.editor.execute('table.row.insertAfter', range(0, 0), {
+            count: 2,
+        });
+        expect(countElements(harness.block.children, 'tr')).toBe(3);
+        expect(harness.replace).toHaveBeenCalledTimes(1);
+        harness.editor.execute('table.column.insertAfter', range(0, 0), {
+            count: 2,
+        });
+        expect(
+            rows(harness.block).every(
+                (row) => countElements(row.children, 'td') === 4,
+            ),
+        ).toBe(true);
+        expect(harness.replace).toHaveBeenCalledTimes(2);
+        await harness.editor.destroy();
+    });
+
+    it('selects rows, columns, and the complete table through commands', async () => {
+        const harness = await createTableHarness(
+            '<table><tbody><tr><td>A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
+        );
+        harness.editor.execute('table.selection.row');
+        expect(
+            harness.editor.services.get(tableEditorServiceToken).inspect(),
+        ).toMatchObject({ selectionKind: 'rows' });
+        harness.editor.execute('table.selection.column');
+        expect(
+            harness.editor.services.get(tableEditorServiceToken).inspect(),
+        ).toMatchObject({ selectionKind: 'columns' });
+        harness.editor.execute('table.selection.table');
+        expect(
+            harness.editor.services.get(tableEditorServiceToken).inspect(),
+        ).toMatchObject({ selectionKind: 'table' });
+        await harness.editor.destroy();
+    });
+
     it('merges and splits a rectangle through one transaction-backed content replacement', async () => {
         const harness = await createTableHarness(
             '<table><tbody><tr><td>A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
@@ -96,6 +136,40 @@ describe('structured table feature', () => {
             '<table><tbody><tr><td>A<br>B<br>C<br>D</td><td></td></tr><tr><td></td><td></td></tr></tbody></table>',
         );
         expect(harness.replace).toHaveBeenCalledTimes(2);
+        await harness.editor.destroy();
+    });
+
+    it('splits merged cells by rows or columns without duplicating ids', async () => {
+        const columns = await createTableHarness(
+            '<table><tbody><tr><td id="kept" colspan="3">A</td></tr></tbody></table>',
+        );
+        columns.editor.execute('table.cell.splitColumns', range(0, 0));
+        expect(columns.html()).toBe(
+            '<table><tbody><tr><td id="kept">A</td><td></td><td></td></tr></tbody></table>',
+        );
+        await columns.editor.destroy();
+
+        const rows = await createTableHarness(
+            '<table><tbody><tr><td id="kept" rowspan="2">A</td><td>B</td></tr><tr><td>C</td></tr></tbody></table>',
+        );
+        rows.editor.execute('table.cell.splitRows', range(0, 0));
+        expect(rows.html()).toBe(
+            '<table><tbody><tr><td id="kept">A</td><td>B</td></tr><tr><td></td><td>C</td></tr></tbody></table>',
+        );
+        await rows.editor.destroy();
+    });
+
+    it('does not merge cells across explicit table sections', async () => {
+        const harness = await createTableHarness(
+            '<table><thead><tr><th>Head</th></tr></thead><tbody><tr><td>Body</td></tr></tbody></table>',
+        );
+        const selection = range(0, 0, 1, 0);
+        expect(harness.editor.execute('table.cells.canMerge', selection)).toBe(
+            false,
+        );
+        expect(() =>
+            harness.editor.execute('table.cells.merge', selection),
+        ).toThrow('cannot merge cells across table sections');
         await harness.editor.destroy();
     });
 
@@ -255,6 +329,14 @@ describe('structured table feature', () => {
             '<table><tbody data-cms="body"><tr><th>A</th><th>B</th></tr></tbody></table>',
         );
         const service = harness.editor.services.get(tableEditorServiceToken);
+        expect(service.inspect()).toMatchObject({
+            capabilities: {
+                clear: { enabled: true },
+                merge: { enabled: false },
+                split: { enabled: false },
+            },
+            selectionKind: 'caret',
+        });
         service.updateTable({ height: '320px', width: '75%' });
         service.updateSection({
             customAttributes: [{ name: 'data-cms', value: 'updated' }],
@@ -302,10 +384,11 @@ async function createTableHarness(source: string): Promise<{
         },
     );
     const remove = vi.fn();
+    let structuredSelection = range(0, 0);
     const service: VisualEditingService = {
         canEdit: () => true,
         getSelection: () => undefined,
-        getStructuredSelection: () => range(0, 0),
+        getStructuredSelection: () => structuredSelection,
         getSelectedStructuredBlock: () => block,
         insertHtml: vi.fn(),
         isBlockActive: () => false,
@@ -319,6 +402,11 @@ async function createTableHarness(source: string): Promise<{
         setBlock: vi.fn(),
         setLink: vi.fn(),
         setSelection: () => false,
+        setStructuredSelection: (type, selection) => {
+            if (type !== 'soeditor.table') return false;
+            structuredSelection = selection as TableCellRange;
+            return true;
+        },
         setStructuredBlockAttributes: vi.fn(),
         toggleList: vi.fn(),
         toggleMark: vi.fn(),

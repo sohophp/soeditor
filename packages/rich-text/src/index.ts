@@ -77,6 +77,7 @@ export type {
     TableCellRange,
     TableColumnResizeOptions,
     TableInsertOptions,
+    TableStructureInsertOptions,
     TableProperties,
     TableDimension,
     TableRowProperties,
@@ -86,7 +87,10 @@ export type {
 export { tableEditorServiceToken } from './table-editor-service.js';
 export type {
     TableEditorDiagnostic,
+    TableEditorCapabilities,
     TableEditorService,
     TableEditorSnapshot,
+    TableOperationCapability,
+    TableSelectionKind,
     TableStructuralAction,
 } from './table-editor-service.js';

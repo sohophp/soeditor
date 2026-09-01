@@ -67,6 +67,11 @@ export interface TableInsertOptions {
     readonly columns: number;
 }
 
+/** Optional count accepted by row and column insertion commands. */
+export interface TableStructureInsertOptions {
+    readonly count: number;
+}
+
 /** Zero-based logical table cell coordinate. */
 export interface TableCellPosition {
     readonly row: number;
@@ -77,6 +82,7 @@ export interface TableCellPosition {
 export interface TableCellRange {
     readonly anchor: TableCellPosition;
     readonly focus: TableCellPosition;
+    readonly kind?: 'cells' | 'columns' | 'rows' | 'table';
 }
 
 export type TableAlignment = 'center' | 'left' | 'right';
@@ -239,15 +245,62 @@ export class TablePlugin extends Plugin {
             ),
         );
         this.#registerInsert();
+        for (const [id, kind] of [
+            ['table.selection.row', 'row'],
+            ['table.selection.column', 'column'],
+            ['table.selection.table', 'table'],
+        ] as const) {
+            this.editor.commands.register({
+                id,
+                label: `Select table ${kind}`,
+                canExecute: ({ editor }) => {
+                    const service = editor.services.tryGet(
+                        visualEditingServiceToken,
+                    );
+                    return (
+                        service?.canEdit() === true &&
+                        service.isStructuredBlockSelected(tableType) &&
+                        service.setStructuredSelection !== undefined
+                    );
+                },
+                execute: ({ editor }, ...args) => {
+                    assertNoArguments(id, args);
+                    const service = requireTableService(
+                        editor.services.tryGet(visualEditingServiceToken),
+                        id,
+                    );
+                    const block = service.getSelectedStructuredBlock(tableType);
+                    const current = readServiceTableRange(service);
+                    if (
+                        block === undefined ||
+                        current === undefined ||
+                        service.setStructuredSelection === undefined
+                    ) {
+                        throw new RichTextArgumentError(
+                            id,
+                            'requires a selected table cell.',
+                        );
+                    }
+                    const parsed = parseTable(tableElement(block));
+                    const next = tableScopeSelection(parsed, current, kind);
+                    if (!service.setStructuredSelection(tableType, next)) {
+                        throw new RichTextArgumentError(
+                            id,
+                            'could not update the table selection.',
+                        );
+                    }
+                },
+            });
+        }
         this.#registerTableCommand(
             'table.row.insertBefore',
             'Insert table row before',
             (table, parsed, range, args) => {
-                assertNoArguments('table.row.insertBefore', args);
-                return insertRow(
+                return insertRows(
                     table,
                     parsed,
                     normalizedRange(range).top,
+                    insertCount('table.row.insertBefore', args),
                     'table.row.insertBefore',
                 );
             },
@@ -256,11 +309,11 @@ export class TablePlugin extends Plugin {
             'table.row.insertAfter',
             'Insert table row after',
             (table, parsed, range, args) => {
-                assertNoArguments('table.row.insertAfter', args);
-                return insertRow(
+                return insertRows(
                     table,
                     parsed,
                     normalizedRange(range).bottom + 1,
+                    insertCount('table.row.insertAfter', args),
                     'table.row.insertAfter',
                 );
             },
@@ -277,11 +330,11 @@ export class TablePlugin extends Plugin {
             'table.column.insertBefore',
             'Insert table column before',
             (table, parsed, range, args) => {
-                assertNoArguments('table.column.insertBefore', args);
-                return insertColumn(
+                return insertColumns(
                     table,
                     parsed,
                     normalizedRange(range).left,
+                    insertCount('table.column.insertBefore', args),
                     'table.column.insertBefore',
                 );
             },
@@ -290,11 +343,11 @@ export class TablePlugin extends Plugin {
             'table.column.insertAfter',
             'Insert table column after',
             (table, parsed, range, args) => {
-                assertNoArguments('table.column.insertAfter', args);
-                return insertColumn(
+                return insertColumns(
                     table,
                     parsed,
                     normalizedRange(range).right + 1,
+                    insertCount('table.column.insertAfter', args),
                     'table.column.insertAfter',
                 );
             },
@@ -360,6 +413,27 @@ export class TablePlugin extends Plugin {
             (table, parsed, range, args) => {
                 assertNoArguments('table.cell.split', args);
                 return splitCell(table, parsed, normalizedRange(range));
+            },
+        );
+        this.#registerTableCommand(
+            'table.cell.splitRows',
+            'Split table cell into rows',
+            (table, parsed, range, args) => {
+                assertNoArguments('table.cell.splitRows', args);
+                return splitCell(table, parsed, normalizedRange(range), 'rows');
+            },
+        );
+        this.#registerTableCommand(
+            'table.cell.splitColumns',
+            'Split table cell into columns',
+            (table, parsed, range, args) => {
+                assertNoArguments('table.cell.splitColumns', args);
+                return splitCell(
+                    table,
+                    parsed,
+                    normalizedRange(range),
+                    'columns',
+                );
             },
         );
         this.#registerTableCommand(
@@ -682,6 +756,7 @@ export class TablePlugin extends Plugin {
                     Record<string, unknown>
                 >,
                 editable: service.canEdit(),
+                capabilities: tableCapabilities(table, parsed, selection),
                 row: this.editor.execute('table.row.inspect') as Readonly<
                     Record<string, unknown>
                 >,
@@ -689,6 +764,7 @@ export class TablePlugin extends Plugin {
                     'table.section.inspect',
                 ) as Readonly<Record<string, unknown>>,
                 selection,
+                selectionKind: tableSelectionKind(parsed, selection),
                 table: this.editor.execute('table.inspect') as Readonly<
                     Record<string, unknown>
                 >,
@@ -871,6 +947,8 @@ function structuralCommand(action: TableStructuralAction): string {
         'delete-row': 'table.row.remove',
         'delete-table': 'table.remove',
         'merge-cells': 'table.cells.merge',
+        'split-columns': 'table.cell.splitColumns',
+        'split-rows': 'table.cell.splitRows',
         'split-cell': 'table.cell.split',
         'toggle-header': 'table.header.toggle',
     }[action];
@@ -1853,6 +1931,22 @@ function insertRow(
     return { ...table, children };
 }
 
+function insertRows(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    insertion: number,
+    count: number,
+    command: string,
+): HtmlElement {
+    let next = table;
+    let nextParsed = parsed;
+    for (let index = 0; index < count; index += 1) {
+        next = insertRow(next, nextParsed, insertion, command);
+        nextParsed = parseTable(next);
+    }
+    return next;
+}
+
 function removeRows(
     table: HtmlElement,
     parsed: ParsedTable,
@@ -1901,6 +1995,22 @@ function insertColumn(
     const nextWidths = [...widths];
     nextWidths.splice(insertion, 0, undefined);
     return setColumnWidths(next, nextWidths);
+}
+
+function insertColumns(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    insertion: number,
+    count: number,
+    command: string,
+): HtmlElement {
+    let next = table;
+    let nextParsed = parsed;
+    for (let index = 0; index < count; index += 1) {
+        next = insertColumn(next, nextParsed, insertion, command);
+        nextParsed = parseTable(next);
+    }
+    return next;
 }
 
 function removeColumns(
@@ -2057,6 +2167,12 @@ function mergeCells(
             'requires multiple cells.',
         );
     }
+    if (!rangeUsesOneSection(table, parsed, range)) {
+        throw new RichTextArgumentError(
+            'table.cells.merge',
+            'cannot merge cells across table sections.',
+        );
+    }
     const selected = selectedCells(parsed, range);
     const anchor = parsed.grid[range.top]?.[range.left];
     if (anchor === undefined) {
@@ -2088,6 +2204,7 @@ function splitCell(
     table: HtmlElement,
     parsed: ParsedTable,
     range: NormalizedRange,
+    direction: 'all' | 'columns' | 'rows' = 'all',
 ): HtmlElement {
     if (range.top !== range.bottom || range.left !== range.right) {
         throw new RichTextArgumentError(
@@ -2098,7 +2215,11 @@ function splitCell(
     const anchor = parsed.grid[range.top]?.[range.left];
     if (
         anchor === undefined ||
-        (anchor.rowspan === 1 && anchor.colspan === 1)
+        (direction === 'rows'
+            ? anchor.rowspan === 1
+            : direction === 'columns'
+              ? anchor.colspan === 1
+              : anchor.rowspan === 1 && anchor.colspan === 1)
     ) {
         throw new RichTextArgumentError(
             'table.cell.split',
@@ -2109,12 +2230,14 @@ function splitCell(
         number,
         { column: number; cell: HtmlElement }[]
     >();
-    for (let row = anchor.row; row < anchor.row + anchor.rowspan; row += 1) {
-        for (
-            let column = anchor.column;
-            column < anchor.column + anchor.colspan;
-            column += 1
-        ) {
+    const rowEnd =
+        direction === 'columns' ? anchor.row + 1 : anchor.row + anchor.rowspan;
+    const columnEnd =
+        direction === 'rows'
+            ? anchor.column + 1
+            : anchor.column + anchor.colspan;
+    for (let row = anchor.row; row < rowEnd; row += 1) {
+        for (let column = anchor.column; column < columnEnd; column += 1) {
             if (row === anchor.row && column === anchor.column) {
                 continue;
             }
@@ -2122,7 +2245,13 @@ function splitCell(
             rowAdditions.push({
                 cell: htmlElement(
                     anchor.element.tagName,
-                    removeSpanAttributes(anchor.element.attributes),
+                    setSpanAttributes(
+                        anchor.element.attributes.filter(
+                            (attribute) => attribute.name !== 'id',
+                        ),
+                        direction === 'columns' ? anchor.rowspan : 1,
+                        direction === 'rows' ? anchor.colspan : 1,
+                    ),
                     [],
                 ),
                 column,
@@ -2132,7 +2261,11 @@ function splitCell(
     }
     const replacement = {
         ...anchor.element,
-        attributes: removeSpanAttributes(anchor.element.attributes),
+        attributes: setSpanAttributes(
+            anchor.element.attributes,
+            direction === 'columns' ? anchor.rowspan : 1,
+            direction === 'rows' ? anchor.colspan : 1,
+        ),
     };
     return mapParsedRows(table, parsed, (row) => {
         const cells = row.cells.map((cell) =>
@@ -3568,6 +3701,119 @@ function normalizedRange(range: TableCellRange): NormalizedRange {
     };
 }
 
+function tableSelectionKind(
+    parsed: ParsedTable,
+    range: TableCellRange,
+): 'caret' | 'cells' | 'rows' | 'columns' | 'table' {
+    const selected = normalizedRange(range);
+    if (selected.top === selected.bottom && selected.left === selected.right)
+        return 'caret';
+    if (range.kind !== undefined) return range.kind;
+    const allRows =
+        selected.top === 0 && selected.bottom === parsed.rows.length - 1;
+    const allColumns =
+        selected.left === 0 && selected.right === parsed.columns - 1;
+    if (allRows && allColumns) return 'table';
+    if (allColumns) return 'rows';
+    if (allRows) return 'columns';
+    return 'cells';
+}
+
+function tableScopeSelection(
+    parsed: ParsedTable,
+    range: TableCellRange,
+    kind: 'column' | 'row' | 'table',
+): TableCellRange {
+    const selected = normalizedRange(range);
+    return {
+        anchor:
+            kind === 'table'
+                ? { column: 0, row: 0 }
+                : kind === 'row'
+                  ? { column: 0, row: selected.top }
+                  : { column: selected.left, row: 0 },
+        focus:
+            kind === 'table'
+                ? { column: parsed.columns - 1, row: parsed.rows.length - 1 }
+                : kind === 'row'
+                  ? { column: parsed.columns - 1, row: selected.bottom }
+                  : {
+                        column: selected.right,
+                        row: parsed.rows.length - 1,
+                    },
+        kind: kind === 'row' ? 'rows' : kind === 'column' ? 'columns' : 'table',
+    };
+}
+
+function tableCapabilities(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    range: TableCellRange,
+) {
+    const selected = normalizedRange(range);
+    const multiple =
+        selected.top !== selected.bottom || selected.left !== selected.right;
+    let mergeReason: string | undefined;
+    if (!multiple) {
+        mergeReason = '请选择至少两个相邻单元格。';
+    } else if (!rangeUsesOneSection(table, parsed, selected)) {
+        mergeReason = '不能跨越表头、表体或表尾分区合并。';
+    } else if (
+        parsed.rows.some((row) =>
+            row.cells.some((cell) => cell.rowspan !== 1 || cell.colspan !== 1),
+        )
+    ) {
+        mergeReason = '所选区域包含跨度冲突，请先拆分相关单元格。';
+    }
+    let splitReason: string | undefined;
+    if (multiple) {
+        splitReason = '拆分操作一次只能处理一个单元格。';
+    } else {
+        const cell = parsed.grid[selected.top]?.[selected.left];
+        if (cell === undefined || (cell.rowspan === 1 && cell.colspan === 1)) {
+            splitReason = '当前单元格没有可拆分的跨度。';
+        }
+    }
+    return Object.freeze({
+        clear: Object.freeze({ enabled: true }),
+        merge: Object.freeze({
+            enabled: mergeReason === undefined,
+            ...(mergeReason === undefined ? {} : { reason: mergeReason }),
+        }),
+        split: Object.freeze({
+            enabled: splitReason === undefined,
+            ...(splitReason === undefined ? {} : { reason: splitReason }),
+        }),
+    });
+}
+
+function rangeUsesOneSection(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    range: NormalizedRange,
+): boolean {
+    const sections = new Map<HtmlElement, HtmlElement>();
+    for (const child of table.children) {
+        if (isElement(child, 'tr')) {
+            sections.set(child, table);
+        } else if (
+            child.type === 'element' &&
+            ['thead', 'tbody', 'tfoot'].includes(child.tagName)
+        ) {
+            for (const row of child.children) {
+                if (isElement(row, 'tr')) sections.set(row, child);
+            }
+        }
+    }
+    return (
+        new Set(
+            parsed.rows
+                .slice(range.top, range.bottom + 1)
+                .map((row) => sections.get(row.element)),
+        ).size === 1
+    );
+}
+
 function readOptionalRange(value: unknown): TableCellRange | undefined {
     if (typeof value !== 'object' || value === null || Array.isArray(value)) {
         return undefined;
@@ -3575,8 +3821,14 @@ function readOptionalRange(value: unknown): TableCellRange | undefined {
     const record = value as Record<string, unknown>;
     const anchor = readPosition(record.anchor);
     const focus = readPosition(record.focus);
-    return anchor === undefined || focus === undefined
-        ? undefined
+    if (anchor === undefined || focus === undefined) return undefined;
+    const kind = record.kind;
+    return ['cells', 'columns', 'rows', 'table'].includes(String(kind))
+        ? {
+              anchor,
+              focus,
+              kind: kind as 'cells' | 'columns' | 'rows' | 'table',
+          }
         : { anchor, focus };
 }
 
@@ -4372,6 +4624,30 @@ function assertNoArguments(command: string, args: readonly unknown[]): void {
     if (args.length !== 0) {
         throw new RichTextArgumentError(command, 'does not accept arguments.');
     }
+}
+
+function insertCount(command: string, args: readonly unknown[]): number {
+    if (args.length === 0) return 1;
+    const options = args[0];
+    if (
+        args.length !== 1 ||
+        typeof options !== 'object' ||
+        options === null ||
+        Array.isArray(options)
+    ) {
+        throw new RichTextArgumentError(
+            command,
+            'accepts an optional { count } object.',
+        );
+    }
+    const count = Reflect.get(options, 'count');
+    if (!Number.isInteger(count) || Number(count) < 1 || Number(count) > 100) {
+        throw new RichTextArgumentError(
+            command,
+            'count must be from 1 to 100.',
+        );
+    }
+    return Number(count);
 }
 
 function oneString(command: string, args: readonly unknown[]): string {

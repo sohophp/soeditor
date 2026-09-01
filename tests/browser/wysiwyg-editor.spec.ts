@@ -1117,11 +1117,8 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
         .poll(() => selectionSnapshot(first).then(({ inside }) => inside))
         .toBe(true);
 
+    await toolbar.getByRole('button', { name: 'Select table' }).click();
     await toolbar.getByRole('button', { name: 'Table editor' }).click();
-    await page
-        .getByRole('dialog', { name: '表格编辑' })
-        .getByRole('button', { name: '表格', exact: true })
-        .click();
     const tableDialog = page.getByRole('dialog', { name: 'Table properties' });
     await expect(tableDialog.getByLabel('Caption')).toHaveValue(
         'Initial caption',
@@ -1137,11 +1134,8 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
     await expect(table).toHaveAttribute('style', /margin-inline:\s*auto/u);
 
     await first.click();
+    await toolbar.getByRole('button', { name: 'Select row' }).click();
     await toolbar.getByRole('button', { name: 'Table editor' }).click();
-    await page
-        .getByRole('dialog', { name: '表格编辑' })
-        .getByRole('button', { name: '行', exact: true })
-        .click();
     const rowDialog = page.getByRole('dialog', { name: 'Row properties' });
     await rowDialog.getByLabel('Section').selectOption('head');
     await rowDialog.getByLabel('Height', { exact: true }).fill('48');
@@ -1155,10 +1149,6 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
     await toolbar.getByRole('button', { name: 'Toggle header' }).click();
     await surface.locator('thead th').first().click();
     await toolbar.getByRole('button', { name: 'Table editor' }).click();
-    await page
-        .getByRole('dialog', { name: '表格编辑' })
-        .getByRole('button', { name: '单元格', exact: true })
-        .click();
     const cellDialog = page.getByRole('dialog', { name: 'Cell properties' });
     await cellDialog.getByLabel('Horizontal alignment').selectOption('center');
     await cellDialog.getByLabel('Vertical alignment').selectOption('middle');
@@ -1206,7 +1196,7 @@ test('uses explicit Shift-click rectangular table selection for merge, split, an
     const toolbar = page.locator('.soeditor-ui__table-balloon');
     await expect(
         toolbar.getByRole('button', { name: 'Merge cells' }),
-    ).toBeDisabled();
+    ).toBeHidden();
     await surface.locator('#range-d').click({ modifiers: ['Shift'] });
     await expect(
         surface.locator('.soeditor-table-cell.is-structurally-selected'),
@@ -1223,8 +1213,8 @@ test('uses explicit Shift-click rectangular table selection for merge, split, an
     await cells.first().click();
     await expect(
         toolbar.getByRole('button', { name: 'Merge cells' }),
-    ).toBeDisabled();
-    await toolbar.getByRole('button', { name: 'Split cell' }).click();
+    ).toBeHidden();
+    await toolbar.getByRole('button', { name: 'Split completely' }).click();
     cells = surface.locator('td,th');
     await expect(cells).toHaveCount(4);
     await expect(cells.first()).not.toHaveAttribute('colspan');
@@ -1258,6 +1248,52 @@ test('enables merge for a rectangular body selection below a table header', asyn
     const merged = surface.locator('tbody td').first();
     await expect(merged).toHaveAttribute('rowspan', '2');
     await expect(merged).toHaveAttribute('colspan', '2');
+});
+
+test('supports Dreamweaver-style drag and row, column, and table selection scopes', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<table><tbody><tr><td id="drag-a">A</td><td>B</td><td>C</td></tr><tr><td>D</td><td id="drag-e">E</td><td>F</td></tr></tbody></table>',
+    );
+    const start = await surface.locator('#drag-a').boundingBox();
+    const end = await surface.locator('#drag-e').boundingBox();
+    if (start === null || end === null)
+        throw new Error('Table cells not found.');
+    await page.mouse.move(
+        start.x + start.width / 2,
+        start.y + start.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(end.x + end.width / 2, end.y + end.height / 2, {
+        steps: 4,
+    });
+    await page.mouse.up();
+    await expect(
+        surface.locator('.soeditor-table-cell.is-structurally-selected'),
+    ).toHaveCount(4);
+    const toolbar = page.locator('.soeditor-ui__table-balloon');
+    await expect(
+        toolbar.getByRole('button', { name: 'Merge cells' }),
+    ).toBeEnabled();
+
+    await toolbar.getByRole('button', { name: 'Select row' }).click();
+    await expect(
+        surface.locator('.soeditor-table-cell.is-structurally-selected'),
+    ).toHaveCount(6);
+    await expect(
+        toolbar.getByRole('button', { name: 'Add column' }),
+    ).toBeHidden();
+
+    await toolbar.getByRole('button', { name: 'Select table' }).click();
+    await expect(
+        toolbar.getByRole('button', { name: 'Delete table' }),
+    ).toBeVisible();
+    await expect(
+        toolbar.getByRole('button', { name: 'Merge cells' }),
+    ).toBeHidden();
 });
 
 test('adds and removes table rows and columns with one-step history', async ({

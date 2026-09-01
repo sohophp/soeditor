@@ -37,7 +37,7 @@ adapters and plugin tooling are no longer active product directions.
 - complete image properties, including a single-step undo, have direct browser
   coverage.
 - the active Chromium product gate contains 81 CMS scenarios; the historical
-  199-scenario suite remains available as `pnpm test:browser:compat` and is not
+  201-scenario suite remains available as `pnpm test:browser:compat` and is not
   a CMS release gate.
 
 ## Active work order

@@ -124,9 +124,7 @@ test('preserves unsupported table source inertly and enforces readonly controls'
             '<table data-cms="kept"><tbody><tr><td>A</td></tr><script>window.__tableExecuted=true</script></tbody></table>',
         );
     });
-    await expect(page.locator(tableBoundary)).toContainText(
-        'Unsupported table preserved',
-    );
+    await expect(page.locator(tableBoundary)).toContainText('此表格结构异常');
     await expect(page.locator(source)).toContainText('data-cms="kept"');
     await expect(page.locator(source)).toContainText('<script>');
     expect(

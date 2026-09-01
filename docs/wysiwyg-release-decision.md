@@ -30,7 +30,7 @@ and High product defects in the executed Chromium qualification are zero.
 ## Passed gates
 
 - lint, strict TypeScript, all unit suites, and documentation audit;
-- 199/199 Chromium browser scenarios;
+- 201/201 Chromium browser scenarios;
 - 6/6 focused Chromium desktop/mobile CMS scenarios;
 - 66/66 applicable Firefox/WebKit focused CMS and direct WYSIWYG scenarios in
   the matching official Playwright Linux image;

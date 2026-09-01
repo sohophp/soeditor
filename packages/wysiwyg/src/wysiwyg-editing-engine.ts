@@ -74,6 +74,7 @@ interface SelectionBookmark {
 interface TableCellRange {
     readonly anchor: { readonly column: number; readonly row: number };
     readonly focus: { readonly column: number; readonly row: number };
+    readonly kind?: 'cells' | 'columns' | 'rows' | 'table';
 }
 
 interface NativeTableSelection {
@@ -240,6 +241,8 @@ export class WysiwygEditingEngine implements EditingEngine {
     readonly #selectionTarget: EventTarget;
     #selectedElement: Element | undefined;
     #tableSelection: NativeTableSelection | undefined;
+    #tableDragAnchor: HTMLTableCellElement | undefined;
+    #tableDragMoved = false;
 
     constructor(options: WysiwygEditingEngineOptions) {
         this.editor = options.editor;
@@ -291,6 +294,8 @@ export class WysiwygEditingEngine implements EditingEngine {
                 type === 'soeditor.table'
                     ? this.#readTableCellRange()
                     : undefined,
+            setStructuredSelection: (type, selection) =>
+                this.#setStructuredSelection(type, selection),
             insertHtml: (html, insertionOptions) =>
                 this.#insertHtml(html, insertionOptions),
             isAlignmentActive: (alignment) =>
@@ -339,6 +344,7 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.element.addEventListener('drop', this.#handleDrop);
         this.element.addEventListener('focusin', this.#handleFocusIn);
         this.element.addEventListener('pointerdown', this.#handlePointerDown);
+        this.element.addEventListener('pointerover', this.#handlePointerOver);
         this.element.addEventListener('pointerup', this.#handlePointerUp);
         this.element.addEventListener('dblclick', this.#handleDoubleClick);
         this.#document.addEventListener(
@@ -460,6 +466,10 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.element.removeEventListener(
             'pointerdown',
             this.#handlePointerDown,
+        );
+        this.element.removeEventListener(
+            'pointerover',
+            this.#handlePointerOver,
         );
         this.element.removeEventListener('pointerup', this.#handlePointerUp);
         this.element.removeEventListener('dblclick', this.#handleDoubleClick);
@@ -585,6 +595,22 @@ export class WysiwygEditingEngine implements EditingEngine {
         ) {
             this.#resetInputHistory();
         }
+        if (event.key === 'Escape' && this.#tableSelection !== undefined) {
+            const { focus } = this.#tableSelection.range;
+            const cell = tableCellAt(
+                this.#tableSelection.table,
+                focus.row,
+                focus.column,
+            );
+            if (cell !== undefined) {
+                this.#tableSelection = {
+                    range: { anchor: focus, focus },
+                    table: this.#tableSelection.table,
+                };
+                this.#paintTableSelection();
+                this.#announceTableSelection(cell);
+            }
+        }
         if (event.key === 'Tab' && this.#moveTableCaret(event.shiftKey)) {
             event.preventDefault();
             return;
@@ -707,10 +733,37 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.#captureRange();
     };
 
-    readonly #handlePointerDown = (): void => {
+    readonly #handlePointerDown = (event: PointerEvent): void => {
         this.#resetInputHistory();
         this.#pendingMark = undefined;
         this.#activateFromUserIntent();
+        const target = event.target;
+        this.#tableDragAnchor =
+            event.button === 0 && target instanceof Element
+                ? (target.closest<HTMLTableCellElement>('td,th') ?? undefined)
+                : undefined;
+        this.#tableDragMoved = false;
+    };
+
+    readonly #handlePointerOver = (event: PointerEvent): void => {
+        const anchor = this.#tableDragAnchor;
+        const target = event.target;
+        const cell =
+            target instanceof Element
+                ? target.closest<HTMLTableCellElement>('td,th')
+                : null;
+        if (
+            anchor === undefined ||
+            cell === null ||
+            cell === anchor ||
+            (event.buttons & 1) !== 1 ||
+            anchor.closest('table') !== cell.closest('table')
+        ) {
+            return;
+        }
+        if (!this.#tableDragMoved) this.#activateCell(anchor);
+        this.#tableDragMoved = true;
+        this.#activateCell(cell, true);
     };
 
     readonly #handlePointerUp = (event: PointerEvent): void => {
@@ -720,9 +773,15 @@ export class WysiwygEditingEngine implements EditingEngine {
             target instanceof Element
                 ? target.closest<HTMLTableCellElement>('td,th')
                 : null;
-        if (cell !== null && this.element.contains(cell)) {
+        if (
+            !this.#tableDragMoved &&
+            cell !== null &&
+            this.element.contains(cell)
+        ) {
             this.#activateCell(cell, event.shiftKey);
         }
+        this.#tableDragAnchor = undefined;
+        this.#tableDragMoved = false;
     };
 
     readonly #handleDoubleClick = (event: MouseEvent): void => {
@@ -842,7 +901,14 @@ export class WysiwygEditingEngine implements EditingEngine {
                     ? this.#tableSelection.range.anchor
                     : focus;
             this.#tableSelection = {
-                range: { anchor, focus },
+                range: {
+                    anchor,
+                    focus,
+                    ...(anchor.row === focus.row &&
+                    anchor.column === focus.column
+                        ? {}
+                        : { kind: 'cells' as const }),
+                },
                 table,
             };
             this.#paintTableSelection();
@@ -857,6 +923,15 @@ export class WysiwygEditingEngine implements EditingEngine {
                 this.#selectRange(range);
             }
         };
+        this.#announceTableSelection(cell, activate);
+    }
+
+    #announceTableSelection(
+        cell: HTMLTableCellElement,
+        activate: () => void = () => {
+            this.element.focus({ preventScroll: true });
+        },
+    ): void {
         const selected = this.#readTableCellRange();
         const EventConstructor =
             this.#document.defaultView?.CustomEvent ?? CustomEvent;
@@ -874,10 +949,36 @@ export class WysiwygEditingEngine implements EditingEngine {
                                       ...selected.anchor,
                                   }),
                                   focus: Object.freeze({ ...selected.focus }),
+                                  ...(selected.kind === undefined
+                                      ? {}
+                                      : { kind: selected.kind }),
                               }),
                 }),
             }),
         );
+    }
+
+    #setStructuredSelection(type: string, value: unknown): boolean {
+        if (type !== 'soeditor.table') return false;
+        const range = readNativeTableRange(value);
+        const table =
+            this.#activeCell?.closest<HTMLTableElement>('table') ??
+            this.#selectedElement?.closest<HTMLTableElement>('table');
+        if (range === undefined || table === null || table === undefined)
+            return false;
+        const focus = tableCellAt(table, range.focus.row, range.focus.column);
+        if (
+            tableCellAt(table, range.anchor.row, range.anchor.column) ===
+                undefined ||
+            focus === undefined
+        )
+            return false;
+        this.#tableSelection = { range, table };
+        this.#activeCell = focus;
+        this.#selectedElement = focus;
+        this.#paintTableSelection();
+        this.#announceTableSelection(focus);
+        return true;
     }
 
     #moveTableCaret(backward: boolean): boolean {
@@ -2692,6 +2793,37 @@ function tableCellPosition(
     const row = rows.indexOf(cell.parentElement as HTMLTableRowElement);
     const column = Array.from(rows[row]?.cells ?? []).indexOf(cell);
     return row < 0 || column < 0 ? undefined : { column, row };
+}
+
+function readNativeTableRange(value: unknown): TableCellRange | undefined {
+    if (typeof value !== 'object' || value === null) return undefined;
+    const anchor = Reflect.get(value, 'anchor');
+    const focus = Reflect.get(value, 'focus');
+    const readPosition = (
+        candidate: unknown,
+    ): TableCellRange['anchor'] | undefined => {
+        if (typeof candidate !== 'object' || candidate === null)
+            return undefined;
+        const row = Reflect.get(candidate, 'row');
+        const column = Reflect.get(candidate, 'column');
+        return Number.isInteger(row) &&
+            Number(row) >= 0 &&
+            Number.isInteger(column) &&
+            Number(column) >= 0
+            ? { column: Number(column), row: Number(row) }
+            : undefined;
+    };
+    const nextAnchor = readPosition(anchor);
+    const nextFocus = readPosition(focus);
+    if (nextAnchor === undefined || nextFocus === undefined) return undefined;
+    const kind = Reflect.get(value, 'kind');
+    return ['cells', 'columns', 'rows', 'table'].includes(String(kind))
+        ? {
+              anchor: nextAnchor,
+              focus: nextFocus,
+              kind: kind as 'cells' | 'columns' | 'rows' | 'table',
+          }
+        : { anchor: nextAnchor, focus: nextFocus };
 }
 
 function nodePath(root: Node, node: Node): readonly number[] {

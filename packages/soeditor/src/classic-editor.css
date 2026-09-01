@@ -388,6 +388,10 @@
     overflow-x: auto;
 }
 
+.soeditor-classic .soeditor-table-context__button[hidden] {
+    display: none;
+}
+
 .soeditor-classic .soeditor-ui__table-balloon {
     max-width: min(48rem, calc(100vw - 1rem));
 }
