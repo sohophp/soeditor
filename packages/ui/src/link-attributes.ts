@@ -171,7 +171,7 @@ export function linkCustomAttributeField(
         updateValueSuggestions();
     });
     add.addEventListener('click', commit);
-    list.addEventListener('change', () => {
+    list.addEventListener('click', () => {
         name.value = list.value;
         value.value = attributes.get(list.value) ?? '';
         updateValueSuggestions();
