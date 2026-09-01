@@ -96,9 +96,7 @@ export function attachClassicTableContext(
             }),
         );
         if (sections.size !== 1) return false;
-        return Array.from(
-            table.querySelectorAll<HTMLElement>('.soeditor-table-cell'),
-        ).every((cell) => {
+        return selectedCells.every((cell) => {
             const nativeCell = cell.matches('td,th')
                 ? cell
                 : cell.closest<HTMLElement>('td,th');
@@ -689,6 +687,15 @@ function selectedTableRange(table: HTMLElement, previous?: unknown): unknown {
         ),
     );
     if (cells.length === 0) return undefined;
+    const previousBounds = tableRangeBounds(previous);
+    if (
+        previousBounds !== undefined &&
+        cells.length ===
+            (previousBounds.bottom - previousBounds.top + 1) *
+                (previousBounds.right - previousBounds.left + 1)
+    ) {
+        return previous;
+    }
     const tableRows = Array.from(table.querySelectorAll('tr'));
     const positions = cells.map((cell) => {
         const nativeCell = cell.matches('td,th')

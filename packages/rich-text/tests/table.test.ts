@@ -139,6 +139,22 @@ describe('structured table feature', () => {
         await harness.editor.destroy();
     });
 
+    it('merges another rectangle when an unrelated merged cell already exists', async () => {
+        const harness = await createTableHarness(
+            '<table><tbody><tr><td rowspan="2">A<br>C</td><td>B</td><td>D</td></tr><tr><td>E</td><td>F</td></tr></tbody></table>',
+        );
+        const selection = range(1, 1, 1, 2);
+
+        expect(harness.editor.execute('table.cells.canMerge', selection)).toBe(
+            true,
+        );
+        harness.editor.execute('table.cells.merge', selection);
+        expect(harness.html()).toBe(
+            '<table><tbody><tr><td rowspan="2">A<br>C</td><td>B</td><td>D</td></tr><tr><td colspan="2">E<br>F</td></tr></tbody></table>',
+        );
+        await harness.editor.destroy();
+    });
+
     it('splits merged cells by rows or columns without duplicating ids', async () => {
         const columns = await createTableHarness(
             '<table><tbody><tr><td id="kept" colspan="3">A</td></tr></tbody></table>',

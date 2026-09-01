@@ -2160,7 +2160,6 @@ function mergeCells(
     parsed: ParsedTable,
     range: NormalizedRange,
 ): HtmlElement {
-    requireUnmerged(parsed, 'table cell merge');
     if (range.top === range.bottom && range.left === range.right) {
         throw new RichTextArgumentError(
             'table.cells.merge',
@@ -2174,6 +2173,12 @@ function mergeCells(
         );
     }
     const selected = selectedCells(parsed, range);
+    if (selected.some((cell) => cell.rowspan !== 1 || cell.colspan !== 1)) {
+        throw new RichTextArgumentError(
+            'table cell merge',
+            'requires split cells in the selected range.',
+        );
+    }
     const anchor = parsed.grid[range.top]?.[range.left];
     if (anchor === undefined) {
         throw new Error('Selected table cell was not found.');

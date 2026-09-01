@@ -2781,23 +2781,50 @@ function tableCellAt(
     row: number,
     column: number,
 ): HTMLTableCellElement | undefined {
-    return (
-        table
-            .querySelectorAll('tr')
-            .item(row)
-            ?.querySelectorAll<HTMLTableCellElement>('td,th')
-            .item(column) ?? undefined
-    );
+    return nativeTableGrid(table)[row]?.[column];
 }
 
 function tableCellPosition(
     table: HTMLTableElement,
     cell: HTMLTableCellElement,
 ): { readonly column: number; readonly row: number } | undefined {
-    const rows = Array.from(table.rows);
-    const row = rows.indexOf(cell.parentElement as HTMLTableRowElement);
-    const column = Array.from(rows[row]?.cells ?? []).indexOf(cell);
-    return row < 0 || column < 0 ? undefined : { column, row };
+    for (const [row, cells] of nativeTableGrid(table).entries()) {
+        const column = cells.indexOf(cell);
+        if (column >= 0) return { column, row };
+    }
+    return undefined;
+}
+
+function nativeTableGrid(table: Element): HTMLTableCellElement[][] {
+    const rows = Array.from(table.querySelectorAll('tr')).filter(
+        (row) => row.closest('table') === table,
+    );
+    const grid: HTMLTableCellElement[][] = rows.map(() => []);
+    for (const [rowIndex, row] of rows.entries()) {
+        let column = 0;
+        for (const cell of Array.from(row.cells)) {
+            while (grid[rowIndex]?.[column] !== undefined) column += 1;
+            const rowspan = Math.max(1, cell.rowSpan);
+            const colspan = Math.max(1, cell.colSpan);
+            for (
+                let coveredRow = rowIndex;
+                coveredRow < Math.min(rows.length, rowIndex + rowspan);
+                coveredRow += 1
+            ) {
+                for (
+                    let coveredColumn = column;
+                    coveredColumn < column + colspan;
+                    coveredColumn += 1
+                ) {
+                    const targetRow = grid[coveredRow];
+                    if (targetRow !== undefined)
+                        targetRow[coveredColumn] = cell;
+                }
+            }
+            column += colspan;
+        }
+    }
+    return grid;
 }
 
 function readNativeTableRange(value: unknown): TableCellRange | undefined {
