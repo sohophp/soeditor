@@ -203,9 +203,12 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
         const selectedText = ui.getEditingSelectionText();
         const editingExisting = typeof values.href === 'string';
         const body = document.createElement('div');
+        body.className = 'soeditor-ui__link-dialog-form';
+        const essentials = document.createElement('div');
+        essentials.className = 'soeditor-ui__link-essentials';
         const displayed = field(
             document,
-            body,
+            essentials,
             'Displayed text',
             'text',
             false,
@@ -213,68 +216,82 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
         );
         const href = field(
             document,
-            body,
+            essentials,
             'Link URL',
-            'url',
+            'text',
             true,
             typeof values.href === 'string' ? values.href : '',
         );
+        displayed.autocomplete = 'off';
+        displayed.placeholder = 'Text shown to readers';
+        href.setAttribute('autocomplete', 'url');
+        href.inputMode = 'url';
+        href.placeholder = 'https://example.com/page';
+        href.spellcheck = false;
+
+        const advanced = document.createElement('details');
+        advanced.className = 'soeditor-ui__link-advanced';
+        advanced.open = ['title', 'target', 'rel'].some(
+            (name) =>
+                typeof values[name] === 'string' &&
+                values[name].trim().length > 0,
+        );
+        const advancedSummary = document.createElement('summary');
+        advancedSummary.textContent = 'Advanced settings';
+        const advancedFields = document.createElement('div');
+        advancedFields.className = 'soeditor-ui__link-advanced-fields';
         const title = field(
             document,
-            body,
+            advancedFields,
             'Title',
             'text',
             false,
             typeof values.title === 'string' ? values.title : '',
         );
+        title.autocomplete = 'off';
+        title.placeholder = 'Optional tooltip';
         const target = linkTargetField(
             document,
-            body,
+            advancedFields,
             typeof values.target === 'string' ? values.target : '',
         );
         const rel = relationshipTagField(
             document,
-            body,
+            advancedFields,
             typeof values.rel === 'string' ? values.rel : '',
         );
+        advanced.append(advancedSummary, advancedFields);
+        body.append(essentials, advanced);
+        const save = (): void => {
+            href.value = href.value.trim();
+            if (!href.reportValidity()) return;
+            const text = displayed.value || href.value;
+            const attributes = {
+                href: href.value,
+                ...(title.value.length === 0 ? {} : { title: title.value }),
+                ...(target.value.length === 0 ? {} : { target: target.value }),
+                ...(rel.value().length === 0 ? {} : { rel: rel.value() }),
+            };
+            const command = text === selectedText ? 'link.set' : 'link.setText';
+            if (
+                execute(editor, ui, command, [
+                    command === 'link.set'
+                        ? attributes
+                        : { ...attributes, text },
+                ])
+            ) {
+                handle.close();
+            }
+        };
         const handle = ui.dialogs.open({
             title: editingExisting ? 'Edit link' : 'Link',
             returnFocus: button,
             content: body,
             actions: [
-                {
-                    kind: 'primary',
-                    label: editingExisting ? 'Update link' : 'Insert link',
-                    run: () => {
-                        const text = displayed.value || href.value;
-                        const attributes = {
-                            href: href.value,
-                            ...(title.value.length === 0
-                                ? {}
-                                : { title: title.value }),
-                            ...(target.value.length === 0
-                                ? {}
-                                : { target: target.value }),
-                            ...(rel.value().length === 0
-                                ? {}
-                                : { rel: rel.value() }),
-                        };
-                        const command =
-                            text === selectedText ? 'link.set' : 'link.setText';
-                        if (
-                            execute(editor, ui, command, [
-                                command === 'link.set'
-                                    ? attributes
-                                    : { ...attributes, text },
-                            ])
-                        ) {
-                            handle.close();
-                        }
-                    },
-                },
                 ...(editingExisting
                     ? [
                           {
+                              kind: 'danger' as const,
                               label: 'Remove link',
                               run: (): void => {
                                   if (execute(editor, ui, 'link.remove', [])) {
@@ -284,10 +301,31 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
                           },
                       ]
                     : []),
+                {
+                    kind: 'primary',
+                    label: editingExisting ? 'Update link' : 'Insert link',
+                    run: save,
+                },
             ],
         });
-        displayed.focus();
-        displayed.select();
+        handle.element.classList.add('soeditor-ui__link-dialog');
+        body.addEventListener('keydown', (event) => {
+            const view = document.defaultView;
+            const fromInput =
+                view !== null && event.target instanceof view.HTMLInputElement;
+            if (
+                event.key !== 'Enter' ||
+                event.isComposing ||
+                event.defaultPrevented ||
+                !fromInput
+            ) {
+                return;
+            }
+            event.preventDefault();
+            save();
+        });
+        href.focus();
+        href.select();
     };
     button.addEventListener('click', click);
     return {
@@ -311,15 +349,6 @@ const commonLinkRelationships = Object.freeze([
     'noopener',
     'noreferrer',
     'external',
-    'author',
-    'bookmark',
-    'help',
-    'license',
-    'next',
-    'prev',
-    'search',
-    'tag',
-    'alternate',
 ] as const);
 
 function linkTargetField(

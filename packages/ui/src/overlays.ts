@@ -111,6 +111,7 @@ export function createOverlayServices(
                     'is-primary',
                     action.kind === 'primary',
                 );
+                button.classList.toggle('is-danger', action.kind === 'danger');
                 button.textContent = action.label;
                 button.addEventListener('click', () => {
                     try {

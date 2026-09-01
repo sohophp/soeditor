@@ -124,7 +124,7 @@ export type UiContent = string | Node | ((container: HTMLElement) => void);
 /** One native dialog footer action. */
 export interface DialogAction {
     readonly label: string;
-    readonly kind?: 'default' | 'primary';
+    readonly kind?: 'danger' | 'default' | 'primary';
     run(handle: DialogHandle): unknown | PromiseLike<unknown>;
 }
 

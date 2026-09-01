@@ -868,6 +868,7 @@ test('creates, edits, and removes a selected-text link without losing its range'
     let dialog = page.getByRole('dialog', { name: 'Link' });
     await expect(dialog.getByLabel('Displayed text')).toHaveValue('Alpha');
     await dialog.getByLabel('Link URL').fill('/alpha');
+    await dialog.getByText('Advanced settings').click();
     await dialog.getByLabel('Title').fill('Alpha article');
     await dialog.getByLabel('Common target').selectOption('_blank');
     await expect(dialog.getByLabel('Target', { exact: true })).toHaveValue(
@@ -888,6 +889,10 @@ test('creates, edits, and removes a selected-text link without losing its range'
     await page.mouse.click(linkPoint.x, linkPoint.y);
     await page.getByRole('button', { name: 'Edit link' }).click();
     dialog = page.getByRole('dialog', { name: 'Edit link' });
+    await expect(dialog.locator('details')).toHaveAttribute('open', '');
+    await expect(
+        dialog.getByRole('button', { name: 'Remove link' }),
+    ).toHaveClass(/is-danger/u);
     await expect(dialog.getByLabel('Displayed text')).toHaveValue('Alpha');
     await expect(dialog.getByLabel('Link URL')).toHaveValue('/alpha');
     await expect(dialog.getByLabel('Target', { exact: true })).toHaveValue(

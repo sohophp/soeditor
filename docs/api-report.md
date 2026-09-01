@@ -270,7 +270,7 @@ Declaration SHA-256:
 | `DiagnosticsStatus`                                   | type       | stable         | `e532053fcf8f96a7` |
 | `DiagnosticsValidationPolicy`                         | type       | stable         | `3065c6d85a822c86` |
 | `DiagnosticsWorkflowConfig`                           | type       | stable         | `e1cbd2b6c8da2018` |
-| `DialogAction`                                        | type       | stable         | `040288bfea786d4e` |
+| `DialogAction`                                        | type       | stable         | `606b5be179931b65` |
 | `DialogHandle`                                        | type       | stable         | `69d8c3df12657d5a` |
 | `DialogOptions`                                       | type       | stable         | `1da46417d28bf824` |
 | `DialogService`                                       | type       | stable         | `a73020dcd4c251eb` |
@@ -1447,7 +1447,7 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`dfb7f12952e4b21a9e161821bca104889ae48a633dc17685734f0617271217f3`
+`bf7f36351c85fb93140a357427f642e4539a235e9f7366848f28fe580ebcde21`
 
 ### .
 
@@ -1464,7 +1464,7 @@ Declaration SHA-256:
 | `createEditorUi`                       | value      | stable         | `901a347f76278407` |
 | `CreateEditorUiOptions`                | type       | stable         | `f8ef2dfebdced65b` |
 | `defaultToolbarConfiguration`          | value      | stable         | `f11a78c87bf29923` |
-| `DialogAction`                         | type       | stable         | `040288bfea786d4e` |
+| `DialogAction`                         | type       | stable         | `606b5be179931b65` |
 | `DialogHandle`                         | type       | stable         | `69d8c3df12657d5a` |
 | `DialogOptions`                        | type       | stable         | `1da46417d28bf824` |
 | `DialogService`                        | type       | stable         | `a73020dcd4c251eb` |

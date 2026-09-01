@@ -1190,6 +1190,7 @@ test('keeps the editing range across dialog, balloon, and nested popup controls'
     await classic.locator('[data-toolbar-item="link"]').click();
     const linkDialog = page.getByRole('dialog', { name: 'Link', exact: true });
     await linkDialog.getByLabel('Link URL').fill('/popup-selection');
+    await linkDialog.getByText('Advanced settings').click();
     await linkDialog.getByLabel('Title').fill('Preserved selection');
     await expect.poll(selectionHighlightCount).toBe(1);
     await linkDialog.getByRole('button', { name: 'Cancel' }).click();

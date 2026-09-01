@@ -4,6 +4,9 @@
 
 ### Patch Changes
 
+- Rework the CMS link dialog around a focused URL workflow, collapsible advanced
+  attributes, responsive scrolling, localized labels, keyboard submission, and
+  a distinct destructive remove action while retaining relative URL support.
 - Resolve and retain editing selections through composed Shadow DOM ranges on
   Firefox and WebKit, expose the retained selection text to command-backed
   dialogs, and make Unicode word counts deterministic across browser engines.

@@ -183,7 +183,9 @@ test('applies a link through a native modal dialog', async ({ page }) => {
     await page.locator('[data-toolbar-item="link"]').click();
     const dialog = page.getByRole('dialog', { name: 'Link' });
     await expect(dialog.getByLabel('Displayed text')).toHaveValue('Hello');
+    await expect(dialog.getByLabel('Link URL')).toBeFocused();
     await dialog.getByLabel('Link URL').fill('/article');
+    await dialog.getByText('Advanced settings').click();
     await dialog.getByLabel('Title').fill('Article');
     await dialog.getByRole('button', { name: 'Insert link' }).click();
 
