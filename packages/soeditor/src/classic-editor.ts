@@ -1463,11 +1463,49 @@ function attachClassicTableContext(
     let activeTarget: HTMLElement | undefined;
     let activeSelection: (() => void) | undefined;
     let activeRange: unknown;
+    let selectionObserver: MutationObserver | undefined;
     const commandButtons = new Map<string, HTMLButtonElement>();
     const refreshCommandButtons = (): void => {
         for (const [command, button] of commandButtons) {
-            button.disabled = !editor.commands.canExecute(command);
+            button.disabled =
+                command === 'table.cells.merge'
+                    ? !canMerge(
+                          activeTable === undefined
+                              ? activeRange
+                              : (selectedTableRange(activeTable) ??
+                                    activeRange),
+                      )
+                    : !editor.commands.canExecute(command);
         }
+    };
+    const canMerge = (range: unknown): boolean => {
+        if (typeof range !== 'object' || range === null) return false;
+        const anchor = Reflect.get(range, 'anchor');
+        const focus = Reflect.get(range, 'focus');
+        if (
+            typeof anchor !== 'object' ||
+            anchor === null ||
+            typeof focus !== 'object' ||
+            focus === null
+        )
+            return false;
+        const rows = [Reflect.get(anchor, 'row'), Reflect.get(focus, 'row')];
+        const columns = [
+            Reflect.get(anchor, 'column'),
+            Reflect.get(focus, 'column'),
+        ];
+        if (![...rows, ...columns].every(Number.isInteger)) return false;
+        const selectedCount =
+            (Math.abs(Number(rows[0]) - Number(rows[1])) + 1) *
+            (Math.abs(Number(columns[0]) - Number(columns[1])) + 1);
+        if (selectedCount < 2 || activeTable === undefined) return false;
+        return Array.from(
+            activeTable.querySelectorAll<HTMLElement>('.soeditor-table-cell'),
+        ).every(
+            (cell) =>
+                (cell.getAttribute('rowspan') ?? '1') === '1' &&
+                (cell.getAttribute('colspan') ?? '1') === '1',
+        );
     };
     const close = (): void => {
         balloon?.close();
@@ -1772,7 +1810,24 @@ function attachClassicTableContext(
         if (table === null) return;
         activeTarget = target;
         activeSelection = activate;
-        activeRange = selectedRange;
+        activeRange = selectedTableRange(table) ?? selectedRange;
+        if (activeTable !== table) {
+            selectionObserver?.disconnect();
+            selectionObserver = new MutationObserver(() => {
+                activeRange = selectedTableRange(table) ?? activeRange;
+                refreshCommandButtons();
+            });
+            selectionObserver.observe(table, {
+                attributeFilter: ['class'],
+                attributes: true,
+                subtree: true,
+            });
+        }
+        globalThis.queueMicrotask(() => {
+            if (activeTable !== table) return;
+            activeRange = selectedTableRange(table) ?? activeRange;
+            refreshCommandButtons();
+        });
         if (balloon !== undefined && activeTable === table) {
             refreshCommandButtons();
             return;
@@ -1834,10 +1889,12 @@ function attachClassicTableContext(
                     ui.setIcon(button, command, label);
                     button.title = label;
                     button.setAttribute('aria-label', label);
-                    button.disabled = !editor.commands.canExecute(command);
+                    button.disabled =
+                        command === 'table.cells.merge'
+                            ? !canMerge(activeRange)
+                            : !editor.commands.canExecute(command);
                     commandButtons.set(command, button);
                     button.addEventListener('click', () => {
-                        activeSelection?.();
                         if (
                             activeRange !== undefined &&
                             command !== 'table.remove'
@@ -1871,6 +1928,13 @@ function attachClassicTableContext(
     };
     const editingStart = (): void => ui.refresh();
     const editingEnd = (): void => ui.refresh();
+    const refreshSelectionState = (): void => {
+        globalThis.queueMicrotask(() => {
+            if (activeTable === undefined) return;
+            activeRange = selectedTableRange(activeTable) ?? activeRange;
+            refreshCommandButtons();
+        });
+    };
     const pointerDown = (event: PointerEvent): void => {
         const path = event.composedPath();
         const target = path.find(
@@ -1901,6 +1965,8 @@ function attachClassicTableContext(
         activeTarget = undefined;
         activeSelection = undefined;
         activeRange = undefined;
+        selectionObserver?.disconnect();
+        selectionObserver = undefined;
     };
     const keydown = (event: KeyboardEvent): void => {
         if (event.key === 'Escape' && balloon !== undefined) {
@@ -1913,10 +1979,12 @@ function attachClassicTableContext(
     visual.addEventListener('soeditor:table-edit', edit);
     visual.addEventListener('soeditor:table-editing-start', editingStart);
     visual.addEventListener('soeditor:table-editing-end', editingEnd);
+    visual.addEventListener('click', refreshSelectionState);
     document.addEventListener('pointerdown', pointerDown, true);
     document.addEventListener('keydown', keydown);
     return () => {
         close();
+        selectionObserver?.disconnect();
         visual.removeEventListener('soeditor:table-selection', selection);
         visual.removeEventListener('soeditor:table-edit', edit);
         visual.removeEventListener(
@@ -1924,6 +1992,7 @@ function attachClassicTableContext(
             editingStart,
         );
         visual.removeEventListener('soeditor:table-editing-end', editingEnd);
+        visual.removeEventListener('click', refreshSelectionState);
         document.removeEventListener('pointerdown', pointerDown, true);
         document.removeEventListener('keydown', keydown);
     };
@@ -1945,6 +2014,40 @@ function tableSelectionRange(event: Event): unknown {
     return typeof detail === 'object' && detail !== null
         ? Reflect.get(detail, 'range')
         : undefined;
+}
+
+function selectedTableRange(table: HTMLElement): unknown {
+    const cells = Array.from(
+        table.querySelectorAll<HTMLElement>(
+            '.soeditor-table-cell.is-structurally-selected',
+        ),
+    );
+    if (cells.length === 0) return undefined;
+    const positions = cells.map((cell) => ({
+        column:
+            cell instanceof HTMLTableCellElement
+                ? cell.cellIndex
+                : Number(cell.dataset.column),
+        row:
+            cell instanceof HTMLTableCellElement
+                ? cell.parentElement instanceof HTMLTableRowElement
+                    ? cell.parentElement.rowIndex
+                    : Number.NaN
+                : Number(cell.dataset.row),
+    }));
+    if (
+        positions.some(
+            ({ column, row }) =>
+                !Number.isInteger(column) || !Number.isInteger(row),
+        )
+    )
+        return undefined;
+    const rows = positions.map(({ row }) => row);
+    const columns = positions.map(({ column }) => column);
+    return {
+        anchor: { column: Math.min(...columns), row: Math.min(...rows) },
+        focus: { column: Math.max(...columns), row: Math.max(...rows) },
+    };
 }
 
 function tableContextProperty(value: unknown, key: string): string {

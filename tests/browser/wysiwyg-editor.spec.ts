@@ -1203,11 +1203,17 @@ test('uses explicit Shift-click rectangular table selection for merge, split, an
         '<table><tbody><tr><td id="range-a">A</td><td>B</td></tr><tr><td>C</td><td id="range-d">D</td></tr></tbody></table>',
     );
     await surface.locator('#range-a').click();
+    const toolbar = page.locator('.soeditor-ui__table-balloon');
+    await expect(
+        toolbar.getByRole('button', { name: 'Merge cells' }),
+    ).toBeDisabled();
     await surface.locator('#range-d').click({ modifiers: ['Shift'] });
     await expect(
         surface.locator('.soeditor-table-cell.is-structurally-selected'),
     ).toHaveCount(4);
-    const toolbar = page.locator('.soeditor-ui__table-balloon');
+    await expect(
+        toolbar.getByRole('button', { name: 'Merge cells' }),
+    ).toBeEnabled();
     await toolbar.getByRole('button', { name: 'Merge cells' }).click();
     let cells = surface.locator('td,th');
     await expect(cells).toHaveCount(1);
@@ -1215,6 +1221,9 @@ test('uses explicit Shift-click rectangular table selection for merge, split, an
     await expect(cells.first()).toHaveAttribute('rowspan', '2');
 
     await cells.first().click();
+    await expect(
+        toolbar.getByRole('button', { name: 'Merge cells' }),
+    ).toBeDisabled();
     await toolbar.getByRole('button', { name: 'Split cell' }).click();
     cells = surface.locator('td,th');
     await expect(cells).toHaveCount(4);

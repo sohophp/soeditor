@@ -323,6 +323,37 @@ export class TablePlugin extends Plugin {
                 return mergeCells(table, parsed, normalizedRange(range));
             },
         );
+        this.editor.commands.register({
+            id: 'table.cells.canMerge',
+            label: 'Check whether table cells can merge',
+            canExecute: ({ editor }) =>
+                editor.services
+                    .tryGet(visualEditingServiceToken)
+                    ?.isStructuredBlockSelected(tableType) === true,
+            execute: ({ editor }, candidate) => {
+                const service = requireTableService(
+                    editor.services.tryGet(visualEditingServiceToken),
+                    'table.cells.canMerge',
+                );
+                const block = service.getSelectedStructuredBlock(tableType);
+                const range =
+                    readOptionalRange(candidate) ??
+                    readServiceTableRange(service) ??
+                    (block === undefined
+                        ? undefined
+                        : this.#selections.get(block));
+                if (block === undefined || range === undefined) return false;
+                try {
+                    const table = tableElement(block);
+                    const parsed = parseTable(table);
+                    assertRange(parsed, range, 'table.cells.canMerge');
+                    mergeCells(table, parsed, normalizedRange(range));
+                    return true;
+                } catch {
+                    return false;
+                }
+            },
+        });
         this.#registerTableCommand(
             'table.cell.split',
             'Split table cell',
@@ -1169,6 +1200,7 @@ function createTableNodeView(
                 'pointerdown',
                 (event) => {
                     if (readonly || event.button !== 0) return;
+                    if (event.shiftKey) return;
                     selectThisCell();
                     // Make the cell editable before the browser performs the
                     // default pointer action, then leave focus, caret hit

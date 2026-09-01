@@ -80,7 +80,12 @@ describe('structured table feature', () => {
         );
         const all = range(0, 0, 1, 1);
 
+        expect(
+            harness.editor.execute('table.cells.canMerge', range(0, 0)),
+        ).toBe(false);
+        expect(harness.editor.execute('table.cells.canMerge', all)).toBe(true);
         harness.editor.execute('table.cells.merge', all);
+        expect(harness.editor.execute('table.cells.canMerge', all)).toBe(false);
         expect(harness.html()).toBe(
             '<table><tbody><tr><td rowspan="2" colspan="2">A<br>B<br>C<br>D</td></tr><tr></tr></tbody></table>',
         );
