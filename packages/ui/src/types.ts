@@ -85,7 +85,11 @@ export interface ContextMenuItemContext extends ToolbarItemContext {
 export interface ContextMenuItemDefinition {
     readonly args?: readonly unknown[];
     readonly command: string;
+    /** Groups adjacent commands with a visual separator. */
+    readonly group?: string;
     readonly label: string;
+    /** Gives destructive actions an explicit warning treatment. */
+    readonly tone?: 'default' | 'danger';
     readonly when?: (context: ContextMenuItemContext) => boolean;
 }
 

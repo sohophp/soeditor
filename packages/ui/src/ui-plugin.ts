@@ -131,6 +131,12 @@ export class UiPlugin extends Plugin {
             definition.label.trim().length === 0 ||
             typeof definition.command !== 'string' ||
             definition.command.trim().length === 0 ||
+            (definition.group !== undefined &&
+                (typeof definition.group !== 'string' ||
+                    definition.group.trim().length === 0)) ||
+            (definition.tone !== undefined &&
+                definition.tone !== 'default' &&
+                definition.tone !== 'danger') ||
             (definition.when !== undefined &&
                 typeof definition.when !== 'function')
         ) {

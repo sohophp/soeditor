@@ -1170,55 +1170,113 @@ function registerClassicContextMenu(
     };
     registry.registerContextMenuItem('classic.link.remove', {
         command: 'link.remove',
+        group: 'link',
         label: 'Remove link',
+        tone: 'danger',
         when: ({ target }) => within(target, 'a'),
     });
-    registry.registerContextMenuItem('classic.table.row-after', {
-        command: 'table.row.insertAfter',
-        label: 'Insert row after',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.select-row', {
-        command: 'table.selection.row',
-        label: 'Select row',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.select-column', {
-        command: 'table.selection.column',
-        label: 'Select column',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.select-table', {
-        command: 'table.selection.table',
-        label: 'Select table',
-        when: ({ target }) => within(target, 'table'),
-    });
+    const tableCell = (target: Element): HTMLElement | undefined =>
+        target.closest<HTMLElement>('td,th') ?? undefined;
+    const hasMultipleCells = (target: Element): boolean =>
+        (target
+            .closest('table')
+            ?.querySelectorAll('.soeditor-table-cell.is-structurally-selected')
+            .length ?? 0) >= 2;
     registry.registerContextMenuItem('classic.table.cells-merge', {
         command: 'table.cells.merge',
+        group: 'cells',
         label: 'Merge cells',
         when: ({ editor, target }) =>
             within(target, 'table') &&
             editor.commands.has('table.cells.canMerge') &&
             editor.execute('table.cells.canMerge') === true,
     });
-    registry.registerContextMenuItem('classic.table.column-after', {
-        command: 'table.column.insertAfter',
-        label: 'Insert column after',
+    registry.registerContextMenuItem('classic.table.cell-split', {
+        command: 'table.cell.split',
+        group: 'cells',
+        label: 'Split cell',
+        when: ({ target }) => {
+            const cell = tableCell(target);
+            return (
+                cell !== undefined &&
+                (Number(cell.getAttribute('rowspan') ?? '1') > 1 ||
+                    Number(cell.getAttribute('colspan') ?? '1') > 1)
+            );
+        },
+    });
+    registry.registerContextMenuItem('classic.table.cells-clear', {
+        command: 'table.cells.clear',
+        group: 'cells',
+        label: 'Clear selected cells',
+        when: ({ target }) => hasMultipleCells(target),
+    });
+    registry.registerContextMenuItem('classic.table.header-toggle', {
+        command: 'table.header.toggle',
+        group: 'cells',
+        label: 'Toggle header cell',
+        when: ({ target }) => tableCell(target) !== undefined,
+    });
+    registry.registerContextMenuItem('classic.table.row-before', {
+        command: 'table.row.insertBefore',
+        group: 'rows',
+        label: 'Insert row before',
+        when: ({ target }) => within(target, 'table'),
+    });
+    registry.registerContextMenuItem('classic.table.row-after', {
+        command: 'table.row.insertAfter',
+        group: 'rows',
+        label: 'Insert row after',
         when: ({ target }) => within(target, 'table'),
     });
     registry.registerContextMenuItem('classic.table.row-remove', {
         command: 'table.row.remove',
+        group: 'rows',
         label: 'Delete selected rows',
+        tone: 'danger',
+        when: ({ target }) => within(target, 'table'),
+    });
+    registry.registerContextMenuItem('classic.table.column-before', {
+        command: 'table.column.insertBefore',
+        group: 'columns',
+        label: 'Insert column before',
+        when: ({ target }) => within(target, 'table'),
+    });
+    registry.registerContextMenuItem('classic.table.column-after', {
+        command: 'table.column.insertAfter',
+        group: 'columns',
+        label: 'Insert column after',
         when: ({ target }) => within(target, 'table'),
     });
     registry.registerContextMenuItem('classic.table.column-remove', {
         command: 'table.column.remove',
+        group: 'columns',
         label: 'Delete selected columns',
+        tone: 'danger',
+        when: ({ target }) => within(target, 'table'),
+    });
+    registry.registerContextMenuItem('classic.table.select-row', {
+        command: 'table.selection.row',
+        group: 'selection',
+        label: 'Select row',
+        when: ({ target }) => within(target, 'table'),
+    });
+    registry.registerContextMenuItem('classic.table.select-column', {
+        command: 'table.selection.column',
+        group: 'selection',
+        label: 'Select column',
+        when: ({ target }) => within(target, 'table'),
+    });
+    registry.registerContextMenuItem('classic.table.select-table', {
+        command: 'table.selection.table',
+        group: 'selection',
+        label: 'Select table',
         when: ({ target }) => within(target, 'table'),
     });
     registry.registerContextMenuItem('classic.table.remove', {
         command: 'table.remove',
+        group: 'table',
         label: 'Delete table',
+        tone: 'danger',
         when: ({ target }) => within(target, 'table'),
     });
 }

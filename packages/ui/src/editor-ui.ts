@@ -579,11 +579,24 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
         menu.setAttribute('role', 'menu');
         menu.setAttribute('aria-label', 'Editor context menu');
         const buttons: HTMLButtonElement[] = [];
+        let previousGroup: string | undefined;
         for (const [id, definition] of available) {
+            const group = definition.group ?? 'default';
+            if (previousGroup !== undefined && group !== previousGroup) {
+                const separator = document.createElement('div');
+                separator.className = 'soeditor-ui__context-menu-separator';
+                separator.setAttribute('role', 'separator');
+                menu.append(separator);
+            }
+            previousGroup = group;
             const button = document.createElement('button');
             button.type = 'button';
             button.className = 'soeditor-ui__menu-item';
             button.dataset.contextMenuItem = id;
+            button.dataset.contextMenuGroup = group;
+            if (definition.tone === 'danger') {
+                button.dataset.tone = 'danger';
+            }
             button.setAttribute('role', 'menuitem');
             button.textContent = translation.translate(definition.label);
             button.addEventListener('click', () => {

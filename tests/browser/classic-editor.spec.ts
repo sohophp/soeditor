@@ -1427,6 +1427,25 @@ test('keeps table cells interactive after source formatting and minification', a
         const contextMenu = page.getByRole('menu', {
             name: 'Editor context menu',
         });
+        await expect(contextMenu.getByRole('menuitem')).toHaveText([
+            'Merge cells',
+            'Clear selected cells',
+            'Toggle header cell',
+            'Insert row before',
+            'Insert row after',
+            'Delete selected rows',
+            'Insert column before',
+            'Insert column after',
+            'Delete selected columns',
+            'Select row',
+            'Select column',
+            'Select table',
+            'Delete table',
+        ]);
+        await expect(contextMenu.getByRole('separator')).toHaveCount(4);
+        await expect(
+            contextMenu.getByRole('menuitem', { name: 'Delete table' }),
+        ).toHaveAttribute('data-tone', 'danger');
         const contextMerge = contextMenu.getByRole('menuitem', {
             name: 'Merge cells',
         });

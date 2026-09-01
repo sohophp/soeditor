@@ -159,7 +159,7 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`a4799c64cb65a21bb25e203967da62779b8f2f4a3e83d21aba122bda5e5887a8`
+`2365484c178aacff5eb8a855d1583afc90c8f3cd1fc046bec399033746b30e49`
 
 ### .
 
@@ -220,7 +220,7 @@ Declaration SHA-256:
 | `compareRevisionSources`                              | value      | stable         | `2bcd4161e723f403` |
 | `Config`                                              | type/value | stable         | `ace7f4c537f5f05a` |
 | `ContextMenuItemContext`                              | type       | experimental   | `43b4955bcfda3b1c` |
-| `ContextMenuItemDefinition`                           | type       | experimental   | `4448fa1f4e1c1986` |
+| `ContextMenuItemDefinition`                           | type       | experimental   | `546caad154d3207a` |
 | `ControlledWorkspaceValue`                            | type       | stable         | `9e3aaa705c6a70e3` |
 | `CoreEventMap`                                        | type       | stable         | `281f660668ce273c` |
 | `createClassicEditor`                                 | value      | experimental   | `0f31728333355113` |
@@ -1004,7 +1004,7 @@ Declaration SHA-256:
 | `CommentStorageAdapter`                               | type       | stable         | `6141cb80a71104d6` |
 | `CommentThread`                                       | type       | stable         | `b1eed1ab786814c8` |
 | `ContextMenuItemContext`                              | type       | experimental   | `43b4955bcfda3b1c` |
-| `ContextMenuItemDefinition`                           | type       | experimental   | `4448fa1f4e1c1986` |
+| `ContextMenuItemDefinition`                           | type       | experimental   | `546caad154d3207a` |
 | `createCommentsPlugin`                                | value      | stable         | `3673444dcdbacbef` |
 | `createRevisionsPlugin`                               | value      | stable         | `5094acf0d2db5b49` |
 | `createServiceToken`                                  | value      | stable         | `3ca34a2d6d30888f` |
@@ -1469,7 +1469,7 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`e010d3cecf2dd264ec187cc0602c6744c525c0a1197d6ab370e00d6ba52c5a48`
+`11187a67ae36d98a7ba30426e50d7b956eff7be6b537d1af8298ae960b54ae8f`
 
 ### .
 
@@ -1482,7 +1482,7 @@ Declaration SHA-256:
 | `BalloonService`                       | type       | stable         | `5efa888c1e4ca0d2` |
 | `builtInUiTranslations`                | value      | experimental   | `a83547fa9b47531e` |
 | `ContextMenuItemContext`               | type       | experimental   | `43b4955bcfda3b1c` |
-| `ContextMenuItemDefinition`            | type       | experimental   | `4448fa1f4e1c1986` |
+| `ContextMenuItemDefinition`            | type       | experimental   | `546caad154d3207a` |
 | `createEditorUi`                       | value      | stable         | `901a347f76278407` |
 | `CreateEditorUiOptions`                | type       | stable         | `f8ef2dfebdced65b` |
 | `defaultToolbarConfiguration`          | value      | stable         | `f11a78c87bf29923` |
