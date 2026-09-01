@@ -362,9 +362,17 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.#mutationObserver =
             MutationObserverConstructor === undefined
                 ? undefined
-                : new MutationObserverConstructor(() =>
-                      this.#repairExternalMutation(),
-                  );
+                : new MutationObserverConstructor((records) => {
+                      if (
+                          records.some(
+                              ({ target }) =>
+                                  target === this.element ||
+                                  this.element.contains(target),
+                          )
+                      ) {
+                          this.#repairExternalMutation();
+                      }
+                  });
         this.#mutationObserver?.observe(this.element, {
             attributes: true,
             characterData: true,
@@ -1070,6 +1078,15 @@ export class WysiwygEditingEngine implements EditingEngine {
         const bookmark = this.#bookmark();
         this.#pendingMark = undefined;
         this.#locked = false;
+        this.#activeCell?.classList.remove('is-editing');
+        this.#activeCell = undefined;
+        const selectedTable = this.#selectedElement?.closest('table');
+        if (selectedTable !== null && selectedTable !== undefined) {
+            this.#selectedElement = undefined;
+        }
+        this.#tableSelection = undefined;
+        this.#tableDragAnchor = undefined;
+        this.#tableDragMoved = false;
         this.#preservedNodes.clear();
         this.#preservedSequence = 0;
         this.element.replaceChildren(
@@ -1280,6 +1297,7 @@ export class WysiwygEditingEngine implements EditingEngine {
                             'soeditor-table-widget',
                             'soeditor-table-cell',
                             'is-editing',
+                            'is-structurally-selected',
                         ].includes(name),
                 )
                 .join(' ');
@@ -1336,8 +1354,15 @@ export class WysiwygEditingEngine implements EditingEngine {
         ) {
             return;
         }
-        if (this.#serialize() !== this.editor.getData()) {
-            this.#render(this.editor.getData());
+        const source = this.editor.getData();
+        const parsed = parseHtmlFragment(source);
+        const canonicalSource = parsed.diagnostics.some(
+            (diagnostic) => diagnostic.severity === 'error',
+        )
+            ? source
+            : serializeHtmlFragment(parsed.document);
+        if (this.#serialize() !== canonicalSource) {
+            this.#render(source);
         }
     }
 
@@ -1906,8 +1931,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     ): EditingStructuredBlock | undefined {
         const element = this.#structuredElement(requestedType);
         if (element === undefined) return undefined;
-        const parsed = parseHtmlFragment(element.outerHTML).document
-            .children[0];
+        const parsed = this.#serializeNode(element);
         if (parsed?.type !== 'element') return undefined;
         const type = requestedType ?? structuredType(element);
         if (type === undefined) return undefined;

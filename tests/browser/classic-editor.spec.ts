@@ -1362,9 +1362,24 @@ test('keeps table cells interactive after source formatting and minification', a
     for (const command of ['format', 'minify'] as const) {
         await page.evaluate(() => {
             globalThis.__classicDemo.editor.setData(
-                '<table><tbody><tr><td id="after-source-a">A</td><td id="after-source-b">B</td></tr></tbody></table>',
+                '<table><tbody><tr><td id="before-source-a">A</td><td id="before-source-b">B</td><td>C</td></tr><tr><td id="after-source-a">D</td><td id="after-source-b">E</td><td>F</td></tr></tbody></table>',
             );
         });
+        await visual.locator('#before-source-a').click();
+        await visual
+            .locator('#before-source-b')
+            .click({ modifiers: ['Shift'] });
+        await page
+            .locator('.soeditor-ui__table-balloon')
+            .getByRole('button', { name: 'Merge cells' })
+            .click();
+        await expect(visual.locator('#before-source-a')).toHaveAttribute(
+            'colspan',
+            '2',
+        );
+        await expect
+            .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+            .not.toContain('is-structurally-selected');
         await sourceToggle.click();
         const transform = page.locator(`[data-toolbar-item="${command}"]`);
         await transform.click();
@@ -1377,9 +1392,7 @@ test('keeps table cells interactive after source formatting and minification', a
         );
         if (command === 'format') await data.toContain('\n  <tbody>');
         else {
-            await data.toBe(
-                '<table><tbody><tr><td id="after-source-a">A</td><td id="after-source-b">B</td></tr></tbody></table>',
-            );
+            await data.toContain('<td id="before-source-a" colspan="2">');
         }
         await expect(transform).not.toHaveAttribute('aria-busy', 'true');
         await expect(sourceToggle).toBeEnabled();
@@ -1388,13 +1401,20 @@ test('keeps table cells interactive after source formatting and minification', a
             'data-switch-target',
             'source',
         );
-        await visual.locator('#after-source-a').click();
         await expect(
-            page
-                .locator('.soeditor-ui__table-balloon')
-                .getByRole('button', { name: 'Table editor' }),
-        ).toBeVisible();
+            visual.locator('.soeditor-table-cell.is-structurally-selected'),
+        ).toHaveCount(0);
+        await expect(
+            visual.locator('.soeditor-wysiwyg-content'),
+        ).toHaveJSProperty('isContentEditable', true);
+        await visual.locator('#after-source-a').click();
+        await expect(visual.locator('#after-source-a')).toHaveClass(
+            /is-editing/,
+        );
         await visual.locator('#after-source-b').click({ modifiers: ['Shift'] });
+        await expect(
+            visual.locator('.soeditor-table-cell.is-structurally-selected'),
+        ).toHaveCount(2);
         await expect(
             page
                 .locator('.soeditor-ui__table-balloon')
