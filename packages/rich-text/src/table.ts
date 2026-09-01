@@ -1194,6 +1194,7 @@ function createTableNodeView(
                         context.document,
                         button,
                         activateSelection,
+                        range,
                     );
                 },
                 { signal: listeners.signal },
@@ -1212,6 +1213,7 @@ function createTableNodeView(
                         context.document,
                         button,
                         activateSelection,
+                        range,
                     );
                 },
                 { signal: listeners.signal },
@@ -1249,6 +1251,7 @@ function createTableNodeView(
                             context.document,
                             button,
                             activateSelection,
+                            range,
                         );
                     }
                 },
@@ -1318,6 +1321,7 @@ function createTableNodeView(
                             context.document,
                             button,
                             activateSelection,
+                            range,
                         );
                         return;
                     }
@@ -1369,6 +1373,7 @@ function createTableNodeView(
                             context.document,
                             next,
                             activateSelection,
+                            range,
                         );
                     }
                 },
@@ -3620,6 +3625,7 @@ function announceTableSelection(
     document: Document,
     anchor: HTMLElement,
     activate: () => void,
+    range: TableCellRange,
 ): void {
     const EventConstructor = document.defaultView?.CustomEvent ?? CustomEvent;
     anchor.dispatchEvent(
@@ -3629,6 +3635,10 @@ function announceTableSelection(
                 column: Number(anchor.dataset.column),
                 row: Number(anchor.dataset.row),
                 activate,
+                range: Object.freeze({
+                    anchor: Object.freeze({ ...range.anchor }),
+                    focus: Object.freeze({ ...range.focus }),
+                }),
             }),
         }),
     );

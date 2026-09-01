@@ -1462,6 +1462,7 @@ function attachClassicTableContext(
     let activeTable: HTMLElement | undefined;
     let activeTarget: HTMLElement | undefined;
     let activeSelection: (() => void) | undefined;
+    let activeRange: unknown;
     const commandButtons = new Map<string, HTMLButtonElement>();
     const refreshCommandButtons = (): void => {
         for (const [command, button] of commandButtons) {
@@ -1765,11 +1766,13 @@ function attachClassicTableContext(
             return;
         }
         const activate = tableSelectionActivation(event);
+        const selectedRange = tableSelectionRange(event);
         if (activate === undefined) return;
         const table = target.closest<HTMLElement>('.soeditor-table-widget');
         if (table === null) return;
         activeTarget = target;
         activeSelection = activate;
+        activeRange = selectedRange;
         if (balloon !== undefined && activeTable === table) {
             refreshCommandButtons();
             return;
@@ -1835,7 +1838,14 @@ function attachClassicTableContext(
                     commandButtons.set(command, button);
                     button.addEventListener('click', () => {
                         activeSelection?.();
-                        execute(command);
+                        if (
+                            activeRange !== undefined &&
+                            command !== 'table.remove'
+                        ) {
+                            execute(command, activeRange);
+                        } else {
+                            execute(command);
+                        }
                     });
                     container.append(button);
                 }
@@ -1890,6 +1900,7 @@ function attachClassicTableContext(
         activeTable = undefined;
         activeTarget = undefined;
         activeSelection = undefined;
+        activeRange = undefined;
     };
     const keydown = (event: KeyboardEvent): void => {
         if (event.key === 'Escape' && balloon !== undefined) {
@@ -1926,6 +1937,13 @@ function tableSelectionActivation(event: Event): (() => void) | undefined {
         ? () => {
               Reflect.apply(activate, undefined, []);
           }
+        : undefined;
+}
+
+function tableSelectionRange(event: Event): unknown {
+    const detail: unknown = Reflect.get(event, 'detail');
+    return typeof detail === 'object' && detail !== null
+        ? Reflect.get(detail, 'range')
         : undefined;
 }
 
