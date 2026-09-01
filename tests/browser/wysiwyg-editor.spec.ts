@@ -1209,11 +1209,12 @@ test('uses explicit Shift-click rectangular table selection for merge, split, an
     await expect(cells).toHaveCount(1);
     await expect(cells.first()).toHaveAttribute('colspan', '2');
     await expect(cells.first()).toHaveAttribute('rowspan', '2');
-
-    await cells.first().click();
     await expect(
         toolbar.getByRole('button', { name: 'Merge cells' }),
     ).toBeHidden();
+    await expect(
+        toolbar.getByRole('button', { name: 'Split completely' }),
+    ).toBeEnabled();
     await toolbar.getByRole('button', { name: 'Split completely' }).click();
     cells = surface.locator('td,th');
     await expect(cells).toHaveCount(4);

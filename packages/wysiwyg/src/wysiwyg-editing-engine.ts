@@ -1934,6 +1934,7 @@ export class WysiwygEditingEngine implements EditingEngine {
         const replacement = this.#renderNode(parsed);
         if (!(replacement instanceof Element)) return;
         const cellRange = this.#readTableCellRange();
+        let restoredCell: HTMLTableCellElement | undefined;
         this.#mutate(() => {
             current.replaceWith(replacement);
             this.#decorateTables();
@@ -1942,17 +1943,18 @@ export class WysiwygEditingEngine implements EditingEngine {
                     ? undefined
                     : tableCellAt(
                           replacement,
-                          cellRange.focus.row,
-                          cellRange.focus.column,
+                          cellRange.anchor.row,
+                          cellRange.anchor.column,
                       );
             if (cell !== undefined) {
+                restoredCell = cell;
                 this.#activeCell = cell;
                 const table = cell.closest<HTMLTableElement>('table');
                 if (table !== null && cellRange !== undefined) {
                     this.#tableSelection = {
                         range: {
-                            anchor: cellRange.focus,
-                            focus: cellRange.focus,
+                            anchor: cellRange.anchor,
+                            focus: cellRange.anchor,
                         },
                         table,
                     };
@@ -1965,6 +1967,9 @@ export class WysiwygEditingEngine implements EditingEngine {
             range.selectNode(replacement);
             return range;
         });
+        if (restoredCell !== undefined) {
+            this.#announceTableSelection(restoredCell);
+        }
     }
 
     #setStructuredBlockAttributes(
