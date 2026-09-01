@@ -108,7 +108,16 @@
 
 .soeditor-classic[data-soeditor-mode='source']
     .soeditor-ui__toolbar
-    [data-toolbar-item='source'] {
+    [data-toolbar-item='source'],
+.soeditor-classic[data-soeditor-mode='source']
+    .soeditor-ui__toolbar
+    [data-toolbar-item='sourceFind'],
+.soeditor-classic[data-soeditor-mode='source']
+    .soeditor-ui__toolbar
+    [data-toolbar-item='format'],
+.soeditor-classic[data-soeditor-mode='source']
+    .soeditor-ui__toolbar
+    [data-toolbar-item='minify'] {
     display: inline-flex;
 }
 

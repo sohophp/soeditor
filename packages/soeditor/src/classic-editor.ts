@@ -197,14 +197,28 @@ export async function createClassicEditor(
     const sourceModule = editingModes.has('source')
         ? await import('@soeditor/source')
         : undefined;
+    const htmlToolsModule = editingModes.has('source')
+        ? await import('@soeditor/html-tools')
+        : undefined;
     const configuredPlugins = options.plugins ?? preset.plugins;
-    const plugins =
-        sourceModule === undefined ||
-        configuredPlugins.some(
-            (plugin) => plugin.id === sourceModule.SourceEditingPlugin.id,
-        )
-            ? configuredPlugins
-            : [...configuredPlugins, sourceModule.SourceEditingPlugin];
+    const sourcePlugins: readonly PluginConstructor[] = [
+        ...(sourceModule === undefined
+            ? []
+            : [sourceModule.SourceEditingPlugin]),
+        ...(htmlToolsModule === undefined
+            ? []
+            : [
+                  htmlToolsModule.DiagnosticsPlugin,
+                  htmlToolsModule.HtmlFormattingPlugin,
+              ]),
+    ];
+    const plugins = sourcePlugins.reduce<readonly PluginConstructor[]>(
+        (current, plugin) =>
+            current.some((candidate) => candidate.id === plugin.id)
+                ? current
+                : [...current, plugin],
+        configuredPlugins,
+    );
     const initialEditingMode = readInitialEditingMode(
         options.initialEditingMode,
         editingModes,
@@ -788,7 +802,14 @@ export async function createClassicEditor(
             toolbar:
                 options.toolbar ??
                 (editingModes.has('source')
-                    ? [...preset.toolbar, '|', 'source']
+                    ? [
+                          'source',
+                          'format',
+                          'minify',
+                          'sourceFind',
+                          '|',
+                          ...preset.toolbar,
+                      ]
                     : preset.toolbar),
             toolbarLayout: options.toolbarLayout ?? {
                 collapsible: true,
