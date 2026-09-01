@@ -1236,6 +1236,30 @@ test('uses explicit Shift-click rectangular table selection for merge, split, an
     await expect(cells).toHaveText(['', '', '', '']);
 });
 
+test('enables merge for a rectangular body selection below a table header', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<table><caption>CMS 功能交付状态</caption><thead><tr><th>能力</th><th>状态</th><th>验证</th></tr></thead><tbody><tr><td id="cms-a">Classic 表单</td><td>完成</td><td>Browser</td></tr><tr><td>Office 粘贴</td><td id="cms-e">完成</td><td>Fixtures</td></tr><tr><td>上传与表格</td><td>完成</td><td>Unit + Browser</td></tr></tbody></table>',
+    );
+    await surface.locator('#cms-a').click();
+    const toolbar = page.locator('.soeditor-ui__table-balloon');
+    await surface.locator('#cms-e').click({ modifiers: ['Shift'] });
+    await expect(
+        surface.locator('.soeditor-table-cell.is-structurally-selected'),
+    ).toHaveCount(4);
+    await expect(
+        toolbar.getByRole('button', { name: 'Merge cells' }),
+    ).toBeEnabled();
+    await toolbar.getByRole('button', { name: 'Merge cells' }).click();
+    await expect(surface.locator('td,th')).toHaveCount(9);
+    const merged = surface.locator('tbody td').first();
+    await expect(merged).toHaveAttribute('rowspan', '2');
+    await expect(merged).toHaveAttribute('colspan', '2');
+});
+
 test('adds and removes table rows and columns with one-step history', async ({
     page,
 }) => {

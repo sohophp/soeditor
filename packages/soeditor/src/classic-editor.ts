@@ -1478,7 +1478,10 @@ function attachClassicTableContext(
                     : !editor.commands.canExecute(command);
         }
     };
-    const canMerge = (range: unknown): boolean => {
+    const canMerge = (
+        range: unknown,
+        table: HTMLElement | undefined = activeTable,
+    ): boolean => {
         if (typeof range !== 'object' || range === null) return false;
         const anchor = Reflect.get(range, 'anchor');
         const focus = Reflect.get(range, 'focus');
@@ -1498,12 +1501,24 @@ function attachClassicTableContext(
         const selectedCount =
             (Math.abs(Number(rows[0]) - Number(rows[1])) + 1) *
             (Math.abs(Number(columns[0]) - Number(columns[1])) + 1);
-        if (selectedCount < 2 || activeTable === undefined) return false;
-        try {
-            return editor.execute('table.cells.canMerge', range) === true;
-        } catch {
-            return false;
-        }
+        if (selectedCount < 2 || table === undefined) return false;
+        const selectedCells = Array.from(
+            table.querySelectorAll<HTMLElement>(
+                '.soeditor-table-cell.is-structurally-selected',
+            ),
+        );
+        if (selectedCells.length !== selectedCount) return false;
+        return Array.from(
+            table.querySelectorAll<HTMLElement>('.soeditor-table-cell'),
+        ).every((cell) => {
+            const nativeCell = cell.matches('td,th')
+                ? cell
+                : cell.closest<HTMLElement>('td,th');
+            return (
+                (nativeCell?.getAttribute('rowspan') ?? '1') === '1' &&
+                (nativeCell?.getAttribute('colspan') ?? '1') === '1'
+            );
+        });
     };
     const close = (): void => {
         balloon?.close();
@@ -1519,6 +1534,7 @@ function attachClassicTableContext(
         );
         close();
         try {
+            activeSelection?.();
             editor.execute(command, ...args);
             return true;
         } catch (error: unknown) {
@@ -1889,7 +1905,7 @@ function attachClassicTableContext(
                     button.setAttribute('aria-label', label);
                     button.disabled =
                         command === 'table.cells.merge'
-                            ? !canMerge(activeRange)
+                            ? !canMerge(activeRange, table)
                             : !editor.commands.canExecute(command);
                     commandButtons.set(command, button);
                     button.addEventListener('click', () => {
