@@ -71,6 +71,7 @@ function sourceOnlyCommandButton(
     text = label,
 ): ToolbarItemFactory {
     return ({ document, editor, ui }) => {
+        let pending = false;
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'soeditor-ui__button';
@@ -81,18 +82,48 @@ function sourceOnlyCommandButton(
             execute(editor, ui, command, []);
         };
         button.addEventListener('click', click);
+        const before = editor.events.on(
+            'command:beforeExecute',
+            ({ commandId }) => {
+                if (commandId !== command) return;
+                pending = true;
+                button.disabled = true;
+                button.setAttribute('aria-busy', 'true');
+            },
+        );
+        const settle = editor.events.on(
+            'command:afterExecute',
+            ({ commandId }) => {
+                if (commandId !== command) return;
+                pending = false;
+                button.removeAttribute('aria-busy');
+                updateCommandButton(button, editor, command);
+            },
+        );
+        const fail = editor.events.on('command:error', ({ commandId }) => {
+            if (commandId !== command) return;
+            pending = false;
+            button.removeAttribute('aria-busy');
+            updateCommandButton(button, editor, command);
+        });
         return {
             element: button,
             update: () => {
                 button.hidden = editor.state.mode !== 'source';
-                updateCommandButton(button, editor, command);
+                if (!pending) updateCommandButton(button, editor, command);
             },
-            destroy: () => button.removeEventListener('click', click),
+            destroy: () => {
+                before();
+                settle();
+                fail();
+                button.removeEventListener('click', click);
+            },
         };
     };
 }
 
 const sourceButton: ToolbarItemFactory = ({ document, editor, ui }) => {
+    let sourceTransformPending = 0;
     const button = document.createElement('button');
     button.type = 'button';
     button.className = 'soeditor-ui__button';
@@ -102,6 +133,30 @@ const sourceButton: ToolbarItemFactory = ({ document, editor, ui }) => {
         execute(editor, ui, command(), []);
     };
     button.addEventListener('click', click);
+    const isSourceTransform = (commandId: string): boolean =>
+        commandId === 'document.format' || commandId === 'document.minify';
+    const before = editor.events.on(
+        'command:beforeExecute',
+        ({ commandId }) => {
+            if (!isSourceTransform(commandId)) return;
+            sourceTransformPending += 1;
+            button.disabled = true;
+            button.setAttribute('aria-busy', 'true');
+        },
+    );
+    const finishSourceTransform = (commandId: string): void => {
+        if (!isSourceTransform(commandId)) return;
+        sourceTransformPending = Math.max(0, sourceTransformPending - 1);
+        if (sourceTransformPending > 0) return;
+        button.removeAttribute('aria-busy');
+        updateCommandAvailability(button, editor, command());
+    };
+    const after = editor.events.on('command:afterExecute', ({ commandId }) =>
+        finishSourceTransform(commandId),
+    );
+    const fail = editor.events.on('command:error', ({ commandId }) =>
+        finishSourceTransform(commandId),
+    );
     return {
         element: button,
         update: () => {
@@ -120,9 +175,16 @@ const sourceButton: ToolbarItemFactory = ({ document, editor, ui }) => {
             button.setAttribute('aria-label', ui.translate(target));
             button.dataset.switchTarget = target.toLowerCase();
             button.setAttribute('aria-pressed', String(sourceMode));
-            updateCommandAvailability(button, editor, command());
+            if (sourceTransformPending === 0) {
+                updateCommandAvailability(button, editor, command());
+            }
         },
-        destroy: () => button.removeEventListener('click', click),
+        destroy: () => {
+            before();
+            after();
+            fail();
+            button.removeEventListener('click', click);
+        },
     };
 };
 

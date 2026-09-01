@@ -1354,6 +1354,56 @@ test('presents whole-document HTML formatting only in Source mode', async ({
         .toBe('<main><h1>Compact</h1><p>HTML</p></main>');
 });
 
+test('keeps table cells interactive after source formatting and minification', async ({
+    page,
+}) => {
+    const sourceToggle = page.locator('[data-toolbar-item="source"]');
+    const visual = page.locator('.soeditor-classic__visual');
+    for (const command of ['format', 'minify'] as const) {
+        await page.evaluate(() => {
+            globalThis.__classicDemo.editor.setData(
+                '<table><tbody><tr><td id="after-source-a">A</td><td id="after-source-b">B</td></tr></tbody></table>',
+            );
+        });
+        await sourceToggle.click();
+        const transform = page.locator(`[data-toolbar-item="${command}"]`);
+        await transform.click();
+        if (command === 'format') {
+            await expect(transform).toHaveAttribute('aria-busy', 'true');
+            await expect(sourceToggle).toBeDisabled();
+        }
+        const data = expect.poll(() =>
+            page.evaluate(() => globalThis.__classicDemo.getData()),
+        );
+        if (command === 'format') await data.toContain('\n  <tbody>');
+        else {
+            await data.toBe(
+                '<table><tbody><tr><td id="after-source-a">A</td><td id="after-source-b">B</td></tr></tbody></table>',
+            );
+        }
+        await expect(transform).not.toHaveAttribute('aria-busy', 'true');
+        await expect(sourceToggle).toBeEnabled();
+        await sourceToggle.click();
+        await expect(sourceToggle).toHaveAttribute(
+            'data-switch-target',
+            'source',
+        );
+        await visual.locator('#after-source-a').click();
+        await expect(
+            page
+                .locator('.soeditor-ui__table-balloon')
+                .getByRole('button', { name: 'Table editor' }),
+        ).toBeVisible();
+        await visual.locator('#after-source-b').click({ modifiers: ['Shift'] });
+        await expect(
+            page
+                .locator('.soeditor-ui__table-balloon')
+                .getByRole('button', { name: 'Merge cells' }),
+        ).toBeEnabled();
+        await page.keyboard.press('Escape');
+    }
+});
+
 test('formats large source in a worker without freezing the editor', async ({
     page,
 }) => {
