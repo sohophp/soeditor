@@ -1400,6 +1400,22 @@ test('keeps table cells interactive after source formatting and minification', a
                 .locator('.soeditor-ui__table-balloon')
                 .getByRole('button', { name: 'Merge cells' }),
         ).toBeEnabled();
+        await visual.locator('#after-source-b').click({ button: 'right' });
+        await expect(
+            visual.locator('.soeditor-table-cell.is-structurally-selected'),
+        ).toHaveCount(2);
+        const contextMenu = page.getByRole('menu', {
+            name: 'Editor context menu',
+        });
+        const contextMerge = contextMenu.getByRole('menuitem', {
+            name: 'Merge cells',
+        });
+        await expect(contextMerge).toBeVisible();
+        await contextMerge.click();
+        await expect(visual.locator('#after-source-a')).toHaveAttribute(
+            'colspan',
+            '2',
+        );
         await page.keyboard.press('Escape');
     }
 });

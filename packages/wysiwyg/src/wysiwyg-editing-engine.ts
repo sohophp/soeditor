@@ -774,6 +774,16 @@ export class WysiwygEditingEngine implements EditingEngine {
                 ? target.closest<HTMLTableCellElement>('td,th')
                 : null;
         if (
+            event.button === 2 &&
+            cell?.classList.contains('is-structurally-selected') === true &&
+            this.#tableSelection?.table === cell.closest('table')
+        ) {
+            this.#announceTableSelection(cell);
+            this.#tableDragAnchor = undefined;
+            this.#tableDragMoved = false;
+            return;
+        }
+        if (
             !this.#tableDragMoved &&
             cell !== null &&
             this.element.contains(cell)

@@ -1193,6 +1193,14 @@ function registerClassicContextMenu(
         label: 'Select table',
         when: ({ target }) => within(target, 'table'),
     });
+    registry.registerContextMenuItem('classic.table.cells-merge', {
+        command: 'table.cells.merge',
+        label: 'Merge cells',
+        when: ({ editor, target }) =>
+            within(target, 'table') &&
+            editor.commands.has('table.cells.canMerge') &&
+            editor.execute('table.cells.canMerge') === true,
+    });
     registry.registerContextMenuItem('classic.table.column-after', {
         command: 'table.column.insertAfter',
         label: 'Insert column after',
