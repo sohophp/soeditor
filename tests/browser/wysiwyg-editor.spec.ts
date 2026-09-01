@@ -1251,6 +1251,48 @@ test('enables merge for a rectangular body selection below a table header', asyn
     await expect(merged).toHaveAttribute('colspan', '2');
 });
 
+test('merges two vertically dragged body cells below a table header', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<table><caption>CMS 功能交付状态</caption><thead><tr><th>能力</th><th>状态</th><th>验证</th></tr></thead><tbody><tr><td id="vertical-a">Classic 表单</td><td>完成</td><td>Browser</td></tr><tr><td id="vertical-b">Office 粘贴</td><td>完成</td><td>Fixtures</td></tr><tr><td>上传与表格</td><td>完成</td><td>Unit + Browser</td></tr></tbody></table>',
+    );
+    const first = await surface.locator('#vertical-a').boundingBox();
+    const second = await surface.locator('#vertical-b').boundingBox();
+    if (first === null || second === null)
+        throw new Error('Table cells not found.');
+    await page.mouse.move(
+        first.x + first.width / 2,
+        first.y + first.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+        second.x + second.width / 2,
+        second.y + second.height / 2,
+        {
+            steps: 4,
+        },
+    );
+    await page.mouse.up();
+    const toolbar = page.locator('.soeditor-ui__table-balloon');
+    await expect(
+        surface.locator('.soeditor-table-cell.is-structurally-selected'),
+    ).toHaveCount(2);
+    const merge = toolbar.getByRole('button', { name: 'Merge cells' });
+    await expect(merge).toBeEnabled();
+    await expect(merge).toHaveClass(/soeditor-table-context__button--primary/);
+    await expect(toolbar.getByRole('button', { name: 'Add row' })).toBeHidden();
+    await expect(
+        toolbar.getByRole('button', { name: 'Select column' }),
+    ).toBeHidden();
+    await merge.click();
+    const merged = surface.locator('tbody td').first();
+    await expect(merged).toHaveAttribute('rowspan', '2');
+    await expect(merged).not.toHaveAttribute('colspan');
+});
+
 test('supports Dreamweaver-style drag and row, column, and table selection scopes', async ({
     page,
 }) => {

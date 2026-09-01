@@ -18,6 +18,7 @@ export function attachClassicTableContext(
     let activeRange: unknown;
     let selectionObserver: MutationObserver | undefined;
     const commandButtons = new Map<string, HTMLButtonElement>();
+    const scopeButtons: HTMLButtonElement[] = [];
     const refreshCommandButtons = (): void => {
         const selectionKind = classicTableSelectionKind(
             activeTable,
@@ -51,6 +52,9 @@ export function attachClassicTableContext(
             } else {
                 button.title = button.getAttribute('aria-label') ?? '';
             }
+        }
+        for (const button of scopeButtons) {
+            button.hidden = selectionKind === 'cells';
         }
     };
     const canMerge = (
@@ -502,25 +506,32 @@ export function attachClassicTableContext(
                     selectButton.addEventListener('click', () =>
                         selectScope(kind),
                     );
+                    scopeButtons.push(selectButton);
                     container.append(selectButton);
                 }
                 const actions = [
+                    ['table.cells.merge', 'Merge cells'],
+                    ['table.cells.clear', 'Clear cells'],
                     ['table.row.insertAfter', 'Add row'],
                     ['table.row.remove', 'Delete row'],
                     ['table.column.insertAfter', 'Add column'],
                     ['table.column.remove', 'Delete column'],
                     ['table.header.toggle', 'Toggle header'],
-                    ['table.cells.merge', 'Merge cells'],
                     ['table.cell.splitRows', 'Split into rows'],
                     ['table.cell.splitColumns', 'Split into columns'],
                     ['table.cell.split', 'Split completely'],
-                    ['table.cells.clear', 'Clear cells'],
                     ['table.remove', 'Delete table'],
                 ] as const;
                 for (const [command, label] of actions) {
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = 'soeditor-table-context__button';
+                    if (command === 'table.cells.merge') {
+                        button.classList.add(
+                            'soeditor-table-context__button--primary',
+                        );
+                    }
+                    button.dataset.command = command;
                     ui.setIcon(
                         button,
                         command.startsWith('table.cell.split')
@@ -789,7 +800,7 @@ function tableCommandApplies(
         return kind === 'caret' || kind === 'rows';
     }
     if (command === 'table.cell.setHtml') {
-        return kind === 'caret' || kind === 'cells';
+        return kind === 'caret';
     }
     if (kind === 'table') {
         return ['table.cells.clear', 'table.remove'].includes(command);
@@ -806,7 +817,13 @@ function tableCommandApplies(
             !command.startsWith('table.cell.split')
         );
     }
-    if (kind === 'cells') return !command.startsWith('table.cell.split');
+    if (kind === 'cells') {
+        return [
+            'table.cells.merge',
+            'table.cells.clear',
+            'table.remove',
+        ].includes(command);
+    }
     return command !== 'table.cells.merge';
 }
 
