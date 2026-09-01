@@ -575,6 +575,10 @@
     margin-block-start: 0.5rem;
 }
 
+.soeditor-ui__link-rel-custom > .soeditor-ui__field {
+    margin-block-end: 0;
+}
+
 @media (max-width: 34rem) {
     .soeditor-ui__link-target-controls,
     .soeditor-ui__link-attribute-row {

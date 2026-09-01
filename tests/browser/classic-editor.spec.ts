@@ -1673,6 +1673,21 @@ test('prefills selected link text and edits or removes a clicked link', async ({
             .locator('option[value="data-cms-id"]'),
     ).toContainText('data-cms-id = article-42');
     const addedAttributes = dialog.getByLabel('Added attributes');
+    const removeAttribute = dialog.getByRole('button', {
+        name: 'Remove attribute',
+    });
+    const [selectBox, removeBox] = await Promise.all([
+        addedAttributes.boundingBox(),
+        removeAttribute.boundingBox(),
+    ]);
+    if (selectBox === null || removeBox === null) {
+        throw new Error('Link attribute controls must be visible.');
+    }
+    expect(
+        Math.abs(
+            selectBox.y + selectBox.height - (removeBox.y + removeBox.height),
+        ),
+    ).toBeLessThanOrEqual(1);
     await addedAttributes.click();
     await expect(addedAttributes).toBeFocused();
     await expect(dialog.getByLabel('Attribute name')).toHaveValue(
