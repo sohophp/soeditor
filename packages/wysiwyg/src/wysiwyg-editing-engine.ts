@@ -1658,6 +1658,16 @@ export class WysiwygEditingEngine implements EditingEngine {
             setOptional(link, 'target', attributes.target);
             setOptional(link, 'rel', attributes.rel);
             setOptional(link, 'title', attributes.title);
+            if (attributes.customAttributes !== undefined) {
+                for (const name of link.getAttributeNames()) {
+                    if (!['href', 'rel', 'target', 'title'].includes(name)) {
+                        link.removeAttribute(name);
+                    }
+                }
+                for (const attribute of attributes.customAttributes) {
+                    link.setAttribute(attribute.name, attribute.value);
+                }
+            }
             if (active === undefined) {
                 if (current.collapsed) link.textContent = attributes.href;
                 else link.append(current.extractContents());
@@ -1685,6 +1695,23 @@ export class WysiwygEditingEngine implements EditingEngine {
             ...(link.hasAttribute('title')
                 ? { title: link.getAttribute('title') ?? '' }
                 : {}),
+            ...(() => {
+                const customAttributes = link
+                    .getAttributeNames()
+                    .filter(
+                        (name) =>
+                            !['href', 'rel', 'target', 'title'].includes(name),
+                    )
+                    .map((name) =>
+                        Object.freeze({
+                            name,
+                            value: link.getAttribute(name) ?? '',
+                        }),
+                    );
+                return customAttributes.length === 0
+                    ? {}
+                    : { customAttributes: Object.freeze(customAttributes) };
+            })(),
         };
     }
 

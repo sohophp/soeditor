@@ -11,7 +11,6 @@ import {
     type StructuredNodeViewContext,
     type StructuredNodeViewInstance,
     type VisualEditingService,
-    type VisualLinkAttributes,
 } from '@soeditor/engine';
 import {
     parseHtmlFragment,
@@ -3148,25 +3147,6 @@ function createCellEditingService(
     const service: VisualEditingService = {
         canEdit: () =>
             options.button.isConnected && options.button.isContentEditable,
-        getLinkAttributes: () => {
-            const link = selectedElement(options, 'a');
-            if (link === undefined) return undefined;
-            const href = link.getAttribute('href');
-            if (href === null) return undefined;
-            const attributes: {
-                href: string;
-                rel?: string;
-                target?: string;
-                title?: string;
-            } = { href };
-            const rel = link.getAttribute('rel');
-            const target = link.getAttribute('target');
-            const title = link.getAttribute('title');
-            if (rel !== null) attributes.rel = rel;
-            if (target !== null) attributes.target = target;
-            if (title !== null) attributes.title = title;
-            return attributes satisfies VisualLinkAttributes;
-        },
         getSelectedStructuredBlock: () => undefined,
         getSelection: () => undefined,
         insertHtml: (html, insertionOptions) => {
@@ -3184,6 +3164,38 @@ function createCellEditingService(
         },
         isBlockActive: () => false,
         isLinkActive: () => selectedElement(options, 'a') !== undefined,
+        getLinkAttributes: () => {
+            const link = selectedElement(options, 'a');
+            const href = link?.getAttribute('href');
+            if (link === undefined || href === null || href === undefined) {
+                return undefined;
+            }
+            const managedNames = ['href', 'rel', 'target', 'title'];
+            const customAttributes = link
+                .getAttributeNames()
+                .filter((name) => !managedNames.includes(name))
+                .map((name) =>
+                    Object.freeze({
+                        name,
+                        value: link.getAttribute(name) ?? '',
+                    }),
+                );
+            return Object.freeze({
+                href,
+                ...(link.hasAttribute('target')
+                    ? { target: link.getAttribute('target') ?? '' }
+                    : {}),
+                ...(link.hasAttribute('rel')
+                    ? { rel: link.getAttribute('rel') ?? '' }
+                    : {}),
+                ...(link.hasAttribute('title')
+                    ? { title: link.getAttribute('title') ?? '' }
+                    : {}),
+                ...(customAttributes.length === 0
+                    ? {}
+                    : { customAttributes: Object.freeze(customAttributes) }),
+            });
+        },
         isListActive: () => false,
         isMarkActive: (mark) => selectedElement(options, mark) !== undefined,
         isStructuredBlockSelected: () => false,
@@ -3216,6 +3228,16 @@ function createCellEditingService(
             setOptionalAttribute(link, 'target', attributes.target);
             setOptionalAttribute(link, 'rel', attributes.rel);
             setOptionalAttribute(link, 'title', attributes.title);
+            if (attributes.customAttributes !== undefined) {
+                for (const name of link.getAttributeNames()) {
+                    if (!['href', 'rel', 'target', 'title'].includes(name)) {
+                        link.removeAttribute(name);
+                    }
+                }
+                for (const attribute of attributes.customAttributes) {
+                    link.setAttribute(attribute.name, attribute.value);
+                }
+            }
             if (active !== undefined) {
                 const next = options.document.createRange();
                 next.selectNodeContents(link);

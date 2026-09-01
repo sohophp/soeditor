@@ -4,6 +4,16 @@ import type {
 } from './types.js';
 
 const simplifiedChinese: Readonly<Record<string, string>> = Object.freeze({
+    'Add attribute': '添加属性',
+    'Additional attributes': '附加属性',
+    'Added attributes': '已添加属性',
+    'Add standard or CMS attributes. Reserved names are blocked.':
+        '可添加标准或 CMS 属性；保留属性名会被阻止。',
+    'Attribute name': '属性名',
+    'Attribute value': '属性值',
+    'Choose or enter an attribute name': '选择或输入属性名',
+    'No additional attributes.': '暂无附加属性。',
+    'Remove attribute': '移除属性',
     'Accessibility help': '无障碍帮助',
     'Accessible label': '无障碍标签',
     'Align center': '居中对齐',
@@ -186,6 +196,16 @@ const simplifiedChinese: Readonly<Record<string, string>> = Object.freeze({
 });
 
 const traditionalChinese: Readonly<Record<string, string>> = Object.freeze({
+    'Add attribute': '新增屬性',
+    'Additional attributes': '附加屬性',
+    'Added attributes': '已新增屬性',
+    'Add standard or CMS attributes. Reserved names are blocked.':
+        '可新增標準或 CMS 屬性；保留屬性名稱會被阻擋。',
+    'Attribute name': '屬性名稱',
+    'Attribute value': '屬性值',
+    'Choose or enter an attribute name': '選擇或輸入屬性名稱',
+    'No additional attributes.': '尚無附加屬性。',
+    'Remove attribute': '移除屬性',
     'Accessibility help': '無障礙說明',
     'Accessible label': '無障礙標籤',
     'Align center': '置中對齊',

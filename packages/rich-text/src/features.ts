@@ -416,6 +416,50 @@ interface LinkPolicy {
     readonly protocols: readonly string[];
 }
 
+const linkAttributeCatalog = Object.freeze([
+    ...[
+        'download',
+        'hreflang',
+        'type',
+        'id',
+        'class',
+        'lang',
+        'role',
+        'tabindex',
+        'aria-label',
+        'aria-describedby',
+    ].map((name) => Object.freeze({ name })),
+    Object.freeze({
+        name: 'referrerpolicy',
+        values: Object.freeze([
+            'no-referrer',
+            'no-referrer-when-downgrade',
+            'origin',
+            'origin-when-cross-origin',
+            'same-origin',
+            'strict-origin',
+            'strict-origin-when-cross-origin',
+            'unsafe-url',
+        ]),
+    }),
+    Object.freeze({
+        name: 'dir',
+        values: Object.freeze(['ltr', 'rtl', 'auto']),
+    }),
+    Object.freeze({
+        name: 'aria-current',
+        values: Object.freeze([
+            'page',
+            'step',
+            'location',
+            'date',
+            'time',
+            'true',
+            'false',
+        ]),
+    }),
+]);
+
 /** Registers link application and removal commands. */
 export class LinkPlugin extends FeaturePlugin {
     static readonly id = 'link';
@@ -424,6 +468,15 @@ export class LinkPlugin extends FeaturePlugin {
         const policy = readLinkPolicy(
             this.editor.config.get<unknown>('cms.links'),
         );
+        this.editor.commands.register({
+            id: 'link.attributes.catalog',
+            label: 'List supported link attributes',
+            canExecute: () => true,
+            execute: (_context, ...args) => {
+                assertNoArguments('link.attributes.catalog', args);
+                return linkAttributeCatalog;
+            },
+        });
         this.register(
             'link.set',
             (service, args) => service.setLink(readLinkOptions(args, policy)),
@@ -432,6 +485,7 @@ export class LinkPlugin extends FeaturePlugin {
         this.register('link.setText', (service, args) => {
             const value = readRecord('link.setText', args);
             rejectUnknownKeys('link.setText', value, [
+                'customAttributes',
                 'href',
                 'rel',
                 'target',
@@ -448,6 +502,11 @@ export class LinkPlugin extends FeaturePlugin {
             const attributes = normalizeLinkOptions(
                 {
                     href: requiredString('link.setText', value, 'href'),
+                    ...optionalLinkCustomAttributes(
+                        'link.setText',
+                        value,
+                        policy,
+                    ),
                     ...optionalStringProperties('link.setText', value, [
                         'target',
                         'rel',
@@ -458,13 +517,9 @@ export class LinkPlugin extends FeaturePlugin {
             );
             service.insertHtml(
                 serializeNodes([
-                    element(
-                        'a',
-                        Object.entries(attributes).flatMap(([name, entry]) =>
-                            entry === undefined ? [] : [attribute(name, entry)],
-                        ),
-                        [Object.freeze({ type: 'text', value: text })],
-                    ),
+                    element('a', linkHtmlAttributes(attributes), [
+                        Object.freeze({ type: 'text', value: text }),
+                    ]),
                 ]),
             );
         });
@@ -894,11 +949,18 @@ function readLinkOptions(
     policy: LinkPolicy,
 ): LinkOptions {
     const value = readRecord('link.set', args);
-    rejectUnknownKeys('link.set', value, ['href', 'target', 'rel', 'title']);
+    rejectUnknownKeys('link.set', value, [
+        'customAttributes',
+        'href',
+        'target',
+        'rel',
+        'title',
+    ]);
     const href = requiredString('link.set', value, 'href');
     return normalizeLinkOptions(
         {
             href,
+            ...optionalLinkCustomAttributes('link.set', value, policy),
             ...optionalStringProperties('link.set', value, [
                 'target',
                 'rel',
@@ -923,7 +985,9 @@ function normalizeLinkOptions(
                 hasControlCharacters(options.title))) ||
         (options.target !== undefined && typeof options.target !== 'string') ||
         (options.rel !== undefined &&
-            (typeof options.rel !== 'string' || options.rel.length > 512))
+            (typeof options.rel !== 'string' || options.rel.length > 512)) ||
+        (options.customAttributes !== undefined &&
+            !Array.isArray(options.customAttributes))
     ) {
         throw new RichTextArgumentError(
             'link.set',
@@ -939,12 +1003,224 @@ function normalizeLinkOptions(
     }
     const target = normalizeLinkTarget(options.target);
     const rel = normalizeRel(options.rel, target);
+    const customAttributes = normalizeLinkCustomAttributes(
+        options.customAttributes,
+        policy,
+    );
     return Object.freeze({
         href,
         ...(target === undefined ? {} : { target }),
         ...(rel === undefined ? {} : { rel }),
         ...(options.title === undefined ? {} : { title: options.title }),
+        ...(customAttributes === undefined ? {} : { customAttributes }),
     });
+}
+
+const managedLinkAttributeNames = new Set(['href', 'rel', 'target', 'title']);
+const blockedLinkAttributeNames = new Set([
+    'is',
+    'nonce',
+    'srcdoc',
+    'style',
+    'xmlns',
+]);
+const linkReferrerPolicies = new Set([
+    '',
+    'no-referrer',
+    'no-referrer-when-downgrade',
+    'origin',
+    'origin-when-cross-origin',
+    'same-origin',
+    'strict-origin',
+    'strict-origin-when-cross-origin',
+    'unsafe-url',
+]);
+
+function optionalLinkCustomAttributes(
+    commandId: string,
+    value: Record<string, unknown>,
+    policy: LinkPolicy,
+): Readonly<{ customAttributes?: readonly HtmlAttribute[] }> {
+    if (!Object.hasOwn(value, 'customAttributes')) return {};
+    return {
+        customAttributes: normalizeLinkCustomAttributes(
+            value.customAttributes,
+            policy,
+            commandId,
+        )!,
+    };
+}
+
+function normalizeLinkCustomAttributes(
+    value: unknown,
+    policy: LinkPolicy,
+    commandId = 'link.set',
+): readonly HtmlAttribute[] | undefined {
+    if (value === undefined) return undefined;
+    if (!Array.isArray(value) || value.length > 32) {
+        throw new RichTextArgumentError(
+            commandId,
+            'customAttributes must be an array with at most 32 entries.',
+        );
+    }
+    const names = new Set<string>();
+    return Object.freeze(
+        value.map((entry: unknown, index): HtmlAttribute => {
+            if (
+                typeof entry !== 'object' ||
+                entry === null ||
+                Array.isArray(entry)
+            ) {
+                throw new RichTextArgumentError(
+                    commandId,
+                    `customAttributes[${String(index)}] must contain a name and value.`,
+                );
+            }
+            const record = entry as Record<string, unknown>;
+            if (
+                Object.keys(record).some(
+                    (key) => key !== 'name' && key !== 'value',
+                ) ||
+                typeof record.name !== 'string' ||
+                typeof record.value !== 'string'
+            ) {
+                throw new RichTextArgumentError(
+                    commandId,
+                    `customAttributes[${String(index)}] must contain only string name and value properties.`,
+                );
+            }
+            const name = record.name.trim().toLowerCase();
+            const attributeValue = record.value;
+            if (!/^[a-z][a-z0-9_.:-]{0,63}$/u.test(name)) {
+                throw new RichTextArgumentError(
+                    commandId,
+                    `custom attribute name "${name}" is invalid.`,
+                );
+            }
+            if (
+                managedLinkAttributeNames.has(name) ||
+                blockedLinkAttributeNames.has(name) ||
+                name.startsWith('on') ||
+                name.startsWith('data-soeditor-')
+            ) {
+                throw new RichTextArgumentError(
+                    commandId,
+                    `custom attribute name "${name}" is reserved or unsafe.`,
+                );
+            }
+            if (names.has(name)) {
+                throw new RichTextArgumentError(
+                    commandId,
+                    `custom attribute name "${name}" is duplicated.`,
+                );
+            }
+            if (
+                attributeValue.length > 4096 ||
+                hasControlCharacters(attributeValue)
+            ) {
+                throw new RichTextArgumentError(
+                    commandId,
+                    `custom attribute "${name}" requires a bounded value without control characters.`,
+                );
+            }
+            validateLinkCustomAttributeValue(
+                commandId,
+                name,
+                attributeValue,
+                policy,
+            );
+            names.add(name);
+            return Object.freeze({ name, value: attributeValue });
+        }),
+    );
+}
+
+function validateLinkCustomAttributeValue(
+    commandId: string,
+    name: string,
+    value: string,
+    policy: LinkPolicy,
+): void {
+    const invalid = (requirement: string): never => {
+        throw new RichTextArgumentError(
+            commandId,
+            `custom attribute "${name}" ${requirement}.`,
+        );
+    };
+    if (name === 'referrerpolicy' && !linkReferrerPolicies.has(value)) {
+        invalid('requires a standard referrer policy value');
+    }
+    if (name === 'dir' && !['auto', 'ltr', 'rtl'].includes(value)) {
+        invalid('requires auto, ltr, or rtl');
+    }
+    if (name === 'tabindex') {
+        const number = Number(value);
+        if (
+            !/^-?\d{1,5}$/u.test(value) ||
+            !Number.isInteger(number) ||
+            number < -32_768 ||
+            number > 32_767
+        ) {
+            invalid('requires an integer from -32768 to 32767');
+        }
+    }
+    if (name === 'id' && (value.length === 0 || /\s/u.test(value))) {
+        invalid('requires a non-empty value without whitespace');
+    }
+    if (
+        (name === 'lang' || name === 'hreflang') &&
+        value.length > 0 &&
+        !/^[A-Za-z]{2,8}(?:-[A-Za-z0-9]{1,8})*$/u.test(value)
+    ) {
+        invalid('requires a valid language tag');
+    }
+    if (
+        name === 'type' &&
+        value.length > 0 &&
+        !/^[a-zA-Z0-9!#$&^_.+-]+\/[a-zA-Z0-9!#$&^_.+-]+(?:\s*;\s*[a-zA-Z0-9!#$&^_.+-]+=[^;\r\n]+)*$/u.test(
+            value,
+        )
+    ) {
+        invalid('requires a MIME type');
+    }
+    if (
+        name === 'aria-current' &&
+        !['page', 'step', 'location', 'date', 'time', 'true', 'false'].includes(
+            value,
+        )
+    ) {
+        invalid('requires a standard aria-current value');
+    }
+    if (
+        name === 'role' &&
+        !/^[a-z][a-z0-9-]*(?:\s+[a-z][a-z0-9-]*)*$/u.test(value)
+    ) {
+        invalid('requires one or more lowercase role tokens');
+    }
+    if (name === 'ping') {
+        const urls = value.trim().split(/\s+/u).filter(Boolean);
+        if (
+            urls.length === 0 ||
+            urls.length > 8 ||
+            urls.some((url) => !isAllowedLink(url, policy))
+        ) {
+            invalid('requires at most 8 safe URLs allowed by cms.links policy');
+        }
+    }
+}
+
+function linkHtmlAttributes(options: LinkOptions): readonly HtmlAttribute[] {
+    return Object.freeze([
+        attribute('href', options.href),
+        ...(options.target === undefined
+            ? []
+            : [attribute('target', options.target)]),
+        ...(options.rel === undefined ? [] : [attribute('rel', options.rel)]),
+        ...(options.title === undefined
+            ? []
+            : [attribute('title', options.title)]),
+        ...(options.customAttributes ?? []),
+    ]);
 }
 
 function normalizeLinkTarget(value: string | undefined): string | undefined {

@@ -878,12 +878,41 @@ test('creates, edits, and removes a selected-text link without losing its range'
     await dialog.getByRole('button', { name: 'Relationship nofollow' }).click();
     await dialog.getByLabel('Add relationship').fill('privacy-policy');
     await dialog.getByRole('button', { name: 'Add', exact: true }).click();
+    let attributeRows = dialog.locator('.soeditor-ui__link-attribute-row');
+    await attributeRows
+        .nth(0)
+        .getByLabel('Attribute name', { exact: true })
+        .fill('referrerpolicy');
+    await expect(attributeRows.getByLabel('Attribute value')).toHaveAttribute(
+        'list',
+        /values/u,
+    );
+    await attributeRows
+        .nth(0)
+        .getByLabel('Attribute value')
+        .fill('strict-origin');
+    await dialog.getByRole('button', { name: 'Add attribute' }).click();
+    const customName = attributeRows.getByLabel('Attribute name', {
+        exact: true,
+    });
+    await customName.fill('href');
+    await attributeRows.getByLabel('Attribute value').fill('/bypass');
+    await dialog.getByRole('button', { name: 'Add attribute' }).click();
+    await expect(dialog).toBeVisible();
+    await expect
+        .poll(() => customName.evaluate((input) => input.validationMessage))
+        .toContain('reserved');
+    await customName.fill('data-cms-id');
+    await attributeRows.getByLabel('Attribute value').fill('article-42');
+    await dialog.getByRole('button', { name: 'Add attribute' }).click();
     await dialog.getByRole('button', { name: 'Insert link' }).click();
     const link = target.locator('a');
     await expect(link).toHaveText('Alpha');
     await expect(link).toHaveAttribute('href', '/alpha');
     await expect(link).toHaveAttribute('target', 'articlePreview');
     await expect(link).toHaveAttribute('rel', 'nofollow privacy-policy');
+    await expect(link).toHaveAttribute('referrerpolicy', 'strict-origin');
+    await expect(link).toHaveAttribute('data-cms-id', 'article-42');
 
     const linkPoint = await textPoint(link, 2);
     await page.mouse.click(linkPoint.x, linkPoint.y);
@@ -904,9 +933,18 @@ test('creates, edits, and removes a selected-text link without losing its range'
     await expect(
         dialog.getByRole('button', { name: 'Relationship privacy-policy' }),
     ).toHaveAttribute('aria-pressed', 'true');
+    attributeRows = dialog.locator('.soeditor-ui__link-attribute-row');
+    await expect(attributeRows).toHaveCount(1);
+    await expect(
+        dialog.getByLabel('Added attributes').locator('option'),
+    ).toHaveCount(2);
+    await dialog.getByLabel('Added attributes').selectOption('data-cms-id');
+    await dialog.getByRole('button', { name: 'Remove attribute' }).click();
     await dialog.getByLabel('Link URL').fill('/updated');
     await dialog.getByRole('button', { name: 'Update link' }).click();
     await expect(link).toHaveAttribute('href', '/updated');
+    await expect(link).toHaveAttribute('referrerpolicy', 'strict-origin');
+    await expect(link).not.toHaveAttribute('data-cms-id');
 
     await page.mouse.click(linkPoint.x, linkPoint.y);
     await page

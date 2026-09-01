@@ -653,7 +653,7 @@ Declaration SHA-256:
 | `VisualHtmlInsertionOptions`                          | type       | stable         | `e6b7905f86115990` |
 | `VisualInlineStyle`                                   | type       | experimental   | `ceb328a291e63d66` |
 | `VisualInlineStyleProperty`                           | type       | stable         | `295f367129c78f1c` |
-| `VisualLinkAttributes`                                | type       | stable         | `1a6f972f0723d61c` |
+| `VisualLinkAttributes`                                | type       | stable         | `ef7fac9e12d16ddb` |
 | `VisualListProperties`                                | type       | experimental   | `b3a668a12ec86d51` |
 | `VisualTextMark`                                      | type       | stable         | `e771736e78ddaf53` |
 | `WorkspaceAttachment`                                 | type       | stable         | `77db72bad098712b` |
@@ -701,7 +701,7 @@ Declaration SHA-256:
 ## @soeditor/engine
 
 Declaration tree SHA-256:
-`4b8326126bcb5106cae253129d2876151b781e101aea3101bc2f4f7fda4a3089`
+`f285b391700aa58e583fe542b7c9f2ceaca1a65f50be855df018c3160ae0262f`
 
 ### .
 
@@ -780,7 +780,7 @@ Declaration SHA-256:
 | `VisualHtmlInsertionOptions`                          | type       | stable         | `e6b7905f86115990` |
 | `VisualInlineStyle`                                   | type       | experimental   | `ceb328a291e63d66` |
 | `VisualInlineStyleProperty`                           | type       | stable         | `295f367129c78f1c` |
-| `VisualLinkAttributes`                                | type       | stable         | `1a6f972f0723d61c` |
+| `VisualLinkAttributes`                                | type       | stable         | `ef7fac9e12d16ddb` |
 | `VisualListProperties`                                | type       | experimental   | `b3a668a12ec86d51` |
 | `VisualTextMark`                                      | type       | stable         | `e771736e78ddaf53` |
 
@@ -1138,7 +1138,7 @@ Declaration SHA-256:
 | `VisualDecorationStatus`                              | type       | experimental   | `5d1e88a2c73eb2f7` |
 | `VisualEditingService`                                | type       | stable         | `e7acbcd076c6bf99` |
 | `visualEditingServiceToken`                           | value      | stable         | `9a32f2a648a6b57e` |
-| `VisualLinkAttributes`                                | type       | stable         | `1a6f972f0723d61c` |
+| `VisualLinkAttributes`                                | type       | stable         | `ef7fac9e12d16ddb` |
 | `VisualTextMark`                                      | type       | stable         | `e771736e78ddaf53` |
 
 ## @soeditor/plugin-tools
@@ -1447,7 +1447,7 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`bf7f36351c85fb93140a357427f642e4539a235e9f7366848f28fe580ebcde21`
+`befdb46bbea9cac7e3dac484a7fa0af9a152bb0cdadfac13b6af935cfec5bd79`
 
 ### .
 

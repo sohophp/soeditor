@@ -1126,16 +1126,43 @@ export class VisualEditingEngine implements EditingEngine {
     }
 
     #setLink(attributes: VisualLinkAttributes | undefined): void {
-        const htmlAttributes =
+        const existingCustomAttributes =
             attributes === undefined
                 ? undefined
-                : Object.freeze(
-                      Object.entries(attributes).flatMap(([name, value]) =>
-                          value === undefined
-                              ? []
-                              : [Object.freeze({ name, value })],
-                      ),
-                  );
+                : this.#getLinkAttributes()?.customAttributes;
+        const htmlAttributes: readonly HtmlAttribute[] | undefined =
+            attributes === undefined
+                ? undefined
+                : Object.freeze([
+                      Object.freeze({ name: 'href', value: attributes.href }),
+                      ...(attributes.target === undefined
+                          ? []
+                          : [
+                                Object.freeze({
+                                    name: 'target',
+                                    value: attributes.target,
+                                }),
+                            ]),
+                      ...(attributes.rel === undefined
+                          ? []
+                          : [
+                                Object.freeze({
+                                    name: 'rel',
+                                    value: attributes.rel,
+                                }),
+                            ]),
+                      ...(attributes.title === undefined
+                          ? []
+                          : [
+                                Object.freeze({
+                                    name: 'title',
+                                    value: attributes.title,
+                                }),
+                            ]),
+                      ...(attributes.customAttributes ??
+                          existingCustomAttributes ??
+                          []),
+                  ]);
         this.#applyFeature((selection) =>
             setLink(this.#model, selection, htmlAttributes),
         );
@@ -1153,12 +1180,16 @@ export class VisualEditingEngine implements EditingEngine {
         if (selection === undefined) return undefined;
         const attributes = getLinkAttributes(this.#model, selection);
         if (attributes === undefined) return undefined;
+        const managedNames = ['href', 'rel', 'target', 'title'];
         const values = Object.fromEntries(
             attributes
-                .filter((attribute) =>
-                    ['href', 'rel', 'target', 'title'].includes(attribute.name),
-                )
+                .filter((attribute) => managedNames.includes(attribute.name))
                 .map((attribute) => [attribute.name, attribute.value]),
+        );
+        const customAttributes = Object.freeze(
+            attributes
+                .filter((attribute) => !managedNames.includes(attribute.name))
+                .map((attribute) => Object.freeze({ ...attribute })),
         );
         const href = values.href;
         return typeof href === 'string'
@@ -1173,6 +1204,9 @@ export class VisualEditingEngine implements EditingEngine {
                   ...(typeof values.title === 'string'
                       ? { title: values.title }
                       : {}),
+                  ...(customAttributes.length === 0
+                      ? {}
+                      : { customAttributes }),
               })
             : undefined;
     }

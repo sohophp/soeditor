@@ -687,13 +687,52 @@ try {
             readFile(join(narrowAssetsRoot, name), 'utf8'),
         ),
     );
-    const narrowSize = narrowSources.reduce(
+    const narrowManifest = JSON.parse(
+        await readFile(
+            join(narrowViteFixtureDirectory, 'dist/.vite/manifest.json'),
+            'utf8',
+        ),
+    );
+    const narrowStartupKeys = collectStaticManifestEntries(narrowManifest, [
+        'index.html',
+    ]);
+    const narrowStartupFiles = new Set(
+        [...narrowStartupKeys]
+            .map((key) => narrowManifest[key]?.file)
+            .filter((file) =>
+                typeof file === 'string' ? file.endsWith('.js') : false,
+            ),
+    );
+    const narrowStartupSources = await Promise.all(
+        [...narrowStartupFiles].map((file) =>
+            readFile(join(narrowViteFixtureDirectory, 'dist', file), 'utf8'),
+        ),
+    );
+    const narrowSize = narrowStartupSources.reduce(
         (total, source) => total + Buffer.byteLength(source),
         0,
     );
     if (narrowSize > 85_000) {
         throw new Error(
             `Narrow Vite consumer exceeds its 85 kB guard (${String(narrowSize)} bytes).`,
+        );
+    }
+    const narrowTotalSize = narrowSources.reduce(
+        (total, source) => total + Buffer.byteLength(source),
+        0,
+    );
+    const lazySizes = narrowJavaScript
+        .map((name, index) => ({
+            name,
+            size: Buffer.byteLength(narrowSources[index] ?? ''),
+        }))
+        .filter(({ name }) => !narrowStartupFiles.has(`assets/${name}`));
+    if (
+        narrowTotalSize > 90_000 ||
+        lazySizes.some(({ size }) => size > 8_000)
+    ) {
+        throw new Error(
+            `Narrow Vite output exceeds its 90 kB total or 8 kB lazy-chunk guard (${String(narrowTotalSize)} bytes total).`,
         );
     }
     for (const excludedMarker of [

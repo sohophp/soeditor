@@ -115,6 +115,7 @@ describe('rich-text feature plugins', () => {
                 'link.setText',
                 'link.remove',
                 'link.auto',
+                'link.attributes.catalog',
                 'link.inspect',
                 'link.pick',
                 'image.insert',
@@ -271,6 +272,71 @@ describe('rich-text feature plugins', () => {
             [{ href: 'tel:+862155551234' }],
             [{ href: '/articles/42', title: 'Story' }],
         ]);
+    });
+
+    it('validates and serializes custom link attributes without allowing managed or unsafe names', async () => {
+        const { editor, harness } = await createHarness();
+        expect(editor.execute('link.attributes.catalog')).toEqual(
+            expect.arrayContaining([
+                { name: 'download' },
+                {
+                    name: 'dir',
+                    values: ['ltr', 'rtl', 'auto'],
+                },
+            ]),
+        );
+        const customAttributes = [
+            { name: ' DATA-CMS-ID ', value: 'article-42' },
+            { name: 'aria-label', value: 'Read article' },
+            { name: 'referrerpolicy', value: 'strict-origin' },
+            { name: 'download', value: '' },
+        ];
+
+        editor.execute('link.set', {
+            href: '/article',
+            customAttributes,
+        });
+        editor.execute('link.setText', {
+            href: '/download',
+            text: 'Download',
+            customAttributes,
+        });
+
+        expect(harness.setLink).toHaveBeenCalledWith({
+            href: '/article',
+            customAttributes: [
+                { name: 'data-cms-id', value: 'article-42' },
+                { name: 'aria-label', value: 'Read article' },
+                { name: 'referrerpolicy', value: 'strict-origin' },
+                { name: 'download', value: '' },
+            ],
+        });
+        expect(harness.insertHtml).toHaveBeenCalledWith(
+            '<a href="/download" data-cms-id="article-42" aria-label="Read article" referrerpolicy="strict-origin" download="">Download</a>',
+        );
+
+        for (const customAttributes of [
+            [{ name: 'href', value: '/bypass' }],
+            [{ name: 'onclick', value: 'alert(1)' }],
+            [{ name: 'style', value: 'display:none' }],
+            [{ name: 'data-soeditor-private', value: 'x' }],
+            [
+                { name: 'data-id', value: 'first' },
+                { name: 'DATA-ID', value: 'second' },
+            ],
+            [{ name: 'referrerpolicy', value: 'invalid' }],
+            [{ name: 'aria-current', value: 'selected' }],
+            [{ name: 'role', value: 'Alert Dialog' }],
+            [{ name: 'tabindex', value: '99999' }],
+            [{ name: 'ping', value: 'javascript:alert(1)' }],
+        ]) {
+            expect(() =>
+                editor.execute('link.set', {
+                    href: '/article',
+                    customAttributes,
+                }),
+            ).toThrow(RichTextArgumentError);
+        }
     });
 
     it('keeps provider failure observable without mutating a link', async () => {

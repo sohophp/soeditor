@@ -35,6 +35,8 @@ export interface VisualLinkAttributes {
     readonly target?: string;
     readonly rel?: string;
     readonly title?: string;
+    /** Validated non-managed attributes preserved on the anchor element. */
+    readonly customAttributes?: readonly HtmlAttribute[];
 }
 
 /** Controls whether inserted HTML replaces a selection or is placed before it. */

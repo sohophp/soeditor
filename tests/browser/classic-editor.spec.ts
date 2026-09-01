@@ -1642,12 +1642,21 @@ test('prefills selected link text and edits or removes a clicked link', async ({
     );
     await dialog.getByLabel('Displayed text').fill('Linked article');
     await dialog.getByLabel('Link URL').fill('/articles/first');
+    await dialog.getByText('Advanced settings').click();
+    const customAttribute = dialog.locator('.soeditor-ui__link-attribute-row');
+    await customAttribute
+        .getByLabel('Attribute name', { exact: true })
+        .fill('data-cms-id');
+    await customAttribute.getByLabel('Attribute value').fill('article-42');
+    await dialog.getByRole('button', { name: 'Add attribute' }).click();
     await dialog.getByRole('button', { name: 'Insert link' }).click();
     let projectedLink = visual.locator('a[href="/articles/first"]');
     await expect(projectedLink).toHaveText('Linked article');
     await expect
         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
-        .toContain('<a href="/articles/first">Linked article</a>');
+        .toContain(
+            '<a href="/articles/first" data-cms-id="article-42">Linked article</a>',
+        );
 
     await projectedLink.click();
     const actions = page.getByRole('dialog', { name: 'Link actions' });
@@ -1658,13 +1667,21 @@ test('prefills selected link text and edits or removes a clicked link', async ({
         'Linked article',
     );
     await expect(dialog.getByLabel('Link URL')).toHaveValue('/articles/first');
+    await expect(
+        dialog
+            .getByLabel('Added attributes')
+            .locator('option[value="data-cms-id"]'),
+    ).toHaveText('data-cms-id=article-42');
     await dialog.getByLabel('Link URL').fill('/articles/updated');
     await dialog.getByRole('button', { name: 'Update link' }).click();
     projectedLink = visual.locator('a[href="/articles/updated"]');
     await expect(projectedLink).toHaveText('Linked article');
+    await expect(projectedLink).toHaveAttribute('data-cms-id', 'article-42');
     await expect
         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
-        .toContain('<a href="/articles/updated">Linked article</a>');
+        .toContain(
+            '<a href="/articles/updated" data-cms-id="article-42">Linked article</a>',
+        );
 
     await projectedLink.click();
     await page

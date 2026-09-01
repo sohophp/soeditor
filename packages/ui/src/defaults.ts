@@ -189,7 +189,7 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
     ui.setIcon(button, 'link.set', 'Link');
     button.title = 'Link';
     button.setAttribute('aria-label', 'Link');
-    const click = (): void => {
+    const click = async (): Promise<void> => {
         ui.restoreEditingSelection();
         const current = editor.commands.has('link.inspect')
             ? editor.commands.canExecute('link.inspect')
@@ -201,6 +201,21 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
                 ? (current as Record<string, unknown>)
                 : {};
         const selectedText = ui.getEditingSelectionText();
+        const attributeTools = await import('./link-attributes.js').catch(
+            (error: unknown) => {
+                reportError(ui, error);
+                return undefined;
+            },
+        );
+        if (attributeTools === undefined) return;
+        if (!button.isConnected) return;
+        const { linkCustomAttributeField, readInspectedCustomAttributes } =
+            attributeTools;
+        const attributeSuggestions = editor.commands.has(
+            'link.attributes.catalog',
+        )
+            ? editor.execute('link.attributes.catalog')
+            : [];
         const editingExisting = typeof values.href === 'string';
         const body = document.createElement('div');
         body.className = 'soeditor-ui__link-dialog-form';
@@ -231,11 +246,12 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
 
         const advanced = document.createElement('details');
         advanced.className = 'soeditor-ui__link-advanced';
-        advanced.open = ['title', 'target', 'rel'].some(
-            (name) =>
-                typeof values[name] === 'string' &&
-                values[name].trim().length > 0,
-        );
+        advanced.open =
+            ['title', 'target', 'rel'].some(
+                (name) =>
+                    typeof values[name] === 'string' &&
+                    values[name].trim().length > 0,
+            ) || readInspectedCustomAttributes(values).length > 0;
         const advancedSummary = document.createElement('summary');
         advancedSummary.textContent = 'Advanced settings';
         const advancedFields = document.createElement('div');
@@ -260,14 +276,23 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
             advancedFields,
             typeof values.rel === 'string' ? values.rel : '',
         );
+        const customAttributes = linkCustomAttributeField(
+            document,
+            advancedFields,
+            readInspectedCustomAttributes(values),
+            attributeSuggestions,
+        );
         advanced.append(advancedSummary, advancedFields);
         body.append(essentials, advanced);
         const save = (): void => {
             href.value = href.value.trim();
             if (!href.reportValidity()) return;
+            const customAttributeResult = customAttributes.value();
+            if (customAttributeResult === undefined) return;
             const text = displayed.value || href.value;
             const attributes = {
                 href: href.value,
+                customAttributes: customAttributeResult,
                 ...(title.value.length === 0 ? {} : { title: title.value }),
                 ...(target.value.length === 0 ? {} : { target: target.value }),
                 ...(rel.value().length === 0 ? {} : { rel: rel.value() }),
