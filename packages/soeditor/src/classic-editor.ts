@@ -843,10 +843,20 @@ export async function createClassicEditor(
             );
         const updateModeChrome = (): void => {
             dom.root.dataset.soeditorMode = editor.state.mode;
+            if (editingModes.has('source')) {
+                const target =
+                    editor.state.mode === 'source' ? 'source' : 'wysiwyg';
+                const visible = editor.services
+                    .get(projectionCoordinatorServiceToken)
+                    .snapshot.activities.filter((activity) => activity.visible);
+                if (visible.length !== 1 || visible[0]?.id !== target) {
+                    setWorkspaceView(target);
+                }
+            }
         };
-        updateModeChrome();
-        disposeModeChrome = editor.events.on('mode:change', updateModeChrome);
         attachWorkspaceControls(editor);
+        dom.root.dataset.soeditorMode = editor.state.mode;
+        disposeModeChrome = editor.events.on('mode:change', updateModeChrome);
         dom.resizeHandle?.setAttribute(
             'aria-label',
             ui.translate('Resize editor height'),
