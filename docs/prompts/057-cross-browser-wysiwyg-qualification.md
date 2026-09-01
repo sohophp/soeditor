@@ -32,7 +32,7 @@ and assistive-technology coverage.
 
 The matching official Playwright Noble image executes 70 Firefox/WebKit runs:
 66 applicable assertions pass and four Chromium-tool-specific checks are
-explicitly skipped. The new CI job is configured to repeat this result on
-Ubuntu using the repository Node version. Production publication remains
-NO-GO until the CI run is reviewed and real Safari/manual accessibility
-sign-off is complete.
+explicitly skipped. The new CI job repeated this result successfully on Ubuntu
+for commit `1fe622c8b17771daeabc256e0ea127e52d311c83` in Actions run
+`33460058428`. Production publication remains NO-GO until real Safari/manual
+accessibility sign-off is complete.

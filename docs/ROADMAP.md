@@ -2445,9 +2445,8 @@ in the public demonstration.
 
 ## Status
 
-IN PROGRESS — Firefox and WebKit automation passes on the supported Playwright
-Linux image; reviewed CI execution and real Safari/manual assistive-technology
-sign-off remain pending.
+IN PROGRESS — Firefox and WebKit automation passes locally and in GitHub CI;
+real Safari/manual assistive-technology sign-off remains pending.
 
 ## Goal
 

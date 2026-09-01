@@ -6,8 +6,8 @@ The `1.0.0` release is published and externally verified.
 The local `1.1.0` release is an unpublished candidate aligned across all 24
 public packages. Phases 38–56 are complete and Phase 57 cross-browser
 qualification is in progress. Publication remains an explicit repository-owner
-operation and is currently NO-GO pending reviewed cross-browser CI execution
-and real Safari/manual assistive-technology sign-off.
+operation and is currently NO-GO pending real Safari/manual
+assistive-technology sign-off.
 The authorized work is the Phase 49–57 WYSIWYG completion program. Its
 contract is `docs/wysiwyg-editor.md`. Existing native WYSIWYG behavior and the
 199 Chromium scenarios are a regression baseline, not a claim that every
@@ -41,8 +41,9 @@ On the matching official Playwright Noble image, all 66 applicable assertions
 pass. Four cases are explicitly excluded because Playwright native clipboard
 permissions and CDP IME injection are Chromium-only; equivalent cross-engine
 composition and rich-paste behavior remains covered. A separate CI job now
-installs and runs Firefox and WebKit so this evidence is repeated on the
-reviewed repository commit when the workflow executes.
+installs and runs Firefox and WebKit. Both that job and the complete release
+gate passed for commit `1fe622c8b17771daeabc256e0ea127e52d311c83` in GitHub
+Actions run `33460058428`.
 The additive, lazily loaded
 `createClassicEditor()` API now mounts Workspace, UI, Visual, and Source on a
 textarea or element, synchronizes native submit/reset behavior, supports

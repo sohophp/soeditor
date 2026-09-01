@@ -4,9 +4,8 @@
 
 The Phase 49–56 implementation program is complete. The local `1.1.0`
 candidate is **GO for continued integration and Chromium-based CMS evaluation**
-and **NO-GO for production publication** until the new Firefox/WebKit CI gate
-passes on the reviewed commit and real Safari/manual assistive-technology
-qualification is signed off.
+and **NO-GO for production publication** until real Safari/manual
+assistive-technology qualification is signed off.
 
 No package was published, tagged, or deployed by this program.
 
@@ -66,9 +65,11 @@ applicable Firefox/WebKit assertions passed. Four cases are explicitly skipped
 because native clipboard permissions and CDP IME injection are Chromium-only;
 cross-engine composition and synthetic rich-paste paths still pass.
 
-The repository now has an independent Firefox/WebKit CI job. Publication stays
-blocked until that job passes on the reviewed commit and real Safari plus the
-documented manual assistive-technology checks are completed.
+The repository now has an independent Firefox/WebKit CI job. It and the full
+release gate passed for commit
+`1fe622c8b17771daeabc256e0ea127e52d311c83` in Actions run `33460058428`.
+Publication stays blocked until real Safari plus the documented manual
+assistive-technology checks are completed.
 
 ## Accepted non-P0 follow-up
 

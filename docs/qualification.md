@@ -54,8 +54,9 @@ corpora in the matching official Playwright Noble image. All 66 applicable
 Firefox/WebKit assertions pass. Four browser-tool-specific cases are explicitly
 skipped: native clipboard permissions and CDP IME injection are Chromium-only;
 equivalent cross-engine composition and synthetic rich-paste paths still run.
-The independent CI job is configured to repeat this gate on a supported Ubuntu
-runner.
+The independent CI job repeated this gate successfully on a supported Ubuntu
+runner for commit `1fe622c8b17771daeabc256e0ea127e52d311c83` in Actions run
+`33460058428`.
 
 ## Accessibility
 
