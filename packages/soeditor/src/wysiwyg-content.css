@@ -44,6 +44,114 @@
     position: absolute;
 }
 
+.soeditor-image-resize-overlay {
+    border: 1px solid var(--soeditor-accent, #0969da);
+    box-sizing: border-box;
+    pointer-events: none;
+    position: fixed;
+    z-index: 8;
+}
+
+.soeditor-image-resize-preview {
+    block-size: 100%;
+    inline-size: 100%;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.soeditor-image-resize-overlay.is-resizing .soeditor-image-resize-preview {
+    opacity: 0.7;
+}
+
+.soeditor-image-resize-overlay::after {
+    background: rgb(17 24 39 / 88%);
+    border-radius: 0.25rem;
+    color: #fff;
+    content: attr(data-dimensions);
+    font:
+        600 11px/1.3 system-ui,
+        sans-serif;
+    inset-block-start: 0.4rem;
+    inset-inline-start: 50%;
+    opacity: 0;
+    padding: 0.2rem 0.35rem;
+    position: absolute;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+.soeditor-image-resize-overlay.is-resizing::after {
+    opacity: 1;
+}
+
+.soeditor-image-resize-handle {
+    appearance: none;
+    background: var(--soeditor-bg, #fff);
+    block-size: 12px;
+    border: 2px solid var(--soeditor-accent, #0969da);
+    border-radius: 50%;
+    box-sizing: border-box;
+    inline-size: 12px;
+    margin: -6px;
+    padding: 0;
+    pointer-events: auto;
+    position: absolute;
+    touch-action: none;
+}
+
+.soeditor-image-resize-handle[data-resize-direction='nw'] {
+    cursor: nwse-resize;
+    inset-block-start: 0;
+    inset-inline-start: 0;
+}
+
+.soeditor-image-resize-handle[data-resize-direction='n'] {
+    cursor: ns-resize;
+    inset-block-start: 0;
+    inset-inline-start: 50%;
+}
+
+.soeditor-image-resize-handle[data-resize-direction='ne'] {
+    cursor: nesw-resize;
+    inset-block-start: 0;
+    inset-inline-end: 0;
+}
+
+.soeditor-image-resize-handle[data-resize-direction='e'] {
+    cursor: ew-resize;
+    inset-block-start: 50%;
+    inset-inline-end: 0;
+}
+
+.soeditor-image-resize-handle[data-resize-direction='se'] {
+    cursor: nwse-resize;
+    inset-block-end: 0;
+    inset-inline-end: 0;
+}
+
+.soeditor-image-resize-handle[data-resize-direction='s'] {
+    cursor: ns-resize;
+    inset-block-end: 0;
+    inset-inline-start: 50%;
+}
+
+.soeditor-image-resize-handle[data-resize-direction='sw'] {
+    cursor: nesw-resize;
+    inset-block-end: 0;
+    inset-inline-start: 0;
+}
+
+.soeditor-image-resize-handle[data-resize-direction='w'] {
+    cursor: ew-resize;
+    inset-block-start: 50%;
+    inset-inline-start: 0;
+}
+
+.soeditor-image-resize-handle:focus-visible {
+    outline: 2px solid var(--soeditor-focus, #0969da);
+    outline-offset: 2px;
+}
+
 /* Editing affordances are independent from the selected content stylesheet. */
 .soeditor-wysiwyg-content .soeditor-table-widget {
     background: var(--soeditor-bg, #fff);
@@ -81,6 +189,8 @@
 
 .soeditor-wysiwyg-content .soeditor-table-widget th {
     background: transparent;
+    font-weight: 600;
+    text-align: center;
 }
 
 .soeditor-wysiwyg-content[data-soeditor-content-style='article']
@@ -150,6 +260,133 @@
 
 .soeditor-wysiwyg-content .soeditor-table-cell.is-editing[aria-pressed='true'] {
     background: var(--soeditor-bg, #fff);
+}
+
+.soeditor-table-resize-overlay {
+    pointer-events: none;
+    /* The controller maps viewport rectangles into the active containing
+       block, including the paint-contained split visual pane. */
+    position: absolute;
+    z-index: 4;
+}
+
+.soeditor-table-resize-overlay
+    :is(.soeditor-table-column-resize, .soeditor-table-row-resize) {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    pointer-events: auto;
+    position: absolute;
+}
+
+.soeditor-table-resize-overlay .soeditor-table-column-resize {
+    block-size: 100%;
+    cursor: col-resize;
+    inline-size: 8px;
+    inset-block-start: 0;
+}
+
+.soeditor-table-resize-overlay .soeditor-table-row-resize {
+    block-size: 8px;
+    cursor: row-resize;
+    inline-size: 100%;
+    inset-inline-start: 0;
+}
+
+.soeditor-table-resize-overlay .soeditor-table-column-resize::before,
+.soeditor-table-resize-overlay .soeditor-table-row-resize::before {
+    background: var(--soeditor-accent, #0969da);
+    content: '';
+    opacity: 0;
+    position: absolute;
+}
+
+.soeditor-table-resize-overlay .soeditor-table-column-resize::before {
+    inline-size: 2px;
+    inset-block: 0;
+    inset-inline-start: 3px;
+}
+
+.soeditor-table-resize-overlay .soeditor-table-row-resize::before {
+    block-size: 2px;
+    inset-block-start: 3px;
+    inset-inline: 0;
+}
+
+.soeditor-table-resize-overlay
+    :is(.soeditor-table-column-resize, .soeditor-table-row-resize):is(
+        :hover,
+        :focus-visible
+    )::before {
+    opacity: 1;
+}
+
+/* Native WYSIWYG node-view handles live beside the table, not in the
+   document-level fallback overlay. Keep them real hit targets in the shadow
+   content stylesheet as well. */
+.soeditor-wysiwyg-content
+    .soeditor-table-widget
+    > :is(.soeditor-table-column-resize, .soeditor-table-row-resize) {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    pointer-events: auto;
+    position: absolute;
+    z-index: 4;
+}
+
+.soeditor-wysiwyg-content
+    .soeditor-table-widget
+    > .soeditor-table-column-resize {
+    block-size: 100%;
+    cursor: col-resize;
+    inline-size: 8px;
+    inset-block-start: 0;
+}
+
+.soeditor-wysiwyg-content .soeditor-table-widget > .soeditor-table-row-resize {
+    block-size: 8px;
+    cursor: row-resize;
+    inline-size: 100%;
+    inset-inline-start: 0;
+}
+
+.soeditor-wysiwyg-content
+    .soeditor-table-widget
+    > :is(.soeditor-table-column-resize, .soeditor-table-row-resize)::before {
+    background: var(--soeditor-accent, #0969da);
+    content: '';
+    opacity: 0;
+    position: absolute;
+}
+
+.soeditor-wysiwyg-content
+    .soeditor-table-widget
+    > .soeditor-table-column-resize::before {
+    inline-size: 2px;
+    inset-block: 0;
+    inset-inline-start: 3px;
+}
+
+.soeditor-wysiwyg-content
+    .soeditor-table-widget
+    > .soeditor-table-row-resize::before {
+    block-size: 2px;
+    inset-block-start: 3px;
+    inset-inline: 0;
+}
+
+.soeditor-wysiwyg-content
+    .soeditor-table-widget
+    > :is(.soeditor-table-column-resize, .soeditor-table-row-resize):is(
+        :hover,
+        :focus-visible
+    )::before {
+    opacity: 1;
 }
 
 .soeditor-wysiwyg-content .soeditor-wysiwyg-preserved-block[hidden],

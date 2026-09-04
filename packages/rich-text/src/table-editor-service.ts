@@ -3,9 +3,13 @@ import { createServiceToken } from '@soeditor/core';
 import type {
     TableCellProperties,
     TableCellRange,
+    TableColumnGroupInsertOptions,
+    TableColumnGroupProperties,
     TableProperties,
+    TableRowMoveOptions,
     TableRowProperties,
     TableSectionProperties,
+    TableStructureSnapshot,
 } from './table.js';
 
 export interface TableEditorDiagnostic {
@@ -56,8 +60,25 @@ export type TableStructuralAction =
 /** Public command-backed API for table editing UIs and CMS integrations. */
 export interface TableEditorService {
     inspect(): TableEditorSnapshot;
+    inspectStructure(): TableStructureSnapshot;
+    updateCaption(text: string | null): void;
+    createSection(kind: 'body' | 'foot' | 'head', position?: number): void;
+    removeSection(sectionIndex: number): void;
+    moveRows(options: TableRowMoveOptions): void;
+    reorderBodySection(sectionIndex: number, targetIndex: number): void;
     updateTable(properties: TableProperties): void;
     updateSection(properties: TableSectionProperties): void;
+    updateSection(
+        sectionIndex: number,
+        properties: TableSectionProperties,
+    ): void;
+    createColumnGroup(options: TableColumnGroupInsertOptions): void;
+    updateColumnGroup(
+        groupIndex: number,
+        properties: TableColumnGroupProperties,
+    ): void;
+    removeColumnGroup(groupIndex: number): void;
+    repairStructure(repairId: string): void;
     updateRows(properties: TableRowProperties): void;
     updateCells(properties: TableCellProperties): void;
     executeStructuralAction(action: TableStructuralAction): void;

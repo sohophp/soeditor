@@ -14,7 +14,16 @@ import {
 } from './structured-editing.js';
 
 export type EditingBlockTag =
-    'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'blockquote' | 'pre';
+    | 'p'
+    | 'div'
+    | 'h1'
+    | 'h2'
+    | 'h3'
+    | 'h4'
+    | 'h5'
+    | 'h6'
+    | 'blockquote'
+    | 'pre';
 
 export type EditingTextMark =
     'strong' | 'em' | 'u' | 's' | 'code' | 'sub' | 'sup';
@@ -503,6 +512,7 @@ function marksEqual(left: EditingMark, right: EditingMark): boolean {
 function isBlockTag(tagName: string): tagName is EditingBlockTag {
     return (
         tagName === 'p' ||
+        tagName === 'div' ||
         tagName === 'blockquote' ||
         tagName === 'pre' ||
         /^h[1-6]$/u.test(tagName)

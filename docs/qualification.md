@@ -45,18 +45,22 @@ Phase 48 adds one uninterrupted public-path browser scenario that proves:
 7. dangerous source retained canonically but absent from executable Visual DOM;
 8. terminal destruction restoring the exact textarea and final source.
 
-The repository now contains 199 Chromium scenarios. The focused CMS project
+The repository now contains 226 Chromium scenarios. The focused CMS project
 runs all three CMS scenarios on Chromium desktop and mobile (six passing runs).
 The original full-matrix attempt could not launch Firefox or WebKit on the
 Rocky Linux development host because its C++ and desktop runtime libraries are
-too old. Phase 57 therefore reruns the focused CMS and complete direct WYSIWYG
-corpora in the matching official Playwright Noble image. All 66 applicable
-Firefox/WebKit assertions pass. Four browser-tool-specific cases are explicitly
-skipped: native clipboard permissions and CDP IME injection are Chromium-only;
-equivalent cross-engine composition and synthetic rich-paste paths still run.
-The independent CI job repeated this gate successfully on a supported Ubuntu
-runner for commit `1fe622c8b17771daeabc256e0ea127e52d311c83` in Actions run
-`33460058428`.
+too old. The cross-browser command now probes both engines before scheduling
+the matrix, so an unsupported host reports both dependency failures once rather
+than recording every unstarted scenario as a product failure. Phase 57
+therefore reruns the focused CMS and complete direct WYSIWYG
+corpora in the matching official Playwright Noble image. The current candidate
+passes all 96 applicable Firefox/WebKit assertions. Four
+browser-tool-specific cases are explicitly skipped: native clipboard
+permissions and CDP IME injection are Chromium-only; equivalent cross-engine
+composition and synthetic rich-paste paths still run.
+An earlier 66-assertion version of the independent CI gate also passed on a
+supported Ubuntu runner for commit
+`1fe622c8b17771daeabc256e0ea127e52d311c83` in Actions run `33460058428`.
 
 ## Accessibility
 

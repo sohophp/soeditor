@@ -478,10 +478,6 @@ body {
     min-inline-size: 2.25rem;
 }
 
-.demo-form .soeditor-ui__menu > summary {
-    min-inline-size: 3rem;
-}
-
 .demo-form__actions {
     display: flex;
     gap: 0.6rem;

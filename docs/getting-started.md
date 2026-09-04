@@ -43,15 +43,18 @@ form submission and is restored through the editor on form reset.
 Source is explicit and lazy in ESM applications:
 
 ```ts
+import { createClassicEditor } from '@soeditor/editor/cms/optional';
+
 const editor = await createClassicEditor(textarea, {
     editingModes: ['wysiwyg', 'source'],
     initialEditingMode: 'wysiwyg',
 });
 ```
 
-This configuration dynamically loads `@soeditor/source` and CodeMirror. The
-standalone browser global intentionally supports WYSIWYG only so Source cost is
-never hidden in the default CDN artifact.
+The optional entry dynamically loads `@soeditor/source` and CodeMirror when
+configured. The default `/cms` entry and standalone browser global reject
+Source, Preview and save-adapter options so their cost is never hidden in the
+default artifact.
 
 ## Read, write and save
 

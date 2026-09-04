@@ -5,6 +5,8 @@ import {
     type TransactionOrigin,
 } from '@soeditor/core';
 import { pastePipelineServiceToken } from '@soeditor/engine';
+import type { HtmlFormattingOptions } from '@soeditor/html-tools';
+import type { PreviewConfiguration } from '@soeditor/preview';
 import {
     createWysiwygEditingEngine,
     setWysiwygContentStylePreset,
@@ -12,7 +14,6 @@ import {
 } from '@soeditor/wysiwyg';
 
 import wysiwygContentStyles from './wysiwyg-content.css?inline';
-import { cmsPreset } from '@soeditor/presets/cms';
 import type { EditorPreset } from '@soeditor/presets';
 import {
     projectionCoordinatorServiceToken,
@@ -20,7 +21,6 @@ import {
 } from '@soeditor/projections';
 import {
     createEditorUi,
-    type DismissibleUiHandle,
     type EditorUi,
     type EditorUiDirection,
     type EditorUiIconResource,
@@ -34,7 +34,6 @@ import {
     resolveUiTranslation,
 } from '@soeditor/ui';
 import {
-    createEditorSaveWorkflow,
     createEditorWorkspace,
     type EditorSaveAdapter,
     type EditorSaveResult,
@@ -46,6 +45,7 @@ import {
     ClassicEditorAlreadyAttachedError,
     ClassicEditorDestroyedError,
 } from './classic-editor-errors.js';
+import type { ClassicPreviewWindow } from '@soeditor/preview';
 
 const attachedHosts = new WeakMap<HTMLElement, ClassicEditor>();
 const maximizedDocuments = new WeakMap<
@@ -60,6 +60,67 @@ const protectedWindows = new WeakMap<
     }
 >();
 const EMPTY_HTML = /^(?:\s*|<p(?:\s[^>]*)?>\s*(?:<br\s*\/?>)?\s*<\/p>)$/iu;
+const OPTIONAL_CLASSIC_FEATURES =
+    import.meta.env.SOEDITOR_OPTIONAL_CLASSIC !== 'false';
+const CLASSIC_TABLE_CONTEXT =
+    import.meta.env.SOEDITOR_TABLE_CONTEXT !== 'false';
+const HIDDEN_CLASSIC_TOOLBAR_ITEMS = new Set([
+    'pageBreak',
+    'placeholder',
+    'redo',
+    'source',
+    'sourceFind',
+    'specialCharacter',
+    'undo',
+]);
+const CLASSIC_TRANSLATIONS: readonly EditorUiTranslationResource[] =
+    OPTIONAL_CLASSIC_FEATURES
+        ? [
+              {
+                  locale: 'zh-CN',
+                  messages: {
+                      'Preview in new window': '在新窗口中预览',
+                      'Preview template': '预览模板',
+                      'Web page': '网页',
+                      'Email newsletter': 'Email 电子报',
+                      'Email newsletter preview': 'Email 电子报预览',
+                      'Word document': 'Word 文档',
+                      'Word document preview': 'Word 文档预览',
+                      'The preview window was blocked by the browser.':
+                          '浏览器阻止了预览窗口。',
+                      'Resize WYSIWYG and Source height':
+                          '调整所见即所得与源码高度',
+                      'Resize WYSIWYG and Source width':
+                          '调整所见即所得与源码宽度',
+                      'WYSIWYG + Source (side by side)':
+                          '所见即所得 + 源码（左右）',
+                      'WYSIWYG + Source (stacked)': '所见即所得 + 源码（上下）',
+                  },
+              },
+              {
+                  locale: 'zh-TW',
+                  messages: {
+                      'Preview in new window': '在新視窗中預覽',
+                      'Preview template': '預覽範本',
+                      'Web page': '網頁',
+                      'Email newsletter': 'Email 電子報',
+                      'Email newsletter preview': 'Email 電子報預覽',
+                      'Word document': 'Word 文件',
+                      'Word document preview': 'Word 文件預覽',
+                      'The preview window was blocked by the browser.':
+                          '瀏覽器阻止了預覽視窗。',
+                      'Resize WYSIWYG and Source height':
+                          '調整所見即所得與原始碼高度',
+                      'Resize WYSIWYG and Source width':
+                          '調整所見即所得與原始碼寬度',
+                      'WYSIWYG + Source (side by side)':
+                          '所見即所得 + 原始碼（左右）',
+                      'WYSIWYG + Source (stacked)':
+                          '所見即所得 + 原始碼（上下）',
+                  },
+              },
+          ]
+        : [];
 
 /** One canonical document change observed by a classic host. */
 export interface ClassicEditorChange {
@@ -75,6 +136,34 @@ export interface ClassicEditorSaveOptions {
     readonly initialRevisionToken?: string;
     readonly leavePageProtection?: boolean;
     readonly onStateChange?: (state: EditorSaveState) => void;
+}
+
+/** Optional automatic formatting for the Classic HTML Source projection. */
+export interface ClassicSourceOptions {
+    /** Formats canonical HTML after debounced WYSIWYG-originated changes. */
+    readonly autoFormat?: boolean;
+    /** Idle delay before automatic formatting. Defaults to 300 milliseconds. */
+    readonly autoFormatDelay?: number;
+    readonly formatting?: HtmlFormattingOptions;
+}
+
+/** Optional isolated preview rendered in a reusable browser window. */
+export interface ClassicPreviewOptions extends PreviewConfiguration {
+    /** Template selected when the preview window first opens. */
+    readonly initialTemplateId?: string;
+    /** Additional application-owned preview templates. */
+    readonly templates?: readonly ClassicPreviewTemplate[];
+    /** Features passed to window.open for the per-instance preview window. */
+    readonly windowFeatures?: string;
+    /** Includes the active WYSIWYG stylesheet before configured preview CSS. */
+    readonly wysiwygStyles?: boolean;
+}
+
+/** One application-owned choice shown beside the built-in preview templates. */
+export interface ClassicPreviewTemplate extends PreviewConfiguration {
+    readonly id: string;
+    readonly label: string;
+    readonly wysiwygStyles?: boolean;
 }
 
 /** Options for the complete textarea/element-hosted classic editor. */
@@ -106,10 +195,13 @@ export interface CreateClassicEditorOptions {
     readonly onReady?: (editor: ClassicEditor) => void;
     readonly placeholder?: string;
     readonly plugins?: readonly PluginConstructor[];
+    /** Enables a per-instance popup preview. */
+    readonly preview?: boolean | ClassicPreviewOptions;
     readonly preset?: EditorPreset;
     readonly readonly?: boolean;
     readonly resizable?: boolean;
     readonly save?: ClassicEditorSaveOptions;
+    readonly source?: ClassicSourceOptions;
     readonly theme?: EditorUiTheme;
     readonly themeVariables?: EditorUiThemeVariables;
     readonly toolbar?: ToolbarConfiguration;
@@ -133,6 +225,7 @@ export interface ClassicEditor {
     focus(): void;
     getData(): string;
     maximize(maximized?: boolean): void;
+    openPreview(): boolean;
     setWorkspaceView(view: ClassicWorkspaceView): void;
     retrySave(): Promise<EditorSaveResult>;
     save(): Promise<EditorSaveResult>;
@@ -142,9 +235,15 @@ export interface ClassicEditor {
 }
 
 /** Built-in Classic projection arrangements. */
-export type ClassicWorkspaceView = 'single' | 'wysiwyg' | 'source';
+export type ClassicWorkspaceView =
+    | 'single'
+    | 'wysiwyg'
+    | 'source'
+    | 'wysiwyg-source-horizontal'
+    | 'wysiwyg-source-vertical';
 
 interface ClassicDom {
+    readonly paneResizeHandle?: HTMLDivElement;
     readonly resizeHandle?: HTMLDivElement;
     readonly root: HTMLDivElement;
     readonly source: HTMLDivElement;
@@ -172,15 +271,26 @@ export async function createClassicEditor(
     }
     validateCallbacks(options);
     validateClassicSaveOptions(options.save);
-    const preset = readPreset(options.preset ?? cmsPreset);
+    if (OPTIONAL_CLASSIC_FEATURES) validateClassicSourceOptions(options.source);
+    const previewOptions = OPTIONAL_CLASSIC_FEATURES
+        ? readClassicPreviewOptions(options.preview)
+        : undefined;
+    if (options.preset === undefined) {
+        throw new TypeError('Classic editor requires a CMS preset.');
+    }
+    const preset = readPreset(options.preset);
     const placeholder = optionalNonEmptyString(
         options.placeholder,
         'placeholder',
     );
     const locale = optionalNonEmptyString(options.locale, 'locale') ?? 'en';
+    const translations = [
+        ...CLASSIC_TRANSLATIONS,
+        ...(options.translations ?? []),
+    ];
     const translation = resolveUiTranslation(
         locale,
-        options.translations,
+        translations,
         options.direction,
     );
     const ariaLabel =
@@ -193,13 +303,21 @@ export async function createClassicEditor(
         true,
     );
     const resizable = optionalBoolean(options.resizable, 'resizable', true);
-    const editingModes = readEditingModes(options.editingModes);
-    const sourceModule = editingModes.has('source')
-        ? await import('@soeditor/source')
-        : undefined;
-    const htmlToolsModule = editingModes.has('source')
-        ? await import('@soeditor/html-tools')
-        : undefined;
+    const editingModes = OPTIONAL_CLASSIC_FEATURES
+        ? readEditingModes(options.editingModes)
+        : new Set<ClassicEditingMode>(['wysiwyg']);
+    const sourceModule =
+        OPTIONAL_CLASSIC_FEATURES && editingModes.has('source')
+            ? await import('@soeditor/source')
+            : undefined;
+    const htmlToolsModule =
+        OPTIONAL_CLASSIC_FEATURES && editingModes.has('source')
+            ? await import('@soeditor/html-tools')
+            : undefined;
+    const previewWindowModule =
+        !OPTIONAL_CLASSIC_FEATURES || previewOptions === undefined
+            ? undefined
+            : await import('@soeditor/preview');
     const configuredPlugins = options.plugins ?? preset.plugins;
     const sourcePlugins: readonly PluginConstructor[] = [
         ...(sourceModule === undefined
@@ -223,6 +341,8 @@ export async function createClassicEditor(
         options.initialEditingMode,
         editingModes,
     );
+    let workspaceView: ClassicWorkspaceView = initialEditingMode;
+    let paneRatio = 50;
     const document = host.ownerDocument;
     const dom = createDom(
         document,
@@ -260,7 +380,6 @@ export async function createClassicEditor(
     let ui: EditorUi | undefined;
     let saveWorkflow: EditorSaveWorkflow | undefined;
     let disposeLeaveProtection: (() => void) | undefined;
-    let saveButton: HTMLButtonElement | undefined;
     let disposeTableContext: (() => void) | undefined;
     let disposeLinkContext: (() => void) | undefined;
     let disposeImageContext: (() => void) | undefined;
@@ -268,9 +387,13 @@ export async function createClassicEditor(
     let disposeEditingFeedback: (() => void) | undefined;
     let disposeModeChrome: (() => void) | undefined;
     let disposeProjectionChrome: (() => void) | undefined;
+    let refreshWorkspaceChrome = (): void => undefined;
+    let disposeSourceEnhancements: (() => void) | undefined;
+    let previewWindow: ClassicPreviewWindow | undefined;
     let manualHeight = false;
     let resizeStart:
         { readonly height: number; readonly y: number } | undefined;
+    let paneResizeStart = false;
 
     host.after(dom.root);
     host.hidden = true;
@@ -335,6 +458,9 @@ export async function createClassicEditor(
         manualHeight = true;
         dom.visual.style.height = `${String(bounded)}px`;
         dom.source.style.height = `${String(bounded)}px`;
+        if (classicSplitOrientation(workspaceView) !== undefined) {
+            dom.surfaces.style.height = `${String(bounded)}px`;
+        }
         resizeHandle?.setAttribute(
             'aria-valuenow',
             String(Math.round(bounded)),
@@ -372,6 +498,74 @@ export async function createClassicEditor(
     };
     resizeHandle?.addEventListener('pointerdown', onResizeStart);
     resizeHandle?.addEventListener('keydown', onResizeKeydown);
+    const paneResizeHandle = dom.paneResizeHandle;
+    const setPaneRatio = (ratio: number): void => {
+        paneRatio = Math.max(20, Math.min(80, Math.round(ratio)));
+        dom.surfaces.style.setProperty(
+            '--soeditor-classic-pane-ratio',
+            `${String(paneRatio)}%`,
+        );
+        dom.surfaces.style.setProperty(
+            '--soeditor-classic-pane-inverse-ratio',
+            `${String(100 - paneRatio)}%`,
+        );
+        paneResizeHandle?.setAttribute('aria-valuenow', String(paneRatio));
+    };
+    const onPaneResizeMove = (event: PointerEvent): void => {
+        const orientation = classicSplitOrientation(workspaceView);
+        if (!paneResizeStart || orientation === undefined) return;
+        const rectangle = dom.surfaces.getBoundingClientRect();
+        const size =
+            orientation === 'horizontal' ? rectangle.width : rectangle.height;
+        if (size <= 0) return;
+        const offset =
+            orientation === 'horizontal'
+                ? event.clientX - rectangle.left
+                : event.clientY - rectangle.top;
+        setPaneRatio((offset / size) * 100);
+    };
+    const onPaneResizeEnd = (): void => {
+        paneResizeStart = false;
+        document.removeEventListener('pointermove', onPaneResizeMove);
+        document.removeEventListener('pointerup', onPaneResizeEnd);
+        document.removeEventListener('pointercancel', onPaneResizeEnd);
+    };
+    const onPaneResizeStart = (event: PointerEvent): void => {
+        if (
+            event.button !== 0 ||
+            classicSplitOrientation(workspaceView) === undefined
+        ) {
+            return;
+        }
+        event.preventDefault();
+        paneResizeStart = true;
+        document.addEventListener('pointermove', onPaneResizeMove);
+        document.addEventListener('pointerup', onPaneResizeEnd);
+        document.addEventListener('pointercancel', onPaneResizeEnd);
+    };
+    const onPaneResizeKeydown = (event: KeyboardEvent): void => {
+        const orientation = classicSplitOrientation(workspaceView);
+        if (orientation === undefined) return;
+        const decrease = event.key === 'ArrowLeft' || event.key === 'ArrowUp';
+        const increase =
+            event.key === 'ArrowRight' || event.key === 'ArrowDown';
+        const next =
+            event.key === 'Home'
+                ? 20
+                : event.key === 'End'
+                  ? 80
+                  : decrease
+                    ? paneRatio - (event.shiftKey ? 10 : 5)
+                    : increase
+                      ? paneRatio + (event.shiftKey ? 10 : 5)
+                      : undefined;
+        if (next === undefined) return;
+        event.preventDefault();
+        setPaneRatio(next);
+    };
+    paneResizeHandle?.addEventListener('pointerdown', onPaneResizeStart);
+    paneResizeHandle?.addEventListener('keydown', onPaneResizeKeydown);
+    setPaneRatio(paneRatio);
     updateHost(latestSource);
 
     const publicValue: ClassicEditor = Object.freeze({
@@ -412,6 +606,13 @@ export async function createClassicEditor(
                 throw new TypeError('This classic editor is not maximizable.');
             }
             setMaximized(value);
+        },
+        openPreview: () => {
+            assertAlive();
+            if (previewWindow === undefined) {
+                throw new Error('Classic popup preview is not enabled.');
+            }
+            return previewWindow.open();
         },
         setWorkspaceView: (view: ClassicWorkspaceView) => {
             assertAlive();
@@ -530,7 +731,44 @@ export async function createClassicEditor(
         const coordinator = editor.services.get(
             projectionCoordinatorServiceToken,
         );
-        const target = view === 'single' ? coordinator.snapshot.primary : view;
+        const orientation = classicSplitOrientation(view);
+        if (orientation !== undefined) {
+            for (const id of ['wysiwyg', 'source'] as const) {
+                if (!editingModes.has(id) || !coordinator.isAttached(id)) {
+                    throw new Error(
+                        `Classic workspace view "${view}" requires disabled editing mode "${id}".`,
+                    );
+                }
+            }
+            if (classicSplitOrientation(workspaceView) === undefined) {
+                const current =
+                    coordinator.snapshot.primary === 'source'
+                        ? dom.source
+                        : dom.visual;
+                const height = current.getBoundingClientRect().height;
+                if (height > 0) {
+                    dom.surfaces.style.height = `${String(height)}px`;
+                }
+            }
+            workspaceView = view;
+            for (const id of ['wysiwyg', 'source'] as const) {
+                if (!coordinator.get(id).visible) {
+                    editor.execute('projection.show', id);
+                }
+            }
+            applyClassicWorkspaceLayout();
+            refreshWorkspaceChrome();
+            return;
+        }
+        const target =
+            view === 'single'
+                ? coordinator.snapshot.primary
+                : view === 'wysiwyg' || view === 'source'
+                  ? view
+                  : undefined;
+        if (target === undefined) {
+            throw new TypeError(`Unknown Classic workspace view "${view}".`);
+        }
         if (!isClassicEditingMode(target) || !editingModes.has(target)) {
             throw new Error(
                 `Classic workspace view "${view}" requires disabled editing mode "${target}".`,
@@ -544,6 +782,7 @@ export async function createClassicEditor(
         if (!coordinator.get(target).visible) {
             editor.execute('projection.show', target);
         }
+        workspaceView = target;
         editor.execute('projection.activate', target);
         for (const id of ['wysiwyg', 'source'] as const) {
             if (!coordinator.isAttached(id)) continue;
@@ -552,6 +791,36 @@ export async function createClassicEditor(
                 editor.execute('projection.hide', id);
             }
         }
+        applyClassicWorkspaceLayout();
+        refreshWorkspaceChrome();
+    }
+
+    function applyClassicWorkspaceLayout(): void {
+        const orientation = classicSplitOrientation(workspaceView);
+        const handle = dom.paneResizeHandle;
+        if (orientation === undefined) {
+            delete dom.surfaces.dataset.orientation;
+            delete dom.root.dataset.soeditorSplitOrientation;
+            dom.surfaces.style.removeProperty('height');
+            if (handle !== undefined) handle.hidden = true;
+            return;
+        }
+        dom.surfaces.dataset.orientation = orientation;
+        dom.root.dataset.soeditorSplitOrientation = orientation;
+        if (handle !== undefined) {
+            handle.hidden = false;
+            handle.setAttribute(
+                'aria-orientation',
+                orientation === 'horizontal' ? 'vertical' : 'horizontal',
+            );
+            const dimension = orientation === 'horizontal' ? 'width' : 'height';
+            handle.setAttribute(
+                'aria-label',
+                ui?.translate(`Resize WYSIWYG and Source ${dimension}`) ??
+                    `Resize WYSIWYG and Source ${dimension}`,
+            );
+        }
+        setPaneRatio(paneRatio);
     }
 
     async function destroy(): Promise<void> {
@@ -588,6 +857,11 @@ export async function createClassicEditor(
             disposeModeChrome = undefined;
             disposeProjectionChrome?.();
             disposeProjectionChrome = undefined;
+            refreshWorkspaceChrome = () => undefined;
+            disposeSourceEnhancements?.();
+            disposeSourceEnhancements = undefined;
+            previewWindow?.destroy();
+            previewWindow = undefined;
             if (workspace !== undefined) await workspace.destroy();
         } catch (error: unknown) {
             errors.push(error);
@@ -604,8 +878,17 @@ export async function createClassicEditor(
             dom.root.removeEventListener('focusin', onFocusIn);
             dom.root.removeEventListener('focusout', onFocusOut);
             onResizeEnd();
+            onPaneResizeEnd();
             resizeHandle?.removeEventListener('pointerdown', onResizeStart);
             resizeHandle?.removeEventListener('keydown', onResizeKeydown);
+            paneResizeHandle?.removeEventListener(
+                'pointerdown',
+                onPaneResizeStart,
+            );
+            paneResizeHandle?.removeEventListener(
+                'keydown',
+                onPaneResizeKeydown,
+            );
             form?.removeEventListener('submit', onSubmit, true);
             form?.removeEventListener('reset', onReset);
             dom.root.remove();
@@ -696,6 +979,33 @@ export async function createClassicEditor(
             },
         });
         coreEditor = workspace.editor;
+        if (previewOptions !== undefined && previewWindowModule !== undefined) {
+            const owner = document.defaultView;
+            if (owner === null) {
+                throw new Error('Classic popup preview requires a window.');
+            }
+            previewWindow = previewWindowModule.createClassicPreviewWindow({
+                editor: coreEditor,
+                ...(previewOptions.windowFeatures === undefined
+                    ? {}
+                    : { features: previewOptions.windowFeatures }),
+                getTemplates: () =>
+                    previewWindowModule.createClassicPreviewTemplates(
+                        previewOptions,
+                        contentStylePreset,
+                        wysiwygContentStyles,
+                        options.contentStyles,
+                        translation.translate,
+                    ),
+                initialTemplateId:
+                    previewOptions.initialTemplateId ?? 'webpage',
+                owner,
+                reportError: (error) => {
+                    reportError(error);
+                },
+                templatePickerLabel: translation.translate('Preview template'),
+            });
+        }
         const coordinator = coreEditor.services.get(
             projectionCoordinatorServiceToken,
         );
@@ -703,7 +1013,48 @@ export async function createClassicEditor(
             coreEditor.execute('projection.show', initialEditingMode);
         }
         coreEditor.execute('projection.activate', initialEditingMode);
-        if (options.save !== undefined) {
+        if (sourceModule !== undefined) {
+            const sourceOptions = options.source;
+            const formattingService = (() => {
+                if (sourceOptions?.autoFormat !== true) return undefined;
+                if (htmlToolsModule === undefined) {
+                    throw new Error(
+                        'Classic Source auto-format requires the "source" editing mode.',
+                    );
+                }
+                return coreEditor.services.get(
+                    htmlToolsModule.htmlFormattingServiceToken,
+                );
+            })();
+            disposeSourceEnhancements =
+                sourceModule.attachClassicSourceEnhancements({
+                    document,
+                    editor: coreEditor,
+                    ...(formattingService === undefined
+                        ? {}
+                        : {
+                              format: (source) =>
+                                  formattingService.format(
+                                      source,
+                                      sourceOptions?.formatting,
+                                  ),
+                              formatDelay:
+                                  sourceOptions?.autoFormatDelay ?? 300,
+                          }),
+                    isDestroyed: () => destroyed,
+                    isSelectionSyncActive: () =>
+                        classicSplitOrientation(workspaceView) !== undefined &&
+                        coordinator.snapshot.primary === 'wysiwyg',
+                    reportError: (error) => {
+                        reportError(error);
+                    },
+                    visual: dom.visualContent,
+                    visualShadow: dom.visualShadow,
+                });
+        }
+        if (OPTIONAL_CLASSIC_FEATURES && options.save !== undefined) {
+            const { createEditorSaveWorkflow } =
+                await import('@soeditor/workspace');
             saveWorkflow = createEditorSaveWorkflow({
                 adapter: options.save.adapter,
                 ...(options.save.autoSaveDelay === undefined
@@ -720,7 +1071,7 @@ export async function createClassicEditor(
                     reportError(error);
                 },
                 onStateChange: (state) => {
-                    updateSaveButton(state);
+                    updateSaveStatus(state);
                     options.save?.onStateChange?.(state);
                 },
             });
@@ -747,7 +1098,6 @@ export async function createClassicEditor(
                     );
                 }
             }
-            attachSaveButton();
         }
         disposeEditorDestroy = coreEditor.events.on('editor:destroy', () => {
             if (!destroyed && destroying === undefined) {
@@ -786,7 +1136,9 @@ export async function createClassicEditor(
     function attachClassicUi(editor: Editor): EditorUi {
         const registry = editor.services.get(uiRegistryServiceToken);
         const commandSurface = dom.visualContent;
-        registerClassicContextMenu(registry, commandSurface);
+        if (previewOptions !== undefined) {
+            registerClassicPreviewTool(registry, () => previewWindow?.open());
+        }
         ui = createEditorUi({
             accessibilityHelp: true,
             documentStatus: true,
@@ -796,35 +1148,31 @@ export async function createClassicEditor(
             ...(options.icons === undefined ? {} : { icons: options.icons }),
             locale: translation.locale,
             ...(options.theme === undefined ? {} : { theme: options.theme }),
-            ...(options.themeVariables === undefined
-                ? {}
-                : { themeVariables: options.themeVariables }),
-            toolbar:
+            themeVariables: {
+                controlSize: '1.875rem',
+                ...options.themeVariables,
+            },
+            toolbar: compactClassicToolbar(
                 options.toolbar ??
-                (editingModes.has('source')
-                    ? [
-                          'source',
-                          'format',
-                          'minify',
-                          'sourceFind',
-                          '|',
-                          ...preset.toolbar,
-                      ]
-                    : preset.toolbar),
+                    withClassicPreviewTool(
+                        preset.toolbar,
+                        previewOptions !== undefined,
+                    ),
+            ),
             toolbarLayout: options.toolbarLayout ?? {
                 collapsible: true,
                 overflow: 'wrap',
                 sticky: true,
             },
-            ...(options.translations === undefined
-                ? {}
-                : { translations: options.translations }),
+            translations,
         });
-        disposeTableContext = attachClassicTableContext(
-            editor,
-            ui,
-            commandSurface,
-        );
+        if (CLASSIC_TABLE_CONTEXT) {
+            disposeTableContext = attachClassicTableContext(
+                editor,
+                ui,
+                commandSurface,
+            );
+        }
         disposeLinkContext = attachClassicLinkContext(
             editor,
             ui,
@@ -862,6 +1210,10 @@ export async function createClassicEditor(
         const updateModeChrome = (): void => {
             dom.root.dataset.soeditorMode = editor.state.mode;
             if (editingModes.has('source')) {
+                if (classicSplitOrientation(workspaceView) !== undefined) {
+                    applyClassicWorkspaceLayout();
+                    return;
+                }
                 const target =
                     editor.state.mode === 'source' ? 'source' : 'wysiwyg';
                 const visible = editor.services
@@ -892,6 +1244,7 @@ export async function createClassicEditor(
             ui.toolbarElement.append(button);
             ui.refresh();
         }
+        groupClassicToolbarActions(ui.toolbarElement);
         return ui;
     }
 
@@ -915,29 +1268,44 @@ export async function createClassicEditor(
         const controls: readonly (readonly [ClassicWorkspaceView, string])[] = [
             ['wysiwyg', 'WYSIWYG'],
             ['source', 'Source'],
+            ['wysiwyg-source-horizontal', 'WYSIWYG + Source (side by side)'],
+            ['wysiwyg-source-vertical', 'WYSIWYG + Source (stacked)'],
         ];
-        const workspacePicker = document.createElement('label');
+        const workspacePicker = document.createElement('div');
         workspacePicker.className = 'soeditor-classic__workspace-picker';
-        const workspacePickerText = document.createElement('span');
-        workspacePickerText.textContent =
-            ui?.translate('Editing view') ?? 'Editing view';
-        const workspaceSelect = document.createElement('select');
-        workspaceSelect.dataset.classicAction = 'workspace-view';
-        workspaceSelect.dataset.soeditorNoTranslate = 'true';
-        workspaceSelect.setAttribute(
+        workspacePicker.dataset.classicAction = 'workspace-view';
+        workspacePicker.setAttribute('role', 'group');
+        workspacePicker.setAttribute(
             'aria-label',
             ui?.translate('Editing view') ?? 'Editing view',
         );
+        const icons: Readonly<Record<ClassicWorkspaceView, string>> = {
+            single: 'editor.visual',
+            source: 'editor.source',
+            wysiwyg: 'editor.visual',
+            'wysiwyg-source-horizontal': 'editor.view.sideBySide',
+            'wysiwyg-source-vertical': 'editor.view.stacked',
+        };
+        const workspaceButtons = new Map<
+            ClassicWorkspaceView,
+            HTMLButtonElement
+        >();
         for (const [view, label] of controls) {
-            const option = document.createElement('option');
-            option.value = view;
-            option.textContent = label;
-            workspaceSelect.append(option);
+            const button = document.createElement('button');
+            const translated = ui?.translate(label) ?? label;
+            button.type = 'button';
+            button.className = 'soeditor-ui__button';
+            button.dataset.workspaceView = view;
+            button.title = translated;
+            button.setAttribute('aria-label', translated);
+            button.setAttribute('aria-pressed', 'false');
+            ui?.setIcon(button, icons[view], translated);
+            button.addEventListener('click', () => {
+                editor.execute('classic.workspace.set', view);
+            });
+            workspaceButtons.set(view, button);
+            workspacePicker.append(button);
         }
-        workspaceSelect.addEventListener('change', () => {
-            editor.execute('classic.workspace.set', workspaceSelect.value);
-        });
-        workspacePicker.append(workspacePickerText, workspaceSelect);
         ui?.toolbarElement.append(workspacePicker);
         const update = (): void => {
             const visible = coordinator.snapshot.activities.filter(
@@ -952,49 +1320,25 @@ export async function createClassicEditor(
             if (editingModes.has('wysiwyg')) {
                 dom.visual.hidden = !visibleIds.has('wysiwyg');
             }
-            const currentView = controls.find(
-                ([view]) => view !== 'single' && visibleIds.has(view),
-            )?.[0];
-            if (currentView !== undefined) {
-                workspaceSelect.value = currentView;
-                dom.root.dataset.soeditorWorkspaceView = currentView;
+            if (editingModes.has('source')) {
+                dom.source.hidden = !visibleIds.has('source');
             }
+            for (const [view, button] of workspaceButtons) {
+                const active = view === workspaceView;
+                button.setAttribute('aria-pressed', String(active));
+                button.classList.toggle('is-active', active);
+            }
+            dom.root.dataset.soeditorWorkspaceView = workspaceView;
+            applyClassicWorkspaceLayout();
         };
+        refreshWorkspaceChrome = update;
         update();
         disposeProjectionChrome = coordinator.subscribe(update);
         ui?.refresh();
     }
 
-    function attachSaveButton(): void {
-        if (ui === undefined || saveWorkflow === undefined) return;
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'soeditor-ui__button';
-        button.dataset.classicAction = 'save';
-        button.addEventListener('click', () => {
-            void Promise.resolve(requireEditor().execute('editor.save')).catch(
-                reportError,
-            );
-        });
-        ui.toolbarElement.append(button);
-        saveButton = button;
-        updateSaveButton(saveWorkflow.state);
-        ui.refresh();
-    }
-
-    function updateSaveButton(state: EditorSaveState): void {
-        if (saveButton === undefined || ui === undefined) return;
-        const label =
-            state.status === 'saving'
-                ? 'Saving'
-                : state.status === 'error' || state.status === 'conflict'
-                  ? 'Retry save'
-                  : 'Save';
-        ui.setIcon(saveButton, 'editor.save', ui.translate(label));
-        saveButton.title = ui.translate(label);
-        saveButton.setAttribute('aria-label', ui.translate(label));
-        saveButton.disabled =
-            !requireEditor().commands.canExecute('editor.save');
+    function updateSaveStatus(state: EditorSaveState): void {
+        if (ui === undefined) return;
         if (state.status === 'saved') {
             ui.notifications.show({
                 message: ui.translate('Changes saved'),
@@ -1047,6 +1391,18 @@ function createDom(
     source.hidden = true;
     source.setAttribute('aria-label', `${ariaLabel} HTML source host`);
     applyHeights(source, heights);
+    const paneResizeHandle = editingModes.has('source')
+        ? document.createElement('div')
+        : undefined;
+    if (paneResizeHandle !== undefined) {
+        paneResizeHandle.className = 'soeditor-classic__pane-resize-handle';
+        paneResizeHandle.hidden = true;
+        paneResizeHandle.tabIndex = 0;
+        paneResizeHandle.setAttribute('role', 'separator');
+        paneResizeHandle.setAttribute('aria-valuemin', '20');
+        paneResizeHandle.setAttribute('aria-valuemax', '80');
+        paneResizeHandle.setAttribute('aria-valuenow', '50');
+    }
     const resizeHandle = resizable ? document.createElement('div') : undefined;
     if (resizeHandle !== undefined) {
         resizeHandle.className = 'soeditor-classic__resize-handle';
@@ -1070,10 +1426,13 @@ function createDom(
     const surfaces = document.createElement('div');
     surfaces.className = 'soeditor-classic__surfaces';
     surfaces.append(visual);
-    if (editingModes.has('source')) surfaces.append(source);
+    if (paneResizeHandle !== undefined) {
+        surfaces.append(paneResizeHandle, source);
+    }
     root.append(surfaces);
     if (resizeHandle !== undefined) root.append(resizeHandle);
     return Object.freeze({
+        ...(paneResizeHandle === undefined ? {} : { paneResizeHandle }),
         ...(resizeHandle === undefined ? {} : { resizeHandle }),
         root,
         source,
@@ -1085,7 +1444,24 @@ function createDom(
 }
 
 function isClassicWorkspaceView(value: unknown): value is ClassicWorkspaceView {
-    return value === 'single' || value === 'wysiwyg' || value === 'source';
+    return (
+        value === 'single' ||
+        value === 'wysiwyg' ||
+        value === 'source' ||
+        value === 'wysiwyg-source-horizontal' ||
+        value === 'wysiwyg-source-vertical'
+    );
+}
+
+function classicSplitOrientation(
+    view: ClassicWorkspaceView,
+): 'horizontal' | 'vertical' | undefined {
+    if (!OPTIONAL_CLASSIC_FEATURES) return undefined;
+    return view === 'wysiwyg-source-horizontal'
+        ? 'horizontal'
+        : view === 'wysiwyg-source-vertical'
+          ? 'vertical'
+          : undefined;
 }
 
 function readEditingModes(
@@ -1160,397 +1536,115 @@ function createCustomContentStyle(
     return style;
 }
 
-function registerClassicContextMenu(
-    registry: UiRegistryService,
-    visual: HTMLElement,
-): void {
-    const within = (target: Element, selector: string): boolean => {
-        const match = target.closest(selector);
-        return match !== null && visual.contains(match);
-    };
-    registry.registerContextMenuItem('classic.link.remove', {
-        command: 'link.remove',
-        group: 'link',
-        label: 'Remove link',
-        tone: 'danger',
-        when: ({ target }) => within(target, 'a'),
-    });
-    const tableCell = (target: Element): HTMLElement | undefined =>
-        target.closest<HTMLElement>('td,th') ?? undefined;
-    const hasMultipleCells = (target: Element): boolean =>
-        (target
-            .closest('table')
-            ?.querySelectorAll('.soeditor-table-cell.is-structurally-selected')
-            .length ?? 0) >= 2;
-    registry.registerContextMenuItem('classic.table.cells-merge', {
-        command: 'table.cells.merge',
-        group: 'cells',
-        label: 'Merge cells',
-        when: ({ editor, target }) =>
-            within(target, 'table') &&
-            editor.commands.has('table.cells.canMerge') &&
-            editor.execute('table.cells.canMerge') === true,
-    });
-    registry.registerContextMenuItem('classic.table.cell-split', {
-        command: 'table.cell.split',
-        group: 'cells',
-        label: 'Split cell',
-        when: ({ target }) => {
-            const cell = tableCell(target);
-            return (
-                cell !== undefined &&
-                (Number(cell.getAttribute('rowspan') ?? '1') > 1 ||
-                    Number(cell.getAttribute('colspan') ?? '1') > 1)
-            );
-        },
-    });
-    registry.registerContextMenuItem('classic.table.cells-clear', {
-        command: 'table.cells.clear',
-        group: 'cells',
-        label: 'Clear selected cells',
-        when: ({ target }) => hasMultipleCells(target),
-    });
-    registry.registerContextMenuItem('classic.table.header-toggle', {
-        command: 'table.header.toggle',
-        group: 'cells',
-        label: 'Toggle header cell',
-        when: ({ target }) => tableCell(target) !== undefined,
-    });
-    registry.registerContextMenuItem('classic.table.row-before', {
-        command: 'table.row.insertBefore',
-        group: 'rows',
-        label: 'Insert row before',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.row-after', {
-        command: 'table.row.insertAfter',
-        group: 'rows',
-        label: 'Insert row after',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.row-remove', {
-        command: 'table.row.remove',
-        group: 'rows',
-        label: 'Delete selected rows',
-        tone: 'danger',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.column-before', {
-        command: 'table.column.insertBefore',
-        group: 'columns',
-        label: 'Insert column before',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.column-after', {
-        command: 'table.column.insertAfter',
-        group: 'columns',
-        label: 'Insert column after',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.column-remove', {
-        command: 'table.column.remove',
-        group: 'columns',
-        label: 'Delete selected columns',
-        tone: 'danger',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.select-row', {
-        command: 'table.selection.row',
-        group: 'selection',
-        label: 'Select row',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.select-column', {
-        command: 'table.selection.column',
-        group: 'selection',
-        label: 'Select column',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.select-table', {
-        command: 'table.selection.table',
-        group: 'selection',
-        label: 'Select table',
-        when: ({ target }) => within(target, 'table'),
-    });
-    registry.registerContextMenuItem('classic.table.remove', {
-        command: 'table.remove',
-        group: 'table',
-        label: 'Delete table',
-        tone: 'danger',
-        when: ({ target }) => within(target, 'table'),
-    });
-}
-
 function attachClassicImageContext(
     ui: EditorUi,
     visual: HTMLElement,
 ): () => void {
-    const document = visual.ownerDocument;
+    let destroyed = false;
+    let dispose: (() => void) | undefined;
+    let loading = false;
+    let pending:
+        | { detail: unknown; target: EventTarget | null; type: string }
+        | undefined;
     const activate = (event: Event): void => {
         const detail: unknown = Reflect.get(event, 'detail');
-        if (typeof detail !== 'object' || detail === null) return;
-        const element: unknown = Reflect.get(detail, 'element');
-        const update: unknown = Reflect.get(detail, 'update');
-        const remove: unknown = Reflect.get(detail, 'remove');
-        if (
-            !(element instanceof HTMLImageElement) ||
-            !visual.contains(element) ||
-            typeof update !== 'function' ||
-            typeof remove !== 'function'
-        ) {
-            return;
-        }
-        const figure = element.closest('figure');
-        const link =
-            element.parentElement?.tagName === 'A'
-                ? element.parentElement
-                : undefined;
-        const caption = figure?.querySelector(':scope > figcaption');
-        const body = document.createElement('div');
-        body.className = 'soeditor-classic__image-properties';
-        const controls = new Map<string, HTMLInputElement>();
-        for (const [name, label, type, initial] of [
-            ['src', 'Image URL', 'url', element.getAttribute('src') ?? ''],
-            [
-                'alt',
-                'Alternative text',
-                'text',
-                element.getAttribute('alt') ?? '',
-            ],
-            ['title', 'Title', 'text', element.getAttribute('title') ?? ''],
-            ['caption', 'Caption', 'text', caption?.textContent ?? ''],
-            ['width', 'Width', 'number', element.getAttribute('width') ?? ''],
-            [
-                'height',
-                'Height',
-                'number',
-                element.getAttribute('height') ?? '',
-            ],
-            ['link', 'Link URL', 'url', link?.getAttribute('href') ?? ''],
-            [
-                'responsiveClass',
-                'Responsive CSS classes',
-                'text',
-                element.getAttribute('class') ?? '',
-            ],
-            [
-                'srcset',
-                'Responsive sources',
-                'text',
-                element.getAttribute('srcset') ?? '',
-            ],
-            [
-                'sizes',
-                'Responsive sizes',
-                'text',
-                element.getAttribute('sizes') ?? '',
-            ],
-        ] as const) {
-            const field = document.createElement('label');
-            const caption = document.createElement('span');
-            caption.textContent = label;
-            const input = document.createElement('input');
-            input.type = type;
-            input.value = initial;
-            input.setAttribute('aria-label', label);
-            if (type === 'number') input.min = '1';
-            controls.set(name, input);
-            field.append(caption, input);
-            body.append(field);
-        }
-        const alignmentField = document.createElement('label');
-        const alignmentCaption = document.createElement('span');
-        alignmentCaption.textContent = 'Alignment';
-        const alignment = document.createElement('select');
-        alignment.setAttribute('aria-label', 'Alignment');
-        for (const [value, label] of [
-            ['', 'Default'],
-            ['left', 'Left'],
-            ['center', 'Center'],
-            ['right', 'Right'],
-            ['wide', 'Wide'],
-        ] as const) {
-            const option = document.createElement('option');
-            option.value = value;
-            option.textContent = label;
-            alignment.append(option);
-        }
-        alignment.value = figure?.getAttribute('data-align') ?? '';
-        alignmentField.append(alignmentCaption, alignment);
-        body.append(alignmentField);
-        const aspectField = document.createElement('label');
-        const aspectLocked = document.createElement('input');
-        aspectLocked.type = 'checkbox';
-        aspectLocked.checked =
-            figure?.getAttribute('data-aspect-lock') === 'true';
-        aspectLocked.setAttribute('aria-label', 'Lock aspect ratio');
-        aspectField.append(aspectLocked, ' Lock aspect ratio');
-        body.append(aspectField);
-        const dialog = ui.dialogs.open({
-            title: 'Image properties',
-            content: body,
-            actions: [
-                {
-                    label: 'Remove image',
-                    run: () => {
-                        dialog.close();
-                        Reflect.apply(remove, undefined, []);
-                    },
-                },
-                {
-                    kind: 'primary',
-                    label: 'Update image',
-                    run: () => {
-                        const values = Object.fromEntries(
-                            [...controls].map(([name, input]) => [
-                                name,
-                                input.value,
-                            ]),
-                        );
-                        Object.assign(values, {
-                            alignment: alignment.value,
-                            aspectLocked: aspectLocked.checked,
-                        });
-                        dialog.close();
-                        Reflect.apply(update, undefined, [values]);
-                    },
-                },
-            ],
-        });
-        controls.get('src')?.focus();
+        if (dispose !== undefined) return;
+        pending = { detail, target: event.target, type: event.type };
+        if (loading) return;
+        loading = true;
+        void import('./classic-image-context.js')
+            .then((module) => {
+                if (destroyed) return;
+                visual.removeEventListener('soeditor:image-activate', activate);
+                visual.removeEventListener('soeditor:image-select', activate);
+                dispose = module.attachClassicImageContext(ui, visual);
+                const replay = pending;
+                pending = undefined;
+                if (replay === undefined) return;
+                const { detail, target, type } = replay;
+                if (!(target instanceof Element)) return;
+                const EventConstructor =
+                    visual.ownerDocument.defaultView?.CustomEvent ??
+                    CustomEvent;
+                target.dispatchEvent(
+                    new EventConstructor(type, { bubbles: true, detail }),
+                );
+            })
+            .catch(() => {
+                if (destroyed) return;
+                loading = false;
+                visual.addEventListener('soeditor:image-activate', activate);
+                visual.addEventListener('soeditor:image-select', activate);
+                ui.notifications.show({
+                    message: 'Image tools failed to load. Please try again.',
+                    severity: 'error',
+                });
+            });
     };
     visual.addEventListener('soeditor:image-activate', activate);
-    return () =>
+    visual.addEventListener('soeditor:image-select', activate);
+    return () => {
+        destroyed = true;
         visual.removeEventListener('soeditor:image-activate', activate);
+        visual.removeEventListener('soeditor:image-select', activate);
+        dispose?.();
+    };
 }
-
 function attachClassicLinkContext(
     editor: Editor,
     ui: EditorUi,
     visual: HTMLElement,
 ): () => void {
-    const document = visual.ownerDocument;
-    let balloon: DismissibleUiHandle | undefined;
-    let activeLink: HTMLAnchorElement | undefined;
-    const close = (): void => {
-        balloon?.close();
-        balloon = undefined;
-        activeLink = undefined;
-    };
-    const selectLink = (link: HTMLAnchorElement): void => {
-        const focusTarget =
-            link.closest<HTMLElement>('.soeditor-table-cell') ?? visual;
-        focusTarget.focus({ preventScroll: true });
-        const range = document.createRange();
-        range.selectNodeContents(link);
-        const selection = document.getSelection();
-        selection?.setBaseAndExtent(
-            range.startContainer,
-            range.startOffset,
-            range.endContainer,
-            range.endOffset,
-        );
-        document.dispatchEvent(new Event('selectionchange'));
-    };
-    const report = (error: unknown): void => {
-        ui.notifications.show({
-            message: error instanceof Error ? error.message : String(error),
-            severity: 'error',
-        });
-    };
-    const click = (event: MouseEvent): void => {
-        if (event.button !== 0 || event.metaKey || event.ctrlKey) return;
+    let destroyed = false;
+    let dispose: (() => void) | undefined;
+    let loading = false;
+    let pending: { event: MouseEvent; link: Element } | undefined;
+    const activate = (event: MouseEvent): void => {
+        if (dispose !== undefined || event.button !== 0) return;
         const origin = event.target;
         const link =
             origin instanceof Element
-                ? origin.closest<HTMLAnchorElement>(
-                      'a[data-soeditor-link="true"], a[href]',
-                  )
+                ? origin.closest('a[data-soeditor-link="true"], a[href]')
                 : null;
         if (link === null || !visual.contains(link)) return;
         event.preventDefault();
-        selectLink(link);
-        close();
-        activeLink = link;
-        balloon = ui.balloons.show({
-            anchor: link,
-            placement: 'above',
-            content: (container) => {
-                container.setAttribute('aria-label', 'Link actions');
-                const value = document.createElement('span');
-                let inspected: unknown;
-                try {
-                    inspected = editor.execute('link.inspect');
-                } catch {
-                    inspected = undefined;
-                }
-                const href =
-                    typeof inspected === 'object' && inspected !== null
-                        ? Reflect.get(inspected, 'href')
-                        : undefined;
-                value.textContent = typeof href === 'string' ? href : '';
-                const edit = document.createElement('button');
-                edit.type = 'button';
-                edit.className = 'soeditor-ui__button';
-                ui.setIcon(edit, 'link.edit', 'Edit link');
-                edit.title = 'Edit link';
-                edit.setAttribute('aria-label', 'Edit link');
-                edit.addEventListener('click', () => {
-                    const current = activeLink;
-                    close();
-                    if (current === undefined) return;
-                    selectLink(current);
-                    ui.toolbarElement
-                        .querySelector<HTMLButtonElement>(
-                            '[data-toolbar-item="link"]',
-                        )
-                        ?.click();
+        pending = { event, link };
+        if (loading) return;
+        loading = true;
+        void import('./classic-link-context.js')
+            .then((module) => {
+                if (destroyed) return;
+                visual.removeEventListener('click', activate);
+                dispose = module.attachClassicLinkContext(editor, ui, visual);
+                const replay = pending;
+                pending = undefined;
+                if (replay === undefined) return;
+                replay.link.dispatchEvent(
+                    new MouseEvent('click', {
+                        bubbles: true,
+                        button: replay.event.button,
+                        ctrlKey: replay.event.ctrlKey,
+                        metaKey: replay.event.metaKey,
+                    }),
+                );
+            })
+            .catch(() => {
+                if (destroyed) return;
+                loading = false;
+                visual.addEventListener('click', activate);
+                ui.notifications.show({
+                    message: 'Link tools failed to load. Please try again.',
+                    severity: 'error',
                 });
-                const remove = document.createElement('button');
-                remove.type = 'button';
-                remove.className = 'soeditor-ui__button';
-                ui.setIcon(remove, 'link.remove', 'Remove link');
-                remove.title = 'Remove link';
-                remove.setAttribute('aria-label', 'Remove link');
-                remove.addEventListener('click', () => {
-                    const current = activeLink;
-                    close();
-                    if (current === undefined) return;
-                    selectLink(current);
-                    try {
-                        editor.execute('link.remove');
-                    } catch (error: unknown) {
-                        report(error);
-                    }
-                });
-                container.append(value, edit, remove);
-            },
-        });
+            });
     };
-    const pointerDown = (event: PointerEvent): void => {
-        const target = event
-            .composedPath()
-            .find((candidate): candidate is Node => candidate instanceof Node);
-        if (!(target instanceof Node)) return;
-        if (balloon?.element.contains(target) === true) return;
-        if (
-            target instanceof Element &&
-            target.closest('a[data-soeditor-link="true"], a[href]') ===
-                activeLink
-        ) {
-            return;
-        }
-        close();
-    };
-    visual.addEventListener('click', click);
-    document.addEventListener('pointerdown', pointerDown, true);
+    visual.addEventListener('click', activate);
     return () => {
-        close();
-        visual.removeEventListener('click', click);
-        document.removeEventListener('pointerdown', pointerDown, true);
+        destroyed = true;
+        visual.removeEventListener('click', activate);
+        dispose?.();
     };
 }
-
 function attachClassicTableContext(
     editor: Editor,
     ui: EditorUi,
@@ -1559,16 +1653,25 @@ function attachClassicTableContext(
     let destroyed = false;
     let dispose: (() => void) | undefined;
     let loading = false;
+    let pending: { detail: unknown; target: EventTarget | null } | undefined;
     const activate = (event: Event): void => {
-        if (loading || dispose !== undefined) return;
-        loading = true;
-        const target = event.target;
         const detail: unknown = Reflect.get(event, 'detail');
-        visual.removeEventListener('soeditor:table-selection', activate);
+        if (dispose !== undefined) return;
+        pending = { detail, target: event.target };
+        if (loading) return;
+        loading = true;
         void import('./classic-table-context.js')
             .then((module) => {
                 if (destroyed) return;
+                visual.removeEventListener(
+                    'soeditor:table-selection',
+                    activate,
+                );
                 dispose = module.attachClassicTableContext(editor, ui, visual);
+                const replay = pending;
+                pending = undefined;
+                if (replay === undefined) return;
+                const { detail, target } = replay;
                 if (!(target instanceof Element)) return;
                 const EventConstructor =
                     visual.ownerDocument.defaultView?.CustomEvent ??
@@ -1706,6 +1809,97 @@ function readPreset(preset: EditorPreset): EditorPreset {
     return preset;
 }
 
+function withClassicPreviewTool(
+    toolbar: ToolbarConfiguration,
+    enabled: boolean,
+): ToolbarConfiguration {
+    if (!enabled || toolbar.includes('popupPreview')) return toolbar;
+    return Object.freeze([...toolbar, '|', 'popupPreview']);
+}
+
+function compactClassicToolbar(
+    toolbar: ToolbarConfiguration,
+): ToolbarConfiguration {
+    const visible: string[] = [];
+    for (const item of toolbar) {
+        if (HIDDEN_CLASSIC_TOOLBAR_ITEMS.has(item)) continue;
+        if (item === '|' && (visible.length === 0 || visible.at(-1) === '|')) {
+            continue;
+        }
+        visible.push(item);
+    }
+    if (visible.at(-1) === '|') visible.pop();
+    return Object.freeze(visible);
+}
+
+function groupClassicToolbarActions(toolbar: HTMLElement): void {
+    const collapse = toolbar.querySelector<HTMLButtonElement>(
+        '.soeditor-ui__toolbar-toggle',
+    );
+    if (collapse !== null) {
+        collapse.hidden = true;
+        collapse.tabIndex = -1;
+    }
+    const group = toolbar.ownerDocument.createElement('div');
+    group.className = 'soeditor-classic__toolbar-end';
+    group.setAttribute('role', 'group');
+    group.setAttribute('aria-label', 'Editor views and preview');
+    const preview = toolbar.querySelector<HTMLElement>(
+        '[data-toolbar-item="popupPreview"]',
+    );
+    if (
+        preview?.previousElementSibling?.classList.contains(
+            'soeditor-ui__separator',
+        ) === true
+    ) {
+        preview.previousElementSibling.remove();
+    }
+    for (const selector of [
+        '[data-toolbar-item="popupPreview"]',
+        '.soeditor-ui__help-button',
+        '[data-classic-action="workspace-view"]',
+        '[data-classic-action="maximize"]',
+    ]) {
+        const item = toolbar.querySelector<HTMLElement>(selector);
+        if (item !== null) group.append(item);
+    }
+    if (group.childElementCount > 0) toolbar.append(group);
+}
+
+function registerClassicPreviewTool(
+    registry: UiRegistryService,
+    open: () => boolean | undefined,
+): void {
+    registry.registerToolbarItem('popupPreview', ({ document, ui }) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'soeditor-ui__button';
+        ui.setIcon(button, 'editor.preview', 'Preview');
+        button.querySelector('svg')?.classList.add('soeditor-ui__icon--solid');
+        button.title = ui.translate('Preview in new window');
+        button.setAttribute(
+            'aria-label',
+            ui.translate('Preview in new window'),
+        );
+        const click = (): void => {
+            if (open() === false) {
+                ui.notifications.show({
+                    message: ui.translate(
+                        'The preview window was blocked by the browser.',
+                    ),
+                    severity: 'error',
+                });
+            }
+        };
+        button.addEventListener('click', click);
+        return {
+            destroy: () => button.removeEventListener('click', click),
+            element: button,
+            update: () => undefined,
+        };
+    });
+}
+
 function validateHost(host: HTMLElement): void {
     const view = host.ownerDocument.defaultView;
     if (view === null || !(host instanceof view.HTMLElement)) {
@@ -1729,6 +1923,68 @@ function validateCallbacks(options: CreateClassicEditorOptions): void {
         if (callback !== undefined && typeof callback !== 'function') {
             throw new TypeError(`Classic editor ${name} must be a function.`);
         }
+    }
+}
+
+function readClassicPreviewOptions(
+    value: boolean | ClassicPreviewOptions | undefined,
+): ClassicPreviewOptions | undefined {
+    if (value === undefined || value === false) return undefined;
+    if (value === true) return Object.freeze({});
+    if (typeof value !== 'object' || value === null) {
+        throw new TypeError(
+            'Classic preview must be a boolean or configuration object.',
+        );
+    }
+    if (
+        value.windowFeatures !== undefined &&
+        (typeof value.windowFeatures !== 'string' ||
+            value.windowFeatures.trim().length === 0)
+    ) {
+        throw new TypeError(
+            'Classic preview windowFeatures must be a non-empty string.',
+        );
+    }
+    if (
+        value.wysiwygStyles !== undefined &&
+        typeof value.wysiwygStyles !== 'boolean'
+    ) {
+        throw new TypeError('Classic preview wysiwygStyles must be a boolean.');
+    }
+    return value;
+}
+
+function readSourceAutoFormatDelay(options: ClassicSourceOptions): number {
+    const delay = options.autoFormatDelay ?? 300;
+    if (!Number.isFinite(delay) || delay < 0 || delay > 10_000) {
+        throw new TypeError(
+            'Classic Source autoFormatDelay must be between 0 and 10000 milliseconds.',
+        );
+    }
+    return delay;
+}
+
+function validateClassicSourceOptions(
+    options: ClassicSourceOptions | undefined,
+): void {
+    if (options === undefined) return;
+    if (typeof options !== 'object' || options === null) {
+        throw new TypeError('Classic Source options must be an object.');
+    }
+    if (
+        options.autoFormat !== undefined &&
+        typeof options.autoFormat !== 'boolean'
+    ) {
+        throw new TypeError('Classic Source autoFormat must be a boolean.');
+    }
+    if (options.autoFormatDelay !== undefined) {
+        readSourceAutoFormatDelay(options);
+    }
+    if (
+        options.formatting !== undefined &&
+        (typeof options.formatting !== 'object' || options.formatting === null)
+    ) {
+        throw new TypeError('Classic Source formatting must be an object.');
     }
 }
 

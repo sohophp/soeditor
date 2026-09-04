@@ -18,7 +18,7 @@ export interface VisualInlineStyle {
 
 /** Inline CSS properties that feature plugins may remove independently. */
 export type VisualInlineStyleProperty =
-    'background-color' | 'color' | 'font-family' | 'font-size';
+    'background' | 'background-color' | 'color' | 'font-family' | 'font-size';
 
 /** Bounded ordered/unordered list source properties. */
 export interface VisualListProperties {
@@ -27,7 +27,16 @@ export interface VisualListProperties {
 }
 /** Text-block elements supported by the controlled visual service. */
 export type VisualBlockTag =
-    'p' | 'h1' | 'h2' | 'h3' | 'h4' | 'h5' | 'h6' | 'blockquote' | 'pre';
+    | 'p'
+    | 'div'
+    | 'h1'
+    | 'h2'
+    | 'h3'
+    | 'h4'
+    | 'h5'
+    | 'h6'
+    | 'blockquote'
+    | 'pre';
 
 /** Source attributes accepted when applying a link mark. */
 export interface VisualLinkAttributes {

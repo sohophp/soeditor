@@ -63,6 +63,7 @@
     flex-wrap: wrap;
     gap: 0.125rem;
     padding: 0.25rem;
+    position: relative;
 }
 
 .soeditor-ui__toolbar[data-overflow='scroll'] {
@@ -83,7 +84,11 @@
 }
 
 .soeditor-ui__toolbar-toggle {
-    margin-inline-start: auto;
+    margin-inline-start: 0.125rem;
+}
+
+.soeditor-ui__toolbar-toggle[aria-expanded='false'] svg {
+    transform: rotate(180deg);
 }
 
 .soeditor-ui__toolbar [hidden] {
@@ -144,10 +149,16 @@
     background: transparent;
     border-color: transparent;
     border-radius: 3px;
-    block-size: 2.375rem;
-    inline-size: 2.375rem;
-    min-block-size: 2.375rem;
+    block-size: var(--soeditor-control-size);
+    inline-size: var(--soeditor-control-size);
+    min-block-size: var(--soeditor-control-size);
     padding: 0.125rem;
+}
+
+.soeditor-ui__toolbar > .soeditor-ui__button.soeditor-ui__button--text {
+    inline-size: auto;
+    min-inline-size: var(--soeditor-control-size);
+    padding-inline: 0.55rem;
 }
 
 .soeditor-ui__toolbar > .soeditor-ui__button:hover:not(:disabled),
@@ -814,7 +825,34 @@
     outline-offset: 1px;
 }
 
+.soeditor-ui__table-picker-exact {
+    align-items: end;
+    border: 0;
+    border-block-start: 1px solid var(--soeditor-border);
+    display: grid;
+    gap: 0.4rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+    margin: 0;
+    padding: 0.5rem 0 0;
+}
+
+.soeditor-ui__table-picker-exact legend {
+    color: var(--soeditor-muted);
+    font-size: 0.8rem;
+    grid-column: 1 / -1;
+    padding: 0;
+}
+
+.soeditor-ui__table-picker-exact input {
+    inline-size: 4.5rem;
+    min-block-size: 2rem;
+}
+
 @media (max-width: 40rem) {
+    .soeditor-ui {
+        --soeditor-control-size: 2.75rem;
+    }
+
     .soeditor-ui__button,
     .soeditor-ui__menu-item,
     .soeditor-ui__dialog-action {
@@ -833,6 +871,7 @@
     }
 }
 
+/* soeditor-global-compatibility-review:start */
 mark[data-soeditor-decoration] {
     background: color-mix(in srgb, #ffd43b 42%, transparent);
     color: inherit;
@@ -926,7 +965,6 @@ mark[data-soeditor-decoration-status='resolved'] {
 }
 
 @media (forced-colors: active) {
-    .soeditor-ui__button.is-active,
     .soeditor-revisions button[aria-pressed='true'],
     .soeditor-revisions button[aria-current='true'],
     .soeditor-comments__thread[aria-current='true'] {
@@ -944,4 +982,12 @@ mark[data-soeditor-decoration-status='resolved'] {
 .soeditor-comments__thread h3,
 .soeditor-comments__message p {
     margin-block: 0 0.4rem;
+}
+/* soeditor-global-compatibility-review:end */
+
+@media (forced-colors: active) {
+    .soeditor-ui__button.is-active {
+        outline: 2px solid Highlight;
+        outline-offset: 2px;
+    }
 }

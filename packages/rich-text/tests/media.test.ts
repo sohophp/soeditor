@@ -27,6 +27,7 @@ describe('structured media feature', () => {
             alt: 'Hero',
             aspectLocked: true,
             link: '/article',
+            linkTarget: '_blank',
             responsiveClass: 'img-fluid cms-image',
             src: '/hero.jpg',
             title: 'Article hero',
@@ -34,7 +35,7 @@ describe('structured media feature', () => {
         });
 
         expect(inserted).toEqual([
-            '<figure data-soeditor-media="image" data-align="center" data-aspect-lock="true"><a href="/article"><img src="/hero.jpg" alt="Hero" title="Article hero" class="img-fluid cms-image" width="800"></a></figure>',
+            '<figure data-soeditor-media="image" data-align="center" data-aspect-lock="true"><a href="/article" target="_blank"><img src="/hero.jpg" alt="Hero" title="Article hero" class="img-fluid cms-image" width="800"></a></figure>',
         ]);
         expect(() =>
             editor.execute('media.insert', {
@@ -108,12 +109,13 @@ describe('structured media feature', () => {
             aspectLocked: true,
             caption: 'New caption',
             link: '/story',
+            linkTarget: '_parent',
             responsiveClass: 'img-fluid',
             title: 'New title',
             width: 800,
         });
         expect(html(block)).toBe(
-            '<figure class="hero" data-cms="42" data-align="right" data-aspect-lock="true"><a href="/story"><img src="new.webp" alt="New" width="800" height="400" loading="eager" data-id="7" title="New title" class="img-fluid"></a><figcaption class="credit">New caption</figcaption></figure>',
+            '<figure class="hero" data-cms="42" data-align="right" data-aspect-lock="true"><a href="/story" target="_parent"><img src="new.webp" alt="New" width="800" height="400" loading="eager" data-id="7" title="New title" class="img-fluid"></a><figcaption class="credit">New caption</figcaption></figure>',
         );
         editor.execute('media.update', { width: null });
         expect(html(block)).not.toContain('width=');

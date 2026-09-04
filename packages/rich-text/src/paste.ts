@@ -32,7 +32,10 @@ const SEMANTIC_ELEMENTS = new Set([
     'a',
     'blockquote',
     'br',
+    'caption',
     'code',
+    'col',
+    'colgroup',
     'div',
     'em',
     'h1',
@@ -67,6 +70,7 @@ const SEMANTIC_ELEMENTS = new Set([
 
 const BLOCK_CHILD_CONTAINERS = new Set([
     '#root',
+    'colgroup',
     'ol',
     'table',
     'tbody',
@@ -378,6 +382,7 @@ function isSemanticAttribute(
     value: string,
 ): boolean {
     if (name === 'title' || name === 'lang' || name === 'dir') return true;
+    if (/^aria-[a-z0-9-]+$/u.test(name)) return true;
     if (tagName === 'a') return ['href', 'rel', 'target'].includes(name);
     if (tagName === 'img') {
         return (
@@ -401,6 +406,14 @@ function isSemanticAttribute(
             ((name === 'rowspan' || name === 'colspan') &&
                 /^\d{1,3}$/u.test(value)) ||
             (name === 'scope' && /^(?:row|col|rowgroup|colgroup)$/u.test(value))
+        );
+    }
+    if (tagName === 'colgroup' || tagName === 'col') {
+        return (
+            (name === 'span' && /^\d{1,3}$/u.test(value)) ||
+            (tagName === 'col' &&
+                name === 'width' &&
+                /^(?:\d{1,4}|\d{1,4}px|100%|\d{1,2}%)$/u.test(value))
         );
     }
     return false;

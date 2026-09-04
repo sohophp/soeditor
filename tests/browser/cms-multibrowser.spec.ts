@@ -244,7 +244,7 @@ test('completes the canonical CMS authoring, submit, security, and teardown jour
         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
         .toContain('<table>');
 
-    await page.locator('[data-toolbar-item="source"]').first().click();
+    await page.locator('[data-workspace-view="source"]').first().click();
     const source = page.locator('.soeditor-classic__source .cm-content');
     await expect(source).toContainText('Linked</a> article');
     await source.click();
@@ -262,7 +262,7 @@ test('completes the canonical CMS authoring, submit, security, and teardown jour
             '<p>Safe</p><script>globalThis.__cmsExecuted=true</script><img src="x" onerror="globalThis.__cmsExecuted=true"><product-card data-id="100"></product-card>',
         );
     });
-    await page.locator('[data-toolbar-item="source"]').first().click();
+    await page.locator('[data-workspace-view="wysiwyg"]').first().click();
     await expect(visual.locator('script')).toHaveCount(0);
     expect(
         await page.evaluate(() => Reflect.get(globalThis, '__cmsExecuted')),

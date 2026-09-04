@@ -1,6 +1,7 @@
 import { defineConfig } from '@playwright/test';
 
 export default defineConfig({
+    globalSetup: './tests/browser/cross-browser-preflight.ts',
     testDir: './tests/browser',
     testMatch: ['cms-multibrowser.spec.ts', 'wysiwyg-editor.spec.ts'],
     fullyParallel: false,

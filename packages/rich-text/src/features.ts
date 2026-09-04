@@ -41,12 +41,15 @@ abstract class FeaturePlugin extends Plugin {
         ) => void,
         isActive?: (service: VisualEditingService) => boolean,
         label?: string,
+        canExecute: (service: VisualEditingService) => boolean = () => true,
     ): void {
         this.editor.commands.register({
             id,
             ...(label === undefined ? {} : { label }),
-            canExecute: ({ editor }) =>
-                resolveFeatureService(editor, id)?.canEdit() ?? false,
+            canExecute: ({ editor }) => {
+                const service = resolveFeatureService(editor, id);
+                return service?.canEdit() === true && canExecute(service);
+            },
             execute: (context, ...args) =>
                 execute(requireFeatureService(context, id), args),
             ...(isActive === undefined
@@ -76,6 +79,23 @@ export class ParagraphPlugin extends FeaturePlugin {
             },
             (service) => service.isBlockActive('p'),
             'Set paragraph',
+        );
+    }
+}
+
+/** Registers a generic CMS div block command. */
+export class DivPlugin extends FeaturePlugin {
+    static readonly id = 'div';
+
+    override init(): void {
+        this.register(
+            'block.div',
+            (service, args) => {
+                assertNoArguments('block.div', args);
+                service.setBlock(service.isBlockActive('div') ? 'p' : 'div');
+            },
+            (service) => service.isBlockActive('div'),
+            'Toggle div block',
         );
     }
 }
@@ -365,8 +385,28 @@ abstract class ListPlugin extends FeaturePlugin {
             },
             (service) => service.isListActive(list),
             list === 'ol' ? 'Toggle ordered list' : 'Toggle unordered list',
+            (service) => !hasMultiCellTableSelection(service),
         );
     }
+}
+
+function hasMultiCellTableSelection(service: VisualEditingService): boolean {
+    const range = service.getStructuredSelection?.('soeditor.table');
+    if (typeof range !== 'object' || range === null) return false;
+    const anchor = Reflect.get(range, 'anchor');
+    const focus = Reflect.get(range, 'focus');
+    if (
+        typeof anchor !== 'object' ||
+        anchor === null ||
+        typeof focus !== 'object' ||
+        focus === null
+    ) {
+        return false;
+    }
+    return (
+        Reflect.get(anchor, 'row') !== Reflect.get(focus, 'row') ||
+        Reflect.get(anchor, 'column') !== Reflect.get(focus, 'column')
+    );
 }
 
 /** Registers ordered-list toggling. */
@@ -747,6 +787,7 @@ function isSafeSemanticStyle(value: string): boolean {
 function isVisualBlockTag(value: unknown): value is VisualBlockTag {
     return (
         value === 'p' ||
+        value === 'div' ||
         value === 'blockquote' ||
         value === 'pre' ||
         (typeof value === 'string' && /^h[1-6]$/u.test(value))

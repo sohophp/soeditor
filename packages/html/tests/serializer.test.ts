@@ -50,11 +50,21 @@ describe('HTML serialization', () => {
         );
     });
 
-    it('serializes void elements without XML-style closing syntax', () => {
+    it('serializes line breaks with the canonical XML-style closing syntax', () => {
         const parsed = parseHtmlFragment('<img src="image.png"><br>');
 
         expect(serializeHtmlFragment(parsed.document)).toBe(
-            '<img src="image.png"><br>',
+            '<img src="image.png"><br />',
+        );
+    });
+
+    it('does not rewrite literal line-break markup in raw text or comments', () => {
+        const parsed = parseHtmlFragment(
+            '<script>const value = "<br>";</script><!--<br>--><br>',
+        );
+
+        expect(serializeHtmlFragment(parsed.document)).toContain(
+            '<script>const value = "<br>";</script><!--<br>--><br />',
         );
     });
 

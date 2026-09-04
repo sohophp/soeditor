@@ -99,6 +99,12 @@ export default defineConfig({
             '@soeditor/presets/cms': fileURLToPath(
                 new URL('../../packages/presets/src/cms.ts', import.meta.url),
             ),
+            '@soeditor/presets/cms-runtime': fileURLToPath(
+                new URL(
+                    '../../packages/presets/src/cms-runtime.ts',
+                    import.meta.url,
+                ),
+            ),
             '@soeditor/presets': fileURLToPath(
                 new URL('../../packages/presets/src/index.ts', import.meta.url),
             ),
@@ -107,6 +113,12 @@ export default defineConfig({
             ),
             '@soeditor/ui/styles.css': fileURLToPath(
                 new URL('../../packages/ui/src/styles.css', import.meta.url),
+            ),
+            '@soeditor/ui/compatibility': fileURLToPath(
+                new URL(
+                    '../../packages/ui/src/compatibility.ts',
+                    import.meta.url,
+                ),
             ),
             '@soeditor/ui': fileURLToPath(
                 new URL('../../packages/ui/src/index.ts', import.meta.url),

@@ -39,7 +39,9 @@ neighboring editor are unchanged.
 The classic toolbar includes localized accessibility help. Tab enters controls;
 Arrow keys, Home, and End move within toolbar/menu groups. Shift+F10 opens the
 context menu, Escape closes menus/dialogs, and native dialog focus returns to
-the invoking control. Narrow layouts use at least 44px logical control targets.
+the invoking control. The embedded help also distinguishes Enter from
+Shift+Enter, documents Undo and Redo, and explains Shift+click table-cell range
+selection. Narrow layouts use at least 44px logical control targets.
 
 ## Chinese composition and history
 

@@ -3,6 +3,7 @@ export {
     BlockquotePlugin,
     BoldPlugin,
     CodeBlockPlugin,
+    DivPlugin,
     HeadingPlugin,
     HorizontalRulePlugin,
     ImagePlugin,
@@ -76,6 +77,11 @@ export type {
     TableCellProperties,
     TableCellRange,
     TableColumnResizeOptions,
+    TableColumnDescriptor,
+    TableColumnGroupDescriptor,
+    TableColumnGroupInsertOptions,
+    TableColumnGroupProperties,
+    TableCaptionDescriptor,
     TableInsertOptions,
     TableStructureInsertOptions,
     TableProperties,
@@ -83,6 +89,10 @@ export type {
     TableRowProperties,
     TableSectionProperties,
     TableSection,
+    TableSectionDescriptor,
+    TableStructureDiagnostic,
+    TableStructureSnapshot,
+    TableRowMoveOptions,
 } from './table.js';
 export { tableEditorServiceToken } from './table-editor-service.js';
 export type {

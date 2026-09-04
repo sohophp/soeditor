@@ -28,6 +28,38 @@ email authoring, page building and spreadsheets are outside this specification.
 Reference behavior is evidence, not permission to copy source or import a broad
 architecture that does not serve the CMS product.
 
+### HTML element semantics
+
+SoEditor treats preservation, visual editability and toolbar exposure as
+separate policies. Current standard HTML elements and unknown CMS elements are
+preserved when safe, but preservation does not automatically add a toolbar
+command or allow executable behavior.
+
+`code` is an inline semantic element for a code fragment or single line. The
+dedicated inline Code control applies it as `<code>` without inventing a `pre`
+ancestor, and it is not offered as a block-style choice. `pre` remains a
+separate block choice that preserves whitespace. Authors who intentionally need
+a multi-line code sample may compose
+`<pre><code>...</code></pre>` in Source, but formatting never adds that structure
+implicitly. HTML parsing and formatting follow element syntax and content
+models rather than a legacy visual "block versus inline" tag list.
+
+Inside `pre`, Enter and Shift+Enter insert literal newline text (`\n`) rather
+than `br` elements. Elsewhere, serialized line breaks use the canonical
+`<br />` spelling; both forms remain accepted when loading existing HTML. When
+switching a block between `pre` and `p`/`div`, SoEditor converts these two
+representations in both directions so the visible line breaks remain intact.
+Legacy content with inline nodes directly under the editor root is preserved on
+load; when an author chooses a block command, that selected inline run is
+wrapped in the requested `p`, `div`, or other block so subsequent formatting
+commands remain available.
+
+Block commands also enforce the HTML content model: a phrasing-only target such
+as `p`, `pre`, or a heading never receives nested flow content such as another
+`p`, a list, or a table. Textual nested blocks are split into same-level target
+blocks with their order, attributes, and PRE line breaks retained. Structural
+content that cannot be converted without losing meaning remains unchanged.
+
 ## 3. Core authoring behavior
 
 ### Input and selection
@@ -66,7 +98,8 @@ architecture that does not serve the CMS product.
 - bold, italic, underline, strike, subscript and superscript;
 - remove format that actually removes the selected style;
 - configured font family/size/color/background only when enabled;
-- blockquote, pre/code, inline code, alignment and indentation;
+- semantic highlighter output using `mark` with a bounded lower-line gradient;
+- paragraph, generic CMS `div`, blockquote, pre/code, inline code, alignment and indentation;
 - horizontal rule and configured page-break marker;
 - semantic CMS style dropdown.
 
@@ -130,7 +163,7 @@ There is exactly one writer. Switching modes synchronizes canonical HTML. If
 Source contains invalid input that cannot be projected safely, WYSIWYG retains
 its last valid inert view and explains why it cannot become writable.
 
-Source is not a reason to ship Developer Visual, split panes, Preview, Markdown,
+Source is not a reason to ship Developer Visual, Preview, Markdown,
 command palettes or full developer tools in the CMS product.
 
 ## 6. HTML preservation and security

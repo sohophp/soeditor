@@ -1,5 +1,20 @@
 export { Editor as SoEditor } from '@soeditor/core';
-export * from './cms.js';
+export { createClassicEditor } from './cms-optional.js';
+export {
+    ClassicEditorAlreadyAttachedError,
+    ClassicEditorDestroyedError,
+} from './classic-editor-errors.js';
+export type {
+    ClassicEditor,
+    ClassicEditorChange,
+    ClassicEditingMode,
+    ClassicPreviewOptions,
+    ClassicPreviewTemplate,
+    ClassicEditorSaveOptions,
+    ClassicSourceOptions,
+    ClassicWorkspaceView,
+    CreateClassicEditorOptions,
+} from './classic-editor.js';
 export * from '@soeditor/adapter-sofinder';
 export * from '@soeditor/comments';
 export * from '@soeditor/core';

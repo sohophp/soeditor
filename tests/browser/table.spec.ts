@@ -23,10 +23,19 @@ test('provides keyboard rectangular selection, merge/split, headers, and history
     await expect(cells.nth(0)).toBeFocused();
     await page.keyboard.press('ArrowRight');
     await expect(cells.nth(0)).toBeFocused();
-    await page.keyboard.press('Alt+Shift+ArrowDown');
+    await page.keyboard.press('Shift+ArrowDown');
     await expect(
         boundary.locator('.soeditor-table-cell[aria-pressed="true"]'),
     ).toHaveCount(2);
+    await page.keyboard.press('Escape');
+    await expect(
+        boundary.locator('.soeditor-table-cell[aria-pressed="true"]'),
+    ).toHaveCount(1);
+    await expect(boundary.locator('.soeditor-table-cell').first()).toHaveClass(
+        /is-editing/u,
+    );
+    await boundary.locator('.soeditor-table-cell').first().click();
+    await page.keyboard.press('Shift+ArrowDown');
 
     await executeCommand(page, 'table.header.toggle');
     await expect(page.locator(source)).toContainText('<th>');
@@ -34,17 +43,17 @@ test('provides keyboard rectangular selection, merge/split, headers, and history
     await expect(page.locator(source)).not.toContainText('<th>');
 
     await page.locator(`${tableBoundary} .soeditor-table-cell`).nth(0).click();
-    await page.keyboard.press('Alt+Shift+ArrowDown');
-    await page.keyboard.press('Alt+Shift+ArrowRight');
+    await page.keyboard.press('Shift+ArrowDown');
+    await page.keyboard.press('Shift+ArrowRight');
     await executeCommand(page, 'table.cells.merge');
     await expect(page.locator(source)).toContainText('rowspan="2"');
     await expect(page.locator(source)).toContainText('colspan="2"');
 
     const merged = page.locator(tableBoundary);
     await merged.locator('.soeditor-table-cell').first().click();
-    await page.keyboard.press('Alt+Shift+ArrowDown');
-    await page.keyboard.press('Alt+Shift+ArrowRight');
-    await page.keyboard.press('Alt+Shift+ArrowRight');
+    await page.keyboard.press('Shift+ArrowDown');
+    await page.keyboard.press('Shift+ArrowRight');
+    await page.keyboard.press('Shift+ArrowRight');
     const mergedClipboard = await dispatchClipboard(
         merged.locator('.soeditor-table-cell').last(),
         'copy',
@@ -81,7 +90,7 @@ test('adds rows and columns and copies, cuts, and pastes semantic cell data', as
     await executeCommand(page, 'table.cell.setText', 'Beta');
     boundary = page.locator(tableBoundary);
     await boundary.locator('.soeditor-table-cell').first().click();
-    await page.keyboard.press('Alt+Shift+ArrowRight');
+    await page.keyboard.press('Shift+ArrowRight');
 
     const copied = await dispatchClipboard(
         boundary.locator('.soeditor-table-cell').nth(1),
@@ -101,7 +110,7 @@ test('adds rows and columns and copies, cuts, and pastes semantic cell data', as
 
     boundary = page.locator(tableBoundary);
     await boundary.locator('.soeditor-table-cell').first().click();
-    await page.keyboard.press('Alt+Shift+ArrowRight');
+    await page.keyboard.press('Shift+ArrowRight');
     await dispatchPaste(
         boundary.locator('.soeditor-table-cell').first(),
         '',
@@ -109,6 +118,49 @@ test('adds rows and columns and copies, cuts, and pastes semantic cell data', as
     );
     await expect(page.locator(source)).toContainText('<td>One</td>');
     await expect(page.locator(source)).toContainText('<td>Two</td>');
+});
+
+test('edits semantic table structure and appends a row from the last Tab stop', async ({
+    page,
+}) => {
+    await setData(
+        page,
+        '<p>Before</p><table data-cms="kept"><caption data-title="kept"><strong>Old</strong></caption><thead><tr><th>H</th></tr></thead><tbody data-body="one"><tr><td>A</td></tr></tbody><tbody data-body="two"><tr><td>B</td></tr></tbody><tfoot></tfoot></table><p>After</p>',
+    );
+    let boundary = page.locator(tableBoundary);
+    await boundary.locator('.soeditor-table-cell').last().click();
+    await page.keyboard.press('Tab');
+    await expect(boundary.locator('tr')).toHaveCount(4);
+    await expect(boundary.locator('.soeditor-table-cell').last()).toBeFocused();
+
+    await executeCommand(page, 'table.caption.set', 'New title');
+    await executeCommand(page, 'table.header.firstColumn');
+    await executeCommand(page, 'table.section.reorderBody', {
+        sectionIndex: 1,
+        targetIndex: 2,
+    });
+    boundary = page.locator(tableBoundary);
+    await expect(boundary.locator('caption')).toHaveText('New title');
+    await expect(page.locator(source)).toContainText('data-title="kept"');
+    await expect(page.locator(source)).toContainText('scope="row"');
+
+    const snapshot = await page.evaluate(() => {
+        const harness = (
+            window as Window & {
+                __soeditor?: { editor: { execute(id: string): unknown } };
+            }
+        ).__soeditor;
+        return harness?.editor.execute('table.structure.inspect');
+    });
+    expect(snapshot).toMatchObject({
+        caption: { exists: true, text: 'New title' },
+        sections: [
+            { kind: 'head' },
+            { kind: 'body' },
+            { kind: 'body' },
+            { kind: 'foot' },
+        ],
+    });
 });
 
 test('preserves unsupported table source inertly and enforces readonly controls', async ({
@@ -206,9 +258,7 @@ test('edits CMS table properties and resizes columns by accessible controls', as
 
     boundary = page.locator(tableBoundary);
     await executeCommand(page, 'table.column.resize', { width: 240 });
-    await expect(page.locator(source)).toContainText(
-        'data-soeditor-width="240"',
-    );
+    await expect(page.locator(source)).toContainText('<col width="240">');
     await expect(boundary.locator('caption')).toHaveText('Quarterly results');
     await expect(boundary.locator('table')).toHaveAttribute(
         'aria-label',
@@ -224,13 +274,11 @@ test('edits CMS table properties and resizes columns by accessible controls', as
         'right',
     );
     await expect(page.locator(source)).toContainText(
-        'data-soeditor-responsive-class="cms-table responsive"',
+        'class="cms-table responsive"',
     );
 
     await page.keyboard.press('Control+z');
-    await expect(page.locator(source)).not.toContainText(
-        'data-soeditor-width="240"',
-    );
+    await expect(page.locator(source)).not.toContainText('<col width="240">');
 });
 
 test('sanitizes external matrix paste and completes list split/exit behavior', async ({

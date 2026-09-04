@@ -205,6 +205,40 @@ release.
 - remaining browser or assistive-technology limitations are explicit;
 - publication and versioning remain an owner decision.
 
+## Phase 63 — Candidate Consolidation and Host Validation
+
+### Status
+
+LOCAL AUTOMATED CONSOLIDATION COMPLETE. Representative packed-consumer and CMS
+browser validation is executable in the repository. Real Safari and manual
+assistive-technology sign-off remain external release checks.
+
+### Goal
+
+Consolidate the bounded Source/Preview improvements without reopening product
+breadth or allowing optional code into the default CMS artifact.
+
+### Delivered outcomes
+
+- bounded side-by-side and stacked WYSIWYG/Source views remain Source-only;
+- passive WYSIWYG-to-Source selection synchronization and debounced formatting
+  live in the optional Source package;
+- popup preview implementation and templates live in the optional Preview
+  package and cannot be enabled in the standalone global;
+- the standalone CMS runtime excludes host-owned file-manager/upload plugins;
+- inspector-like element-attribute editing and Show Blocks were removed from
+  the active Classic path;
+- lint, type, focused browser and release size gates cover the consolidated
+  implementation; full release qualification remains required before an owner
+  publication decision.
+
+### Remaining external sign-off
+
+- real Safari authoring and Source round trips;
+- NVDA/Firefox or Chrome and VoiceOver/Safari manual journeys;
+- owner review of future-major compatibility-package deprecations;
+- explicit owner authorization for publication, tags or deployment.
+
 ## Package disposition policy
 
 Phase 58 maintains one checked inventory with these categories:

@@ -7,10 +7,11 @@ export default defineConfig({
         lib: {
             cssFileName: 'soeditor-ui',
             entry: {
+                compatibility: 'src/compatibility.ts',
                 index: 'src/index.ts',
                 styles: 'src/styles.css',
             },
-            fileName: 'index',
+            fileName: (_format, entryName) => `${entryName}.js`,
             formats: ['es'],
         },
         minify: false,

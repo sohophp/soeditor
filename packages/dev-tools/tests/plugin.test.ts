@@ -28,8 +28,13 @@ describe('DeveloperToolsPlugin', () => {
         editor.services.register(sourceEditingServiceToken, {
             focus: () => undefined,
             getDiagnostics: () => [],
+            getSelection: () => ({
+                end: { column: 1, line: 1, offset: 0 },
+                start: { column: 1, line: 1, offset: 0 },
+            }),
             openSearchPanel: () => undefined,
             reveal: () => undefined,
+            subscribeSelection: () => () => undefined,
         });
         editor.services.register(developerToolsServiceToken, {
             getInspector: () => undefined,

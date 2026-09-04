@@ -7,6 +7,7 @@ import {
     type UploadRequest,
 } from '@soeditor/file-manager';
 import '@soeditor/editor/styles.css';
+import { cmsPreset } from '@soeditor/presets/cms';
 
 const fixtureHtml = [
     '<h1>WYSIWYG direct qualification</h1>',
@@ -23,6 +24,7 @@ const host = document.querySelector<HTMLTextAreaElement>('#wysiwyg-content');
 if (host === null) throw new Error('Missing WYSIWYG qualification host.');
 
 const instance = await createClassicEditor(host, {
+    preset: cmsPreset,
     ariaLabel: 'WYSIWYG qualification editor',
     data: fixtureHtml,
     editingModes: ['wysiwyg', 'source'],
@@ -86,6 +88,7 @@ Reflect.set(
                 data: '<p id="secondary">Secondary editor</p>',
                 editingModes: ['wysiwyg'],
                 initialEditingMode: 'wysiwyg',
+                preset: cmsPreset,
             }),
         destroy: (): Promise<void> => instance.destroy(),
         editor: instance,

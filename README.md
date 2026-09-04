@@ -25,14 +25,16 @@ candidate. Its supported entry is `@soeditor/editor/cms`; compatibility exports
 remain available from the package root for SemVer safety but are excluded from
 the CMS global and default preset.
 
-The measured CMS browser global is 482.60 kB raw / 143.89 kB gzip with 25.58 kB
-raw CSS. HTML Source is explicit and lazy in ESM builds and is not included in
-the standalone browser global.
+The measured CMS browser global is 485.82 kB raw / 149.35 kB gzip with 26.19 kB
+raw CSS. The packed default CMS startup is 461.10 kB raw / 149.85 kB gzip.
+HTML Source, Preview and save adapters use the explicit
+`@soeditor/editor/cms/optional` entry and are not included in the default CMS
+entry or standalone browser global.
 
 ## Basic integration
 
 ```ts
-import { createClassicEditor } from '@soeditor/editor/cms';
+import { createClassicEditor } from '@soeditor/editor/cms/optional';
 
 const textarea = document.querySelector<HTMLTextAreaElement>('#content');
 if (textarea === null) throw new Error('Missing #content textarea.');
@@ -46,7 +48,8 @@ const editor = await createClassicEditor(textarea, {
 // Later: await editor.destroy();
 ```
 
-The target default is WYSIWYG-only. HTML Source remains an explicit lazy option.
+The target default is WYSIWYG-only. Import `/cms/optional` only when Source,
+Preview or a save adapter is configured.
 
 ## CMS product capabilities
 

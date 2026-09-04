@@ -43,6 +43,10 @@
             "types": "./dist/cms.d.ts",
             "import": "./dist/cms.js"
         },
+        "./cms-runtime": {
+            "types": "./dist/cms-runtime.d.ts",
+            "import": "./dist/cms-runtime.js"
+        },
         "./developer": {
             "types": "./dist/developer.d.ts",
             "import": "./dist/developer.js"

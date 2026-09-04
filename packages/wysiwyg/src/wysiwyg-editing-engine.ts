@@ -87,9 +87,31 @@ interface PreservedAttribute {
     readonly value: string;
 }
 
+interface PendingPreLineBreak {
+    readonly newline: Text;
+    readonly pre: HTMLElement;
+}
+
 const blockSelector =
     'address,article,aside,blockquote,div,figcaption,figure,footer,h1,h2,h3,h4,h5,h6,header,li,main,nav,p,pre,section,td,th';
 const formatBlockSelector = 'address,blockquote,div,h1,h2,h3,h4,h5,h6,p,pre';
+// Flow elements are broader than the editable block list: this selector is
+// used only to prevent phrasing-only targets (p, headings, PRE) from
+// containing lists, tables, or other block content.
+const flowBlockSelector =
+    'address,article,aside,blockquote,caption,dd,details,div,dl,dt,fieldset,figcaption,figure,footer,form,h1,h2,h3,h4,h5,h6,header,hr,li,main,menu,nav,ol,p,pre,section,table,tbody,td,tfoot,th,thead,tr,ul,video';
+const nonTextualFlowBlockSelector =
+    'caption,details,dl,fieldset,figure,form,hr,menu,ol,table,tbody,td,tfoot,th,thead,tr,ul,video';
+const phrasingOnlyBlockTags = new Set([
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'p',
+    'pre',
+]);
 
 const standardTags = new Set([
     'a',
@@ -231,6 +253,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     #locked = false;
     #pendingInputGroup: string | undefined;
     #pendingMark: VisualTextMark | undefined;
+    #pendingPreLineBreak: PendingPreLineBreak | undefined;
     #pendingSource: string | undefined;
     #preservedSequence = 0;
     #programmaticFocus = false;
@@ -365,15 +388,17 @@ export class WysiwygEditingEngine implements EditingEngine {
                 : new MutationObserverConstructor((records) => {
                       if (
                           records.some(
-                              ({ target }) =>
-                                  target === this.element ||
-                                  this.element.contains(target),
+                              (record) =>
+                                  (record.target === this.element ||
+                                      this.element.contains(record.target)) &&
+                                  !isTableSelectionProjectionMutation(record),
                           )
                       ) {
                           this.#repairExternalMutation();
                       }
                   });
         this.#mutationObserver?.observe(this.element, {
+            attributeOldValue: true,
             attributes: true,
             characterData: true,
             childList: true,
@@ -538,6 +563,25 @@ export class WysiwygEditingEngine implements EditingEngine {
             this.#resetInputHistory();
             return;
         }
+        if (
+            (event.inputType === 'insertLineBreak' ||
+                event.inputType === 'insertParagraph') &&
+            this.#insertPreLineBreak()
+        ) {
+            event.preventDefault();
+            this.#resetInputHistory();
+            return;
+        }
+        if (
+            event.inputType === 'insertText' &&
+            event.data !== null &&
+            !event.isComposing &&
+            this.#consumePendingPreLineBreak(event.data)
+        ) {
+            event.preventDefault();
+            this.#resetInputHistory();
+            return;
+        }
         this.#prepareInputHistory(event);
         if (
             this.#pendingMark !== undefined &&
@@ -575,6 +619,7 @@ export class WysiwygEditingEngine implements EditingEngine {
 
     readonly #handleCompositionStart = (): void => {
         this.#resetInputHistory();
+        this.#pendingPreLineBreak = undefined;
         this.#compositionGroup = this.#nextCompositionGroup();
     };
 
@@ -602,8 +647,18 @@ export class WysiwygEditingEngine implements EditingEngine {
             event.altKey
         ) {
             this.#resetInputHistory();
+            this.#pendingPreLineBreak = undefined;
         }
-        if (event.key === 'Escape' && this.#tableSelection !== undefined) {
+        if (
+            event.key === 'Escape' &&
+            this.#tableSelection !== undefined &&
+            (this.#tableSelection.range.anchor.row !==
+                this.#tableSelection.range.focus.row ||
+                this.#tableSelection.range.anchor.column !==
+                    this.#tableSelection.range.focus.column)
+        ) {
+            event.preventDefault();
+            event.stopPropagation();
             const { focus } = this.#tableSelection.range;
             const cell = tableCellAt(
                 this.#tableSelection.table,
@@ -669,7 +724,7 @@ export class WysiwygEditingEngine implements EditingEngine {
         const text = result?.text ?? transfer.getData('text/plain');
         this.#insertHtml(
             result?.policy === 'plain-text' || html.length === 0
-                ? escapeText(text).replaceAll('\n', '<br>')
+                ? this.#plainTextInsertion(text)
                 : html,
         );
     };
@@ -731,7 +786,7 @@ export class WysiwygEditingEngine implements EditingEngine {
         event.preventDefault();
         this.#insertHtml(
             result?.policy === 'plain-text' || html.length === 0
-                ? escapeText(text)
+                ? this.#plainTextInsertion(text)
                 : html,
         );
     };
@@ -744,6 +799,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     readonly #handlePointerDown = (event: PointerEvent): void => {
         this.#resetInputHistory();
         this.#pendingMark = undefined;
+        this.#pendingPreLineBreak = undefined;
         this.#activateFromUserIntent();
         const target = event.target;
         this.#tableDragAnchor =
@@ -751,6 +807,9 @@ export class WysiwygEditingEngine implements EditingEngine {
                 ? (target.closest<HTMLTableCellElement>('td,th') ?? undefined)
                 : undefined;
         this.#tableDragMoved = false;
+        if (this.#tableDragAnchor !== undefined && !event.shiftKey) {
+            this.#activateCell(this.#tableDragAnchor, false, false);
+        }
     };
 
     readonly #handlePointerOver = (event: PointerEvent): void => {
@@ -777,6 +836,14 @@ export class WysiwygEditingEngine implements EditingEngine {
     readonly #handlePointerUp = (event: PointerEvent): void => {
         this.#captureRange();
         const target = event.target;
+        const image =
+            target instanceof Element
+                ? target.closest<HTMLImageElement>('img')
+                : null;
+        if (image !== null && this.element.contains(image)) {
+            this.#selectedElement = image;
+            this.#dispatchImageEvent(image, 'soeditor:image-select');
+        }
         const cell =
             target instanceof Element
                 ? target.closest<HTMLTableCellElement>('td,th')
@@ -809,26 +876,33 @@ export class WysiwygEditingEngine implements EditingEngine {
         if (image !== null && this.element.contains(image)) {
             event.preventDefault();
             this.#selectedElement = image;
-            const EventConstructor =
-                this.#document.defaultView?.CustomEvent ?? CustomEvent;
-            image.dispatchEvent(
-                new EventConstructor('soeditor:image-activate', {
-                    bubbles: true,
-                    detail: Object.freeze({
-                        element: image,
-                        remove: () => {
-                            image.remove();
-                            this.#selectedElement = undefined;
-                            this.#commit();
-                        },
-                        update: (values: unknown) =>
-                            this.#updateImage(image, values),
-                    }),
-                }),
-            );
+            this.#dispatchImageEvent(image, 'soeditor:image-activate');
             return;
         }
     };
+
+    #dispatchImageEvent(
+        image: HTMLImageElement,
+        type: 'soeditor:image-activate' | 'soeditor:image-select',
+    ): void {
+        const EventConstructor =
+            this.#document.defaultView?.CustomEvent ?? CustomEvent;
+        image.dispatchEvent(
+            new EventConstructor(type, {
+                bubbles: true,
+                detail: Object.freeze({
+                    element: image,
+                    remove: () => {
+                        image.remove();
+                        this.#selectedElement = undefined;
+                        this.#commit();
+                    },
+                    update: (values: unknown) =>
+                        this.#updateImage(image, values),
+                }),
+            }),
+        );
+    }
 
     readonly #handleSelectionChange = (): void => this.#captureRange();
 
@@ -862,6 +936,84 @@ export class WysiwygEditingEngine implements EditingEngine {
             this.#inputGroupKind = kind;
         }
         this.#pendingInputGroup = this.#inputGroup;
+    }
+
+    /** Inserts line breaks as text inside preformatted blocks. */
+    #insertPreLineBreak(): boolean {
+        if (!this.#canEdit()) return false;
+        const range = this.#range();
+        if (range === undefined) return false;
+        const startPre = closestElement(range.startContainer, 'pre');
+        const endPre = closestElement(range.endContainer, 'pre');
+        if (startPre === undefined || startPre !== endPre) return false;
+        let caret: Range | undefined;
+        let newlineNode: Text | undefined;
+        this.#mutate(() => {
+            range.deleteContents();
+            const newline = this.#document.createTextNode('\n');
+            newlineNode = newline;
+            range.insertNode(newline);
+            // Keep an empty text node after a trailing newline as a stable
+            // caret anchor. Chromium otherwise normalizes the caret back to
+            // the preceding line, causing the next typed character to land
+            // before the newline.
+            const caretAnchor = this.#document.createTextNode('');
+            newline.after(caretAnchor);
+            const next = this.#document.createRange();
+            next.setStart(caretAnchor, 0);
+            next.collapse(true);
+            caret = next.cloneRange();
+            return next;
+        });
+        if (newlineNode !== undefined) {
+            this.#pendingPreLineBreak = { newline: newlineNode, pre: startPre };
+        }
+        // Some engines restore the native selection after beforeinput even
+        // when the event was cancelled. Re-apply the logical caret once the
+        // event dispatch stack has unwound.
+        if (caret !== undefined) {
+            queueMicrotask(() => {
+                if (!this.#destroyed && caret?.startContainer.isConnected) {
+                    this.#selectRange(caret);
+                }
+            });
+        }
+        return true;
+    }
+
+    #consumePendingPreLineBreak(text: string): boolean {
+        const pending = this.#pendingPreLineBreak;
+        this.#pendingPreLineBreak = undefined;
+        if (
+            pending === undefined ||
+            !pending.pre.isConnected ||
+            !pending.pre.contains(pending.newline)
+        ) {
+            return false;
+        }
+        const range = this.#document.createRange();
+        range.setStartAfter(pending.newline);
+        range.collapse(true);
+        this.#mutate(() => {
+            const inserted = this.#document.createTextNode(text);
+            range.insertNode(inserted);
+            const next = this.#document.createRange();
+            next.setStart(inserted, inserted.data.length);
+            next.collapse(true);
+            return next;
+        });
+        return true;
+    }
+
+    #plainTextInsertion(text: string): string {
+        const range = this.#range();
+        const pre =
+            range === undefined
+                ? undefined
+                : closestElement(range.commonAncestorContainer, 'pre');
+        return pre === undefined
+            ? escapeText(text).replaceAll('\n', '<br />')
+            : escapeText(text);
     }
 
     #resetInputHistory(): void {
@@ -905,7 +1057,11 @@ export class WysiwygEditingEngine implements EditingEngine {
         return true;
     }
 
-    #activateCell(cell: HTMLTableCellElement, extend = false): void {
+    #activateCell(
+        cell: HTMLTableCellElement,
+        extend = false,
+        announce = true,
+    ): void {
         this.#activeCell?.classList.remove('is-editing');
         this.#activeCell = cell;
         cell.classList.add('is-editing');
@@ -941,7 +1097,7 @@ export class WysiwygEditingEngine implements EditingEngine {
                 this.#selectRange(range);
             }
         };
-        this.#announceTableSelection(cell, activate);
+        if (announce) this.#announceTableSelection(cell, activate);
     }
 
     #announceTableSelection(
@@ -1019,7 +1175,34 @@ export class WysiwygEditingEngine implements EditingEngine {
             table.querySelectorAll<HTMLTableCellElement>('th,td'),
         );
         const index = cells.indexOf(origin);
-        const target = cells[index + (backward ? -1 : 1)];
+        let target = cells[index + (backward ? -1 : 1)];
+        if (
+            target === undefined &&
+            !backward &&
+            index === cells.length - 1 &&
+            this.editor.commands.has('table.row.insertAfter')
+        ) {
+            this.editor.execute('table.row.insertAfter');
+            target = Array.from(
+                table.querySelectorAll<HTMLTableCellElement>('th,td'),
+            )[cells.length];
+            if (target === undefined) {
+                this.#document.defaultView?.setTimeout(() => {
+                    const next = Array.from(
+                        this.element.querySelectorAll<HTMLTableCellElement>(
+                            'table th,table td',
+                        ),
+                    ).at(-1);
+                    if (next === undefined) return;
+                    this.#activateCell(next);
+                    const nextRange = this.#document.createRange();
+                    nextRange.selectNodeContents(next);
+                    nextRange.collapse(true);
+                    this.#selectRange(nextRange);
+                }, 0);
+                return true;
+            }
+        }
         if (target === undefined) return false;
         this.#activateCell(target);
         const next = this.#document.createRange();
@@ -1077,6 +1260,7 @@ export class WysiwygEditingEngine implements EditingEngine {
         }
         const bookmark = this.#bookmark();
         this.#pendingMark = undefined;
+        this.#pendingPreLineBreak = undefined;
         this.#locked = false;
         this.#activeCell?.classList.remove('is-editing');
         this.#activeCell = undefined;
@@ -1156,18 +1340,17 @@ export class WysiwygEditingEngine implements EditingEngine {
         )) {
             this.#rememberTableProjectionAttributes(table);
             table.classList.add('soeditor-table-widget');
-            addClassTokens(
-                table,
-                table.getAttribute('data-soeditor-responsive-class'),
-            );
-            const width = table.getAttribute('data-soeditor-width');
-            if (
-                width !== null &&
-                /^(?:[1-9][0-9]{0,3}px|(?:100|[1-9]?[0-9])%)$/u.test(width)
-            ) {
-                table.style.width = width;
+            addClassTokens(table, table.getAttribute('class'));
+            const width = readTableDimension(table, 'width');
+            if (width !== undefined) table.style.width = width;
+            const height = readTableDimension(table, 'height');
+            if (height !== undefined) table.style.height = height;
+            const border = readTableInteger(table, 'border');
+            if (border !== undefined) {
+                table.style.borderStyle = border === 0 ? 'none' : 'solid';
+                table.style.borderWidth = `${String(border)}px`;
             }
-            const alignment = table.getAttribute('data-soeditor-align');
+            const alignment = table.getAttribute('align');
             if (alignment === 'center') {
                 table.style.marginInline = 'auto';
             } else if (alignment === 'right') {
@@ -1179,9 +1362,7 @@ export class WysiwygEditingEngine implements EditingEngine {
                 table.querySelectorAll<HTMLTableColElement>('colgroup col'),
             )) {
                 this.#rememberTableProjectionAttributes(column);
-                const projectedWidth = Number(
-                    column.getAttribute('data-soeditor-width'),
-                );
+                const projectedWidth = Number(column.getAttribute('width'));
                 if (
                     Number.isInteger(projectedWidth) &&
                     projectedWidth >= 40 &&
@@ -1192,8 +1373,8 @@ export class WysiwygEditingEngine implements EditingEngine {
             }
             for (const row of Array.from(table.rows)) {
                 this.#rememberTableProjectionAttributes(row);
-                addClassTokens(row, row.getAttribute('data-soeditor-class'));
-                const height = Number(row.getAttribute('data-soeditor-height'));
+                addClassTokens(row, row.getAttribute('class'));
+                const height = Number(row.getAttribute('height'));
                 if (
                     Number.isInteger(height) &&
                     height >= 20 &&
@@ -1207,8 +1388,8 @@ export class WysiwygEditingEngine implements EditingEngine {
             )) {
                 this.#rememberTableProjectionAttributes(cell);
                 cell.classList.add('soeditor-table-cell');
-                addClassTokens(cell, cell.getAttribute('data-soeditor-class'));
-                const horizontal = cell.getAttribute('data-soeditor-align');
+                addClassTokens(cell, cell.getAttribute('class'));
+                const horizontal = cell.getAttribute('align');
                 if (
                     horizontal === 'center' ||
                     horizontal === 'left' ||
@@ -1216,9 +1397,7 @@ export class WysiwygEditingEngine implements EditingEngine {
                 ) {
                     cell.style.textAlign = horizontal;
                 }
-                const vertical = cell.getAttribute(
-                    'data-soeditor-vertical-align',
-                );
+                const vertical = cell.getAttribute('valign');
                 if (
                     vertical === 'baseline' ||
                     vertical === 'bottom' ||
@@ -1226,6 +1405,10 @@ export class WysiwygEditingEngine implements EditingEngine {
                     vertical === 'top'
                 ) {
                     cell.style.verticalAlign = vertical;
+                }
+                if (border !== undefined) {
+                    cell.style.borderStyle = border === 0 ? 'none' : 'solid';
+                    cell.style.borderWidth = `${String(border)}px`;
                 }
             }
         }
@@ -1293,12 +1476,9 @@ export class WysiwygEditingEngine implements EditingEngine {
                 .filter(
                     (name) =>
                         name.length > 0 &&
-                        ![
-                            'soeditor-table-widget',
-                            'soeditor-table-cell',
-                            'is-editing',
-                            'is-structurally-selected',
-                        ].includes(name),
+                        !name.startsWith('soeditor-') &&
+                        name !== 'is-editing' &&
+                        name !== 'is-structurally-selected',
                 )
                 .join(' ');
             if (value.length > 0) attributes.push({ name: 'class', value });
@@ -1337,6 +1517,10 @@ export class WysiwygEditingEngine implements EditingEngine {
                 },
                 { origin: 'user' },
             );
+            // The native input mutation has just been serialized into the
+            // canonical document. Do not parse and serialize the whole
+            // document again when its queued observer record is delivered.
+            this.#mutationObserver?.takeRecords();
         } finally {
             this.#pendingSource = undefined;
         }
@@ -1538,86 +1722,440 @@ export class WysiwygEditingEngine implements EditingEngine {
     #removeFormat(): void {
         const range = this.#range();
         if (range === undefined || range.collapsed) return;
-        this.#mutateRange(range, (current) => {
-            const marker = this.#document.createElement('span');
-            marker.dataset.soeditorRemoveFormat = 'true';
-            marker.textContent = current.toString();
-            current.deleteContents();
-            current.insertNode(marker);
-            let parent = marker.parentElement;
-            while (
-                parent !== null &&
-                parent !== this.element &&
-                !parent.matches(blockSelector) &&
-                parent.matches(
-                    'b,strong,i,em,u,s,strike,sub,sup,font,span[style],span[class]',
-                )
-            ) {
-                splitInlineAncestorAround(marker, parent);
-                parent = marker.parentElement;
-            }
-            const text = this.#document.createTextNode(
-                marker.textContent ?? '',
+        const blocks = this.#selectedBlocks().filter((block) =>
+            block.matches(blockSelector),
+        );
+        if (blocks.length <= 1) {
+            this.#mutateRange(range, (current) =>
+                this.#removeFormatInRange(current),
             );
-            const cleanupRoot =
-                marker.closest<HTMLElement>(blockSelector) ??
-                marker.parentElement;
-            marker.replaceWith(text);
-            if (cleanupRoot !== null) {
-                const emptyFormatting = Array.from(
-                    cleanupRoot.querySelectorAll(
-                        'b,strong,i,em,u,s,strike,sub,sup,font,span',
-                    ),
-                ).reverse();
-                for (const element of emptyFormatting) {
-                    if (
-                        (element.textContent ?? '').length === 0 &&
-                        element.querySelector(
-                            'img,video,audio,iframe,object,embed,svg,math,br',
-                        ) === null
-                    ) {
-                        element.remove();
-                    }
+            return;
+        }
+        this.#mutate(() => {
+            const results: Range[] = [];
+            for (const block of blocks) {
+                const blockRange = this.#rangeWithinBlock(range, block);
+                if (blockRange !== undefined && !blockRange.collapsed) {
+                    results.push(this.#removeFormatInRange(blockRange));
                 }
             }
-            current.selectNodeContents(text);
-            return current;
+            const first = results[0];
+            const last = results.at(-1);
+            if (first === undefined || last === undefined) return range;
+            const restored = this.#document.createRange();
+            restored.setStart(first.startContainer, first.startOffset);
+            restored.setEnd(last.endContainer, last.endOffset);
+            return restored;
         });
+    }
+
+    #rangeWithinBlock(range: Range, block: HTMLElement): Range | undefined {
+        const result = this.#document.createRange();
+        result.selectNodeContents(block);
+        try {
+            if (block.contains(range.startContainer)) {
+                result.setStart(range.startContainer, range.startOffset);
+            }
+            if (block.contains(range.endContainer)) {
+                result.setEnd(range.endContainer, range.endOffset);
+            }
+            return result;
+        } catch {
+            return undefined;
+        }
+    }
+
+    #removeFormatInRange(current: Range): Range {
+        const marker = this.#document.createElement('span');
+        marker.dataset.soeditorRemoveFormat = 'true';
+        marker.textContent = current.toString();
+        current.deleteContents();
+        current.insertNode(marker);
+        let parent = marker.parentElement;
+        while (
+            parent !== null &&
+            parent !== this.element &&
+            !parent.matches(blockSelector) &&
+            parent.matches(
+                'b,strong,i,em,u,s,strike,sub,sup,font,span[style],span[class]',
+            )
+        ) {
+            splitInlineAncestorAround(marker, parent);
+            parent = marker.parentElement;
+        }
+        const text = this.#document.createTextNode(marker.textContent ?? '');
+        const cleanupRoot =
+            marker.closest<HTMLElement>(blockSelector) ?? marker.parentElement;
+        marker.replaceWith(text);
+        if (cleanupRoot !== null) {
+            const emptyFormatting = Array.from(
+                cleanupRoot.querySelectorAll(
+                    'b,strong,i,em,u,s,strike,sub,sup,font,span',
+                ),
+            ).reverse();
+            for (const element of emptyFormatting) {
+                if (
+                    (element.textContent ?? '').length === 0 &&
+                    element.querySelector(
+                        'img,video,audio,iframe,object,embed,svg,math,br',
+                    ) === null
+                ) {
+                    element.remove();
+                }
+            }
+        }
+        current.selectNodeContents(text);
+        return current;
     }
 
     #setBlock(tagName: VisualBlockTag): void {
         const blocks = this.#selectedFormatBlocks();
+        const editingSelection = this.#getSelection();
         const targetTagName = tagName.toUpperCase();
+        if (blocks.length === 0) {
+            this.#wrapOrphanInlineContent(tagName);
+            return;
+        }
         if (
-            blocks.length === 0 ||
-            blocks.every((block) => block.tagName === targetTagName)
+            blocks.every(
+                (block) =>
+                    block.tagName === targetTagName &&
+                    !hasFlowBlockDescendant(block),
+            )
         ) {
             return;
         }
-        const bookmark = this.#bookmark();
+        const selection = this.#range();
         this.#mutate(() => {
+            const markers =
+                selection === undefined
+                    ? undefined
+                    : this.#placeSelectionMarkers(selection);
             let lastReplacement: HTMLElement | undefined;
             for (const block of blocks) {
-                if (!block.isConnected || block.tagName === targetTagName) {
+                if (
+                    !block.isConnected ||
+                    (block.tagName === targetTagName &&
+                        !hasFlowBlockDescendant(block))
+                ) {
+                    continue;
+                }
+                if (
+                    phrasingOnlyBlockTags.has(tagName) &&
+                    block.querySelector(nonTextualFlowBlockSelector) !== null
+                ) {
+                    // A paragraph cannot contain a table, list, media, or
+                    // other structural flow content. Leave such legacy
+                    // blocks untouched instead of flattening meaningful data.
                     continue;
                 }
                 const replacement = this.#document.createElement(tagName);
                 for (const attribute of Array.from(block.attributes)) {
                     replacement.setAttribute(attribute.name, attribute.value);
                 }
-                replacement.append(...Array.from(block.childNodes));
-                block.replaceWith(replacement);
-                lastReplacement = replacement;
+                const sourceTagName = block.tagName.toLowerCase();
+                if (
+                    sourceTagName === 'pre' &&
+                    (tagName === 'p' || tagName === 'div')
+                ) {
+                    this.#convertPreLineBreaks(block);
+                } else if (
+                    (sourceTagName === 'p' || sourceTagName === 'div') &&
+                    tagName === 'pre'
+                ) {
+                    this.#convertBreakElements(block);
+                }
+                const replacements = this.#replaceBlockContent(
+                    block,
+                    replacement,
+                    tagName,
+                );
+                block.replaceWith(...replacements);
+                lastReplacement = replacements.at(-1);
             }
             const restored =
-                bookmark === undefined
+                markers === undefined
                     ? undefined
-                    : this.#rangeFromBookmark(bookmark);
+                    : this.#restoreSelectionMarkers(markers);
             if (restored !== undefined) return restored;
             return lastReplacement === undefined
                 ? this.#range()
                 : rangeAtEnd(this.#document, lastReplacement);
         });
+        if (editingSelection !== undefined) {
+            // Replacing a block can leave a connected but semantically stale
+            // saved Range behind. Force setSelection() to resolve the text
+            // points against the replacement blocks instead of taking its
+            // same-selection fast path.
+            this.#reportedSelection = undefined;
+            this.setSelection(editingSelection);
+        }
+    }
+
+    /**
+     * Keep phrasing-only blocks (paragraphs, headings and PRE) valid when a
+     * legacy block contains nested flow content. HTML parsers repair this on
+     * load, but a direct block-format command can otherwise create e.g.
+     * `<p><p>…</p></p>`. Nested blocks become sibling target blocks and inline
+     * runs remain in their original order.
+     */
+    #replaceBlockContent(
+        source: HTMLElement,
+        replacement: HTMLElement,
+        tagName: VisualBlockTag,
+    ): HTMLElement[] {
+        if (!phrasingOnlyBlockTags.has(tagName)) {
+            replacement.append(...Array.from(source.childNodes));
+            return [replacement];
+        }
+        const replacements: HTMLElement[] = [];
+        let inlineNodes: Node[] = [];
+        const flushInline = (): void => {
+            if (!hasMeaningfulInlineNodes(inlineNodes)) {
+                inlineNodes = [];
+                return;
+            }
+            const target = this.#document.createElement(tagName);
+            target.append(...inlineNodes);
+            replacements.push(target);
+            inlineNodes = [];
+        };
+        for (const child of Array.from(source.childNodes)) {
+            if (isFlowBlockNode(child)) {
+                flushInline();
+                if (child instanceof HTMLElement) {
+                    if (
+                        child.tagName.toLowerCase() === tagName &&
+                        !hasFlowBlockDescendant(child)
+                    ) {
+                        replacements.push(child);
+                    } else {
+                        const childTagName = child.tagName.toLowerCase();
+                        if (
+                            childTagName === 'pre' &&
+                            (tagName === 'p' || tagName === 'div')
+                        ) {
+                            this.#convertPreLineBreaks(child);
+                        } else if (
+                            (childTagName === 'p' || childTagName === 'div') &&
+                            tagName === 'pre'
+                        ) {
+                            this.#convertBreakElements(child);
+                        }
+                        const nested = this.#document.createElement(tagName);
+                        for (const attribute of Array.from(child.attributes)) {
+                            nested.setAttribute(
+                                attribute.name,
+                                attribute.value,
+                            );
+                        }
+                        replacements.push(
+                            ...this.#replaceBlockContent(
+                                child,
+                                nested,
+                                tagName,
+                            ),
+                        );
+                    }
+                }
+            } else {
+                inlineNodes.push(child);
+            }
+        }
+        flushInline();
+        if (replacements.length === 0) replacements.push(replacement);
+        else {
+            for (const attribute of Array.from(replacement.attributes)) {
+                if (!replacements[0]!.hasAttribute(attribute.name)) {
+                    replacements[0]!.setAttribute(
+                        attribute.name,
+                        attribute.value,
+                    );
+                }
+            }
+            // Preserve attributes on the block being reformatted without
+            // overwriting attributes carried by an existing nested block.
+            for (const attribute of Array.from(source.attributes)) {
+                if (!replacements[0]!.hasAttribute(attribute.name)) {
+                    replacements[0]!.setAttribute(
+                        attribute.name,
+                        attribute.value,
+                    );
+                }
+            }
+        }
+        return replacements;
+    }
+
+    /**
+     * CKEditor-style paragraphization for legacy HTML that leaves inline
+     * content directly under the editing root. Do this only when the author
+     * explicitly chooses a block command; loading the document remains
+     * source-preserving.
+     */
+    #wrapOrphanInlineContent(tagName: VisualBlockTag): void {
+        const selection = this.#range();
+        if (selection === undefined) return;
+        const rootChild = (node: Node): Node | undefined => {
+            let current: Node | null = node;
+            while (current !== null && current.parentNode !== this.element) {
+                current = current.parentNode;
+            }
+            return current?.parentNode === this.element ? current : undefined;
+        };
+        const first = rootChild(selection.startContainer);
+        const last = rootChild(selection.endContainer);
+        if (first === undefined || last === undefined) return;
+        const firstIndex = Array.prototype.indexOf.call(
+            this.element.childNodes,
+            first,
+        );
+        const lastIndex = Array.prototype.indexOf.call(
+            this.element.childNodes,
+            last,
+        );
+        if (firstIndex < 0 || lastIndex < firstIndex) return;
+        const children = Array.from(this.element.childNodes).slice(
+            firstIndex,
+            lastIndex + 1,
+        );
+        if (
+            children.some(
+                (child) =>
+                    child instanceof HTMLElement &&
+                    child.matches(blockSelector),
+            )
+        ) {
+            return;
+        }
+        this.#mutate(() => {
+            const markers = this.#placeSelectionMarkers(selection);
+            const replacement = this.#document.createElement(tagName);
+            this.element.insertBefore(replacement, first);
+            for (const child of children) replacement.append(child);
+            const restored = this.#restoreSelectionMarkers(markers);
+            return restored ?? rangeAtEnd(this.#document, replacement);
+        });
+    }
+
+    #convertPreLineBreaks(block: HTMLElement): void {
+        const walker = this.#document.createTreeWalker(
+            block,
+            this.#document.defaultView?.NodeFilter.SHOW_TEXT ?? 4,
+        );
+        const textNodes: Text[] = [];
+        for (
+            let node = walker.nextNode();
+            node !== null;
+            node = walker.nextNode()
+        ) {
+            if (node instanceof Text && node.data.includes('\n')) {
+                textNodes.push(node);
+            }
+        }
+        for (const text of textNodes) {
+            const fragment = this.#document.createDocumentFragment();
+            const lines = text.data.split('\n');
+            lines.forEach((line, index) => {
+                if (line.length > 0) {
+                    fragment.append(this.#document.createTextNode(line));
+                }
+                if (index < lines.length - 1) {
+                    fragment.append(this.#document.createElement('br'));
+                }
+            });
+            text.replaceWith(fragment);
+        }
+    }
+
+    #convertBreakElements(block: HTMLElement): void {
+        for (const br of Array.from(block.querySelectorAll('br'))) {
+            if (br.namespaceURI !== 'http://www.w3.org/1999/xhtml') continue;
+            br.replaceWith(this.#document.createTextNode('\n'));
+        }
+    }
+
+    #placeSelectionMarkers(range: Range): {
+        readonly end: HTMLElement;
+        readonly start: HTMLElement;
+    } {
+        const createMarker = (): HTMLElement => {
+            const marker = this.#document.createElement('span');
+            marker.setAttribute('data-soeditor-selection-marker', 'true');
+            return marker;
+        };
+        const start = createMarker();
+        const end = range.collapsed ? start : createMarker();
+        if (!range.collapsed) {
+            const endRange = range.cloneRange();
+            endRange.collapse(false);
+            endRange.insertNode(end);
+        }
+        const startRange = range.cloneRange();
+        startRange.collapse(true);
+        startRange.insertNode(start);
+        return { end, start };
+    }
+
+    #restoreSelectionMarkers(markers: {
+        readonly end: HTMLElement;
+        readonly start: HTMLElement;
+    }): Range | undefined {
+        const { end, start } = markers;
+        if (start === end) {
+            const point = this.#removeSelectionMarker(start);
+            return point === undefined ? undefined : this.#rangeAtPoint(point);
+        }
+        const endPoint = this.#removeSelectionMarker(end);
+        const startPoint = this.#removeSelectionMarker(start);
+        if (startPoint === undefined || endPoint === undefined)
+            return undefined;
+        const restored = this.#document.createRange();
+        try {
+            restored.setStart(startPoint.node, startPoint.offset);
+            restored.setEnd(endPoint.node, endPoint.offset);
+            return restored;
+        } catch {
+            return undefined;
+        }
+    }
+
+    #removeSelectionMarker(
+        marker: HTMLElement,
+    ): { readonly node: Node; readonly offset: number } | undefined {
+        const parent = marker.parentNode;
+        if (parent === null) {
+            marker.remove();
+            return undefined;
+        }
+        const previous = marker.previousSibling;
+        const next = marker.nextSibling;
+        marker.remove();
+        if (previous instanceof Text && next instanceof Text) {
+            const offset = previous.data.length;
+            previous.appendData(next.data);
+            next.remove();
+            return { node: previous, offset };
+        }
+        if (previous instanceof Text) {
+            return { node: previous, offset: previous.data.length };
+        }
+        if (next instanceof Text) return { node: next, offset: 0 };
+        const offset = Array.prototype.indexOf.call(parent.childNodes, next);
+        return {
+            node: parent,
+            offset: offset < 0 ? parent.childNodes.length : offset,
+        };
+    }
+
+    #rangeAtPoint(point: {
+        readonly node: Node;
+        readonly offset: number;
+    }): Range {
+        const range = this.#document.createRange();
+        range.setStart(point.node, point.offset);
+        range.collapse(true);
+        return range;
     }
 
     #isBlockActive(tagName: VisualBlockTag): boolean {
@@ -1774,7 +2312,8 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     #isListActive(list: 'ol' | 'ul'): boolean {
-        return this.#selectedBlock()?.closest(list) !== null;
+        const block = this.#selectedBlock();
+        return block !== undefined && block.closest(list) !== null;
     }
 
     #setListProperties(properties: VisualListProperties): void {
@@ -2066,12 +2605,22 @@ export class WysiwygEditingEngine implements EditingEngine {
             return;
         }
         const linkValue = readImageString(value.link);
+        const linkTarget = readImageString(value.linkTarget);
         if (
             linkValue !== undefined &&
             linkValue.length > 0 &&
             !safeUrl(linkValue, false)
         ) {
             this.#editingFeedback('Image link URL is not safe.', 'error');
+            return;
+        }
+        if (
+            linkTarget !== undefined &&
+            linkTarget.length > 0 &&
+            !/^_(?:blank|parent|self|top)$/u.test(linkTarget) &&
+            !/^[A-Za-z][A-Za-z0-9_.:-]*$/u.test(linkTarget)
+        ) {
+            this.#editingFeedback('Image link target is invalid.', 'error');
             return;
         }
         const sourceSet = readImageString(value.srcset);
@@ -2238,6 +2787,16 @@ export class WysiwygEditingEngine implements EditingEngine {
                     currentLink.setAttribute('href', linkValue);
                 }
             }
+            if (linkTarget !== undefined) {
+                const currentLink = image.closest('a');
+                if (currentLink !== null) {
+                    setOptional(
+                        currentLink,
+                        'target',
+                        linkTarget.length === 0 ? undefined : linkTarget,
+                    );
+                }
+            }
             this.#selectedElement = image;
             const range = this.#document.createRange();
             range.selectNode(image);
@@ -2258,6 +2817,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     #selectedBlock(): HTMLElement | undefined {
+        if (this.#activeCell?.isConnected === true) return this.#activeCell;
         const range = this.#range();
         if (range === undefined) return undefined;
         const element =
@@ -2502,6 +3062,27 @@ function safeSourceSet(value: string): boolean {
     });
 }
 
+function readTableDimension(
+    table: HTMLTableElement,
+    name: 'height' | 'width',
+): string | undefined {
+    const value = table.getAttribute(name);
+    if (value === null) return undefined;
+    const pixels = /^([1-9][0-9]{0,3})(?:px)?$/u.exec(value);
+    if (pixels?.[1] !== undefined) return `${pixels[1]}px`;
+    const percent = /^(100|[1-9]?[0-9])%$/u.exec(value);
+    return percent?.[1] === undefined ? undefined : value;
+}
+
+function readTableInteger(
+    table: HTMLTableElement,
+    name: 'border',
+): number | undefined {
+    const value = table.getAttribute(name);
+    if (value === null || !/^\d{1,3}$/u.test(value)) return undefined;
+    return Number(value);
+}
+
 function readImageString(value: unknown): string | undefined {
     if (value === undefined) return undefined;
     if (value === null) return '';
@@ -2629,6 +3210,10 @@ function removeInlineStyleDeclaration(
     element: HTMLElement,
     property: VisualInlineStyleProperty,
 ): void {
+    const removedProperties =
+        property === 'background'
+            ? new Set(['background', 'background-color'])
+            : new Set([property]);
     const retained = (element.getAttribute('style') ?? '')
         .split(';')
         .map((declaration) => declaration.trim())
@@ -2636,9 +3221,8 @@ function removeInlineStyleDeclaration(
             if (declaration.length === 0) return false;
             const separator = declaration.indexOf(':');
             if (separator < 0) return false;
-            return (
-                declaration.slice(0, separator).trim().toLowerCase() !==
-                property
+            return !removedProperties.has(
+                declaration.slice(0, separator).trim().toLowerCase(),
             );
         });
     if (retained.length === 0) {
@@ -2795,6 +3379,24 @@ function isBlockInsertion(element: Element): boolean {
     );
 }
 
+function isFlowBlockNode(node: Node): node is HTMLElement {
+    return node instanceof HTMLElement && node.matches(flowBlockSelector);
+}
+
+function hasMeaningfulInlineNodes(nodes: readonly Node[]): boolean {
+    return nodes.some((node) => {
+        if (node instanceof Text) return node.data.trim().length > 0;
+        return !(
+            node instanceof HTMLElement &&
+            node.dataset.soeditorSelectionMarker === 'true'
+        );
+    });
+}
+
+function hasFlowBlockDescendant(element: Element): boolean {
+    return element.querySelector(flowBlockSelector) !== null;
+}
+
 function structuredType(element: Element): string | undefined {
     if (element.matches('table')) return 'soeditor.table';
     if (element.matches('figure[data-soeditor-media],figure:has(img)')) {
@@ -2890,6 +3492,42 @@ function readNativeTableRange(value: unknown): TableCellRange | undefined {
               kind: kind as 'cells' | 'columns' | 'rows' | 'table',
           }
         : { anchor: nextAnchor, focus: nextFocus };
+}
+
+function isTableSelectionProjectionMutation(record: MutationRecord): boolean {
+    if (record.type !== 'attributes' || !(record.target instanceof Element)) {
+        return false;
+    }
+    if (
+        record.target.matches(
+            '.soeditor-table-column-resize, .soeditor-table-row-resize',
+        )
+    ) {
+        return true;
+    }
+    if (
+        record.attributeName === 'aria-selected' &&
+        record.target.matches('td,th')
+    ) {
+        return true;
+    }
+    if (record.attributeName !== 'class') return false;
+    const contentClasses = (value: string | null): string =>
+        (value ?? '')
+            .split(/\s+/u)
+            .filter(
+                (name) =>
+                    name.length > 0 &&
+                    !name.startsWith('soeditor-') &&
+                    name !== 'is-editing' &&
+                    name !== 'is-structurally-selected',
+            )
+            .sort()
+            .join(' ');
+    return (
+        contentClasses(record.oldValue) ===
+        contentClasses(record.target.getAttribute('class'))
+    );
 }
 
 function nodePath(root: Node, node: Node): readonly number[] {

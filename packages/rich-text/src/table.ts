@@ -93,8 +93,12 @@ export type TableDimension = `${number}` | `${number}px` | `${number}%`;
 export interface TableProperties {
     readonly alignment?: TableAlignment | null;
     readonly ariaLabel?: string | null;
+    readonly border?: string | null;
     readonly caption?: string | null;
+    readonly cellPadding?: string | null;
+    readonly cellSpacing?: string | null;
     readonly responsiveClass?: string | null;
+    readonly summary?: string | null;
     readonly width?: string | null;
     readonly height?: string | null;
     readonly customAttributes?: readonly HtmlAttribute[];
@@ -124,6 +128,76 @@ export interface TableCellProperties {
 
 export interface TableSectionProperties {
     readonly customAttributes?: readonly HtmlAttribute[];
+}
+
+export interface TableCaptionDescriptor {
+    readonly attributes: readonly HtmlAttribute[];
+    readonly exists: boolean;
+    readonly hasRichContent: boolean;
+    readonly text: string;
+}
+
+export interface TableSectionDescriptor {
+    readonly attributes: readonly HtmlAttribute[];
+    readonly editable: boolean;
+    readonly index: number;
+    readonly kind: TableSection;
+    readonly rowCount: number;
+    readonly reason?: string;
+}
+
+export interface TableColumnDescriptor {
+    readonly attributes: readonly HtmlAttribute[];
+    readonly span: number;
+    readonly width?: string;
+}
+
+export interface TableColumnGroupDescriptor {
+    readonly attributes: readonly HtmlAttribute[];
+    readonly columnCount: number;
+    readonly columns: readonly TableColumnDescriptor[];
+    readonly editable: boolean;
+    readonly index: number;
+    readonly reason?: string;
+    readonly span?: number;
+    readonly startColumn: number;
+}
+
+export interface TableStructureDiagnostic {
+    readonly code:
+        | 'column-coverage-mismatch'
+        | 'conflicting-column-definition'
+        | 'direct-table-rows'
+        | 'empty-duplicate-section'
+        | 'invalid-column-span'
+        | 'unknown-column-child';
+    readonly message: string;
+    readonly repairId?: string;
+    readonly repairable: boolean;
+    readonly severity: 'error' | 'info' | 'warning';
+}
+
+export interface TableStructureSnapshot {
+    readonly caption: TableCaptionDescriptor;
+    readonly columnGroups: readonly TableColumnGroupDescriptor[];
+    readonly diagnostics: readonly TableStructureDiagnostic[];
+    readonly sections: readonly TableSectionDescriptor[];
+}
+
+export interface TableRowMoveOptions {
+    readonly placement: 'end' | 'start';
+    readonly range: TableCellRange;
+    readonly targetSectionIndex: number;
+}
+
+export interface TableColumnGroupProperties {
+    readonly columns?: readonly TableColumnDescriptor[];
+    readonly customAttributes?: readonly HtmlAttribute[];
+    readonly span?: number | null;
+}
+
+export interface TableColumnGroupInsertOptions extends TableColumnGroupProperties {
+    readonly position?: number;
 }
 
 /** Bounded pixel width accepted by `table.column.resize`. */
@@ -182,13 +256,58 @@ export class TablePlugin extends Plugin {
         executeStructuralAction: (action: TableStructuralAction) =>
             this.editor.execute(structuralCommand(action)),
         inspect: () => this.#inspectEditor(),
+        inspectStructure: () =>
+            this.editor.execute(
+                'table.structure.inspect',
+            ) as TableStructureSnapshot,
+        updateCaption: (text: string | null) =>
+            this.editor.execute(
+                text === null ? 'table.caption.remove' : 'table.caption.set',
+                ...(text === null ? [] : [text]),
+            ),
+        createSection: (kind: TableSection, position?: number) =>
+            this.editor.execute('table.section.create', { kind, position }),
+        removeSection: (sectionIndex: number) =>
+            this.editor.execute('table.section.remove', sectionIndex),
+        moveRows: (options: TableRowMoveOptions) =>
+            this.editor.execute('table.section.moveRows', options),
+        reorderBodySection: (sectionIndex: number, targetIndex: number) =>
+            this.editor.execute('table.section.reorderBody', {
+                sectionIndex,
+                targetIndex,
+            }),
         recover: () => this.#recoverEmptyTable(),
         updateCells: (properties: TableCellProperties) =>
             this.editor.execute('table.cell.properties', properties),
         updateRows: (properties: TableRowProperties) =>
             this.editor.execute('table.row.properties', properties),
-        updateSection: (properties: TableSectionProperties) =>
-            this.editor.execute('table.section.properties', properties),
+        updateSection: (
+            sectionIndexOrProperties: number | TableSectionProperties,
+            properties?: TableSectionProperties,
+        ) =>
+            typeof sectionIndexOrProperties === 'number'
+                ? this.editor.execute('table.section.properties', {
+                      sectionIndex: sectionIndexOrProperties,
+                      properties,
+                  })
+                : this.editor.execute(
+                      'table.section.properties',
+                      sectionIndexOrProperties,
+                  ),
+        createColumnGroup: (options: TableColumnGroupInsertOptions) =>
+            this.editor.execute('table.colgroup.create', options),
+        updateColumnGroup: (
+            groupIndex: number,
+            properties: TableColumnGroupProperties,
+        ) =>
+            this.editor.execute('table.colgroup.properties', {
+                groupIndex,
+                properties,
+            }),
+        removeColumnGroup: (groupIndex: number) =>
+            this.editor.execute('table.colgroup.remove', groupIndex),
+        repairStructure: (repairId: string) =>
+            this.editor.execute('table.structure.repair', repairId),
         updateTable: (properties: TableProperties) =>
             this.editor.execute('table.properties', properties),
     });
@@ -369,6 +488,22 @@ export class TablePlugin extends Plugin {
             },
         );
         this.#registerTableCommand(
+            'table.header.firstRow',
+            'Set first row as column headers',
+            (table, parsed, _range, args) => {
+                assertNoArguments('table.header.firstRow', args);
+                return setHeaderAxis(table, parsed, 'row');
+            },
+        );
+        this.#registerTableCommand(
+            'table.header.firstColumn',
+            'Set first column as row headers',
+            (table, parsed, _range, args) => {
+                assertNoArguments('table.header.firstColumn', args);
+                return setHeaderAxis(table, parsed, 'column');
+            },
+        );
+        this.#registerTableCommand(
             'table.cells.merge',
             'Merge table cells',
             (table, parsed, range, args) => {
@@ -504,6 +639,99 @@ export class TablePlugin extends Plugin {
                 setTableProperties(table, readTableProperties(args)),
         );
         this.#registerTableCommand(
+            'table.caption.set',
+            'Set table caption',
+            (table, _parsed, _range, args) =>
+                setCaption(table, oneString('table.caption.set', args)),
+        );
+        this.#registerTableCommand(
+            'table.caption.remove',
+            'Remove table caption',
+            (table, _parsed, _range, args) => {
+                assertNoArguments('table.caption.remove', args);
+                return setCaption(table, null);
+            },
+        );
+        this.#registerTableCommand(
+            'table.section.create',
+            'Create table section',
+            (table, _parsed, _range, args) =>
+                createTableSection(table, readSectionCreate(args)),
+        );
+        this.#registerTableCommand(
+            'table.section.remove',
+            'Remove empty table section',
+            (table, _parsed, _range, args) =>
+                removeTableSection(
+                    table,
+                    oneInteger('table.section.remove', args, 0, 1024),
+                ),
+        );
+        this.#registerTableCommand(
+            'table.section.moveRows',
+            'Move rows to table section',
+            (table, parsed, _range, args) =>
+                moveTableRows(table, parsed, readRowMoveOptions(args)),
+        );
+        this.#registerTableCommand(
+            'table.section.reorderBody',
+            'Reorder table body section',
+            (table, _parsed, _range, args) =>
+                reorderBodySection(table, readBodyReorder(args)),
+        );
+        this.#registerTableCommand(
+            'table.colgroup.create',
+            'Create table column group',
+            (table, parsed, _range, args) =>
+                createTableColumnGroup(
+                    table,
+                    parsed,
+                    readColumnGroupInsert(args),
+                ),
+        );
+        this.#registerTableCommand(
+            'table.colgroup.properties',
+            'Set table column group properties',
+            (table, parsed, _range, args) => {
+                const value = readColumnGroupUpdate(args);
+                return updateTableColumnGroup(
+                    table,
+                    parsed,
+                    value.groupIndex,
+                    value.properties,
+                );
+            },
+        );
+        this.#registerTableCommand(
+            'table.colgroup.remove',
+            'Remove empty table column group',
+            (table, parsed, _range, args) =>
+                removeTableColumnGroup(
+                    table,
+                    parsed,
+                    oneInteger('table.colgroup.remove', args, 0, 1024),
+                ),
+        );
+        this.#registerTableCommand(
+            'table.structure.repair',
+            'Repair table structure',
+            (table, _parsed, _range, args) => {
+                const repairId = oneString('table.structure.repair', args);
+                if (
+                    repairId !== 'wrap-direct-rows' &&
+                    repairId !== 'remove-empty-duplicate-sections'
+                ) {
+                    throw new RichTextArgumentError(
+                        'table.structure.repair',
+                        'unknown or unsafe repair.',
+                    );
+                }
+                return repairId === 'wrap-direct-rows'
+                    ? wrapDirectTableRows(table)
+                    : removeEmptyDuplicateSections(table);
+            },
+        );
+        this.#registerTableCommand(
             'table.row.properties',
             'Set table row properties',
             (table, parsed, range, args) =>
@@ -528,13 +756,21 @@ export class TablePlugin extends Plugin {
         this.#registerTableCommand(
             'table.section.properties',
             'Set table section properties',
-            (table, parsed, range, args) =>
-                setSectionProperties(
-                    table,
-                    parsed,
-                    normalizedRange(range),
-                    readSectionProperties(args),
-                ),
+            (table, parsed, range, args) => {
+                const indexed = readIndexedSectionProperties(args);
+                return indexed === undefined
+                    ? setSectionProperties(
+                          table,
+                          parsed,
+                          normalizedRange(range),
+                          readSectionProperties(args),
+                      )
+                    : setSectionPropertiesByIndex(
+                          table,
+                          indexed.sectionIndex,
+                          indexed.properties,
+                      );
+            },
         );
         this.#registerTableCommand(
             'table.column.resize',
@@ -552,39 +788,34 @@ export class TablePlugin extends Plugin {
             'Inspect table properties',
             (table) =>
                 Object.freeze({
-                    alignment:
-                        attributeValue(
-                            table.attributes,
-                            'data-soeditor-align',
-                        ) ?? '',
+                    alignment: attributeValue(table.attributes, 'align') ?? '',
                     ariaLabel:
                         attributeValue(table.attributes, 'aria-label') ?? '',
+                    border: attributeValue(table.attributes, 'border') ?? '',
                     caption:
                         plainText(
                             directElement(table.children, 'caption')
                                 ?.children ?? [],
                         ) ?? '',
                     responsiveClass:
-                        attributeValue(
-                            table.attributes,
-                            'data-soeditor-responsive-class',
-                        ) ?? '',
-                    width:
-                        attributeValue(table.attributes, 'width') ??
-                        attributeValue(
-                            table.attributes,
-                            'data-soeditor-width',
-                        ) ??
-                        '',
-                    height:
-                        attributeValue(table.attributes, 'height') ??
-                        attributeValue(
-                            table.attributes,
-                            'data-soeditor-height',
-                        ) ??
-                        '',
+                        attributeValue(table.attributes, 'class') ?? '',
+                    cellPadding:
+                        attributeValue(table.attributes, 'cellpadding') ?? '',
+                    cellSpacing:
+                        attributeValue(table.attributes, 'cellspacing') ?? '',
+                    summary: attributeValue(table.attributes, 'summary') ?? '',
+                    width: attributeValue(table.attributes, 'width') ?? '',
+                    height: attributeValue(table.attributes, 'height') ?? '',
                     customAttributes: inspectCustomAttributes(table.attributes),
                 }),
+        );
+        this.#registerTableInspection(
+            'table.structure.inspect',
+            'Inspect table structure',
+            (table, parsed) =>
+                inspectTableStructure(table, parsed) as unknown as Readonly<
+                    Record<string, unknown>
+                >,
         );
         this.#registerTableInspection(
             'table.row.inspect',
@@ -601,18 +832,13 @@ export class TablePlugin extends Plugin {
                     className:
                         attributeValue(
                             row?.element.attributes ?? [],
-                            'data-soeditor-class',
+                            'class',
                         ) ?? '',
                     height:
                         attributeValue(
                             row?.element.attributes ?? [],
                             'height',
-                        ) ??
-                        attributeValue(
-                            row?.element.attributes ?? [],
-                            'data-soeditor-height',
-                        ) ??
-                        '',
+                        ) ?? '',
                     section:
                         tableRowSections(table.children)[normalized.top] ??
                         'body',
@@ -632,24 +858,14 @@ export class TablePlugin extends Plugin {
                 return Object.freeze({
                     tagName: cell?.element.tagName ?? '',
                     ariaLabel: attributeValue(attributes, 'aria-label') ?? '',
-                    className:
-                        attributeValue(attributes, 'data-soeditor-class') ?? '',
+                    className: attributeValue(attributes, 'class') ?? '',
                     horizontalAlignment:
-                        attributeValue(attributes, 'data-soeditor-align') ?? '',
+                        attributeValue(attributes, 'align') ?? '',
                     scope: attributeValue(attributes, 'scope') ?? '',
                     verticalAlignment:
-                        attributeValue(
-                            attributes,
-                            'data-soeditor-vertical-align',
-                        ) ?? '',
-                    height:
-                        attributeValue(attributes, 'height') ??
-                        attributeValue(attributes, 'data-soeditor-height') ??
-                        '',
-                    width:
-                        attributeValue(attributes, 'width') ??
-                        attributeValue(attributes, 'data-soeditor-width') ??
-                        '',
+                        attributeValue(attributes, 'valign') ?? '',
+                    height: attributeValue(attributes, 'height') ?? '',
+                    width: attributeValue(attributes, 'width') ?? '',
                     rowspan: attributeValue(attributes, 'rowspan') ?? '1',
                     colspan: attributeValue(attributes, 'colspan') ?? '1',
                     contentHtml:
@@ -1048,26 +1264,27 @@ function createTableNodeView(
         attributeValue(context.node.attributes, 'aria-label') ??
             'Editable table',
     );
-    const tableWidth =
-        attributeValue(context.node.attributes, 'width') ??
-        attributeValue(context.node.attributes, 'data-soeditor-width');
+    const tableWidth = attributeValue(context.node.attributes, 'width');
     if (tableWidth !== undefined) {
         table.style.width = /^\d+$/u.test(tableWidth)
             ? `${tableWidth}px`
             : tableWidth;
     }
-    const tableHeight =
-        attributeValue(context.node.attributes, 'height') ??
-        attributeValue(context.node.attributes, 'data-soeditor-height');
+    const tableHeight = attributeValue(context.node.attributes, 'height');
     if (tableHeight !== undefined) {
         table.style.height = /^\d+$/u.test(tableHeight)
             ? `${tableHeight}px`
             : tableHeight;
     }
-    const tableAlignment = attributeValue(
+    const tableBorder = tableIntegerAttribute(
         context.node.attributes,
-        'data-soeditor-align',
+        'border',
     );
+    if (tableBorder !== undefined) {
+        table.style.borderStyle = tableBorder === 0 ? 'none' : 'solid';
+        table.style.borderWidth = `${String(tableBorder)}px`;
+    }
+    const tableAlignment = attributeValue(context.node.attributes, 'align');
     if (tableAlignment === 'center') {
         table.style.marginInline = 'auto';
     } else if (tableAlignment === 'right') {
@@ -1075,10 +1292,7 @@ function createTableNodeView(
     } else if (tableAlignment === 'left') {
         table.style.marginInlineEnd = 'auto';
     }
-    const responsiveClass = attributeValue(
-        context.node.attributes,
-        'data-soeditor-responsive-class',
-    );
+    const responsiveClass = attributeValue(context.node.attributes, 'class');
     if (responsiveClass !== undefined) {
         table.className = responsiveClass;
     }
@@ -1109,6 +1323,7 @@ function createTableNodeView(
     const cellEditingServices = new Set<VisualEditingService>();
     const dirtyCells = new Map<string, HTMLElement>();
     const editingFinishers = new Map<HTMLElement, () => void>();
+    const editingStarters = new Map<HTMLElement, () => void>();
     const restoreNativeRange = (nativeRange: Range | undefined): void => {
         if (
             nativeRange === undefined ||
@@ -1164,6 +1379,10 @@ function createTableNodeView(
         for (const cell of row.cells) {
             const td = context.document.createElement(cell.element.tagName);
             applyProjectedProperties(td, cell.element.attributes, 'cell');
+            if (tableBorder !== undefined) {
+                td.style.borderStyle = tableBorder === 0 ? 'none' : 'solid';
+                td.style.borderWidth = `${String(tableBorder)}px`;
+            }
             if (cell.colspan > 1) {
                 td.setAttribute('colspan', String(cell.colspan));
             }
@@ -1273,6 +1492,7 @@ function createTableNodeView(
                     blurTimer = undefined;
                 }
             };
+            editingStarters.set(button, () => startEditing());
             cellEditingServices.add(cellEditingService);
             button.addEventListener(
                 'pointerdown',
@@ -1412,7 +1632,34 @@ function createTableNodeView(
             button.addEventListener(
                 'keydown',
                 (event) => {
-                    if (editing && event.altKey && event.shiftKey) {
+                    if (
+                        event.key === 'Escape' &&
+                        !editing &&
+                        (range.anchor.row !== range.focus.row ||
+                            range.anchor.column !== range.focus.column)
+                    ) {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        range = {
+                            anchor: range.anchor,
+                            focus: range.anchor,
+                        };
+                        activateSelection();
+                        paintTableSelection(buttons, range);
+                        const anchor = buttons.get(positionKey(range.anchor));
+                        anchor?.focus();
+                        if (anchor !== undefined) {
+                            editingStarters.get(anchor)?.();
+                        }
+                        return;
+                    }
+                    if (
+                        editing &&
+                        event.shiftKey &&
+                        !event.altKey &&
+                        !event.ctrlKey &&
+                        !event.metaKey
+                    ) {
                         const movement = tableMovement(event.key);
                         if (movement === undefined) return;
                         event.preventDefault();
@@ -1434,6 +1681,20 @@ function createTableNodeView(
                             range,
                         );
                         return;
+                    }
+                    if (
+                        editing &&
+                        event.key === 'Tab' &&
+                        !event.shiftKey &&
+                        nextTableTabPosition(
+                            parsed,
+                            buttons,
+                            { column: cell.column, row: cell.row },
+                            false,
+                        ) === undefined
+                    ) {
+                        finishEditing();
+                        commitDirtyCells();
                     }
                     if (editing) return;
                     if (event.key === 'Enter' || event.key === 'F2') {
@@ -1468,7 +1729,27 @@ function createTableNodeView(
                                     column: origin.column + movement.column,
                                     row: origin.row + movement.row,
                                 });
-                    if (position === undefined) return;
+                    if (position === undefined) {
+                        if (event.key === 'Tab' && !event.shiftKey) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            activateSelection();
+                            context.actions.execute('table.row.insertAfter');
+                            context.document.defaultView?.setTimeout(() => {
+                                context.document.defaultView?.requestAnimationFrame(
+                                    () => {
+                                        const next = Array.from(
+                                            context.document.querySelectorAll<HTMLElement>(
+                                                '.soeditor-table-cell',
+                                            ),
+                                        ).at(-1);
+                                        next?.focus();
+                                    },
+                                );
+                            }, 0);
+                        }
+                        return;
+                    }
                     event.preventDefault();
                     event.stopPropagation();
                     range = event.shiftKey
@@ -1499,6 +1780,251 @@ function createTableNodeView(
         projectedSection?.append(tr);
     }
     root.append(table);
+    const canResizeColumns = (() => {
+        try {
+            readResizableColumnWidths(
+                tableElement(context.node),
+                parsed.columns,
+            );
+            return true;
+        } catch {
+            return false;
+        }
+    })();
+    if (!readonly && canResizeColumns) {
+        for (let column = 0; column < parsed.columns; column += 1) {
+            const reference = buttons.get(positionKey({ column, row: 0 }));
+            const nativeCell = reference?.closest<HTMLElement>('td,th');
+            if (nativeCell === null || nativeCell === undefined) continue;
+            const handle = context.document.createElement('button');
+            handle.type = 'button';
+            handle.className = 'soeditor-table-column-resize';
+            handle.setAttribute(
+                'aria-label',
+                `Resize column ${String(column + 1)}`,
+            );
+            const positionHandle = (): void => {
+                const rootRect = root.getBoundingClientRect();
+                const cellRect = nativeCell.getBoundingClientRect();
+                handle.style.insetInlineStart = `${String(cellRect.right - rootRect.left - 8)}px`;
+                handle.style.insetBlockStart = `${String(table.offsetTop)}px`;
+                handle.style.height = `${String(table.offsetHeight)}px`;
+            };
+            let originalWidth = 0;
+            let pendingWidth = 0;
+            let startX = 0;
+            let dragging = false;
+            const preview = (width: number): void => {
+                pendingWidth = Math.max(40, Math.min(1200, Math.round(width)));
+                handle.dataset.width = `${String(pendingWidth)} px`;
+                handle.setAttribute('aria-valuenow', String(pendingWidth));
+            };
+            const commit = (): void => {
+                if (!dragging) return;
+                dragging = false;
+                handle.style.removeProperty('transform');
+                root.classList.remove('is-resizing-column');
+                range = {
+                    anchor: { column, row: 0 },
+                    focus: { column, row: parsed.rows.length - 1 },
+                    kind: 'columns',
+                };
+                activateSelection();
+                context.actions.execute('table.column.resize', range, {
+                    width: pendingWidth,
+                });
+            };
+            const cancel = (): void => {
+                if (!dragging) return;
+                dragging = false;
+                handle.style.removeProperty('transform');
+                root.classList.remove('is-resizing-column');
+                preview(originalWidth);
+            };
+            handle.addEventListener(
+                'pointerdown',
+                (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    originalWidth = nativeCell.getBoundingClientRect().width;
+                    pendingWidth = originalWidth;
+                    startX = event.clientX;
+                    dragging = true;
+                    root.classList.add('is-resizing-column');
+                    handle.setPointerCapture(event.pointerId);
+                },
+                { signal: listeners.signal },
+            );
+            context.document.addEventListener(
+                'pointermove',
+                (event) => {
+                    if (!dragging) return;
+                    handle.style.transform = `translateX(${String(event.clientX - startX)}px)`;
+                    preview(originalWidth + event.clientX - startX);
+                },
+                { signal: listeners.signal },
+            );
+            context.document.addEventListener('pointerup', commit, {
+                signal: listeners.signal,
+            });
+            context.document.addEventListener('pointercancel', cancel, {
+                signal: listeners.signal,
+            });
+            handle.addEventListener(
+                'keydown',
+                (event) => {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        cancel();
+                        return;
+                    }
+                    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
+                        return;
+                    event.preventDefault();
+                    originalWidth = nativeCell.getBoundingClientRect().width;
+                    pendingWidth = Math.max(
+                        40,
+                        Math.min(
+                            1200,
+                            Math.round(originalWidth) +
+                                (event.key === 'ArrowLeft' ? -10 : 10),
+                        ),
+                    );
+                    dragging = true;
+                    commit();
+                },
+                { signal: listeners.signal },
+            );
+            root.append(handle);
+            globalThis.queueMicrotask(positionHandle);
+        }
+    }
+    if (!readonly) {
+        for (let row = 0; row < parsed.rows.length; row += 1) {
+            const reference = buttons.get(positionKey({ column: 0, row }));
+            const nativeCell = reference?.closest<HTMLElement>('td,th');
+            const nativeRow = nativeCell?.parentElement;
+            if (nativeRow === null || nativeRow === undefined) continue;
+            const handle = context.document.createElement('button');
+            handle.type = 'button';
+            handle.className = 'soeditor-table-row-resize';
+            handle.setAttribute('aria-label', `Resize row ${String(row + 1)}`);
+            handle.setAttribute('role', 'slider');
+            handle.setAttribute('aria-orientation', 'vertical');
+            handle.setAttribute('aria-valuemin', '24');
+            handle.setAttribute('aria-valuemax', '1000');
+            handle.setAttribute('aria-valuenow', '24');
+            const positionHandle = (): void => {
+                const rootRect = root.getBoundingClientRect();
+                const rowRect = nativeRow.getBoundingClientRect();
+                const tableRect = table.getBoundingClientRect();
+                handle.setAttribute(
+                    'aria-valuenow',
+                    String(
+                        Math.max(
+                            24,
+                            Math.min(1000, Math.round(rowRect.height)),
+                        ),
+                    ),
+                );
+                handle.style.insetInlineStart = `${String(tableRect.left - rootRect.left)}px`;
+                handle.style.insetBlockStart = `${String(rowRect.bottom - rootRect.top - 4)}px`;
+                handle.style.width = `${String(tableRect.width)}px`;
+            };
+            let originalHeight = 0;
+            let pendingHeight = 0;
+            let startY = 0;
+            let dragging = false;
+            const preview = (height: number): void => {
+                pendingHeight = Math.max(
+                    24,
+                    Math.min(1000, Math.round(height)),
+                );
+                handle.dataset.height = `${String(pendingHeight)} px`;
+                handle.setAttribute('aria-valuenow', String(pendingHeight));
+            };
+            const commit = (): void => {
+                if (!dragging) return;
+                dragging = false;
+                handle.style.removeProperty('transform');
+                root.classList.remove('is-resizing-row');
+                range = {
+                    anchor: { column: 0, row },
+                    focus: { column: parsed.columns - 1, row },
+                    kind: 'rows',
+                };
+                activateSelection();
+                context.actions.execute('table.row.properties', {
+                    height: pendingHeight,
+                });
+            };
+            const cancel = (): void => {
+                if (!dragging) return;
+                dragging = false;
+                handle.style.removeProperty('transform');
+                root.classList.remove('is-resizing-row');
+                preview(originalHeight);
+                delete handle.dataset.height;
+            };
+            handle.addEventListener(
+                'pointerdown',
+                (event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    originalHeight = nativeRow.getBoundingClientRect().height;
+                    pendingHeight = originalHeight;
+                    startY = event.clientY;
+                    dragging = true;
+                    root.classList.add('is-resizing-row');
+                    handle.setPointerCapture(event.pointerId);
+                },
+                { signal: listeners.signal },
+            );
+            context.document.addEventListener(
+                'pointermove',
+                (event) => {
+                    if (!dragging) return;
+                    handle.style.transform = `translateY(${String(event.clientY - startY)}px)`;
+                    preview(originalHeight + event.clientY - startY);
+                },
+                { signal: listeners.signal },
+            );
+            context.document.addEventListener('pointerup', commit, {
+                signal: listeners.signal,
+            });
+            context.document.addEventListener('pointercancel', cancel, {
+                signal: listeners.signal,
+            });
+            handle.addEventListener(
+                'keydown',
+                (event) => {
+                    if (event.key === 'Escape') {
+                        event.preventDefault();
+                        cancel();
+                        return;
+                    }
+                    if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown') {
+                        return;
+                    }
+                    event.preventDefault();
+                    originalHeight = nativeRow.getBoundingClientRect().height;
+                    pendingHeight = Math.max(
+                        24,
+                        Math.min(
+                            1000,
+                            Math.round(originalHeight) +
+                                (event.key === 'ArrowUp' ? -10 : 10),
+                        ),
+                    );
+                    dragging = true;
+                    commit();
+                },
+                { signal: listeners.signal },
+            );
+            root.append(handle);
+            globalThis.queueMicrotask(positionHandle);
+        }
+    }
     if (nativeWysiwyg) {
         root.addEventListener(
             'input',
@@ -1747,7 +2273,7 @@ function parseTable(table: HtmlElement): ParsedTable {
             (cellElements.length === 0 &&
                 (occupancy[rowIndex]?.length ?? 0) === 0) ||
             row.children.some(
-                (child) => !isCell(child) && !isWhitespaceText(child),
+                (child) => !isCell(child) && !isTableTrivia(child),
             )
         ) {
             throw new Error('rows may contain only table cells');
@@ -1834,7 +2360,7 @@ function collectRows(
                 child.children.some(
                     (candidate) =>
                         !isElement(candidate, 'tr') &&
-                        !isWhitespaceText(candidate),
+                        !isTableTrivia(candidate),
                 )
             ) {
                 throw new Error('table sections may contain only rows');
@@ -1845,7 +2371,7 @@ function collectRows(
                 ),
             );
         } else if (
-            !isWhitespaceText(child) &&
+            !isTableTrivia(child) &&
             !(
                 child.type === 'element' &&
                 ['caption', 'colgroup'].includes(child.tagName)
@@ -1855,6 +2381,10 @@ function collectRows(
         }
     }
     return rows;
+}
+
+function isTableTrivia(node: HtmlChildNode): boolean {
+    return node.type === 'comment' || isWhitespaceText(node);
 }
 
 function transformRows(
@@ -2054,14 +2584,13 @@ function readColumnWidths(
     if (
         groups.length !== 1 ||
         group === undefined ||
-        attributeValue(group.attributes, 'data-soeditor-columns') !== 'true' ||
         group.children.some(
             (child) => !isElement(child, 'col') && !isWhitespaceText(child),
         )
     ) {
         throw new RichTextArgumentError(
             command,
-            'does not alter tables with colgroup metadata unless SoEditor owns it.',
+            'requires one simple colgroup with one col per logical column.',
         );
     }
     const columnElements = group.children.filter((child) =>
@@ -2070,14 +2599,20 @@ function readColumnWidths(
     if (columnElements.length !== columns) {
         throw new RichTextArgumentError(
             command,
-            'requires owned column metadata to match the table grid.',
+            'requires column metadata to match the table grid.',
         );
     }
     return columnElements.map((column) => {
-        const value = attributeValue(column.attributes, 'data-soeditor-width');
+        const value = attributeValue(column.attributes, 'width');
         if (value === undefined) return undefined;
-        const width = Number(value);
-        if (!Number.isInteger(width) || width < 40 || width > 1200) {
+        const match = /^(\d{1,4})(?:px)?$/u.exec(value);
+        const width = Number(match?.[1]);
+        if (
+            match === null ||
+            !Number.isInteger(width) ||
+            width < 40 ||
+            width > 1200
+        ) {
             throw new RichTextArgumentError(
                 command,
                 'found invalid owned column width metadata.',
@@ -2098,6 +2633,102 @@ function projectedColumnWidths(
     }
 }
 
+function readResizableColumnWidths(
+    table: HtmlElement,
+    columns: number,
+): readonly (number | undefined)[] {
+    const groups = tableColumnGroups(table);
+    if (groups.length === 0) return readColumnWidths(table, columns);
+    const widths: (number | undefined)[] = [];
+    for (const group of groups) {
+        if (
+            attributeValue(group.attributes, 'span') !== undefined ||
+            group.children.some(
+                (child) => !isElement(child, 'col') && !isWhitespaceText(child),
+            )
+        ) {
+            throw new RichTextArgumentError(
+                'table.column.resize',
+                'requires column groups with explicit col elements.',
+            );
+        }
+        for (const column of group.children.filter((child) =>
+            isElement(child, 'col'),
+        )) {
+            const spanText = attributeValue(column.attributes, 'span');
+            const span = readPositiveSpan(spanText);
+            if (
+                (spanText !== undefined && span === undefined) ||
+                (span !== undefined && span !== 1)
+            ) {
+                throw new RichTextArgumentError(
+                    'table.column.resize',
+                    'cannot map a spanned col to one logical column.',
+                );
+            }
+            const value = attributeValue(column.attributes, 'width');
+            if (value === undefined || /^\d{1,4}%$/u.test(value)) {
+                widths.push(undefined);
+                continue;
+            }
+            const match = /^(\d{1,4})(?:px)?$/u.exec(value);
+            const width = Number(match?.[1]);
+            if (
+                match === null ||
+                !Number.isInteger(width) ||
+                width < 40 ||
+                width > 1200
+            ) {
+                throw new RichTextArgumentError(
+                    'table.column.resize',
+                    'found a column width that cannot be mapped safely.',
+                );
+            }
+            widths.push(width);
+        }
+    }
+    if (widths.length !== columns) {
+        throw new RichTextArgumentError(
+            'table.column.resize',
+            'requires column groups to match the logical table grid.',
+        );
+    }
+    return widths;
+}
+
+function resizeMappedColumnGroups(
+    table: HtmlElement,
+    range: NormalizedRange,
+    width: number | null,
+): HtmlElement {
+    let logicalColumn = 0;
+    return {
+        ...table,
+        children: table.children.map((child) => {
+            if (!isElement(child, 'colgroup')) return child;
+            return {
+                ...child,
+                children: child.children.map((column) => {
+                    if (!isElement(column, 'col')) return column;
+                    const selected =
+                        logicalColumn >= range.left &&
+                        logicalColumn <= range.right;
+                    logicalColumn += 1;
+                    if (!selected) return column;
+                    return {
+                        ...column,
+                        attributes: updateAttribute(
+                            column.attributes,
+                            'width',
+                            width === null ? null : `${String(width)}px`,
+                        ),
+                    };
+                }),
+            };
+        }),
+    };
+}
+
 function setColumnWidths(
     table: HtmlElement,
     widths: readonly (number | undefined)[],
@@ -2110,7 +2741,7 @@ function setColumnWidths(
     }
     const group = htmlElement(
         'colgroup',
-        [{ name: 'data-soeditor-columns', value: 'true' }],
+        [],
         widths.map((width) =>
             htmlElement(
                 'col',
@@ -2118,7 +2749,7 @@ function setColumnWidths(
                     ? []
                     : [
                           {
-                              name: 'data-soeditor-width',
+                              name: 'width',
                               value: String(width),
                           },
                       ],
@@ -2150,6 +2781,39 @@ function toggleHeaders(
                     ...cell.element,
                     tagName: makeHeader ? 'th' : 'td',
                 },
+            ]),
+        ),
+    );
+}
+
+function setHeaderAxis(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    axis: 'column' | 'row',
+): HtmlElement {
+    const selected = new Set<ParsedCell>();
+    if (axis === 'row') {
+        for (const cell of parsed.rows[0]?.cells ?? []) selected.add(cell);
+    } else {
+        for (const row of parsed.rows) {
+            const cell = parsed.grid[row.row]?.[0];
+            if (cell !== undefined) selected.add(cell);
+        }
+    }
+    return replaceCells(
+        table,
+        new Map(
+            [...selected].map((cell) => [
+                cell,
+                {
+                    ...cell.element,
+                    attributes: updateAttribute(
+                        cell.element.attributes,
+                        'scope',
+                        axis === 'row' ? 'col' : 'row',
+                    ),
+                    tagName: 'th',
+                } as HtmlElement,
             ]),
         ),
     );
@@ -2357,12 +3021,28 @@ function pasteCells(
     matrix: readonly (readonly (readonly HtmlChildNode[])[])[],
 ): HtmlElement {
     const columns = Math.max(...matrix.map((row) => row.length));
+    if (
+        range.top + matrix.length > parsed.rows.length ||
+        range.left + columns > parsed.columns
+    ) {
+        throw new RichTextArgumentError(
+            'table.cells.paste',
+            'clipboard matrix does not fit the table and automatic expansion is disabled.',
+        );
+    }
     const target: NormalizedRange = {
-        bottom: Math.min(parsed.rows.length - 1, range.top + matrix.length - 1),
+        bottom: range.top + matrix.length - 1,
         left: range.left,
-        right: Math.min(parsed.columns - 1, range.left + columns - 1),
+        right: range.left + columns - 1,
         top: range.top,
     };
+    const targetCells = selectedCells(parsed, target);
+    if (targetCells.some((cell) => cell.rowspan !== 1 || cell.colspan !== 1)) {
+        throw new RichTextArgumentError(
+            'table.cells.paste',
+            'clipboard matrix conflicts with a spanned table cell.',
+        );
+    }
     return replaceCellContents(
         table,
         parsed,
@@ -2377,11 +3057,7 @@ function setTableProperties(
 ): HtmlElement {
     let attributes = table.attributes;
     if (properties.alignment !== undefined) {
-        attributes = updateAttribute(
-            attributes,
-            'data-soeditor-align',
-            properties.alignment,
-        );
+        attributes = updateAttribute(attributes, 'align', properties.alignment);
     }
     if (properties.width !== undefined) {
         attributes = updateAttribute(attributes, 'width', properties.width);
@@ -2389,10 +3065,19 @@ function setTableProperties(
     if (properties.height !== undefined) {
         attributes = updateAttribute(attributes, 'height', properties.height);
     }
+    for (const [name, value] of [
+        ['border', properties.border],
+        ['cellpadding', properties.cellPadding],
+        ['cellspacing', properties.cellSpacing],
+        ['summary', properties.summary],
+    ] as const) {
+        if (value !== undefined)
+            attributes = updateAttribute(attributes, name, value);
+    }
     if (properties.responsiveClass !== undefined) {
         attributes = updateAttribute(
             attributes,
-            'data-soeditor-responsive-class',
+            'class',
             properties.responsiveClass,
         );
     }
@@ -2439,7 +3124,7 @@ function setRowProperties(
                       attributes: replaceCustomAttributes(
                           updateProperties(row.attributes, [
                               ['aria-label', properties.ariaLabel],
-                              ['data-soeditor-class', properties.className],
+                              ['class', properties.className],
                               [
                                   'height',
                                   typeof properties.height === 'number'
@@ -2456,6 +3141,647 @@ function setRowProperties(
         next = setRowSection(next, parsed, range, properties.section);
     }
     return next;
+}
+
+function tableSections(table: HtmlElement): readonly HtmlElement[] {
+    return table.children.filter(
+        (child): child is HtmlElement =>
+            child.type === 'element' &&
+            ['thead', 'tbody', 'tfoot'].includes(child.tagName),
+    );
+}
+
+function wrapDirectTableRows(table: HtmlElement): HtmlElement {
+    const children: HtmlChildNode[] = [];
+    let rows: HtmlElement[] = [];
+    const flush = (): void => {
+        if (rows.length === 0) return;
+        children.push(htmlElement('tbody', [], rows));
+        rows = [];
+    };
+    for (const child of table.children) {
+        if (isElement(child, 'tr')) rows.push(child);
+        else {
+            flush();
+            children.push(child);
+        }
+    }
+    flush();
+    return { ...table, children };
+}
+
+function removeEmptyDuplicateSections(table: HtmlElement): HtmlElement {
+    const sections = tableSections(table);
+    let remainingBodies = sections.filter((section) =>
+        isElement(section, 'tbody'),
+    ).length;
+    const seen = new Set<string>();
+    return {
+        ...table,
+        children: table.children.filter((child) => {
+            if (
+                child.type !== 'element' ||
+                !['thead', 'tbody', 'tfoot'].includes(child.tagName)
+            ) {
+                return true;
+            }
+            const duplicate = seen.has(child.tagName);
+            seen.add(child.tagName);
+            const removable =
+                child.attributes.length === 0 && child.children.length === 0;
+            if (!removable) return true;
+            if (child.tagName === 'tbody') {
+                if (remainingBodies <= 1) return true;
+                remainingBodies -= 1;
+                return false;
+            }
+            return !duplicate;
+        }),
+    };
+}
+
+function tableColumnGroups(table: HtmlElement): readonly HtmlElement[] {
+    return table.children.filter((child): child is HtmlElement =>
+        isElement(child, 'colgroup'),
+    );
+}
+
+function inspectTableStructure(
+    table: HtmlElement,
+    parsed: ParsedTable,
+): TableStructureSnapshot {
+    const caption = directElement(table.children, 'caption');
+    const diagnostics: TableStructureDiagnostic[] = [];
+    let startColumn = 0;
+    const columnGroups = tableColumnGroups(table).map(
+        (group, index): TableColumnGroupDescriptor => {
+            const columns = group.children.filter(
+                (child): child is HtmlElement => isElement(child, 'col'),
+            );
+            const unknownChild = group.children.some(
+                (child) => child.type === 'element' && !isElement(child, 'col'),
+            );
+            const groupSpanText = attributeValue(group.attributes, 'span');
+            const groupSpan = readPositiveSpan(groupSpanText);
+            let reason: string | undefined;
+            let code: TableStructureDiagnostic['code'] | undefined;
+            if (unknownChild) {
+                reason = '列组包含不支持的子元素，只能在源码模式中修改。';
+                code = 'unknown-column-child';
+            } else if (groupSpanText !== undefined && columns.length > 0) {
+                reason = '列组不能同时使用 span 和 col 子项。';
+                code = 'conflicting-column-definition';
+            } else if (
+                (groupSpanText !== undefined && groupSpan === undefined) ||
+                columns.some(
+                    (column) =>
+                        attributeValue(column.attributes, 'span') !==
+                            undefined &&
+                        readPositiveSpan(
+                            attributeValue(column.attributes, 'span'),
+                        ) === undefined,
+                )
+            ) {
+                reason = '列组包含无效的 span。';
+                code = 'invalid-column-span';
+            }
+            const descriptors = columns.map((column): TableColumnDescriptor => {
+                const width = attributeValue(column.attributes, 'width');
+                return {
+                    attributes: inspectCustomAttributes(column.attributes),
+                    span:
+                        readPositiveSpan(
+                            attributeValue(column.attributes, 'span'),
+                        ) ?? 1,
+                    ...(width === undefined ? {} : { width }),
+                };
+            });
+            const columnCount =
+                columns.length > 0
+                    ? descriptors.reduce((sum, column) => sum + column.span, 0)
+                    : (groupSpan ?? 1);
+            if (code !== undefined && reason !== undefined) {
+                diagnostics.push({
+                    code,
+                    message: reason,
+                    repairable: false,
+                    severity: 'warning',
+                });
+            }
+            const descriptor: TableColumnGroupDescriptor = {
+                attributes: inspectCustomAttributes(group.attributes),
+                columnCount,
+                columns: descriptors,
+                editable: reason === undefined,
+                index,
+                ...(reason === undefined ? {} : { reason }),
+                ...(groupSpan === undefined ? {} : { span: groupSpan }),
+                startColumn,
+            };
+            startColumn += columnCount;
+            return Object.freeze(descriptor);
+        },
+    );
+    if (columnGroups.length > 0 && startColumn !== parsed.columns) {
+        diagnostics.push({
+            code: 'column-coverage-mismatch',
+            message: `列组覆盖 ${String(startColumn)} 列，但表格有 ${String(parsed.columns)} 个逻辑列。`,
+            repairable: false,
+            severity: 'warning',
+        });
+    }
+    if (table.children.some((child) => isElement(child, 'tr'))) {
+        diagnostics.push({
+            code: 'direct-table-rows',
+            message: '部分 tr 直接位于 table 下，可安全放入显式 tbody。',
+            repairable: true,
+            repairId: 'wrap-direct-rows',
+            severity: 'info',
+        });
+    }
+    const sectionKinds = new Map<string, number>();
+    const hasEmptyDuplicateSection = tableSections(table).some((section) => {
+        const count = sectionKinds.get(section.tagName) ?? 0;
+        sectionKinds.set(section.tagName, count + 1);
+        return (
+            count > 0 &&
+            section.attributes.length === 0 &&
+            section.children.length === 0
+        );
+    });
+    const bodies = tableSections(table).filter((section) =>
+        isElement(section, 'tbody'),
+    );
+    const hasRemovableEmptyBody = bodies.some(
+        (section) =>
+            bodies.length > 1 &&
+            section.attributes.length === 0 &&
+            section.children.length === 0,
+    );
+    if (hasEmptyDuplicateSection || hasRemovableEmptyBody) {
+        diagnostics.push({
+            code: 'empty-duplicate-section',
+            message: '存在无属性、无内容的重复空分区，可安全移除。',
+            repairable: true,
+            repairId: 'remove-empty-duplicate-sections',
+            severity: 'info',
+        });
+    }
+    return Object.freeze({
+        caption: Object.freeze({
+            attributes: inspectCustomAttributes(caption?.attributes ?? []),
+            exists: caption !== undefined,
+            hasRichContent:
+                caption?.children.some((child) => child.type !== 'text') ??
+                false,
+            text: plainText(caption?.children ?? []) ?? '',
+        }),
+        columnGroups: Object.freeze(columnGroups),
+        diagnostics: Object.freeze(diagnostics),
+        sections: Object.freeze(
+            tableSections(table).map((section, index) =>
+                Object.freeze({
+                    attributes: inspectCustomAttributes(section.attributes),
+                    editable: true,
+                    index,
+                    kind:
+                        section.tagName === 'thead'
+                            ? 'head'
+                            : section.tagName === 'tfoot'
+                              ? 'foot'
+                              : 'body',
+                    rowCount: section.children.filter((child) =>
+                        isElement(child, 'tr'),
+                    ).length,
+                } satisfies TableSectionDescriptor),
+            ),
+        ),
+    });
+}
+
+function readPositiveSpan(value: string | undefined): number | undefined {
+    if (value === undefined) return undefined;
+    if (!/^[1-9][0-9]*$/u.test(value)) return undefined;
+    const span = Number(value);
+    return Number.isSafeInteger(span) && span <= maximumColumns
+        ? span
+        : undefined;
+}
+
+function setCaption(table: HtmlElement, text: string | null): HtmlElement {
+    const existing = directElement(table.children, 'caption');
+    const children = table.children.filter(
+        (child) => !isElement(child, 'caption'),
+    );
+    if (text === null) return { ...table, children };
+    const caption = htmlElement('caption', existing?.attributes ?? [], [
+        Object.freeze({ type: 'text', value: text }),
+    ]);
+    return { ...table, children: [caption, ...children] };
+}
+
+function createTableSection(
+    table: HtmlElement,
+    options: { readonly kind: TableSection; readonly position?: number },
+): HtmlElement {
+    const sections = tableSections(table);
+    if (
+        options.kind !== 'body' &&
+        sections.some((section) => section.tagName === sectionTag(options.kind))
+    ) {
+        throw new RichTextArgumentError(
+            'table.section.create',
+            `table already contains a ${sectionTag(options.kind)}.`,
+        );
+    }
+    const section = htmlElement(sectionTag(options.kind), [], []);
+    const children = [...table.children];
+    let insertion: number;
+    if (options.kind === 'head') {
+        insertion = children.findIndex(
+            (child) =>
+                isElement(child, 'tbody') ||
+                isElement(child, 'tfoot') ||
+                isElement(child, 'tr'),
+        );
+    } else if (options.kind === 'foot') {
+        let lastSection = -1;
+        for (let index = children.length - 1; index >= 0; index -= 1) {
+            const child = children[index];
+            if (
+                child !== undefined &&
+                (isElement(child, 'thead') ||
+                    isElement(child, 'tbody') ||
+                    isElement(child, 'tfoot') ||
+                    isElement(child, 'tr'))
+            ) {
+                lastSection = index;
+                break;
+            }
+        }
+        insertion = lastSection < 0 ? children.length : lastSection + 1;
+    } else {
+        const bodies = sections.filter(
+            (candidate) => candidate.tagName === 'tbody',
+        );
+        const reference = bodies[options.position ?? bodies.length];
+        insertion =
+            reference === undefined
+                ? children.findIndex((child) => isElement(child, 'tfoot'))
+                : children.indexOf(reference);
+    }
+    children.splice(insertion < 0 ? children.length : insertion, 0, section);
+    return { ...table, children };
+}
+
+function removeTableSection(table: HtmlElement, index: number): HtmlElement {
+    const sections = tableSections(table);
+    const section = sections[index];
+    if (section === undefined) {
+        throw new RichTextArgumentError(
+            'table.section.remove',
+            'section does not exist.',
+        );
+    }
+    if (section.children.some((child) => isElement(child, 'tr'))) {
+        throw new RichTextArgumentError(
+            'table.section.remove',
+            'cannot remove a section that contains rows.',
+        );
+    }
+    if (
+        section.tagName === 'tbody' &&
+        sections.filter((candidate) => candidate.tagName === 'tbody').length <=
+            1
+    ) {
+        throw new RichTextArgumentError(
+            'table.section.remove',
+            'cannot remove the last tbody.',
+        );
+    }
+    return {
+        ...table,
+        children: table.children.filter((child) => child !== section),
+    };
+}
+
+function moveTableRows(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    options: TableRowMoveOptions,
+): HtmlElement {
+    const range = normalizedRange(options.range);
+    assertRange(parsed, options.range, 'table.section.moveRows');
+    const sections = tableSections(table);
+    const target = sections[options.targetSectionIndex];
+    if (target === undefined) {
+        throw new RichTextArgumentError(
+            'table.section.moveRows',
+            'target section does not exist.',
+        );
+    }
+    const selectedRows = parsed.rows.slice(range.top, range.bottom + 1);
+    const sources = new Set(
+        selectedRows.map((row) => findParentSection(table, row.element)),
+    );
+    if (sources.size !== 1 || sources.has(undefined)) {
+        throw new RichTextArgumentError(
+            'table.section.moveRows',
+            'selected rows must belong to one explicit section.',
+        );
+    }
+    const selected = new Set(selectedRows.map((row) => row.element));
+    for (const cell of parsed.rows.flatMap((row) => row.cells)) {
+        const cellBottom = cell.row + cell.rowspan - 1;
+        if (
+            cell.row <= range.bottom &&
+            cellBottom >= range.top &&
+            (cell.row < range.top || cellBottom > range.bottom)
+        ) {
+            throw new RichTextArgumentError(
+                'table.section.moveRows',
+                `rowspan at row ${String(cell.row + 1)}, column ${String(cell.column + 1)} crosses the move boundary.`,
+            );
+        }
+    }
+    return {
+        ...table,
+        children: table.children.map((child) => {
+            if (child === target) {
+                const retained = child.children.filter(
+                    (candidate) => !selected.has(candidate as HtmlElement),
+                );
+                return {
+                    ...child,
+                    children:
+                        options.placement === 'start'
+                            ? [
+                                  ...selectedRows.map((row) => row.element),
+                                  ...retained,
+                              ]
+                            : [
+                                  ...retained,
+                                  ...selectedRows.map((row) => row.element),
+                              ],
+                };
+            }
+            if (
+                child.type === 'element' &&
+                ['thead', 'tbody', 'tfoot'].includes(child.tagName)
+            ) {
+                return {
+                    ...child,
+                    children: child.children.filter(
+                        (candidate) => !selected.has(candidate as HtmlElement),
+                    ),
+                };
+            }
+            return child;
+        }),
+    };
+}
+
+function reorderBodySection(
+    table: HtmlElement,
+    options: { readonly sectionIndex: number; readonly targetIndex: number },
+): HtmlElement {
+    const sections = tableSections(table);
+    const source = sections[options.sectionIndex];
+    const target = sections[options.targetIndex];
+    if (source?.tagName !== 'tbody' || target?.tagName !== 'tbody') {
+        throw new RichTextArgumentError(
+            'table.section.reorderBody',
+            'source and target must both be tbody sections.',
+        );
+    }
+    const children = [...table.children];
+    const sourcePosition = children.indexOf(source);
+    const targetPosition = children.indexOf(target);
+    children[sourcePosition] = target;
+    children[targetPosition] = source;
+    return { ...table, children };
+}
+
+function setSectionPropertiesByIndex(
+    table: HtmlElement,
+    index: number,
+    properties: TableSectionProperties,
+): HtmlElement {
+    const section = tableSections(table)[index];
+    if (section === undefined) {
+        throw new RichTextArgumentError(
+            'table.section.properties',
+            'section does not exist.',
+        );
+    }
+    return {
+        ...table,
+        children: table.children.map((child) =>
+            child === section
+                ? {
+                      ...section,
+                      attributes: replaceCustomAttributes(
+                          section.attributes,
+                          properties.customAttributes,
+                      ),
+                  }
+                : child,
+        ),
+    };
+}
+
+function assertEditableColumnGroups(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    command: string,
+): readonly TableColumnGroupDescriptor[] {
+    const snapshot = inspectTableStructure(table, parsed);
+    const blocking = snapshot.diagnostics.find(
+        (diagnostic) => diagnostic.code !== 'column-coverage-mismatch',
+    );
+    if (blocking !== undefined) {
+        throw new RichTextArgumentError(command, blocking.message);
+    }
+    return snapshot.columnGroups;
+}
+
+function createTableColumnGroup(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    options: TableColumnGroupInsertOptions,
+): HtmlElement {
+    const existing = assertEditableColumnGroups(
+        table,
+        parsed,
+        'table.colgroup.create',
+    );
+    const covered = existing.reduce((sum, group) => sum + group.columnCount, 0);
+    const remaining = parsed.columns - covered;
+    const columns = options.columns;
+    const columnCount =
+        columns?.reduce((sum, column) => sum + column.span, 0) ?? 0;
+    const span = columns === undefined ? (options.span ?? remaining) : null;
+    if (
+        (columns !== undefined &&
+            (columnCount < 1 || columnCount > remaining)) ||
+        (columns === undefined &&
+            (span === null || span < 1 || span > remaining))
+    ) {
+        throw new RichTextArgumentError(
+            'table.colgroup.create',
+            'column group coverage must fit the remaining logical columns.',
+        );
+    }
+    const group = htmlElement(
+        'colgroup',
+        replaceCustomAttributes(
+            span === null ? [] : [{ name: 'span', value: String(span) }],
+            options.customAttributes,
+        ),
+        columns?.map(tableColumnElement) ?? [],
+    );
+    const children = [...table.children];
+    const groups = tableColumnGroups(table);
+    const requested = options.position ?? groups.length;
+    const reference = groups[requested];
+    const insertion =
+        reference === undefined
+            ? children.findIndex(
+                  (child) =>
+                      child.type === 'element' &&
+                      ['thead', 'tbody', 'tfoot', 'tr'].includes(child.tagName),
+              )
+            : children.indexOf(reference);
+    children.splice(insertion < 0 ? children.length : insertion, 0, group);
+    return { ...table, children };
+}
+
+function updateTableColumnGroup(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    index: number,
+    properties: TableColumnGroupProperties,
+): HtmlElement {
+    const descriptors = assertEditableColumnGroups(
+        table,
+        parsed,
+        'table.colgroup.properties',
+    );
+    const group = tableColumnGroups(table)[index];
+    const descriptor = descriptors[index];
+    if (group === undefined || descriptor === undefined) {
+        throw new RichTextArgumentError(
+            'table.colgroup.properties',
+            'column group does not exist.',
+        );
+    }
+    if (
+        group.children.some((child) => isElement(child, 'col')) &&
+        properties.span !== undefined
+    ) {
+        throw new RichTextArgumentError(
+            'table.colgroup.properties',
+            'span cannot be set on a group containing col elements.',
+        );
+    }
+    if (properties.columns !== undefined && properties.span !== undefined) {
+        throw new RichTextArgumentError(
+            'table.colgroup.properties',
+            'columns and group span cannot be updated together.',
+        );
+    }
+    const attributes = replaceCustomAttributes(
+        updateProperties(group.attributes, [
+            [
+                'span',
+                properties.span === undefined
+                    ? undefined
+                    : properties.span === null
+                      ? null
+                      : String(properties.span),
+            ],
+        ]),
+        properties.customAttributes,
+    );
+    return {
+        ...table,
+        children: table.children.map((child) =>
+            child === group
+                ? {
+                      ...group,
+                      attributes:
+                          properties.columns === undefined
+                              ? attributes
+                              : updateAttribute(attributes, 'span', null),
+                      children:
+                          properties.columns === undefined
+                              ? group.children
+                              : replaceColumnChildren(
+                                    group.children,
+                                    properties.columns,
+                                ),
+                  }
+                : child,
+        ),
+    };
+}
+
+function tableColumnElement(column: TableColumnDescriptor): HtmlElement {
+    return htmlElement(
+        'col',
+        replaceCustomAttributes(
+            updateProperties(
+                [],
+                [
+                    ['span', column.span === 1 ? null : String(column.span)],
+                    ['width', column.width],
+                ],
+            ),
+            column.attributes,
+        ),
+        [],
+    );
+}
+
+function replaceColumnChildren(
+    children: readonly HtmlChildNode[],
+    columns: readonly TableColumnDescriptor[],
+): readonly HtmlChildNode[] {
+    const replacements = [...columns].map(tableColumnElement);
+    const next = children.flatMap((child): readonly HtmlChildNode[] => {
+        if (!isElement(child, 'col')) return [child];
+        const replacement = replacements.shift();
+        return replacement === undefined ? [] : [replacement];
+    });
+    return [...next, ...replacements];
+}
+
+function removeTableColumnGroup(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    index: number,
+): HtmlElement {
+    assertEditableColumnGroups(table, parsed, 'table.colgroup.remove');
+    const group = tableColumnGroups(table)[index];
+    if (group === undefined) {
+        throw new RichTextArgumentError(
+            'table.colgroup.remove',
+            'column group does not exist.',
+        );
+    }
+    if (
+        group.children.some((child) => isElement(child, 'col')) ||
+        attributeValue(group.attributes, 'span') !== undefined
+    ) {
+        throw new RichTextArgumentError(
+            'table.colgroup.remove',
+            'only an empty column group can be removed.',
+        );
+    }
+    return {
+        ...table,
+        children: table.children.filter((child) => child !== group),
+    };
 }
 
 function setCellProperties(
@@ -2486,15 +3812,9 @@ function setCellProperties(
                     attributes: replaceCustomAttributes(
                         updateProperties(cell.element.attributes, [
                             ['aria-label', properties.ariaLabel],
-                            ['data-soeditor-class', properties.className],
-                            [
-                                'data-soeditor-align',
-                                properties.horizontalAlignment,
-                            ],
-                            [
-                                'data-soeditor-vertical-align',
-                                properties.verticalAlignment,
-                            ],
+                            ['class', properties.className],
+                            ['align', properties.horizontalAlignment],
+                            ['valign', properties.verticalAlignment],
                             ['scope', properties.scope],
                             ['height', properties.height],
                             ['width', properties.width],
@@ -2571,6 +3891,11 @@ function resizeColumns(
     range: NormalizedRange,
     options: TableColumnResizeOptions,
 ): HtmlElement {
+    const groups = tableColumnGroups(table);
+    if (groups.length > 0) {
+        readResizableColumnWidths(table, parsed.columns);
+        return resizeMappedColumnGroups(table, range, options.width);
+    }
     const widths = [
         ...readColumnWidths(table, parsed.columns, 'table.column.resize'),
     ];
@@ -2694,12 +4019,17 @@ function updateProperties(
 const managedTableAttributeNames = new Set([
     'align',
     'aria-label',
+    'border',
+    'cellpadding',
+    'cellspacing',
     'class',
     'colspan',
     'height',
     'rowspan',
     'scope',
+    'span',
     'style',
+    'summary',
     'valign',
     'width',
 ]);
@@ -3047,19 +4377,23 @@ function clipboardMatrix(
     if (text.length === 0 || text.length > maximumClipboardSourceLength) {
         return [];
     }
+    const textRows = text.split(/\r?\n/u);
+    const valuesByRow = textRows.map((row) => row.split('\t'));
+    const cells = valuesByRow.reduce((sum, row) => sum + row.length, 0);
+    if (
+        textRows.length > maximumRows ||
+        valuesByRow.some((row) => row.length > maximumColumns) ||
+        cells > maximumCells
+    ) {
+        return [];
+    }
     const result: HtmlChildNode[][][] = [];
-    let cells = 0;
-    for (const row of text.split(/\r?\n/u).slice(0, maximumRows)) {
-        const values = row.split('\t').slice(0, maximumColumns);
-        if (cells + values.length > maximumCells) {
-            break;
-        }
+    for (const values of valuesByRow) {
         result.push(
             values.map((value) => [
                 Object.freeze({ type: 'text' as const, value }),
             ]),
         );
-        cells += values.length;
     }
     return result;
 }
@@ -3223,8 +4557,12 @@ function readTableProperties(args: readonly unknown[]): TableProperties {
     const value = propertiesRecord('table.properties', args, [
         'alignment',
         'ariaLabel',
+        'border',
         'caption',
+        'cellPadding',
+        'cellSpacing',
         'responsiveClass',
+        'summary',
         'width',
         'height',
         'customAttributes',
@@ -3247,8 +4585,20 @@ function readTableProperties(args: readonly unknown[]): TableProperties {
     return Object.freeze({
         ...(alignment === undefined ? {} : { alignment }),
         ...nullableStringProperty('table.properties', value, 'ariaLabel', 512),
+        ...nullableTableIntegerProperty('table.properties', value, 'border'),
         ...nullableStringProperty('table.properties', value, 'caption', 2048),
+        ...nullableTableIntegerProperty(
+            'table.properties',
+            value,
+            'cellPadding',
+        ),
+        ...nullableTableIntegerProperty(
+            'table.properties',
+            value,
+            'cellSpacing',
+        ),
         ...(responsiveClass === undefined ? {} : { responsiveClass }),
+        ...nullableStringProperty('table.properties', value, 'summary', 2048),
         ...(width === undefined ? {} : { width }),
         ...(height === undefined ? {} : { height }),
         ...optionalCustomAttributes('table.properties', value),
@@ -3403,6 +4753,288 @@ function readColumnResize(args: readonly unknown[]): TableColumnResizeOptions {
     return Object.freeze({ width: width === null ? null : Number(width) });
 }
 
+function readSectionCreate(args: readonly unknown[]): {
+    readonly kind: TableSection;
+    readonly position?: number;
+} {
+    const value = propertiesRecord('table.section.create', args, [
+        'kind',
+        'position',
+    ]);
+    if (!['body', 'foot', 'head'].includes(String(value.kind))) {
+        throw new RichTextArgumentError(
+            'table.section.create',
+            'kind must be body, foot, or head.',
+        );
+    }
+    const position = value.position;
+    if (
+        position !== undefined &&
+        (!Number.isInteger(position) ||
+            Number(position) < 0 ||
+            Number(position) > 100)
+    ) {
+        throw new RichTextArgumentError(
+            'table.section.create',
+            'position must be from 0 to 100.',
+        );
+    }
+    return {
+        kind: value.kind as TableSection,
+        ...(position === undefined ? {} : { position: Number(position) }),
+    };
+}
+
+function readRowMoveOptions(args: readonly unknown[]): TableRowMoveOptions {
+    const value = propertiesRecord('table.section.moveRows', args, [
+        'placement',
+        'range',
+        'targetSectionIndex',
+    ]);
+    const range = readOptionalRange(value.range);
+    if (
+        range === undefined ||
+        !['start', 'end'].includes(String(value.placement))
+    ) {
+        throw new RichTextArgumentError(
+            'table.section.moveRows',
+            'requires a range and start or end placement.',
+        );
+    }
+    return {
+        placement: value.placement as 'end' | 'start',
+        range,
+        targetSectionIndex: integerValue(
+            'table.section.moveRows',
+            value.targetSectionIndex,
+            0,
+            1024,
+        ),
+    };
+}
+
+function readBodyReorder(args: readonly unknown[]): {
+    readonly sectionIndex: number;
+    readonly targetIndex: number;
+} {
+    const value = propertiesRecord('table.section.reorderBody', args, [
+        'sectionIndex',
+        'targetIndex',
+    ]);
+    return {
+        sectionIndex: integerValue(
+            'table.section.reorderBody',
+            value.sectionIndex,
+            0,
+            1024,
+        ),
+        targetIndex: integerValue(
+            'table.section.reorderBody',
+            value.targetIndex,
+            0,
+            1024,
+        ),
+    };
+}
+
+function readIndexedSectionProperties(args: readonly unknown[]):
+    | {
+          readonly properties: TableSectionProperties;
+          readonly sectionIndex: number;
+      }
+    | undefined {
+    if (
+        args.length !== 1 ||
+        typeof args[0] !== 'object' ||
+        args[0] === null ||
+        Array.isArray(args[0]) ||
+        !Object.hasOwn(args[0], 'sectionIndex')
+    )
+        return undefined;
+    const value = propertiesRecord('table.section.properties', args, [
+        'properties',
+        'sectionIndex',
+    ]);
+    return {
+        properties: readSectionProperties([value.properties]),
+        sectionIndex: integerValue(
+            'table.section.properties',
+            value.sectionIndex,
+            0,
+            1024,
+        ),
+    };
+}
+
+function readColumnGroupProperties(
+    command: string,
+    candidate: unknown,
+): TableColumnGroupProperties {
+    const value = propertiesRecord(
+        command,
+        [candidate],
+        ['columns', 'customAttributes', 'span'],
+    );
+    const span = value.span;
+    if (
+        span !== undefined &&
+        span !== null &&
+        (!Number.isInteger(span) ||
+            Number(span) < 1 ||
+            Number(span) > maximumColumns)
+    ) {
+        throw new RichTextArgumentError(
+            command,
+            'span must be from 1 to 100 or null.',
+        );
+    }
+    const columns = value.columns;
+    if (
+        columns !== undefined &&
+        (!Array.isArray(columns) || columns.length > maximumColumns)
+    ) {
+        throw new RichTextArgumentError(
+            command,
+            'columns must contain at most 100 column definitions.',
+        );
+    }
+    return {
+        ...(columns === undefined
+            ? {}
+            : {
+                  columns: Object.freeze(
+                      columns.map((column) =>
+                          readColumnDescriptor(command, column),
+                      ),
+                  ),
+              }),
+        ...optionalCustomAttributes(command, value),
+        ...(span === undefined
+            ? {}
+            : { span: span === null ? null : Number(span) }),
+    };
+}
+
+function readColumnDescriptor(
+    command: string,
+    candidate: unknown,
+): TableColumnDescriptor {
+    const value = propertiesRecord(
+        command,
+        [candidate],
+        ['attributes', 'span', 'width'],
+    );
+    const span = integerValue(command, value.span, 1, maximumColumns);
+    const width = nullableString(command, value.width, 16);
+    if (
+        width !== undefined &&
+        width !== null &&
+        !/^(?:[4-9][0-9]|[1-9][0-9]{2}|1[01][0-9]{2}|1200)(?:px)?$/u.test(width)
+    ) {
+        throw new RichTextArgumentError(
+            command,
+            'column width must be from 40px to 1200px.',
+        );
+    }
+    const attributes =
+        value.attributes === undefined
+            ? undefined
+            : optionalCustomAttributes(command, {
+                  customAttributes: value.attributes,
+              }).customAttributes;
+    return Object.freeze({
+        attributes: attributes ?? [],
+        span,
+        ...(width === undefined || width === null ? {} : { width }),
+    });
+}
+
+function readColumnGroupInsert(
+    args: readonly unknown[],
+): TableColumnGroupInsertOptions {
+    const value = propertiesRecord('table.colgroup.create', args, [
+        'columns',
+        'customAttributes',
+        'position',
+        'span',
+    ]);
+    const properties = readColumnGroupProperties('table.colgroup.create', {
+        ...(value.columns === undefined ? {} : { columns: value.columns }),
+        ...(value.customAttributes === undefined
+            ? {}
+            : { customAttributes: value.customAttributes }),
+        ...(value.span === undefined ? {} : { span: value.span }),
+    });
+    const position = value.position;
+    if (
+        position !== undefined &&
+        (!Number.isInteger(position) ||
+            Number(position) < 0 ||
+            Number(position) > maximumColumns)
+    ) {
+        throw new RichTextArgumentError(
+            'table.colgroup.create',
+            'position must be from 0 to 100.',
+        );
+    }
+    return {
+        ...properties,
+        ...(position === undefined ? {} : { position: Number(position) }),
+    };
+}
+
+function readColumnGroupUpdate(args: readonly unknown[]): {
+    readonly groupIndex: number;
+    readonly properties: TableColumnGroupProperties;
+} {
+    const value = propertiesRecord('table.colgroup.properties', args, [
+        'groupIndex',
+        'properties',
+    ]);
+    return {
+        groupIndex: integerValue(
+            'table.colgroup.properties',
+            value.groupIndex,
+            0,
+            1024,
+        ),
+        properties: readColumnGroupProperties(
+            'table.colgroup.properties',
+            value.properties,
+        ),
+    };
+}
+
+function integerValue(
+    command: string,
+    value: unknown,
+    minimum: number,
+    maximum: number,
+): number {
+    if (
+        !Number.isInteger(value) ||
+        Number(value) < minimum ||
+        Number(value) > maximum
+    ) {
+        throw new RichTextArgumentError(
+            command,
+            `requires an integer from ${String(minimum)} to ${String(maximum)}.`,
+        );
+    }
+    return Number(value);
+}
+
+function oneInteger(
+    command: string,
+    args: readonly unknown[],
+    minimum: number,
+    maximum: number,
+): number {
+    if (args.length !== 1)
+        throw new RichTextArgumentError(command, 'requires one integer.');
+    return integerValue(command, args[0], minimum, maximum);
+}
+
 function propertiesRecord(
     command: string,
     args: readonly unknown[],
@@ -3437,6 +5069,24 @@ function nullableStringProperty(
 ): Record<string, string | null> {
     const candidate = nullableString(command, value[key], maximum);
     return candidate === undefined ? {} : { [key]: candidate };
+}
+
+function nullableTableIntegerProperty(
+    command: string,
+    value: Record<string, unknown>,
+    key: string,
+): Record<string, string | null> {
+    const candidate = value[key];
+    if (candidate === undefined || candidate === null) {
+        return candidate === undefined ? {} : { [key]: null };
+    }
+    if (typeof candidate !== 'string' || !/^\d{1,3}$/u.test(candidate)) {
+        throw new RichTextArgumentError(
+            command,
+            `${key} requires a whole number from 0 to 999.`,
+        );
+    }
+    return { [key]: String(Number(candidate)) };
 }
 
 function nullableString(
@@ -4376,6 +6026,15 @@ function attributeValue(
     return attributes.find((attribute) => attribute.name === name)?.value;
 }
 
+function tableIntegerAttribute(
+    attributes: readonly HtmlAttribute[],
+    name: 'border',
+): number | undefined {
+    const value = attributeValue(attributes, name);
+    if (value === undefined || !/^\d{1,3}$/u.test(value)) return undefined;
+    return Number(value);
+}
+
 function applyProjectedProperties(
     element: HTMLElement,
     attributes: readonly HtmlAttribute[],
@@ -4383,22 +6042,18 @@ function applyProjectedProperties(
 ): void {
     const ariaLabel = attributeValue(attributes, 'aria-label');
     if (ariaLabel !== undefined) element.setAttribute('aria-label', ariaLabel);
-    const className = attributeValue(attributes, 'data-soeditor-class');
+    const className = attributeValue(attributes, 'class');
     if (className !== undefined) element.className = className;
-    const height =
-        attributeValue(attributes, 'height') ??
-        attributeValue(attributes, 'data-soeditor-height');
+    const height = attributeValue(attributes, 'height');
     if (height !== undefined) {
         element.style.height = /^\d+$/u.test(height) ? `${height}px` : height;
     }
     if (kind === 'cell') {
-        const width =
-            attributeValue(attributes, 'width') ??
-            attributeValue(attributes, 'data-soeditor-width');
+        const width = attributeValue(attributes, 'width');
         if (width !== undefined) {
             element.style.width = /^\d+$/u.test(width) ? `${width}px` : width;
         }
-        const alignment = attributeValue(attributes, 'data-soeditor-align');
+        const alignment = attributeValue(attributes, 'align');
         if (
             alignment === 'center' ||
             alignment === 'left' ||
@@ -4406,10 +6061,7 @@ function applyProjectedProperties(
         ) {
             element.style.textAlign = alignment;
         }
-        const vertical = attributeValue(
-            attributes,
-            'data-soeditor-vertical-align',
-        );
+        const vertical = attributeValue(attributes, 'valign');
         if (
             vertical === 'baseline' ||
             vertical === 'bottom' ||

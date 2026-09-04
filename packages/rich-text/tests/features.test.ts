@@ -15,6 +15,7 @@ import {
     BlockquotePlugin,
     BoldPlugin,
     CodeBlockPlugin,
+    DivPlugin,
     FontPlugin,
     HeadingPlugin,
     HorizontalRulePlugin,
@@ -41,6 +42,7 @@ import {
 
 const plugins: readonly PluginConstructor[] = [
     ParagraphPlugin,
+    DivPlugin,
     HeadingPlugin,
     BoldPlugin,
     ItalicPlugin,
@@ -88,6 +90,7 @@ describe('rich-text feature plugins', () => {
             [
                 'paragraph.set',
                 'paragraph.heading',
+                'block.div',
                 'format.bold',
                 'format.italic',
                 'format.underline',
@@ -129,6 +132,7 @@ describe('rich-text feature plugins', () => {
 
         editor.execute('paragraph.set');
         editor.execute('paragraph.heading', 3);
+        editor.execute('block.div');
         editor.execute('format.bold');
         editor.execute('format.italic');
         editor.execute('format.underline');
@@ -150,6 +154,7 @@ describe('rich-text feature plugins', () => {
         expect(harness.setBlock.mock.calls).toEqual([
             ['p'],
             ['h3'],
+            ['div'],
             ['blockquote'],
             ['pre'],
         ]);
@@ -425,9 +430,12 @@ describe('rich-text feature plugins', () => {
         });
         expect(harness.service.applyInlineStyle).toHaveBeenNthCalledWith(3, {
             attributes: [
-                { name: 'style', value: 'background-color: #fef08a;' },
+                {
+                    name: 'style',
+                    value: 'background: linear-gradient(transparent 60%, #fef08a 0);',
+                },
             ],
-            tagName: 'span',
+            tagName: 'mark',
         });
         expect(harness.service.applyInlineStyle).toHaveBeenNthCalledWith(4, {
             attributes: [{ name: 'style', value: 'font-family: georgia;' }],
@@ -447,7 +455,7 @@ describe('rich-text feature plugins', () => {
         );
         expect(harness.removeInlineStyleProperty).toHaveBeenNthCalledWith(
             3,
-            'background-color',
+            'background',
         );
         expect(() => editor.execute('font.color', 'url(javascript:x)')).toThrow(
             RichTextArgumentError,

@@ -217,3 +217,35 @@ function required<T extends Element>(root: Element, selector: string): T {
     if (element === null) throw new Error('Link attribute UI is incomplete.');
     return element;
 }
+
+export function appendExactTablePicker(
+    document: Document,
+    container: HTMLElement,
+    status: HTMLElement,
+    insertTable: (rows: number, columns: number) => boolean,
+    close: () => void,
+): void {
+    const exact = document.createElement('fieldset');
+    exact.className = 'soeditor-ui__table-picker-exact';
+    exact.innerHTML =
+        '<legend>Exact size</legend><input type=number min=1 max=100 value=3 aria-label="Table rows"><input type=number min=1 max=100 value=3 aria-label="Table columns"><button type=button>Insert</button>';
+    const inputs = exact.getElementsByTagName('input');
+    const rows = inputs.item(0);
+    const columns = inputs.item(1);
+    const insert = exact.querySelector('button');
+    if (!rows || !columns || !insert) return;
+    insert.addEventListener('click', () => {
+        const rowCount = +rows.value;
+        const columnCount = +columns.value;
+        if (
+            !rows.checkValidity() ||
+            !columns.checkValidity() ||
+            rowCount * columnCount > 1000
+        ) {
+            status.textContent = 'Limits: 1–100 each; 1000 cells.';
+            return;
+        }
+        if (insertTable(rowCount, columnCount)) close();
+    });
+    container.append(exact);
+}

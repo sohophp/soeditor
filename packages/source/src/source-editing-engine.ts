@@ -15,6 +15,7 @@ import {
     type ProjectionActivity,
 } from '@soeditor/projections';
 import { html } from '@codemirror/lang-html';
+import { HighlightStyle, syntaxHighlighting } from '@codemirror/language';
 import {
     lintGutter,
     linter,
@@ -32,16 +33,33 @@ import {
     Transaction as CodeMirrorTransaction,
 } from '@codemirror/state';
 import { EditorView } from '@codemirror/view';
+import { tags } from '@lezer/highlight';
 import { basicSetup } from 'codemirror';
 
 import {
     sourceEditingServiceToken,
     type SourceEditingService,
+    type SourceRevealOptions,
 } from './source-editing-service.js';
 
 const accessibleActiveLineTheme = EditorView.theme({
+    '&': { backgroundColor: '#1e1e1e', color: '#d4d4d4' },
     '.cm-activeLine': { backgroundColor: 'transparent' },
+    '.cm-gutters': { backgroundColor: '#1e1e1e', color: '#d4d4d4' },
 });
+
+const vscodeDarkSourceHighlight = HighlightStyle.define([
+    { tag: [tags.tagName, tags.keyword], color: '#569cd6' },
+    {
+        tag: [tags.attributeName, tags.propertyName, tags.variableName],
+        color: '#9cdcfe',
+    },
+    { tag: [tags.string, tags.attributeValue], color: '#ce9178' },
+    { tag: tags.comment, color: '#6a9955' },
+    { tag: [tags.number, tags.bool, tags.atom], color: '#b5cea8' },
+    { tag: tags.angleBracket, color: '#808080' },
+    { tag: tags.invalid, color: '#f44747' },
+]);
 
 /** Options for attaching a source surface to one editor and host. */
 export interface SourceEditingEngineOptions {
@@ -86,6 +104,7 @@ export class SourceEditingEngine implements SourceEngine {
     readonly #editable = new Compartment();
     readonly #previousHidden: boolean;
     readonly #service: SourceEditingService;
+    readonly #selectionListeners = new Set<() => void>();
     readonly #view: EditorView;
     #destroyed = false;
     #diagnostics: readonly HtmlParseDiagnostic[];
@@ -124,6 +143,7 @@ export class SourceEditingEngine implements SourceEngine {
             extensions: [
                 basicSetup,
                 accessibleActiveLineTheme,
+                syntaxHighlighting(vscodeDarkSourceHighlight),
                 ...(cspNonce === undefined
                     ? []
                     : [EditorView.cspNonce.of(cspNonce)]),
@@ -147,6 +167,11 @@ export class SourceEditingEngine implements SourceEngine {
                     if (update.docChanged && !this.#synchronizing) {
                         this.#handleSourceChange(update.state.doc.toString());
                     }
+                    if (update.selectionSet) {
+                        for (const listener of this.#selectionListeners) {
+                            listener();
+                        }
+                    }
                 }),
             ],
             parent: this.element,
@@ -161,8 +186,13 @@ export class SourceEditingEngine implements SourceEngine {
         const service: SourceEditingService = {
             focus: () => this.focus(),
             getDiagnostics: () => this.diagnostics,
+            getSelection: () => this.#sourceSelection(),
             openSearchPanel: (query) => this.openSearchPanel(query),
-            reveal: (range) => this.reveal(range),
+            reveal: (range, revealOptions) => this.reveal(range, revealOptions),
+            subscribeSelection: (listener) => {
+                this.#selectionListeners.add(listener);
+                return () => this.#selectionListeners.delete(listener);
+            },
         };
         this.#service = Object.freeze(service);
         this.editor.services.register(sourceEditingServiceToken, this.#service);
@@ -216,6 +246,16 @@ export class SourceEditingEngine implements SourceEngine {
         this.#withoutFocusActivation(() => this.#view.focus());
     }
 
+    #sourceSelection(): SourceRange {
+        const selection = this.#view.state.selection.main;
+        const start = Math.min(selection.anchor, selection.head);
+        const end = Math.max(selection.anchor, selection.head);
+        return Object.freeze({
+            start: Object.freeze({ column: 0, line: 0, offset: start }),
+            end: Object.freeze({ column: 0, line: 0, offset: end }),
+        });
+    }
+
     openSearchPanel(query?: string): void {
         this.#assertAlive();
         if (query !== undefined && typeof query !== 'string') {
@@ -236,11 +276,19 @@ export class SourceEditingEngine implements SourceEngine {
         });
     }
 
-    reveal(range: SourceRange): void {
+    reveal(range: SourceRange, options: SourceRevealOptions = {}): void {
         this.#assertAlive();
         const length = this.#view.state.doc.length;
         const from = clampSourceOffset(range.start.offset, length);
         const to = Math.max(from, clampSourceOffset(range.end.offset, length));
+        if (options.focus === false) {
+            const line = this.#view.lineBlockAt(from);
+            this.#view.scrollDOM.scrollTop = Math.max(
+                0,
+                line.top - this.#view.scrollDOM.clientHeight / 2,
+            );
+            return;
+        }
         this.#withoutFocusActivation(() => {
             this.#view.dispatch({
                 effects: EditorView.scrollIntoView(from, { y: 'center' }),
@@ -286,6 +334,7 @@ export class SourceEditingEngine implements SourceEngine {
             }
         }
         this.#view.destroy();
+        this.#selectionListeners.clear();
         this.element.replaceChildren();
         this.element.hidden = this.#previousHidden;
         if (errors.length > 0) {
@@ -366,11 +415,13 @@ export class SourceEditingEngine implements SourceEngine {
             return;
         }
 
+        const change = minimalSourceChange(current, source);
+
         this.#synchronizing = true;
         try {
             this.#view.dispatch({
                 annotations: CodeMirrorTransaction.addToHistory.of(false),
-                changes: { from: 0, insert: source, to: current.length },
+                changes: change,
             });
         } finally {
             this.#synchronizing = false;
@@ -420,6 +471,34 @@ function readCspNonce(value: string | undefined): string | undefined {
         throw new TypeError('The source editing CSP nonce must not be empty.');
     }
     return value;
+}
+
+function minimalSourceChange(
+    current: string,
+    source: string,
+): { readonly from: number; readonly insert: string; readonly to: number } {
+    const sharedLimit = Math.min(current.length, source.length);
+    let from = 0;
+    while (from < sharedLimit && current[from] === source[from]) {
+        from += 1;
+    }
+
+    let currentEnd = current.length;
+    let sourceEnd = source.length;
+    while (
+        currentEnd > from &&
+        sourceEnd > from &&
+        current[currentEnd - 1] === source[sourceEnd - 1]
+    ) {
+        currentEnd -= 1;
+        sourceEnd -= 1;
+    }
+
+    return {
+        from,
+        insert: source.slice(from, sourceEnd),
+        to: currentEnd,
+    };
 }
 
 /** Attaches a CodeMirror source surface to an editor. */

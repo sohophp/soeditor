@@ -42,10 +42,14 @@
             "types": "./dist/cms.d.ts",
             "import": "./dist/cms.js"
         },
+        "./cms/optional": {
+            "types": "./dist/cms-optional.d.ts",
+            "import": "./dist/cms-optional.js"
+        },
         "./styles.css": "./dist/soeditor.css"
     },
     "scripts": {
-        "build": "vite build && vite build --config vite.global.config.ts && tsc -p tsconfig.build.json",
+        "build": "vite build && vite build --config vite.cms.config.ts && vite build --config vite.global.config.ts && tsc -p tsconfig.build.json",
         "test": "vitest run --passWithNoTests",
         "typecheck": "tsc -p tsconfig.json"
     },

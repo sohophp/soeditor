@@ -3,7 +3,10 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     build: {
         lib: {
-            entry: { cms: 'src/cms.ts', index: 'src/index.ts' },
+            entry: {
+                'cms-optional': 'src/cms-optional.ts',
+                index: 'src/index.ts',
+            },
             formats: ['es'],
         },
         minify: false,

@@ -95,6 +95,13 @@ describe('CMS external paste cleanup', () => {
         ).toThrow(/Complete HTML/u);
     });
 
+    it('preserves safe external table structure and accessibility semantics', () => {
+        const source =
+            '<table aria-label="Results"><caption>Quarter</caption><colgroup><col width="240px"><col span="2"></colgroup><thead><tr><th scope="col">Name</th></tr></thead><tbody><tr><td rowspan="2">A</td></tr></tbody><tfoot><tr><td>Total</td></tr></tfoot></table>';
+        const result = processCmsPaste(context(source, 'office', 'semantic'));
+        expect(compact(result?.html ?? '')).toBe(source);
+    });
+
     it('previews and applies undoable strict, balanced, and trusted cleanup', async () => {
         const source =
             '<custom-card data-id="7"><p style="color:red" onclick="run()">Safe</p><script>run()</script></custom-card>';

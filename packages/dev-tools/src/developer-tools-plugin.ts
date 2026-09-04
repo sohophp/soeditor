@@ -592,7 +592,7 @@ function renderOutline(
 function toolbarButton(document: Document, label: string): HTMLButtonElement {
     const button = document.createElement('button');
     button.type = 'button';
-    button.className = 'soeditor-ui__button';
+    button.className = 'soeditor-ui__button soeditor-ui__button--text';
     button.textContent = label;
     button.title = label;
     return button;

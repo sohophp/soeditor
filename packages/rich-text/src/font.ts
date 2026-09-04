@@ -27,7 +27,7 @@ export class FontPlugin extends Plugin {
     override init(): void {
         this.#register('font.color', 'color', readColor);
         this.#register('font.backgroundColor', 'background-color', readColor);
-        this.#register('font.highlight', 'background-color', readColor);
+        this.#registerHighlight();
         this.#register('font.family', 'font-family', readFontFamily);
         this.#register('font.size', 'font-size', readFontSize);
         this.#registerRemoval('font.color.remove', 'color');
@@ -35,7 +35,7 @@ export class FontPlugin extends Plugin {
             'font.backgroundColor.remove',
             'background-color',
         );
-        this.#registerRemoval('font.highlight.remove', 'background-color');
+        this.#registerHighlightRemoval();
     }
 
     #register(
@@ -88,9 +88,69 @@ export class FontPlugin extends Plugin {
         });
     }
 
+    #registerHighlight(): void {
+        this.editor.commands.register({
+            id: 'font.highlight',
+            label: 'Highlighter',
+            canExecute: ({ editor }) => {
+                const service = editor.services.tryGet(
+                    visualEditingServiceToken,
+                );
+                return (
+                    service?.canEdit() === true &&
+                    service.applyInlineStyle !== undefined
+                );
+            },
+            execute: ({ editor }, ...args) => {
+                if (args.length !== 1) {
+                    throw new RichTextArgumentError(
+                        'font.highlight',
+                        'requires exactly one value.',
+                    );
+                }
+                const color = readColor('font.highlight', args[0]);
+                requireFontService(
+                    editor.services.get(visualEditingServiceToken),
+                    'font.highlight',
+                ).applyInlineStyle?.({
+                    attributes: Object.freeze([
+                        Object.freeze({
+                            name: 'style',
+                            value: `background: linear-gradient(transparent 60%, ${color} 0);`,
+                        }),
+                    ]),
+                    tagName: 'mark',
+                });
+            },
+        });
+    }
+
+    #registerHighlightRemoval(): void {
+        this.editor.commands.register({
+            id: 'font.highlight.remove',
+            label: 'Remove highlight',
+            canExecute: ({ editor }) => {
+                const service = editor.services.tryGet(
+                    visualEditingServiceToken,
+                );
+                return (
+                    service?.canEdit() === true &&
+                    service.removeInlineStyleProperty !== undefined
+                );
+            },
+            execute: ({ editor }) => {
+                const service = requireFontService(
+                    editor.services.get(visualEditingServiceToken),
+                    'font.highlight',
+                );
+                service.removeInlineStyleProperty?.('background');
+            },
+        });
+    }
+
     #registerRemoval(
         command: FontStyleRemovalCommand,
-        property: 'background-color' | 'color',
+        property: 'background' | 'background-color' | 'color',
     ): void {
         this.editor.commands.register({
             id: command,

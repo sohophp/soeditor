@@ -22,8 +22,7 @@ import {
     linkTargetProviderServiceToken,
 } from '@soeditor/rich-text';
 import type { EditorSaveState } from '@soeditor/workspace';
-import '@soeditor/editor/styles.css';
-import './classic-demo.css';
+import { cmsPreset } from '@soeditor/presets/cms';
 
 const showcaseHtml = [
     '<h1>用 SoEditor 构建现代内容体验</h1>',
@@ -61,6 +60,7 @@ let darkTheme = false;
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
 const editor = await createClassicEditor(textarea, {
+    preset: cmsPreset,
     ariaLabel: testMode ? 'Article editor' : '文章内容编辑器',
     autoGrow: testMode,
     config: {
@@ -106,6 +106,8 @@ const editor = await createClassicEditor(textarea, {
         readyCount += 1;
     },
     placeholder: testMode ? 'Write article content' : '开始撰写文章内容…',
+    preview: true,
+    toolbar: [...cmsPreset.toolbar, '|', 'format', 'minify', 'popupPreview'],
     ...(testMode
         ? {}
         : {
@@ -135,6 +137,14 @@ const editor = await createClassicEditor(textarea, {
                   onStateChange: updateSaveState,
               },
           }),
+    ...(!testMode
+        ? {
+              source: {
+                  autoFormat: true,
+                  autoFormatDelay: 300,
+              },
+          }
+        : {}),
     ...(testMode
         ? {}
         : {
@@ -150,8 +160,8 @@ const editor = await createClassicEditor(textarea, {
 
 const pasteDiagnostics: string[] = [];
 editor.element
-    .querySelector<HTMLSelectElement>('[data-classic-action="workspace-view"]')
-    ?.addEventListener('change', updateMode);
+    .querySelector<HTMLElement>('[data-classic-action="workspace-view"]')
+    ?.addEventListener('click', updateMode);
 editor.editor.services
     .get(pastePipelineServiceToken)
     .subscribe((diagnostic) => pasteDiagnostics.push(diagnostic.code));
@@ -346,7 +356,11 @@ Reflect.set(
         create: (
             host: HTMLElement,
             options?: CreateClassicEditorOptions,
-        ): Promise<ClassicEditor> => createClassicEditor(host, options),
+        ): Promise<ClassicEditor> =>
+            createClassicEditor(host, {
+                ...options,
+                preset: options?.preset ?? cmsPreset,
+            }),
         destroy: (): Promise<void> => editor.destroy(),
         editor,
         execute: (commandId: string, ...args: readonly unknown[]): unknown =>
@@ -454,8 +468,11 @@ async function runTourAction(action: string | undefined): Promise<void> {
             updateMode();
             return;
         case 'preview':
-            editor.setWorkspaceView('source');
-            showToast('已打开 HTML 源码');
+            if (!editor.openPreview()) {
+                showToast('浏览器阻止了预览窗口，请允许本站弹出窗口');
+                return;
+            }
+            showToast('已在独立窗口打开实时预览');
             return;
         case 'triple':
             editor.setWorkspaceView('wysiwyg');
@@ -519,9 +536,10 @@ function uploadImage(name: string): Promise<unknown> {
 }
 
 function updateMode(): void {
-    const selected = editor.element.querySelector<HTMLSelectElement>(
-        '[data-classic-action="workspace-view"]',
-    )?.selectedOptions[0]?.textContent;
+    const selected = editor.element
+        .querySelector<HTMLElement>('[data-classic-action="workspace-view"]')
+        ?.querySelector<HTMLElement>('[aria-pressed="true"]')
+        ?.getAttribute('aria-label');
     const fallback =
         editor.editor.state.mode === 'source' ? 'Source' : 'WYSIWYG';
     modeElement.innerHTML = `<i></i> ${selected ?? fallback}`;

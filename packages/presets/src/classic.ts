@@ -20,7 +20,8 @@ import {
     UnorderedListPlugin,
 } from '@soeditor/rich-text';
 import { SourceEditingPlugin } from '@soeditor/source';
-import { defaultToolbarConfiguration, UiPlugin } from '@soeditor/ui';
+import { UiPlugin } from '@soeditor/ui';
+import { CompatibilityUiPlugin } from '@soeditor/ui/compatibility';
 
 import { createPreset } from './create-preset.js';
 
@@ -49,6 +50,31 @@ export const classicPreset = createPreset(
         HtmlFormattingPlugin,
         PreviewPlugin,
         UiPlugin,
+        CompatibilityUiPlugin,
     ],
-    defaultToolbarConfiguration,
+    [
+        'undo',
+        'redo',
+        '|',
+        'heading',
+        '|',
+        'bold',
+        'italic',
+        'underline',
+        'strike',
+        'fontFamily',
+        'fontSize',
+        'fontColor',
+        'fontBackgroundColor',
+        'highlight',
+        'link',
+        '|',
+        'image',
+        'media',
+        'table',
+        '|',
+        'source',
+        'preview',
+        'format',
+    ],
 );

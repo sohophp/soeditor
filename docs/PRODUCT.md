@@ -85,7 +85,10 @@ workflows above. Optional functionality must use explicit entry points and must
 not increase default startup or bundle cost.
 
 HTML Source is the only alternate editing mode in the active product direction.
-It is optional and loaded on demand.
+It is optional and loaded on demand. When Source is enabled, Classic may show
+WYSIWYG and Source together in one bounded two-pane view with a resizable
+horizontal or vertical division; this does not authorize Preview or generic
+workspace composition.
 
 Focused integrations such as SoFinder, custom save adapters, safe media embeds,
 or advanced diagnostics may remain separate optional packages.
@@ -99,7 +102,7 @@ The active product and roadmap exclude:
 - real-time collaboration and presence;
 - AI writing, generation, review or agents;
 - Developer Visual, IDE-style inspectors and command palettes;
-- Preview workspaces, split-pane layouts and arbitrary docking;
+- Preview workspaces, arbitrary multi-pane layouts and docking;
 - page builders, office-style pagination, spreadsheets, formulas and charts;
 - email-authoring/client-optimization modes;
 - framework-specific editor architecture;

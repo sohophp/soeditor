@@ -30,6 +30,7 @@ export interface MediaInsertOptions {
     readonly width?: number;
     readonly height?: number;
     readonly link?: string;
+    readonly linkTarget?: string;
     readonly responsiveClass?: string;
     readonly title?: string;
 }
@@ -46,6 +47,7 @@ export interface MediaUpdateOptions {
     /** `null` removes the source attribute; omission keeps it unchanged. */
     readonly height?: number | null;
     readonly link?: string | null;
+    readonly linkTarget?: string | null;
     readonly responsiveClass?: string | null;
     readonly title?: string | null;
 }
@@ -503,7 +505,12 @@ function updateMedia(
             : htmlElement('figcaption', parsed.caption?.attributes ?? [], [
                   Object.freeze({ type: 'text', value: resolved.caption }),
               ]);
-    const linkedImage = updateMediaLink(parsed.link, image, resolved.link);
+    const linkedImage = updateMediaLink(
+        parsed.link,
+        image,
+        resolved.link,
+        resolved.linkTarget,
+    );
     return {
         ...figure,
         attributes: updateFigureAttributes(figure.attributes, resolved),
@@ -591,13 +598,13 @@ function updateMediaLink(
     link: HtmlElement | undefined,
     image: HtmlElement,
     value: string | null | undefined,
+    target: string | null | undefined,
 ): HtmlElement {
     if (value === null) return image;
-    if (value === undefined) {
-        return link === undefined ? image : { ...link, children: [image] };
-    }
+    if (value === undefined && link === undefined) return image;
     const attributes = updateAttributes(link?.attributes ?? [], {
-        href: value,
+        ...(value === undefined ? {} : { href: value }),
+        ...(target === undefined ? {} : { target }),
     });
     return htmlElement('a', attributes, [image]);
 }
@@ -658,7 +665,12 @@ function createMediaFragment(options: MediaInsertOptions) {
             ? image
             : htmlElement(
                   'a',
-                  [{ name: 'href', value: options.link }],
+                  [
+                      { name: 'href', value: options.link },
+                      ...(options.linkTarget === undefined
+                          ? []
+                          : [{ name: 'target', value: options.linkTarget }]),
+                  ],
                   [image],
               ),
     ];
@@ -725,6 +737,7 @@ function readMediaOptions(
                 'caption',
                 'height',
                 'link',
+                'linkTarget',
                 'responsiveClass',
                 'src',
                 'title',
@@ -763,6 +776,22 @@ function readMediaOptions(
     );
     if (typeof link === 'string' && !isSafeMediaLinkUrl(link)) {
         throw new RichTextArgumentError(command, 'requires a safe link URL.');
+    }
+    const linkTarget = optionalNullableString(
+        value.linkTarget,
+        !requireSource,
+        command,
+        'linkTarget',
+    );
+    if (
+        typeof linkTarget === 'string' &&
+        !/^_(?:blank|parent|self|top)$/u.test(linkTarget) &&
+        !/^[A-Za-z][A-Za-z0-9_.:-]*$/u.test(linkTarget)
+    ) {
+        throw new RichTextArgumentError(
+            command,
+            'requires a valid linkTarget.',
+        );
     }
     const responsiveClass = optionalNullableString(
         value.responsiveClass,
@@ -808,6 +837,7 @@ function readMediaOptions(
         ...(width === undefined ? {} : { width }),
         ...(height === undefined ? {} : { height }),
         ...(link === undefined ? {} : { link }),
+        ...(linkTarget === undefined ? {} : { linkTarget }),
         ...(responsiveClass === undefined ? {} : { responsiveClass }),
         ...(title === undefined ? {} : { title }),
     };

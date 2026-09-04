@@ -30,9 +30,9 @@ and High product defects in the executed Chromium qualification are zero.
 ## Passed gates
 
 - lint, strict TypeScript, all unit suites, and documentation audit;
-- 204/204 Chromium browser scenarios;
+- 226/226 Chromium compatibility scenarios;
 - 6/6 focused Chromium desktop/mobile CMS scenarios;
-- 66/66 applicable Firefox/WebKit focused CMS and direct WYSIWYG scenarios in
+- 96/96 applicable Firefox/WebKit focused CMS and direct WYSIWYG scenarios in
   the matching official Playwright Linux image;
 - direct axe WCAG A/AA WYSIWYG scan and existing UI accessibility corpus;
 - integration performance and explicit-GC memory budgets;
@@ -42,9 +42,10 @@ and High product defects in the executed Chromium qualification are zero.
 - MIT license metadata for all 24 packages;
 - dependency audit with no known vulnerabilities.
 
-The largest Playground-only chunk remains the lazily loaded Preview/CodeMirror
-path at about 1.062 MB raw. The editor global is about 2.214 MB raw / 649.71 kB
-gzip. These are recorded budgets, not regressions hidden as failures.
+The largest Playground-only chunk is the lazily loaded Source/CodeMirror path
+at 576.69 kB raw. The CMS global is 485.98 kB raw / 149.45 kB gzip, while the
+packed CMS Vite consumer is 461,271 bytes raw / 149,986 bytes gzip. These are
+recorded measurements, not regressions hidden as failures.
 
 ## Cross-browser qualification
 
@@ -59,14 +60,15 @@ The complete 12-run CMS matrix was attempted again on 2026-08-31:
   runtime libraries.
 
 These remain environment blockers on the Rocky Linux workstation, not passing
-results and not observed SoEditor failures. Phase 57 reran the focused CMS and
-direct WYSIWYG corpora in the matching official Playwright Noble image: all 66
-applicable Firefox/WebKit assertions passed. Four cases are explicitly skipped
-because native clipboard permissions and CDP IME injection are Chromium-only;
-cross-engine composition and synthetic rich-paste paths still pass.
+results and not observed SoEditor failures. The current candidate reran the
+focused CMS and complete direct WYSIWYG corpora in the matching official
+Playwright Noble image: all 96 applicable Firefox/WebKit assertions passed.
+Four cases are explicitly skipped because native clipboard permissions and CDP
+IME injection are Chromium-only; cross-engine composition and synthetic
+rich-paste paths still pass.
 
-The repository now has an independent Firefox/WebKit CI job. It and the full
-release gate passed for commit
+The repository now has an independent Firefox/WebKit CI job. An earlier
+66-assertion version of that job and the full release gate passed for commit
 `1fe622c8b17771daeabc256e0ea127e52d311c83` in Actions run `33460058428`.
 Publication stays blocked until real Safari plus the documented manual
 assistive-technology checks are completed.

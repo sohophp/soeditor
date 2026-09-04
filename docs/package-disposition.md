@@ -23,6 +23,7 @@ boundary, not an immediate deletion or compatibility promise.
 | Package                      | Target role                                                           | Loading rule                                                                            |
 | ---------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
 | `@soeditor/source`           | optional HTML Source mode                                             | dynamic import only when configured or activated                                        |
+| `@soeditor/preview`          | optional isolated Classic popup preview                               | dynamic import only when configured; never part of the standalone CMS global            |
 | `@soeditor/file-manager`     | upload and picker service contracts                                   | explicit integration or narrow lazy path                                                |
 | `@soeditor/adapter-sofinder` | SoFinder picker adapter                                               | explicit host import; never a Core dependency                                           |
 | `@soeditor/workspace`        | save/lifecycle helpers still needed by current Classic implementation | split essential host behavior from recovery/platform breadth before deciding final tier |
@@ -35,7 +36,6 @@ boundary, not an immediate deletion or compatibility promise.
 | `@soeditor/comments`    | mapped comments                                  | security/critical compatibility fixes only                                                                   |
 | `@soeditor/revisions`   | revision and review policies                     | security/critical compatibility fixes only                                                                   |
 | `@soeditor/markdown`    | Markdown editing/conversion                      | security/critical compatibility fixes only                                                                   |
-| `@soeditor/preview`     | sandboxed Preview                                | security/critical compatibility fixes only                                                                   |
 | `@soeditor/dev-tools`   | Problems, Inspector, Outline and command palette | security/critical compatibility fixes only                                                                   |
 | `@soeditor/layout`      | split projection layouts                         | security/critical compatibility fixes only                                                                   |
 | `@soeditor/react`       | React Workspace adapter                          | compatibility fixes only; not required for CMS integration                                                   |

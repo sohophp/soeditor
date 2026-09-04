@@ -55,10 +55,10 @@ describe('structured table feature', () => {
         harness.editor.execute(
             'table.cell.setHtml',
             range(1, 1),
-            '<strong>Rich</strong> <a href="/docs">link</a><br><img src="/cover.png" alt="Cover">',
+            '<strong>Rich</strong> <a href="/docs">link</a><br /><img src="/cover.png" alt="Cover">',
         );
         expect(harness.html()).toContain(
-            '<td><strong>Rich</strong> <a href="/docs">link</a><br><img src="/cover.png" alt="Cover"></td>',
+            '<td><strong>Rich</strong> <a href="/docs">link</a><br /><img src="/cover.png" alt="Cover"></td>',
         );
         expect(() =>
             harness.editor.execute(
@@ -127,13 +127,13 @@ describe('structured table feature', () => {
         harness.editor.execute('table.cells.merge', all);
         expect(harness.editor.execute('table.cells.canMerge', all)).toBe(false);
         expect(harness.html()).toBe(
-            '<table><tbody><tr><td rowspan="2" colspan="2">A<br>B<br>C<br>D</td></tr><tr></tr></tbody></table>',
+            '<table><tbody><tr><td rowspan="2" colspan="2">A<br />B<br />C<br />D</td></tr><tr></tr></tbody></table>',
         );
         expect(harness.replace).toHaveBeenCalledTimes(1);
 
         harness.editor.execute('table.cell.split', range(0, 0));
         expect(harness.html()).toBe(
-            '<table><tbody><tr><td>A<br>B<br>C<br>D</td><td></td></tr><tr><td></td><td></td></tr></tbody></table>',
+            '<table><tbody><tr><td>A<br />B<br />C<br />D</td><td></td></tr><tr><td></td><td></td></tr></tbody></table>',
         );
         expect(harness.replace).toHaveBeenCalledTimes(2);
         await harness.editor.destroy();
@@ -141,7 +141,7 @@ describe('structured table feature', () => {
 
     it('merges another rectangle when an unrelated merged cell already exists', async () => {
         const harness = await createTableHarness(
-            '<table><tbody><tr><td rowspan="2">A<br>C</td><td>B</td><td>D</td></tr><tr><td>E</td><td>F</td></tr></tbody></table>',
+            '<table><tbody><tr><td rowspan="2">A<br />C</td><td>B</td><td>D</td></tr><tr><td>E</td><td>F</td></tr></tbody></table>',
         );
         const selection = range(1, 1, 1, 2);
 
@@ -150,7 +150,7 @@ describe('structured table feature', () => {
         );
         harness.editor.execute('table.cells.merge', selection);
         expect(harness.html()).toBe(
-            '<table><tbody><tr><td rowspan="2">A<br>C</td><td>B</td><td>D</td></tr><tr><td colspan="2">E<br>F</td></tr></tbody></table>',
+            '<table><tbody><tr><td rowspan="2">A<br />C</td><td>B</td><td>D</td></tr><tr><td colspan="2">E<br />F</td></tr></tbody></table>',
         );
         await harness.editor.destroy();
     });
@@ -223,6 +223,16 @@ describe('structured table feature', () => {
                 ]),
             ),
         ).toThrow('bounded to 100 rows');
+        const beforeRejectedPaste = harness.html();
+        expect(() =>
+            harness.editor.execute('table.cells.paste', range(1, 1), [
+                [
+                    [{ type: 'text', value: 'x' }],
+                    [{ type: 'text', value: 'y' }],
+                ],
+            ]),
+        ).toThrow('does not fit the table');
+        expect(harness.html()).toBe(beforeRejectedPaste);
         await harness.editor.destroy();
 
         const unsupported = await createTableHarness(
@@ -240,7 +250,7 @@ describe('structured table feature', () => {
         );
         expect(() =>
             columns.editor.execute('table.column.insertAfter', range(0, 0)),
-        ).toThrow('does not alter tables with colgroup metadata');
+        ).toThrow('requires column metadata to match the table grid');
         expect(columns.html()).toContain('<colgroup><col span="2"></colgroup>');
         expect(columns.replace).not.toHaveBeenCalled();
         await columns.editor.destroy();
@@ -253,14 +263,18 @@ describe('structured table feature', () => {
         harness.editor.execute('table.properties', range(0, 0), {
             alignment: 'center',
             ariaLabel: 'Quarterly results',
-            caption: 'Results',
+            border: '1',
+            cellPadding: '6',
+            cellSpacing: '0',
             responsiveClass: 'cms-table responsive',
+            summary: 'Quarterly results summary',
             width: '80%',
             customAttributes: [
                 { name: 'data-cms', value: 'table' },
                 { name: 'role', value: 'grid' },
             ],
         });
+        harness.editor.execute('table.caption.set', range(0, 0), 'Results');
         harness.editor.execute('table.row.properties', range(0, 0, 0, 1), {
             ariaLabel: 'Header row',
             className: 'highlight',
@@ -281,10 +295,10 @@ describe('structured table feature', () => {
         });
 
         expect(harness.html()).toContain(
-            '<table data-soeditor-align="center" width="80%" data-soeditor-responsive-class="cms-table responsive" aria-label="Quarterly results" data-cms="table" role="grid"><caption>Results</caption><colgroup data-soeditor-columns="true"><col data-soeditor-width="240"><col></colgroup>',
+            '<table align="center" width="80%" border="1" cellpadding="6" cellspacing="0" summary="Quarterly results summary" class="cms-table responsive" aria-label="Quarterly results" data-cms="table" role="grid"><caption>Results</caption><colgroup><col width="240"><col></colgroup>',
         );
         expect(harness.html()).toContain(
-            '<thead><tr aria-label="Header row" data-soeditor-class="highlight" height="48" data-row="header"><th data-soeditor-class="numeric" data-soeditor-align="right" data-soeditor-vertical-align="middle" scope="col" headers="amount">A</th>',
+            '<thead><tr aria-label="Header row" class="highlight" height="48" data-row="header"><th class="numeric" align="right" valign="middle" scope="col" headers="amount">A</th>',
         );
         expect(harness.html()).toContain(
             '<tbody><tr><td>C</td><td>D</td></tr></tbody>',
@@ -292,7 +306,7 @@ describe('structured table feature', () => {
 
         harness.editor.execute('table.column.insertAfter', range(0, 0));
         expect(harness.html()).toContain(
-            '<colgroup data-soeditor-columns="true"><col data-soeditor-width="240"><col><col></colgroup>',
+            '<colgroup><col width="240"><col><col></colgroup>',
         );
         const beforeInvalid = harness.html();
         expect(() =>
@@ -305,6 +319,11 @@ describe('structured table feature', () => {
                 width: '10000px',
             }),
         ).toThrow('1px to 9999px, or 1% to 100%');
+        expect(() =>
+            harness.editor.execute('table.properties', range(0, 0), {
+                cellPadding: '-1',
+            }),
+        ).toThrow('cellPadding');
         expect(harness.html()).toBe(beforeInvalid);
         expect(() =>
             harness.editor.execute('table.cell.properties', range(0, 0), {
@@ -369,6 +388,147 @@ describe('structured table feature', () => {
             }),
         ).toThrow('invalid or reserved');
         await harness.editor.destroy();
+    });
+    it('inspects and edits captions, sections, and safe column groups', async () => {
+        const harness = await createTableHarness(
+            '<table data-cms="kept"><caption data-title="kept"><strong>Old</strong> title</caption><thead><tr><th scope="col">H</th></tr></thead><tbody data-body="one"><tr><td>A</td></tr></tbody><tbody data-body="two"></tbody><tfoot></tfoot></table>',
+        );
+        const service = harness.editor.services.get(tableEditorServiceToken);
+        expect(service.inspectStructure()).toMatchObject({
+            caption: { exists: true, hasRichContent: true, text: 'Old title' },
+            sections: [
+                { kind: 'head', rowCount: 1 },
+                { kind: 'body', rowCount: 1 },
+                { kind: 'body', rowCount: 0 },
+                { kind: 'foot', rowCount: 0 },
+            ],
+        });
+
+        service.updateCaption('New title');
+        expect(harness.html()).toContain(
+            '<caption data-title="kept">New title</caption>',
+        );
+        service.moveRows({
+            placement: 'start',
+            range: range(0, 0),
+            targetSectionIndex: 2,
+        });
+        expect(service.inspectStructure().sections).toMatchObject([
+            { kind: 'head', rowCount: 0 },
+            { kind: 'body', rowCount: 1 },
+            { kind: 'body', rowCount: 1 },
+            { kind: 'foot', rowCount: 0 },
+        ]);
+        service.updateSection(2, {
+            customAttributes: [{ name: 'data-cms-section', value: 'kept' }],
+        });
+        service.removeSection(3);
+        expect(harness.html()).toContain(
+            '<tbody data-cms-section="kept"><tr><th scope="col">H</th></tr></tbody>',
+        );
+        expect(harness.replace).toHaveBeenCalledTimes(4);
+        await harness.editor.destroy();
+
+        const columns = await createTableHarness(
+            '<table><tbody><tr><td>A</td><td>B</td></tr></tbody></table>',
+        );
+        const columnService = columns.editor.services.get(
+            tableEditorServiceToken,
+        );
+        columnService.createColumnGroup({ span: 2 });
+        expect(columnService.inspectStructure()).toMatchObject({
+            columnGroups: [{ columnCount: 2, editable: true, span: 2 }],
+            diagnostics: [],
+        });
+        columnService.updateColumnGroup(0, {
+            customAttributes: [{ name: 'data-cms-columns', value: 'kept' }],
+            span: 2,
+        });
+        expect(columns.html()).toContain(
+            '<colgroup span="2" data-cms-columns="kept"></colgroup>',
+        );
+        columnService.updateColumnGroup(0, {
+            columns: [
+                {
+                    attributes: [{ name: 'data-cms-column', value: 'one' }],
+                    span: 1,
+                    width: '240px',
+                },
+                { attributes: [], span: 1 },
+            ],
+        });
+        expect(columns.html()).toContain(
+            '<colgroup data-cms-columns="kept"><col width="240px" data-cms-column="one"><col></colgroup>',
+        );
+        columns.editor.execute('table.column.resize', range(0, 1), {
+            width: 320,
+        });
+        expect(columns.html()).toContain(
+            '<colgroup data-cms-columns="kept"><col width="240px" data-cms-column="one"><col width="320px"></colgroup>',
+        );
+        expect(() => columnService.removeColumnGroup(0)).toThrow(
+            'only an empty column group',
+        );
+        await columns.editor.destroy();
+
+        const multipleGroups = await createTableHarness(
+            '<table><colgroup data-group="one"><col></colgroup><!--cms-columns--><colgroup data-group="two"><col></colgroup><tbody><tr><td>A</td><td>B</td></tr></tbody></table>',
+        );
+        multipleGroups.editor.execute('table.column.resize', range(0, 0), {
+            width: 180,
+        });
+        expect(multipleGroups.html()).toContain(
+            '<colgroup data-group="one"><col width="180px"></colgroup><!--cms-columns--><colgroup data-group="two"><col></colgroup>',
+        );
+        await multipleGroups.editor.destroy();
+
+        const repair = await createTableHarness(
+            '<table><tr><td>A</td><td>B</td></tr></table>',
+        );
+        const repairService = repair.editor.services.get(
+            tableEditorServiceToken,
+        );
+        expect(repairService.inspectStructure().sections).toMatchObject([
+            { kind: 'body', rowCount: 1 },
+        ]);
+        repair.editor.execute('table.header.firstRow');
+        expect(repair.html()).toBe(
+            '<table><tbody><tr><th scope="col">A</th><th scope="col">B</th></tr></tbody></table>',
+        );
+        await repair.editor.destroy();
+
+        const preservation = await createTableHarness(
+            '<table><thead><tr><th>H</th></tr></thead><!--cms-marker--><tbody data-body="one"><tr><td>A</td></tr></tbody><tbody data-body="two"><tr><td>B</td></tr></tbody><tfoot></tfoot></table>',
+        );
+        const preservationService = preservation.editor.services.get(
+            tableEditorServiceToken,
+        );
+        preservationService.reorderBodySection(1, 2);
+        preservationService.createSection('body', 1);
+        expect(preservation.html()).toContain('<!--cms-marker-->');
+        expect(preservation.html()).toContain(
+            '<tbody data-body="two"><tr><td>B</td></tr></tbody><tbody></tbody><tbody data-body="one">',
+        );
+        await preservation.editor.destroy();
+
+        const duplicateSections = await createTableHarness(
+            '<table><thead></thead><thead></thead><tbody><tr><td>A</td></tr></tbody><tbody></tbody></table>',
+        );
+        const duplicateService = duplicateSections.editor.services.get(
+            tableEditorServiceToken,
+        );
+        expect(duplicateService.inspectStructure().diagnostics).toContainEqual(
+            expect.objectContaining({
+                code: 'empty-duplicate-section',
+                repairId: 'remove-empty-duplicate-sections',
+                repairable: true,
+            }),
+        );
+        duplicateService.repairStructure('remove-empty-duplicate-sections');
+        expect(duplicateSections.html()).toBe(
+            '<table><thead></thead><tbody><tr><td>A</td></tr></tbody></table>',
+        );
+        await duplicateSections.editor.destroy();
     });
 });
 

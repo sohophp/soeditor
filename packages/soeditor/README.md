@@ -5,7 +5,7 @@ mount the Classic Editor through the narrow `/cms` entry. The direct browser
 build exposes the WYSIWYG-only CMS API through `globalThis.SoEditor`.
 
 ```ts
-import { createClassicEditor } from '@soeditor/editor/cms';
+import { createClassicEditor } from '@soeditor/editor/cms/optional';
 import '@soeditor/editor/styles.css';
 
 const editor = await createClassicEditor(
@@ -19,6 +19,10 @@ const editor = await createClassicEditor(
     },
 );
 ```
+
+Use `@soeditor/editor/cms` for the smaller WYSIWYG-only default. The explicit
+`/cms/optional` entry is required when Source, Preview or a save adapter is
+configured; the standalone browser global also remains WYSIWYG-only.
 
 When the host is a named textarea, its value follows canonical HTML and is
 updated before native form submission. Form reset restores the textarea's

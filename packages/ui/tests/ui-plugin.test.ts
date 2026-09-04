@@ -23,8 +23,16 @@ describe('UI contribution registry', () => {
 
         expect(simplified.locale).toBe('zh-CN');
         expect(simplified.translate('Source')).toBe('源码');
+        expect(simplified.translate('Table height')).toBe('表格高度');
+        expect(simplified.translate('Border size')).toBe('边框大小');
+        expect(simplified.translate('Cell spacing')).toBe('单元格间距');
+        expect(simplified.translate('Cell padding')).toBe('单元格内边距');
         expect(traditional.locale).toBe('zh-TW');
         expect(traditional.translate('Source')).toBe('原始碼');
+        expect(traditional.translate('Table height')).toBe('表格高度');
+        expect(traditional.translate('Border size')).toBe('邊框大小');
+        expect(traditional.translate('Cell spacing')).toBe('儲存格間距');
+        expect(traditional.translate('Cell padding')).toBe('儲存格內邊距');
         expect(traditional.translate('Table cell properties')).toBe(
             '儲存格屬性',
         );

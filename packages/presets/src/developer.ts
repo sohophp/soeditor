@@ -6,8 +6,6 @@ import {
 } from '@soeditor/html-tools';
 import { SplitViewPlugin } from '@soeditor/layout';
 import { ProjectionCoordinatorPlugin } from '@soeditor/projections';
-import { defaultToolbarConfiguration } from '@soeditor/ui';
-
 import { classicPreset } from './classic.js';
 import { createPreset } from './create-preset.js';
 
@@ -23,7 +21,7 @@ export const developerPreset = createPreset(
         FileManagerPlugin,
     ],
     [
-        ...defaultToolbarConfiguration,
+        ...classicPreset.toolbar,
         '|',
         'problems',
         'image-browse',

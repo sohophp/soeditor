@@ -23,18 +23,25 @@ CMS-specific browser global.
 
 | Artifact                       |       Raw |      Gzip |    Enforced ceiling |
 | ------------------------------ | --------: | --------: | ------------------: |
-| packed `/cms` Vite startup JS  | 485.44 kB | 145.02 kB |        500 / 150 kB |
-| optional Source/CodeMirror     | 574.36 kB | 198.38 kB | measured separately |
-| CMS browser global             | 482.60 kB | 143.89 kB |        500 / 150 kB |
-| CMS CSS                        |  25.58 kB |   4.71 kB |           27 kB raw |
-| CMS ESM facade                 |   0.68 kB |   0.30 kB |            measured |
-| lazy Classic implementation    |  64.98 kB |  14.45 kB |            measured |
+| packed `/cms` Vite startup JS  | 461.10 kB | 149.85 kB |        510 / 150 kB |
+| optional Source/CodeMirror     |         — |         — | measured separately |
+| CMS browser global             | 485.82 kB | 149.35 kB |        500 / 150 kB |
+| CMS CSS                        |  26.19 kB |   4.80 kB |           27 kB raw |
+| CMS ESM facade                 |   0.19 kB |   0.16 kB |            measured |
+| lazy Classic implementation    |  84.78 kB |  24.18 kB |            measured |
 | historical all-features global |  2,214 kB | 649.71 kB |            rejected |
 
-The ESM Classic implementation still resolves workspace packages from the
-consumer graph. Optional Source adds `@soeditor/source` and CodeMirror only when
-configured; it is external to the standalone browser global, so no Source cost
-is disguised inside the default number.
+The `/cms` artifact prebundles the narrow CMS runtime and keeps link, image and
+table context tools in user-triggered chunks. Source, Preview and save adapters
+are exposed only by `/cms/optional`; Source still loads `@soeditor/source` and
+CodeMirror only when configured and remains external to the standalone global.
+
+The nominal raw targets use rounded product units. The executable release gate
+allows 510,000 bytes for the global and 27,250 bytes for CSS so normal toolchain
+serialization variance remains bounded; gzip remains capped at 150,000 bytes.
+The default CMS runtime preset omits host-owned file-manager/upload plugins and
+non-visible code/list-property plugins. Applications requiring the file-manager
+integration pass the full `cmsPreset` explicitly through the ESM CMS entry.
 
 The packed-consumer gate reads the Vite manifest and counts the entry, the
 immediately invoked Classic chunk and their static imports. Nested dynamic

@@ -1,9 +1,52 @@
 import type { Editor } from '@soeditor/core';
+import { projectionCoordinatorServiceToken } from '@soeditor/projections';
 import type { DismissibleUiHandle, EditorUi } from '@soeditor/ui';
 
 import type * as TableEditorAttributes from './table-editor-attributes.js';
 
 type TableContextPropertyKind = 'cell' | 'row' | 'section' | 'table';
+
+interface TableStructureSnapshot {
+    readonly caption: {
+        readonly exists: boolean;
+        readonly hasRichContent: boolean;
+        readonly text: string;
+    };
+    readonly columnGroups: readonly {
+        readonly columnCount: number;
+        readonly columns: readonly {
+            readonly attributes: readonly {
+                readonly name: string;
+                readonly value: string;
+            }[];
+            readonly span: number;
+            readonly width?: string;
+        }[];
+        readonly editable: boolean;
+        readonly index: number;
+        readonly reason?: string;
+        readonly span?: number;
+        readonly startColumn: number;
+        readonly attributes: readonly {
+            readonly name: string;
+            readonly value: string;
+        }[];
+    }[];
+    readonly diagnostics: readonly {
+        readonly message: string;
+        readonly repairable: boolean;
+        readonly repairId?: string;
+    }[];
+    readonly sections: readonly {
+        readonly index: number;
+        readonly kind: 'body' | 'foot' | 'head';
+        readonly rowCount: number;
+        readonly attributes: readonly {
+            readonly name: string;
+            readonly value: string;
+        }[];
+    }[];
+}
 
 export function attachClassicTableContext(
     editor: Editor,
@@ -17,13 +60,39 @@ export function attachClassicTableContext(
     let activeSelection: (() => void) | undefined;
     let activeRange: unknown;
     let selectionObserver: MutationObserver | undefined;
+    let resizeOverlay: HTMLDivElement | undefined;
+    let resizeObserver: ResizeObserver | undefined;
+    let disposeResizePosition: (() => void) | undefined;
     const commandButtons = new Map<string, HTMLButtonElement>();
     const scopeButtons: HTMLButtonElement[] = [];
+    let captionButton: HTMLButtonElement | undefined;
+    let cellPropertiesButton: HTMLButtonElement | undefined;
+    let propertiesButton: HTMLButtonElement | undefined;
+    let resyncFrame: number | undefined;
+    let resyncAttempts = 0;
+    let resizeDragging = false;
+    let projectionObserver: MutationObserver | undefined;
     const refreshCommandButtons = (): void => {
         const selectionKind = classicTableSelectionKind(
             activeTable,
             activeRange,
         );
+        ui.setStatus(
+            `${ui.translate(capitalizeMode(editor.state.mode))} · ${tableScopeLabel(ui, selectionKind, activeRange)} · ${ui.translate(editor.state.dirty ? 'Unsaved' : 'Saved')}`,
+        );
+        const isSingleCell = selectionKind === 'caret';
+        if (captionButton !== undefined) captionButton.hidden = !isSingleCell;
+        if (cellPropertiesButton !== undefined) {
+            cellPropertiesButton.hidden = !isSingleCell;
+        }
+        if (propertiesButton !== undefined) {
+            const label =
+                selectionKind === 'rows'
+                    ? 'Row properties'
+                    : 'Table properties';
+            propertiesButton.title = ui.translate(label);
+            propertiesButton.setAttribute('aria-label', ui.translate(label));
+        }
         for (const [command, button] of commandButtons) {
             button.disabled =
                 command === 'table.cells.merge'
@@ -54,7 +123,17 @@ export function attachClassicTableContext(
             }
         }
         for (const button of scopeButtons) {
-            button.hidden = selectionKind === 'cells';
+            const bounds = tableRangeBounds(activeRange);
+            const scope = button.dataset.selectionScope;
+            button.hidden =
+                selectionKind === 'cells' &&
+                bounds !== undefined &&
+                ((scope === 'column' &&
+                    bounds.left === bounds.right &&
+                    bounds.top !== bounds.bottom) ||
+                    (scope === 'row' &&
+                        bounds.top === bounds.bottom &&
+                        bounds.left !== bounds.right));
         }
     };
     const canMerge = (
@@ -123,8 +202,405 @@ export function attachClassicTableContext(
     const close = (): void => {
         balloon?.close();
         balloon = undefined;
+        ui.setStatus();
         commandButtons.clear();
+        scopeButtons.length = 0;
+        resizeObserver?.disconnect();
+        resizeObserver = undefined;
+        disposeResizePosition?.();
+        disposeResizePosition = undefined;
+        resizeOverlay?.remove();
+        resizeOverlay = undefined;
     };
+    const attachResizeHandles = (table: HTMLElement): void => {
+        // The rich-text table node view already owns resize handles in the
+        // native WYSIWYG projection. Do not add a second overlay on top of
+        // those controls: the duplicate hit target can turn a boundary drag
+        // into the neighboring table toolbar action (such as Add column).
+        const shadow = visual.getRootNode();
+        const resizeHost =
+            table.closest<HTMLElement>('.soeditor-table-widget--wysiwyg') ??
+            table.parentElement;
+        if (
+            table.classList.contains('soeditor-table-widget--wysiwyg') ||
+            resizeHost?.classList.contains('soeditor-table-widget--wysiwyg') ||
+            (shadow instanceof ShadowRoot &&
+                shadow.querySelector(
+                    '.soeditor-table-column-resize, .soeditor-table-row-resize',
+                ) !== null) ||
+            resizeHost?.querySelector(
+                '.soeditor-table-column-resize, .soeditor-table-row-resize',
+            ) !== null
+        ) {
+            return;
+        }
+        resizeObserver?.disconnect();
+        disposeResizePosition?.();
+        resizeOverlay?.remove();
+        if (!(shadow instanceof ShadowRoot)) return;
+        const overlay = document.createElement('div');
+        overlay.className = 'soeditor-table-resize-overlay';
+        const activateCellForResize = (cell: HTMLTableCellElement): void => {
+            const PointerEventConstructor = document.defaultView?.PointerEvent;
+            if (PointerEventConstructor === undefined) {
+                cell.click();
+                return;
+            }
+            cell.dispatchEvent(
+                new PointerEventConstructor('pointerdown', {
+                    bubbles: true,
+                    button: 0,
+                }),
+            );
+            cell.dispatchEvent(
+                new PointerEventConstructor('pointerup', {
+                    bubbles: true,
+                    button: 0,
+                }),
+            );
+        };
+        const position = (): void => {
+            if (!table.isConnected) return;
+            const tableRect = table.getBoundingClientRect();
+            // The overlay is an absolutely positioned shadow child. In split
+            // mode `contain: paint` makes the visual pane its containing
+            // block; otherwise the positioned classic root is the containing
+            // block. Convert the viewport rectangle to whichever coordinate
+            // system the browser is actually using.
+            const shadowRoot = visual.getRootNode();
+            const visualHost =
+                shadowRoot instanceof ShadowRoot ? shadowRoot.host : visual;
+            const hostStyle = getComputedStyle(visualHost);
+            const containingBlock = hostStyle.contain.includes('paint')
+                ? visualHost
+                : (visualHost.closest<HTMLElement>('.soeditor-classic') ??
+                  visualHost);
+            const containingRect = containingBlock.getBoundingClientRect();
+            overlay.style.insetInlineStart = `${String(
+                tableRect.left -
+                    containingRect.left -
+                    containingBlock.clientLeft +
+                    visual.scrollLeft,
+            )}px`;
+            overlay.style.insetBlockStart = `${String(
+                tableRect.top -
+                    containingRect.top -
+                    containingBlock.clientTop +
+                    visual.scrollTop,
+            )}px`;
+            overlay.style.width = `${String(tableRect.width)}px`;
+            overlay.style.height = `${String(tableRect.height)}px`;
+            const firstRow = table.querySelector('tr');
+            for (const [column, cell] of Array.from(
+                firstRow?.children ?? [],
+            ).entries()) {
+                const handle = overlay.querySelector<HTMLElement>(
+                    `[data-resize-column="${String(column)}"]`,
+                );
+                if (handle === null) continue;
+                const rectangle = cell.getBoundingClientRect();
+                handle.style.insetInlineStart = `${String(rectangle.right - tableRect.left - 8)}px`;
+            }
+            for (const [row, tableRow] of Array.from(
+                table.querySelectorAll('tr'),
+            ).entries()) {
+                const handle = overlay.querySelector<HTMLElement>(
+                    `[data-resize-row="${String(row)}"]`,
+                );
+                if (handle === null) continue;
+                const rectangle = tableRow.getBoundingClientRect();
+                handle.style.insetBlockStart = `${String(rectangle.bottom - tableRect.top - 4)}px`;
+            }
+        };
+        const redirectStalePointer = (
+            event: PointerEvent,
+            selector: string,
+        ): boolean => {
+            if (table.isConnected) return false;
+            const nextTable = visual.querySelector<HTMLElement>(
+                '.soeditor-table-widget',
+            );
+            const PointerEventConstructor = document.defaultView?.PointerEvent;
+            if (nextTable === null || PointerEventConstructor === undefined) {
+                return false;
+            }
+            close();
+            activeTable = nextTable;
+            activeTarget =
+                nextTable.querySelector<HTMLElement>('.soeditor-table-cell') ??
+                undefined;
+            activeSelection = undefined;
+            activeRange = undefined;
+            attachResizeHandles(nextTable);
+            const replacement =
+                resizeOverlay?.querySelector<HTMLElement>(selector);
+            if (replacement === null || replacement === undefined) {
+                return false;
+            }
+            replacement.dispatchEvent(
+                new PointerEventConstructor('pointerdown', {
+                    bubbles: true,
+                    button: event.button,
+                    clientX: event.clientX,
+                    clientY: event.clientY,
+                    pointerId: event.pointerId,
+                    pointerType: event.pointerType,
+                }),
+            );
+            return true;
+        };
+        const firstRow = table.querySelector('tr');
+        for (const [column, cell] of Array.from(
+            firstRow?.children ?? [],
+        ).entries()) {
+            if (!(cell instanceof HTMLTableCellElement)) continue;
+            const handle = document.createElement('button');
+            handle.type = 'button';
+            handle.className = 'soeditor-table-column-resize';
+            handle.dataset.resizeColumn = String(column);
+            handle.setAttribute(
+                'aria-label',
+                `Resize column ${String(column + 1)}`,
+            );
+            let start = 0;
+            let origin = 0;
+            let width = 0;
+            const commit = (): void => {
+                if (!resizeDragging) return;
+                resizeDragging = false;
+                handle.style.removeProperty('transform');
+                const targetTable = table.isConnected
+                    ? table
+                    : visual.querySelector<HTMLElement>(
+                          '.soeditor-table-widget',
+                      );
+                const targetCell =
+                    targetTable?.querySelectorAll('tr')[0]?.children[column];
+                if (!(targetCell instanceof HTMLTableCellElement)) return;
+                activateCellForResize(targetCell);
+                editor.execute('table.selection.column');
+                editor.execute('table.column.resize', { width });
+                resyncTableContext();
+            };
+            const cancel = (): void => {
+                if (!resizeDragging) return;
+                resizeDragging = false;
+                handle.style.removeProperty('transform');
+                resyncTableContext();
+            };
+            handle.addEventListener('pointerdown', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (
+                    redirectStalePointer(
+                        event,
+                        `[data-resize-column="${String(column)}"]`,
+                    )
+                ) {
+                    return;
+                }
+                resizeDragging = true;
+                start = event.clientX;
+                origin = event.clientX;
+                width = cell.getBoundingClientRect().width;
+                handle.setPointerCapture(event.pointerId);
+            });
+            handle.addEventListener('pointermove', (event) => {
+                if (!handle.hasPointerCapture(event.pointerId)) return;
+                const delta = event.clientX - origin;
+                const step = event.clientX - start;
+                width = Math.max(40, Math.min(1200, Math.round(width + step)));
+                start = event.clientX;
+                handle.style.transform = `translateX(${String(delta)}px)`;
+                handle.dataset.width = `${String(width)} px`;
+            });
+            handle.addEventListener('pointerup', commit);
+            handle.addEventListener('pointercancel', cancel);
+            handle.addEventListener('keydown', (event) => {
+                if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
+                    return;
+                event.preventDefault();
+                width = Math.max(
+                    40,
+                    Math.min(
+                        1200,
+                        Math.round(cell.getBoundingClientRect().width) +
+                            (event.key === 'ArrowLeft' ? -10 : 10),
+                    ),
+                );
+                resizeDragging = true;
+                commit();
+            });
+            overlay.append(handle);
+        }
+        for (const [row, tableRow] of Array.from(
+            table.querySelectorAll('tr'),
+        ).entries()) {
+            const cell = tableRow.querySelector('td,th');
+            if (!(cell instanceof HTMLTableCellElement)) continue;
+            const handle = document.createElement('button');
+            handle.type = 'button';
+            handle.className = 'soeditor-table-row-resize';
+            handle.dataset.resizeRow = String(row);
+            handle.setAttribute('role', 'slider');
+            handle.setAttribute('aria-label', `Resize row ${String(row + 1)}`);
+            let start = 0;
+            let origin = 0;
+            let height = 0;
+            const commit = (): void => {
+                if (!resizeDragging) return;
+                resizeDragging = false;
+                handle.style.removeProperty('transform');
+                activateCellForResize(cell);
+                const targetTable = table.isConnected
+                    ? table
+                    : visual.querySelector<HTMLElement>(
+                          '.soeditor-table-widget',
+                      );
+                const targetRow = targetTable?.querySelectorAll('tr')[row];
+                const targetCell = targetRow?.querySelector('td,th');
+                if (!(targetCell instanceof HTMLTableCellElement)) return;
+                activateCellForResize(targetCell);
+                editor.execute('table.selection.row');
+                editor.execute('table.row.properties', { height });
+                resyncTableContext();
+            };
+            const cancel = (): void => {
+                if (!resizeDragging) return;
+                resizeDragging = false;
+                handle.style.removeProperty('transform');
+                resyncTableContext();
+            };
+            handle.addEventListener('pointerdown', (event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                if (
+                    redirectStalePointer(
+                        event,
+                        `[data-resize-row="${String(row)}"]`,
+                    )
+                ) {
+                    return;
+                }
+                resizeDragging = true;
+                start = event.clientY;
+                origin = event.clientY;
+                height = tableRow.getBoundingClientRect().height;
+                handle.setPointerCapture(event.pointerId);
+            });
+            handle.addEventListener('pointermove', (event) => {
+                if (!handle.hasPointerCapture(event.pointerId)) return;
+                const delta = event.clientY - origin;
+                const step = event.clientY - start;
+                height = Math.max(
+                    24,
+                    Math.min(1000, Math.round(height + step)),
+                );
+                start = event.clientY;
+                handle.style.transform = `translateY(${String(delta)}px)`;
+                handle.dataset.height = `${String(height)} px`;
+            });
+            handle.addEventListener('pointerup', commit);
+            handle.addEventListener('pointercancel', cancel);
+            handle.addEventListener('keydown', (event) => {
+                if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')
+                    return;
+                event.preventDefault();
+                height = Math.max(
+                    24,
+                    Math.min(
+                        1000,
+                        Math.round(tableRow.getBoundingClientRect().height) +
+                            (event.key === 'ArrowUp' ? -10 : 10),
+                    ),
+                );
+                resizeDragging = true;
+                commit();
+            });
+            overlay.append(handle);
+        }
+        shadow.append(overlay);
+        resizeOverlay = overlay;
+        const ResizeObserverConstructor = document.defaultView?.ResizeObserver;
+        if (ResizeObserverConstructor !== undefined) {
+            resizeObserver = new ResizeObserverConstructor(position);
+            resizeObserver.observe(table);
+            resizeObserver.observe(visual);
+            if (shadow instanceof ShadowRoot) {
+                resizeObserver.observe(shadow.host);
+                const editorRoot = shadow.host.closest('.soeditor-classic');
+                if (editorRoot !== null) resizeObserver.observe(editorRoot);
+            }
+        }
+        visual.addEventListener('scroll', position);
+        document.defaultView?.addEventListener('resize', position);
+        disposeResizePosition = () => {
+            visual.removeEventListener('scroll', position);
+            document.defaultView?.removeEventListener('resize', position);
+        };
+        position();
+    };
+    const resyncTableContext = (): void => {
+        if (resyncFrame !== undefined) return;
+        const view = document.defaultView;
+        if (view === null) return;
+        resyncFrame = view.requestAnimationFrame(() => {
+            resyncFrame = undefined;
+            if (activeTable === undefined) return;
+            if (resizeDragging) return;
+            const coordinator = editor.services.get(
+                projectionCoordinatorServiceToken,
+            );
+            if (coordinator.snapshot.primary !== 'wysiwyg') return;
+            const ownsResizeHandles =
+                resizeOverlay?.isConnected === true ||
+                activeTable.querySelector(
+                    '.soeditor-table-column-resize, .soeditor-table-row-resize',
+                ) !== null;
+            if (activeTable.isConnected && ownsResizeHandles) {
+                resyncAttempts = 0;
+                return;
+            }
+            const nextTable = visual.querySelector<HTMLElement>(
+                '.soeditor-table-widget',
+            );
+            if (nextTable === null) {
+                if (resyncAttempts < 10) {
+                    resyncAttempts += 1;
+                    resyncTableContext();
+                }
+                return;
+            }
+            resyncAttempts = 0;
+            close();
+            activeTable = nextTable;
+            activeTarget =
+                nextTable.querySelector<HTMLElement>('.soeditor-table-cell') ??
+                undefined;
+            activeSelection = undefined;
+            activeRange = undefined;
+            attachResizeHandles(nextTable);
+        });
+    };
+    const coordinator = editor.services.get(projectionCoordinatorServiceToken);
+    const disposeProjection = coordinator.subscribe((snapshot) => {
+        if (
+            snapshot.primary === 'wysiwyg' &&
+            snapshot.activities.some(
+                (activity) => activity.id === 'wysiwyg' && activity.visible,
+            )
+        ) {
+            resyncTableContext();
+        }
+    });
+    const disposeDocumentChange = editor.events.on(
+        'document:change',
+        resyncTableContext,
+    );
+    projectionObserver = new MutationObserver(() => {
+        resyncTableContext();
+    });
+    projectionObserver.observe(visual, { childList: true });
     const execute = (command: string, ...args: readonly unknown[]): boolean => {
         const EventConstructor = document.defaultView?.Event ?? Event;
         activeTarget?.dispatchEvent(
@@ -355,7 +831,10 @@ export function attachClassicTableContext(
                 },
             ],
         });
-        dialog.element.classList.add('soeditor-ui__link-dialog');
+        dialog.element.classList.add(
+            'soeditor-ui__link-dialog',
+            'soeditor-table-properties-dialog',
+        );
         const firstControl = controls.values().next().value;
         if (firstControl !== undefined) firstControl.focus();
         else dimensionControls.values().next().value?.focus();
@@ -369,6 +848,564 @@ export function attachClassicTableContext(
                 severity: 'error',
             });
         }
+    };
+    const openCaption = async (
+        anchor: HTMLElement,
+        activate: () => void,
+    ): Promise<void> => {
+        anchor.focus();
+        activate();
+        const structureRange = activeRange;
+        const hasStructureRange =
+            tableRangeBounds(structureRange) !== undefined;
+        close();
+        let attributeModule: typeof TableEditorAttributes;
+        try {
+            attributeModule = await import('./table-editor-attributes.js');
+        } catch {
+            ui.notifications.show({
+                message: '表格附加属性编辑器加载失败，请重试。',
+                severity: 'error',
+            });
+            return;
+        }
+        const service = {
+            createColumnGroup: (options: Readonly<Record<string, unknown>>) =>
+                editor.execute('table.colgroup.create', options),
+            createSection: (kind: 'body' | 'foot' | 'head') =>
+                editor.execute('table.section.create', { kind }),
+            inspectStructure: () =>
+                editor.execute(
+                    'table.structure.inspect',
+                ) as TableStructureSnapshot,
+            moveRows: (options: Readonly<Record<string, unknown>>) =>
+                editor.execute('table.section.moveRows', options),
+            removeColumnGroup: (groupIndex: number) =>
+                editor.execute('table.colgroup.remove', groupIndex),
+            removeSection: (sectionIndex: number) =>
+                editor.execute('table.section.remove', sectionIndex),
+            reorderBodySection: (sectionIndex: number, targetIndex: number) =>
+                editor.execute('table.section.reorderBody', {
+                    sectionIndex,
+                    targetIndex,
+                }),
+            repairStructure: (repairId: string) =>
+                editor.execute('table.structure.repair', repairId),
+            updateCaption: (text: string | null) =>
+                editor.execute(
+                    text === null
+                        ? 'table.caption.remove'
+                        : 'table.caption.set',
+                    ...(text === null ? [] : [text]),
+                ),
+            updateColumnGroup: (
+                groupIndex: number,
+                properties: Readonly<Record<string, unknown>>,
+            ) =>
+                editor.execute('table.colgroup.properties', {
+                    groupIndex,
+                    properties,
+                }),
+            updateSection: (
+                sectionIndex: number,
+                properties: Readonly<Record<string, unknown>>,
+            ) =>
+                editor.execute('table.section.properties', {
+                    sectionIndex,
+                    properties,
+                }),
+        };
+        const body = document.createElement('div');
+        body.className = 'soeditor-table-structure';
+        const status = document.createElement('p');
+        status.className = 'soeditor-table-properties__help';
+        status.setAttribute('role', 'status');
+        status.setAttribute('aria-live', 'polite');
+        const run = (action: () => void, message: string): void => {
+            try {
+                anchor.focus();
+                activate();
+                action();
+                render();
+                status.textContent = message;
+            } catch (error: unknown) {
+                ui.notifications.show({
+                    message:
+                        error instanceof Error ? error.message : String(error),
+                    severity: 'error',
+                });
+            }
+        };
+        const actionButton = (
+            label: string,
+            action: () => void,
+            disabled = false,
+        ): HTMLButtonElement => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'soeditor-ui__dialog-action';
+            if (/^(?:Remove|Delete|删除)/u.test(label)) {
+                button.classList.add('is-danger');
+            } else if (/^(?:Apply|Save|保存)/u.test(label)) {
+                button.classList.add('is-primary');
+            }
+            button.textContent = label;
+            button.disabled = disabled;
+            button.addEventListener('click', action);
+            return button;
+        };
+        const render = (): void => {
+            let snapshot: TableStructureSnapshot;
+            try {
+                snapshot = service.inspectStructure();
+            } catch (error: unknown) {
+                ui.notifications.show({
+                    message:
+                        error instanceof Error ? error.message : String(error),
+                    severity: 'error',
+                });
+                return;
+            }
+            const content = document.createElement('div');
+            content.className = 'soeditor-table-structure__content';
+            const captionCard = document.createElement('section');
+            captionCard.className =
+                'soeditor-table-structure__card soeditor-table-structure__caption';
+            const captionTitle = document.createElement('h3');
+            captionTitle.textContent = '表格标题';
+            const captionField = document.createElement('label');
+            captionField.className = 'soeditor-ui__field';
+            const captionLabel = document.createElement('span');
+            captionLabel.textContent = '标题文字';
+            const captionInput = document.createElement('input');
+            captionInput.type = 'text';
+            captionInput.value = snapshot.caption.text;
+            captionField.append(captionLabel, captionInput);
+            const captionActions = document.createElement('div');
+            captionActions.className = 'soeditor-table-structure__actions';
+            captionActions.append(
+                actionButton('保存标题', () =>
+                    run(
+                        () => service.updateCaption(captionInput.value),
+                        '表格标题已保存。',
+                    ),
+                ),
+                actionButton(
+                    '删除标题',
+                    () =>
+                        run(
+                            () => service.updateCaption(null),
+                            '表格标题已删除。',
+                        ),
+                    !snapshot.caption.exists,
+                ),
+            );
+            if (snapshot.caption.hasRichContent) {
+                const warning = document.createElement('p');
+                warning.className = 'soeditor-table-properties__help';
+                warning.textContent =
+                    '当前标题包含行内结构；只有提交新文字时才会替换为纯文本。';
+                captionCard.append(
+                    captionTitle,
+                    captionField,
+                    warning,
+                    captionActions,
+                );
+            } else {
+                captionCard.append(captionTitle, captionField, captionActions);
+            }
+            content.append(captionCard);
+
+            if (body.dataset.advanced === 'true') {
+                const sectionTitle = document.createElement('h3');
+                sectionTitle.textContent = '表格分区';
+                const sectionList = document.createElement('ul');
+                for (const section of snapshot.sections) {
+                    const item = document.createElement('li');
+                    item.className = 'soeditor-table-structure__card';
+                    item.dataset.sectionKind = section.kind;
+                    const sectionName = document.createElement('strong');
+                    sectionName.className =
+                        'soeditor-table-structure__item-title';
+                    sectionName.textContent = `${section.kind === 'head' ? '表头 thead' : section.kind === 'foot' ? '表尾 tfoot' : '表体 tbody'} · ${String(section.rowCount)} 行`;
+                    item.append(sectionName);
+                    const sectionAttributes =
+                        attributeModule.createTableTagAttributeEditor(
+                            document,
+                            attributeModule.readTableTagAttributes(
+                                section.attributes,
+                            ),
+                            attributeModule.tableAttributeSuggestions(
+                                'section',
+                                section.kind === 'head'
+                                    ? 'thead'
+                                    : section.kind === 'foot'
+                                      ? 'tfoot'
+                                      : 'tbody',
+                            ),
+                            attributeModule.managedTableAttributes('section'),
+                        );
+                    const bodyIndexes = snapshot.sections
+                        .filter((candidate) => candidate.kind === 'body')
+                        .map((candidate) => candidate.index);
+                    const bodyPosition = bodyIndexes.indexOf(section.index);
+                    item.append(
+                        actionButton(
+                            '选中行移到开头',
+                            () =>
+                                run(
+                                    () =>
+                                        service.moveRows({
+                                            placement: 'start',
+                                            range: structureRange,
+                                            targetSectionIndex: section.index,
+                                        }),
+                                    '选中行已移到分区开头。',
+                                ),
+                            !hasStructureRange,
+                        ),
+                        actionButton(
+                            '选中行移到末尾',
+                            () =>
+                                run(
+                                    () =>
+                                        service.moveRows({
+                                            placement: 'end',
+                                            range: structureRange,
+                                            targetSectionIndex: section.index,
+                                        }),
+                                    '选中行已移到分区末尾。',
+                                ),
+                            !hasStructureRange,
+                        ),
+                        actionButton('保存属性', () => {
+                            const attributes = sectionAttributes.value();
+                            if (attributes === undefined) return;
+                            run(
+                                () =>
+                                    service.updateSection(section.index, {
+                                        customAttributes: attributes,
+                                    }),
+                                '分区属性已保存。',
+                            );
+                        }),
+                        actionButton(
+                            '删除空分区',
+                            () =>
+                                run(
+                                    () => service.removeSection(section.index),
+                                    '空分区已删除。',
+                                ),
+                            section.rowCount > 0,
+                        ),
+                    );
+                    if (section.kind === 'body') {
+                        item.append(
+                            actionButton(
+                                '上移',
+                                () =>
+                                    run(
+                                        () =>
+                                            service.reorderBodySection(
+                                                section.index,
+                                                bodyIndexes[bodyPosition - 1] ??
+                                                    section.index,
+                                            ),
+                                        '表体分区已上移。',
+                                    ),
+                                bodyPosition <= 0,
+                            ),
+                            actionButton(
+                                '下移',
+                                () =>
+                                    run(
+                                        () =>
+                                            service.reorderBodySection(
+                                                section.index,
+                                                bodyIndexes[bodyPosition + 1] ??
+                                                    section.index,
+                                            ),
+                                        '表体分区已下移。',
+                                    ),
+                                bodyPosition < 0 ||
+                                    bodyPosition === bodyIndexes.length - 1,
+                            ),
+                        );
+                    }
+                    const attributeDetails = document.createElement('details');
+                    attributeDetails.className =
+                        'soeditor-table-structure__attributes';
+                    const attributeSummary = document.createElement('summary');
+                    attributeSummary.textContent = '附加属性';
+                    attributeDetails.append(
+                        attributeSummary,
+                        sectionAttributes.element,
+                    );
+                    item.append(attributeDetails);
+                    sectionList.append(item);
+                }
+                const createActions = document.createElement('div');
+                createActions.className = 'soeditor-table-structure__actions';
+                for (const [kind, label] of [
+                    ['head', '添加表头'],
+                    ['body', '添加表体'],
+                    ['foot', '添加表尾'],
+                ] as const) {
+                    createActions.append(
+                        actionButton(
+                            label,
+                            () =>
+                                run(
+                                    () => service.createSection(kind),
+                                    `${label} created.`,
+                                ),
+                            kind !== 'body' &&
+                                snapshot.sections.some(
+                                    (section) => section.kind === kind,
+                                ),
+                        ),
+                    );
+                }
+                content.append(sectionTitle, sectionList, createActions);
+
+                const columnTitle = document.createElement('h3');
+                columnTitle.textContent = '列组';
+                const columnList = document.createElement('ul');
+                for (const group of snapshot.columnGroups) {
+                    const item = document.createElement('li');
+                    item.className = 'soeditor-table-structure__card';
+                    item.textContent = `Columns ${String(group.startColumn + 1)}–${String(group.startColumn + group.columnCount)} `;
+                    if (!group.editable) {
+                        item.append(
+                            document.createTextNode(group.reason ?? '只读'),
+                        );
+                    } else if (group.columns.length > 0) {
+                        const groupAttributes =
+                            attributeModule.createTableTagAttributeEditor(
+                                document,
+                                attributeModule.readTableTagAttributes(
+                                    group.attributes,
+                                ),
+                                attributeModule.tableAttributeSuggestions(
+                                    'section',
+                                    'colgroup',
+                                ),
+                                ['span', 'style'],
+                            );
+                        const controls = group.columns.map((column, index) => {
+                            const definition =
+                                document.createElement('section');
+                            definition.className =
+                                'soeditor-table-structure__column';
+                            const heading = document.createElement('strong');
+                            heading.textContent = `列定义 ${String(index + 1)}`;
+                            const span = document.createElement('input');
+                            span.type = 'number';
+                            span.min = '1';
+                            span.max = '100';
+                            span.value = String(column.span);
+                            span.setAttribute(
+                                'aria-label',
+                                `Column ${String(index + 1)} span`,
+                            );
+                            const spanField = document.createElement('label');
+                            spanField.className = 'soeditor-ui__field';
+                            const spanCaption = document.createElement('span');
+                            spanCaption.textContent = '跨度';
+                            spanField.append(spanCaption, span);
+                            const width = document.createElement('input');
+                            width.type = 'number';
+                            width.min = '40';
+                            width.max = '1200';
+                            width.value =
+                                column.width?.replace(/px$/u, '') ?? '';
+                            width.placeholder = 'Width';
+                            width.setAttribute(
+                                'aria-label',
+                                `Column ${String(index + 1)} width in pixels`,
+                            );
+                            const widthField = document.createElement('label');
+                            widthField.className = 'soeditor-ui__field';
+                            const widthCaption = document.createElement('span');
+                            widthCaption.textContent = '宽度（px）';
+                            widthField.append(widthCaption, width);
+                            const attributes =
+                                attributeModule.createTableTagAttributeEditor(
+                                    document,
+                                    attributeModule.readTableTagAttributes(
+                                        column.attributes,
+                                    ),
+                                    attributeModule.tableAttributeSuggestions(
+                                        'section',
+                                        'col',
+                                    ),
+                                    ['span', 'style', 'width'],
+                                );
+                            const details = document.createElement('details');
+                            details.className =
+                                'soeditor-table-structure__attributes';
+                            const summary = document.createElement('summary');
+                            summary.textContent = '附加属性';
+                            details.append(summary, attributes.element);
+                            definition.append(
+                                heading,
+                                spanField,
+                                widthField,
+                                details,
+                            );
+                            item.append(definition);
+                            return { attributes, span, width };
+                        });
+                        item.append(
+                            actionButton('保存列定义', () => {
+                                const customAttributes =
+                                    groupAttributes.value();
+                                const columnAttributes = controls.map(
+                                    ({ attributes }) => attributes.value(),
+                                );
+                                if (
+                                    customAttributes === undefined ||
+                                    columnAttributes.some(
+                                        (attributes) =>
+                                            attributes === undefined,
+                                    )
+                                ) {
+                                    return;
+                                }
+                                run(
+                                    () =>
+                                        service.updateColumnGroup(group.index, {
+                                            customAttributes,
+                                            columns: controls.map(
+                                                ({ span, width }, index) => ({
+                                                    attributes:
+                                                        columnAttributes[
+                                                            index
+                                                        ] ?? [],
+                                                    span: Number(span.value),
+                                                    ...(width.value.length === 0
+                                                        ? {}
+                                                        : {
+                                                              width: `${width.value}px`,
+                                                          }),
+                                                }),
+                                            ),
+                                        }),
+                                    '列定义已保存。',
+                                );
+                            }),
+                        );
+                        const groupDetails = document.createElement('details');
+                        groupDetails.className =
+                            'soeditor-table-structure__attributes';
+                        const groupSummary = document.createElement('summary');
+                        groupSummary.textContent = '列组属性';
+                        groupDetails.append(
+                            groupSummary,
+                            groupAttributes.element,
+                        );
+                        item.append(groupDetails);
+                    } else {
+                        const span = document.createElement('input');
+                        span.type = 'number';
+                        span.min = '1';
+                        span.max = '100';
+                        span.value = String(group.span ?? group.columnCount);
+                        span.setAttribute('aria-label', '列组跨度');
+                        item.append(
+                            span,
+                            actionButton('保存跨度', () =>
+                                run(
+                                    () =>
+                                        service.updateColumnGroup(group.index, {
+                                            span: Number(span.value),
+                                        }),
+                                    '列组跨度已保存。',
+                                ),
+                            ),
+                            actionButton(
+                                '删除空列组',
+                                () =>
+                                    run(
+                                        () =>
+                                            service.removeColumnGroup(
+                                                group.index,
+                                            ),
+                                        '空列组已删除。',
+                                    ),
+                                group.columns.length > 0 ||
+                                    group.span !== undefined,
+                            ),
+                        );
+                    }
+                    columnList.append(item);
+                }
+                content.append(
+                    columnTitle,
+                    columnList,
+                    actionButton(
+                        '添加列组',
+                        () =>
+                            run(
+                                () => service.createColumnGroup({ span: 1 }),
+                                '列组已添加。',
+                            ),
+                        snapshot.columnGroups.length > 0 &&
+                            !snapshot.diagnostics.some((diagnostic) =>
+                                diagnostic.message.includes('列组覆盖'),
+                            ),
+                    ),
+                );
+                for (const diagnostic of snapshot.diagnostics) {
+                    const warning = document.createElement('p');
+                    warning.className = 'soeditor-table-properties__help';
+                    warning.textContent = diagnostic.message;
+                    content.append(warning);
+                    if (
+                        diagnostic.repairable &&
+                        diagnostic.repairId !== undefined
+                    ) {
+                        content.append(
+                            actionButton('查看修复', () => {
+                                const confirmation =
+                                    document.createElement('p');
+                                confirmation.textContent = diagnostic.message;
+                                const confirmDialog = ui.dialogs.open({
+                                    title: '确认修复表格结构',
+                                    content: confirmation,
+                                    actions: [
+                                        {
+                                            kind: 'primary',
+                                            label: '执行修复',
+                                            run: () => {
+                                                run(
+                                                    () =>
+                                                        service.repairStructure(
+                                                            diagnostic.repairId ??
+                                                                '',
+                                                        ),
+                                                    '表格结构已修复。',
+                                                );
+                                                confirmDialog.close();
+                                            },
+                                        },
+                                    ],
+                                });
+                            }),
+                        );
+                    }
+                }
+            }
+            body.replaceChildren(content, status);
+        };
+        render();
+        const dialog = ui.dialogs.open({
+            title: '表格标题',
+            content: body,
+            actions: [{ label: '完成', run: () => dialog.close() }],
+        });
+        dialog.element.classList.add('soeditor-table-structure-dialog');
+        body.querySelector<HTMLElement>('input,button')?.focus();
     };
     const selection = (event: Event): void => {
         const origin = event.target;
@@ -386,9 +1423,15 @@ export function attachClassicTableContext(
         if (activate === undefined) return;
         const table = target.closest<HTMLElement>('.soeditor-table-widget');
         if (table === null) return;
+        if (balloon !== undefined && !balloon.element.isConnected) {
+            balloon = undefined;
+            commandButtons.clear();
+            scopeButtons.length = 0;
+        }
         activeTarget = target;
         activeSelection = activate;
         activeRange = selectedRange ?? selectedTableRange(table);
+        ui.refresh();
         if (activeTable !== table) {
             selectionObserver?.disconnect();
             selectionObserver = new MutationObserver(() => {
@@ -413,18 +1456,35 @@ export function attachClassicTableContext(
         }
         close();
         activeTable = table;
+        attachResizeHandles(table);
         balloon = ui.balloons.show({
             anchor: table,
             placement: 'above',
             content: (container) => {
                 container.classList.add('soeditor-table-context');
                 container.setAttribute('aria-label', 'Table tools');
+                const caption = document.createElement('button');
+                caption.type = 'button';
+                caption.className = 'soeditor-table-context__button';
+                ui.setIcon(caption, 'table.properties', 'Table caption');
+                caption.title = 'Table caption';
+                caption.setAttribute('aria-label', 'Table caption');
+                captionButton = caption;
+                caption.addEventListener('click', () => {
+                    const current = activeTarget;
+                    const select = activeSelection;
+                    if (current !== undefined && select !== undefined) {
+                        void openCaption(current, select);
+                    }
+                });
+                container.append(caption);
                 const properties = document.createElement('button');
                 properties.type = 'button';
                 properties.className = 'soeditor-table-context__button';
-                ui.setIcon(properties, 'table.properties', 'Table editor');
-                properties.title = 'Table editor';
-                properties.setAttribute('aria-label', 'Table editor');
+                ui.setIcon(properties, 'table.properties', 'Table properties');
+                properties.title = 'Table properties';
+                properties.setAttribute('aria-label', 'Table properties');
+                propertiesButton = properties;
                 properties.addEventListener('click', () => {
                     const current = activeTarget;
                     const select = activeSelection;
@@ -436,15 +1496,30 @@ export function attachClassicTableContext(
                         void openProperties(
                             current,
                             select,
-                            kind === 'table'
-                                ? 'table'
-                                : kind === 'rows'
-                                  ? 'row'
-                                  : 'cell',
+                            kind === 'rows' ? 'row' : 'table',
                         );
                     }
                 });
                 container.append(properties);
+                const cellProperties = document.createElement('button');
+                cellProperties.type = 'button';
+                cellProperties.className = 'soeditor-table-context__button';
+                ui.setIcon(
+                    cellProperties,
+                    'table.properties',
+                    'Cell properties',
+                );
+                cellProperties.title = 'Cell properties';
+                cellProperties.setAttribute('aria-label', 'Cell properties');
+                cellPropertiesButton = cellProperties;
+                cellProperties.addEventListener('click', () => {
+                    const current = activeTarget;
+                    const select = activeSelection;
+                    if (current !== undefined && select !== undefined) {
+                        void openProperties(current, select, 'cell');
+                    }
+                });
+                container.append(cellProperties);
                 const sectionProperties = document.createElement('button');
                 sectionProperties.type = 'button';
                 sectionProperties.className = 'soeditor-table-context__button';
@@ -493,7 +1568,6 @@ export function attachClassicTableContext(
                 for (const [kind, label, icon] of [
                     ['row', 'Select row', 'table.row.insertAfter'],
                     ['column', 'Select column', 'table.column.insertAfter'],
-                    ['table', 'Select table', 'table.properties'],
                 ] as const) {
                     const selectButton = document.createElement('button');
                     selectButton.type = 'button';
@@ -501,6 +1575,7 @@ export function attachClassicTableContext(
                     ui.setIcon(selectButton, icon, label);
                     selectButton.title = label;
                     selectButton.setAttribute('aria-label', label);
+                    selectButton.dataset.selectionScope = kind;
                     selectButton.addEventListener('click', () =>
                         selectScope(kind),
                     );
@@ -547,10 +1622,32 @@ export function attachClassicTableContext(
                               : !editor.commands.canExecute(command);
                     commandButtons.set(command, button);
                     button.addEventListener('click', () => {
-                        if (
-                            activeRange !== undefined &&
-                            command !== 'table.remove'
-                        ) {
+                        if (command === 'table.remove') {
+                            const confirmation = document.createElement('p');
+                            confirmation.textContent =
+                                '删除整张表格及其中所有内容？此操作可以撤销。';
+                            const confirmDialog = ui.dialogs.open({
+                                title: 'Delete table',
+                                content: confirmation,
+                                actions: [
+                                    {
+                                        kind: 'danger',
+                                        label: 'Delete table',
+                                        run: () => {
+                                            confirmDialog.close();
+                                            activeSelection?.();
+                                            execute(command);
+                                        },
+                                    },
+                                    {
+                                        label: 'Cancel',
+                                        run: () => confirmDialog.close(),
+                                    },
+                                ],
+                            });
+                            return;
+                        }
+                        if (activeRange !== undefined) {
                             const insertOptions = tableInsertOptions(
                                 command,
                                 activeTable,
@@ -606,6 +1703,27 @@ export function attachClassicTableContext(
         );
         if (!(target instanceof Node)) return;
         if (
+            path.some(
+                (candidate) =>
+                    candidate instanceof Element &&
+                    candidate.closest('.soeditor-table-resize-overlay') !==
+                        null,
+            )
+        ) {
+            return;
+        }
+        if (
+            path.some(
+                (candidate) =>
+                    candidate instanceof Element &&
+                    candidate.closest(
+                        '.soeditor-ui__chrome, .soeditor-classic__source, .soeditor-classic__workspace-picker, [data-classic-action], .soeditor-classic__pane-resize-handle, .soeditor-classic__resize-handle',
+                    ) !== null,
+            )
+        ) {
+            return;
+        }
+        if (
             balloon !== undefined &&
             path.some(
                 (candidate) =>
@@ -647,6 +1765,14 @@ export function attachClassicTableContext(
     document.addEventListener('pointerdown', pointerDown, true);
     document.addEventListener('keydown', keydown);
     return () => {
+        disposeDocumentChange();
+        disposeProjection();
+        projectionObserver?.disconnect();
+        projectionObserver = undefined;
+        if (resyncFrame !== undefined) {
+            document.defaultView?.cancelAnimationFrame(resyncFrame);
+            resyncFrame = undefined;
+        }
         close();
         selectionObserver?.disconnect();
         visual.removeEventListener('soeditor:table-selection', selection);
@@ -761,6 +1887,36 @@ function classicTableSelectionKind(
     return 'cells';
 }
 
+function tableScopeLabel(
+    ui: EditorUi,
+    kind: ClassicTableSelectionKind,
+    range: unknown,
+): string {
+    const bounds = tableRangeBounds(range);
+    if (kind === 'table') return ui.translate('Table');
+    if (kind === 'rows') {
+        const count = bounds === undefined ? 1 : bounds.bottom - bounds.top + 1;
+        return `${ui.translate('Row')} · ${String(count)}`;
+    }
+    if (kind === 'columns') {
+        const count = bounds === undefined ? 1 : bounds.right - bounds.left + 1;
+        return `${ui.translate('Column')} · ${String(count)}`;
+    }
+    if (kind === 'cells' && bounds !== undefined) {
+        return `${ui.translate('Cell')} · ${String(bounds.right - bounds.left + 1)} × ${String(bounds.bottom - bounds.top + 1)}`;
+    }
+    if (bounds !== undefined) {
+        return `${ui.translate('Cell')} · R${String(bounds.top + 1)} C${String(bounds.left + 1)}`;
+    }
+    return ui.translate('Cell');
+}
+
+function capitalizeMode(mode: string): string {
+    return mode.length === 0
+        ? mode
+        : `${mode[0]?.toUpperCase() ?? ''}${mode.slice(1)}`;
+}
+
 function tableRangeBounds(
     range: unknown,
 ):
@@ -803,6 +1959,9 @@ function tableCommandApplies(
     command: string,
     kind: ClassicTableSelectionKind,
 ): boolean {
+    if (command === 'table.remove') {
+        return kind === 'caret' || kind === 'table';
+    }
     if (command === 'table.section.properties') {
         return kind === 'caret' || kind === 'rows';
     }
@@ -825,13 +1984,10 @@ function tableCommandApplies(
         );
     }
     if (kind === 'cells') {
-        return [
-            'table.cells.merge',
-            'table.cells.clear',
-            'table.remove',
-        ].includes(command);
+        return ['table.cells.merge', 'table.cells.clear'].includes(command);
     }
-    return command !== 'table.cells.merge';
+    if (kind === 'caret') return command !== 'table.cells.merge';
+    return command !== 'table.cells.merge' && command !== 'table.remove';
 }
 
 function tableInsertOptions(

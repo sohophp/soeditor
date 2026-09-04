@@ -14,34 +14,13 @@ interface IconDrawing {
 }
 
 const fallbackDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
-    'editor.undo': {
+    'block.div': { text: 'DIV', variant: 'solid' },
+    'view.blocks': {
         paths: [
-            'M9.5 4 3 9.5 9.5 15v-3.5h3.25c3.38 0 5.75 1.53 7.25 4.5-.34-5.5-3.16-8.5-7.25-8.5H9.5Z',
+            'M3 3h18v5H3Zm2 2v1h14V5ZM3 10h8v11H3Zm2 2v7h4v-7Zm8-2h8v11h-8Zm2 2v7h4v-7Z',
         ],
         variant: 'solid',
     },
-    'editor.redo': {
-        paths: [
-            'm14.5 4 6.5 5.5-6.5 5.5v-3.5h-3.25C7.87 11.5 5.5 13.03 4 16c.34-5.5 3.16-8.5 7.25-8.5h3.25Z',
-        ],
-        variant: 'solid',
-    },
-    'format.bold': { text: 'B', variant: 'solid' },
-    'format.italic': { text: 'I', variant: 'solid' },
-    'format.underline': {
-        paths: [
-            'M6 3h3v8.25c0 2.2 1.07 3.5 3 3.5s3-1.3 3-3.5V3h3v8.5c0 3.77-2.27 6-6 6s-6-2.23-6-6ZM5 20h14v2H5Z',
-        ],
-        variant: 'solid',
-    },
-    'format.strike': {
-        paths: [
-            'M4 11h16v2H4Zm4.3-1.5C7.48 8.67 7 7.67 7 6.55 7 4.35 8.93 3 12.05 3c2.61 0 4.43.9 5.54 2.77l-2.35 1.48c-.64-1.08-1.73-1.62-3.27-1.62-1.24 0-1.94.36-1.94 1.06 0 .72.83 1.15 2.95 1.78.91.28 1.67.62 2.29 1.03Zm7.4 5c.86.85 1.3 1.9 1.3 3.14C17 19.77 15.08 21 11.86 21c-2.72 0-4.7-.93-5.95-2.79l2.33-1.58c.76 1.15 2 1.74 3.71 1.74 1.34 0 2.02-.35 2.02-1.04 0-.73-.82-1.17-2.8-1.83Z',
-        ],
-        variant: 'solid',
-    },
-    'format.subscript': { text: 'X₂', variant: 'solid' },
-    'format.superscript': { text: 'X²', variant: 'solid' },
     'format.remove': {
         paths: [
             'm3 15 8.5-11a2 2 0 0 1 2.8-.35l5.9 4.55a2 2 0 0 1 .35 2.8L13 21H6.5a2 2 0 0 1-1.22-.42L3.35 19A2 2 0 0 1 3 15Zm3.2 1.45L8.1 18H12l3.55-4.65-4.7-3.6Z',
@@ -213,6 +192,14 @@ const fallbackDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
         paths: ['m10 4 2.2 2.2L7.9 10.5H22v3H7.9l4.3 4.3L10 20l-8-8Z'],
         variant: 'solid',
     },
+    'editor.view.sideBySide': {
+        paths: ['M2 3h20v18H2Zm2 2v14h7V5Zm9 0v14h7V5Z'],
+        variant: 'solid',
+    },
+    'editor.view.stacked': {
+        paths: ['M2 3h20v18H2Zm2 2v6h16V5Zm0 8v6h16v-6Z'],
+        variant: 'solid',
+    },
     'editor.source.find': {
         paths: [
             'M2 2h13v4h-2V4H4v16h7v2H2Zm5 6h5v2H7Zm0 4h4v2H7Zm10 1a4 4 0 1 1-2.45 7.16L10.7 24 9 22.3l3.84-3.85A4 4 0 0 1 17 13Zm0 2.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Z',
@@ -253,7 +240,7 @@ const fallbackDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
         variant: 'solid',
     },
     'ui.toolbar.toggle': {
-        paths: ['M2 4h20v3H2Zm0 6.5h20v3H2ZM2 17h20v3H2Z'],
+        paths: ['M5.4 8.4 12 15l6.6-6.6 2.1 2.1-8.7 8.7-8.7-8.7Z'],
         variant: 'solid',
     },
     'editor.maximize': {

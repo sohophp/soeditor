@@ -9,6 +9,8 @@ import type {
     ToolbarItemInstance,
 } from './types.js';
 
+const loadLinkAttributeTools = () => import('./link-attributes.js');
+
 export const defaultToolbarConfiguration = Object.freeze([
     'undo',
     'redo',
@@ -188,6 +190,40 @@ const sourceButton: ToolbarItemFactory = ({ document, editor, ui }) => {
     };
 };
 
+const previewButton: ToolbarItemFactory = ({ document, editor, ui }) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'soeditor-ui__button';
+    const command = (): 'editor.preview' | 'editor.preview.close' =>
+        editor.state.mode === 'preview'
+            ? 'editor.preview.close'
+            : 'editor.preview';
+    const click = (): void => {
+        execute(editor, ui, command(), []);
+    };
+    button.addEventListener('click', click);
+    return {
+        element: button,
+        update: () => {
+            const previewMode = editor.state.mode === 'preview';
+            const target = previewMode ? 'edit' : 'preview';
+            if (button.dataset.previewTarget !== target) {
+                ui.setIcon(
+                    button,
+                    previewMode ? 'editor.preview.close' : 'editor.preview',
+                    previewMode ? 'Edit' : 'Preview',
+                );
+                button.dataset.previewTarget = target;
+            }
+            button.title = previewMode ? 'Close preview' : 'Preview content';
+            button.setAttribute('aria-label', button.title);
+            button.setAttribute('aria-pressed', String(previewMode));
+            updateCommandAvailability(button, editor, command());
+        },
+        destroy: () => button.removeEventListener('click', click),
+    };
+};
+
 const headingMenu: ToolbarItemFactory = ({ document, editor, ui }) => {
     const details = document.createElement('details');
     details.className = 'soeditor-ui__menu';
@@ -197,32 +233,42 @@ const headingMenu: ToolbarItemFactory = ({ document, editor, ui }) => {
     summary.setAttribute('aria-label', 'Choose block style');
     const menu = document.createElement('div');
     menu.className = 'soeditor-ui__menu-items soeditor-ui__heading-choices';
-    const entries = [
-        { label: 'Paragraph', command: 'paragraph.set', args: [] },
-        ...Array.from({ length: 6 }, (_, index) => ({
-            label: `Heading ${String(index + 1)}`,
-            command: 'paragraph.heading',
-            args: [index + 1],
-        })),
+    const entries: readonly (readonly [
+        label: string,
+        command: string,
+        args: readonly unknown[],
+    ])[] = [
+        ['Paragraph', 'paragraph.set', []],
+        ...Array.from(
+            { length: 6 },
+            (_, index) =>
+                [
+                    `Heading ${index + 1}`,
+                    'paragraph.heading',
+                    [index + 1],
+                ] as const,
+        ),
+        ['DIV', 'block.div', []],
+        ['Preformatted', 'codeBlock.toggle', []],
+        ['Code', 'format.inlineCode', []],
     ];
-    const buttons = entries.map((entry) => {
+    const buttons = entries.map(([label, command, args]) => {
         const button = document.createElement('button');
         button.type = 'button';
         button.className = 'soeditor-ui__menu-item soeditor-ui__heading-choice';
-        button.dataset.block =
-            entry.command === 'paragraph.set'
-                ? 'p'
-                : `h${String(entry.args[0])}`;
+        if (command === 'paragraph.set') button.dataset.block = 'p';
+        else if (command === 'paragraph.heading')
+            button.dataset.block = `h${args[0]}`;
         const sample = document.createElement('span');
-        sample.textContent = entry.label;
+        sample.textContent = label;
         button.append(sample);
         const click = (): void => {
-            execute(editor, ui, entry.command, entry.args);
             details.open = false;
+            execute(editor, ui, command, args);
         };
         button.addEventListener('click', click);
         menu.append(button);
-        return { button, click, command: entry.command };
+        return { button, click, command };
     });
     details.append(summary, menu);
     return {
@@ -263,7 +309,7 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
                 ? (current as Record<string, unknown>)
                 : {};
         const selectedText = ui.getEditingSelectionText();
-        const attributeTools = await import('./link-attributes.js').catch(
+        const attributeTools = await loadLinkAttributeTools().catch(
             (error: unknown) => {
                 reportError(ui, error);
                 return undefined;
@@ -785,6 +831,43 @@ const imageButton = dialogCommandButton(
     '▣',
 );
 
+const mediaButton = dialogCommandButton(
+    'Media',
+    'media.insert',
+    (document, run) => {
+        let src: HTMLInputElement;
+        let alt: HTMLInputElement;
+        let caption: HTMLInputElement;
+        let width: HTMLInputElement;
+        let height: HTMLInputElement;
+        return {
+            content: (container) => {
+                src = field(document, container, 'Media URL', 'url', true);
+                alt = field(document, container, 'Alternative text', 'text');
+                caption = field(document, container, 'Caption', 'text');
+                width = field(document, container, 'Width', 'number');
+                height = field(document, container, 'Height', 'number');
+                width.max = '10000';
+                height.max = '10000';
+            },
+            run: () =>
+                run({
+                    src: src.value,
+                    alt: alt.value,
+                    ...(caption.value.length === 0
+                        ? {}
+                        : { caption: caption.value }),
+                    ...(width.value.length === 0
+                        ? {}
+                        : { width: Number(width.value) }),
+                    ...(height.value.length === 0
+                        ? {}
+                        : { height: Number(height.value) }),
+                }),
+        };
+    },
+);
+
 const imageActionsMenu: ToolbarItemFactory = ({ document, editor, ui }) => {
     const details = document.createElement('details');
     details.className = 'soeditor-ui__menu soeditor-ui__image-menu';
@@ -1023,11 +1106,28 @@ const tableButton: ToolbarItemFactory = ({ document, editor, ui }) => {
                     }
                 }
                 container.append(status, grid);
+                void loadLinkAttributeTools()
+                    .then(({ appendExactTablePicker }) => {
+                        if (!container.isConnected) return;
+                        appendExactTablePicker(
+                            document,
+                            container,
+                            status,
+                            (rows, columns) =>
+                                execute(editor, ui, 'table.insert', [
+                                    { columns, rows },
+                                ]),
+                            close,
+                        );
+                    })
+                    .catch((error: unknown) => reportError(ui, error));
             },
         });
         button.setAttribute('aria-expanded', 'true');
         handle.element
-            .querySelector<HTMLButtonElement>('.soeditor-ui__table-picker-cell')
+            .querySelector<HTMLButtonElement>(
+                '.soeditor-ui__table-picker-cell[data-row="3"][data-column="3"]',
+            )
             ?.focus();
     };
     button.addEventListener('click', open);
@@ -1070,7 +1170,7 @@ const tablePropertiesButton = dialogCommandButton(
     'table.properties',
     async (document, run, editor) => {
         const { readInspectedCustomAttributes, tagCustomAttributeField } =
-            await import('./link-attributes.js');
+            await loadLinkAttributeTools();
         let caption: HTMLInputElement;
         let width: HTMLInputElement;
         let alignment: HTMLInputElement;
@@ -1155,7 +1255,7 @@ const tableRowPropertiesButton = dialogCommandButton(
     'table.row.properties',
     async (document, run, editor) => {
         const { readInspectedCustomAttributes, tagCustomAttributeField } =
-            await import('./link-attributes.js');
+            await loadLinkAttributeTools();
         let section: HTMLInputElement;
         let className: HTMLInputElement;
         let height: HTMLInputElement;
@@ -1221,7 +1321,7 @@ const tableCellPropertiesButton = dialogCommandButton(
     'table.cell.properties',
     async (document, run, editor) => {
         const { readInspectedCustomAttributes, tagCustomAttributeField } =
-            await import('./link-attributes.js');
+            await loadLinkAttributeTools();
         let horizontal: HTMLInputElement;
         let vertical: HTMLInputElement;
         let scope: HTMLInputElement;
@@ -1335,6 +1435,7 @@ const backgroundColors = Object.freeze([
 ] as const);
 
 const highlightColors = Object.freeze([
+    ['Classic yellow marker', '#ffff66'],
     ['Yellow marker', '#fef08a'],
     ['Green marker', '#bbf7d0'],
     ['Pink marker', '#fecaca'],
@@ -1502,7 +1603,7 @@ function colorMenu(
             button.dataset.value = value;
             button.style.setProperty('--soeditor-choice-color', value);
             const click = (): void => {
-                stageColor(value);
+                commitColor(value);
             };
             button.addEventListener('click', click);
             presets.append(button);
@@ -1592,7 +1693,7 @@ function colorMenu(
                 button.setAttribute('aria-label', `Recent color ${value}`);
                 button.dataset.recentColor = value;
                 button.style.setProperty('--soeditor-choice-color', value);
-                const click = (): void => stageColor(value);
+                const click = (): void => commitColor(value);
                 button.addEventListener('click', click);
                 recentButtons.push({ button, click });
                 recentPalette.append(button);
@@ -1808,6 +1909,7 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
             commandButton('Remove format', 'format.remove', [], 'Tₓ'),
         ],
         ['blockquote', commandButton('Block quote', 'blockquote.toggle')],
+        ['div', commandButton('DIV block', 'block.div', [], 'DIV')],
         ['orderedList', commandButton('Ordered list', 'list.ordered')],
         ['unorderedList', commandButton('Unordered list', 'list.unordered')],
         ['outdent', commandButton('Outdent', 'format.outdent')],
@@ -1888,6 +1990,16 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
         ],
         ['cleanHtml', commandButton('Clean HTML', 'html.cleanup')],
     ]);
+
+/** Toolbar contributions retained behind the explicit compatibility entry. */
+export const compatibilityToolbarItems: ReadonlyMap<
+    string,
+    ToolbarItemFactory
+> = new Map([
+    ['markdown', commandButton('Markdown', 'editor.markdown')],
+    ['media', mediaButton],
+    ['preview', previewButton],
+]);
 
 function textDialogButton(
     label: string,
@@ -2024,9 +2136,10 @@ function updateCommandButton(
     command: string,
 ): void {
     updateCommandAvailability(button, editor, command);
-    const active = editor.commands.has(command)
-        ? editor.commands.isActive(command)
-        : false;
+    const active =
+        !button.disabled && editor.commands.has(command)
+            ? editor.commands.isActive(command)
+            : false;
     button.setAttribute('aria-pressed', String(active));
     button.classList.toggle('is-active', active);
 }

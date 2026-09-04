@@ -8,6 +8,8 @@ the visual DOM.
 ## Classic editor
 
 ```ts
+import { createClassicEditor } from '@soeditor/editor/cms/optional';
+
 const editor = await createClassicEditor(textarea, {
     save: {
         adapter: {

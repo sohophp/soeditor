@@ -31,7 +31,6 @@ export function tablePropertyFields(
     if (kind === 'section') return [];
     if (kind === 'table')
         return [
-            { key: 'caption', label: 'Caption', type: 'text' },
             { key: 'width', label: 'Table width', type: 'dimension' },
             { key: 'height', label: 'Table height', type: 'dimension' },
             {
@@ -39,6 +38,15 @@ export function tablePropertyFields(
                 label: 'Alignment',
                 options: ['left', 'center', 'right'],
                 type: 'select',
+            },
+            { key: 'border', label: 'Border size', type: 'text' },
+            { key: 'cellSpacing', label: 'Cell spacing', type: 'text' },
+            { key: 'cellPadding', label: 'Cell padding', type: 'text' },
+            {
+                advanced: true,
+                key: 'summary',
+                label: 'Summary',
+                type: 'text',
             },
             {
                 advanced: true,
@@ -159,7 +167,17 @@ export function tableAttributeSuggestions(
 export function managedTableAttributes(
     kind: TablePropertyKind,
 ): readonly string[] {
-    if (kind === 'table') return ['aria-label', 'height', 'style', 'width'];
+    if (kind === 'table')
+        return [
+            'aria-label',
+            'border',
+            'cellpadding',
+            'cellspacing',
+            'height',
+            'style',
+            'summary',
+            'width',
+        ];
     if (kind === 'row') return ['aria-label', 'height', 'style'];
     if (kind === 'section') return ['style'];
     return [

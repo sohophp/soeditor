@@ -1401,7 +1401,11 @@ function createAccessibilityHelpButton(
                 for (const item of [
                     'Bold: Control or Command plus B',
                     'Italic: Control or Command plus I',
+                    'New paragraph: Enter',
+                    'Line break without a new paragraph: Shift plus Enter',
                     'Undo: Control or Command plus Z',
+                    'Redo: Control or Command plus Shift plus Z',
+                    'Select multiple table cells: Shift plus click another cell',
                     'Context menu: Shift plus F10',
                     'Close a dialog or menu: Escape',
                 ]) {

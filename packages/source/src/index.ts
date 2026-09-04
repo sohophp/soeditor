@@ -10,4 +10,10 @@ export type {
 } from './source-editing-engine.js';
 export { SourceEditingPlugin } from './source-editing-plugin.js';
 export { sourceEditingServiceToken } from './source-editing-service.js';
-export type { SourceEditingService } from './source-editing-service.js';
+export type {
+    SourceEditingService,
+    SourceRevealOptions,
+} from './source-editing-service.js';
+export { sourceRangeForEditingSelection } from './source-mapping.js';
+export { attachClassicSourceEnhancements } from './classic-source-enhancements.js';
+export type { ClassicSourceEnhancementOptions } from './classic-source-enhancements.js';

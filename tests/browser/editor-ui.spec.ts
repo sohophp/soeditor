@@ -141,6 +141,9 @@ test('uses the heading dropdown and mode button through shared commands', async 
         [16, 700],
         [13.28, 700],
         [10.72, 700],
+        [16, 400],
+        [16, 400],
+        [16, 400],
     ]);
     await page.locator(editor).click();
     await expect(heading).not.toHaveAttribute('open', '');
@@ -226,6 +229,25 @@ test('inserts image through a dialog and tables through the size picker', async 
     await expect(page.locator(source)).toContainText(
         '<tr><td>&nbsp;</td><td>&nbsp;</td><td>&nbsp;</td></tr>',
     );
+});
+
+test('inserts an exact bounded table size from the keyboard picker', async ({
+    page,
+}) => {
+    await page.click('#hello');
+    await setSelection(page, 0, 0);
+    await page.locator('[data-toolbar-item="table"]').click();
+    const tablePicker = page.getByRole('dialog', {
+        name: 'Choose table size',
+    });
+    await tablePicker.getByLabel('Table rows').fill('12');
+    await tablePicker.getByLabel('Table columns').fill('4');
+    await tablePicker.getByRole('button', { name: 'Insert' }).click();
+    const inserted = page.locator(
+        `${editor} [data-soeditor-structured-block="soeditor.table"]`,
+    );
+    await expect(inserted.locator('tr')).toHaveCount(12);
+    await expect(inserted.locator('tr').first().locator('td')).toHaveCount(4);
 });
 
 test('supports plugin-contributed compact toolbars and host-scoped shortcuts', async ({

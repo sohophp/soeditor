@@ -37,6 +37,10 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/index.js"
         },
+        "./compatibility": {
+            "types": "./dist/compatibility.d.ts",
+            "import": "./dist/compatibility.js"
+        },
         "./styles.css": "./dist/styles.css"
     },
     "scripts": {

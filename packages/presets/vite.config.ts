@@ -13,6 +13,7 @@ const external = [
     '@soeditor/rich-text',
     '@soeditor/source',
     '@soeditor/ui',
+    '@soeditor/ui/compatibility',
 ];
 
 export default defineConfig({
@@ -21,6 +22,7 @@ export default defineConfig({
             entry: {
                 classic: 'src/classic.ts',
                 cms: 'src/cms.ts',
+                'cms-runtime': 'src/cms-runtime.ts',
                 developer: 'src/developer.ts',
                 index: 'src/index.ts',
                 markdown: 'src/markdown.ts',
