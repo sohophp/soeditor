@@ -1,3 +1,6 @@
+import { showFormatState } from './format-state.js';
+import { blockFormatMenu } from './block-format-menu.js';
+import { SOURCE_TOOLBAR } from './source-toolbar.js';
 import type { Editor } from '@soeditor/core';
 
 import type {
@@ -224,12 +227,63 @@ const previewButton: ToolbarItemFactory = ({ document, editor, ui }) => {
     };
 };
 
+const moreFormattingMenu: ToolbarItemFactory = ({ document, editor, ui }) => {
+    const details = document.createElement('details');
+    details.className = 'soeditor-ui__menu';
+    const summary = document.createElement('summary');
+    summary.className = 'soeditor-ui__button';
+    summary.setAttribute('aria-label', 'More text styles');
+    summary.title = 'More text styles';
+    ui.setIcon(summary, 'format.more', '⋯');
+    const menu = document.createElement('div');
+    menu.className = 'soeditor-ui__menu-items';
+    const buttons = (
+        [
+            ['strike', 'Strikethrough', 'format.strike'],
+            ['subscript', 'Subscript', 'format.subscript'],
+            ['superscript', 'Superscript', 'format.superscript'],
+            ['removeFormat', 'Remove format', 'format.remove'],
+        ] as const
+    ).map(([item, label, id]) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'soeditor-ui__menu-item';
+        button.textContent = label;
+        button.dataset.toolbarItem = item;
+        const click = (): void => {
+            if (execute(editor, ui, id, [])) details.open = false;
+        };
+        button.addEventListener('click', click);
+        menu.append(button);
+        return { button, id, click };
+    });
+    details.append(summary, menu);
+    return {
+        element: details,
+        update: () => {
+            for (const { button, id } of buttons)
+                updateCommandButton(button, editor, id);
+            summary.setAttribute(
+                'aria-disabled',
+                String(buttons.every(({ button }) => button.disabled)),
+            );
+        },
+        destroy: () => {
+            for (const { button, click } of buttons)
+                button.removeEventListener('click', click);
+        },
+    };
+};
+
 const headingMenu: ToolbarItemFactory = ({ document, editor, ui }) => {
     const details = document.createElement('details');
     details.className = 'soeditor-ui__menu';
     const summary = document.createElement('summary');
     summary.className = 'soeditor-ui__button';
-    ui.setIcon(summary, 'paragraph.heading', 'Heading');
+    summary.classList.add('soeditor-ui__value-control');
+    const currentValue = document.createElement('span');
+    currentValue.className = 'soeditor-ui__current-value';
+    summary.append(currentValue);
     summary.setAttribute('aria-label', 'Choose block style');
     const menu = document.createElement('div');
     menu.className = 'soeditor-ui__menu-items soeditor-ui__heading-choices';
@@ -278,8 +332,39 @@ const headingMenu: ToolbarItemFactory = ({ document, editor, ui }) => {
                 canExecute(editor, command),
             );
             summary.setAttribute('aria-disabled', String(!available));
+            const state = ui.getEditingFormatState?.('heading');
+            showFormatState(summary, 'Heading', state, ui, available);
+            const block = state?.status === 'uniform' ? state.value : '';
+            const currentLabel = ui.translate(
+                state?.status === 'mixed'
+                    ? 'Mixed'
+                    : state?.status !== 'uniform'
+                      ? 'Heading'
+                      : /^h[1-6]$/u.test(block)
+                        ? `Heading ${block.slice(1)}`
+                        : block === 'div'
+                          ? 'DIV'
+                          : block === 'pre'
+                            ? 'Preformatted'
+                            : 'Paragraph',
+            );
+            // Preserve the text hit target between pointerdown and click (WebKit).
+            if (currentValue.textContent !== currentLabel)
+                currentValue.textContent = currentLabel;
             for (const { button, command } of buttons) {
                 updateCommandButton(button, editor, command);
+                if (
+                    state?.status !== 'unavailable' &&
+                    state !== undefined &&
+                    button.dataset.block
+                ) {
+                    const active =
+                        available &&
+                        state.status === 'uniform' &&
+                        state.value === button.dataset.block;
+                    button.classList.toggle('is-active', active);
+                    button.setAttribute('aria-pressed', String(active));
+                }
             }
         },
         destroy: () => {
@@ -677,24 +762,6 @@ const specialCharacterButton: ToolbarItemFactory = ({
     summary.setAttribute('aria-label', 'Choose special character');
     const menu = document.createElement('div');
     menu.className = 'soeditor-ui__menu-items soeditor-ui__character-grid';
-    const positionMenu = (): void => {
-        menu.style.transform = '';
-        if (!details.open) return;
-
-        const gutter = 8;
-        const viewportWidth = document.documentElement.clientWidth;
-        const menuRectangle = menu.getBoundingClientRect();
-        let horizontalShift = 0;
-        if (menuRectangle.right > viewportWidth - gutter) {
-            horizontalShift = viewportWidth - gutter - menuRectangle.right;
-        }
-        if (menuRectangle.left + horizontalShift < gutter) {
-            horizontalShift += gutter - (menuRectangle.left + horizontalShift);
-        }
-        if (horizontalShift !== 0) {
-            menu.style.transform = `translateX(${String(horizontalShift)}px)`;
-        }
-    };
     const characters = readSpecialCharacters(
         editor.config.get<unknown>('cms.specialCharacters'),
     );
@@ -749,7 +816,6 @@ const specialCharacterButton: ToolbarItemFactory = ({
     custom.addEventListener('click', customClick);
     menu.append(custom);
     details.append(summary, menu);
-    details.addEventListener('toggle', positionMenu);
     details.hidden = characters === false;
     return {
         element: details,
@@ -760,7 +826,6 @@ const specialCharacterButton: ToolbarItemFactory = ({
             custom.disabled = !available;
         },
         destroy: () => {
-            details.removeEventListener('toggle', positionMenu);
             for (const { button, click } of listeners) {
                 button.removeEventListener('click', click);
             }
@@ -1016,8 +1081,9 @@ const tableButton: ToolbarItemFactory = ({ document, editor, ui }) => {
     };
     const open = (): void => {
         if (handle !== undefined) {
+            const visible = handle.element.isConnected;
             close();
-            return;
+            if (visible) return;
         }
         handle = ui.balloons.show({
             anchor: button,
@@ -1165,235 +1231,127 @@ const cellAttributeCatalog = [
     { name: 'aria-selected', values: ['true', 'false'] },
 ] as const;
 
-const tablePropertiesButton = dialogCommandButton(
+interface TablePropertyField {
+    readonly key: string;
+    readonly label: string;
+    readonly numeric?: boolean;
+    readonly omitEmpty?: boolean;
+}
+
+function tablePropertyButton(
+    label: string,
+    command: string,
+    inspectCommand: string,
+    fields: readonly TablePropertyField[],
+    catalog:
+        | typeof tableAttributeCatalog
+        | typeof rowAttributeCatalog
+        | typeof cellAttributeCatalog,
+    managedAttributes: readonly string[],
+): ToolbarItemFactory {
+    return dialogCommandButton(
+        label,
+        command,
+        async (document, run, editor) => {
+            const { readInspectedCustomAttributes, tagCustomAttributeField } =
+                await loadLinkAttributeTools();
+            const inputs = new Map<TablePropertyField, HTMLInputElement>();
+            let customAttributes: ReturnType<typeof tagCustomAttributeField>;
+            return {
+                content: (container) => {
+                    const values = inspectedValues(editor, inspectCommand);
+                    for (const specification of fields) {
+                        const input = field(
+                            document,
+                            container,
+                            specification.label,
+                            specification.numeric ? 'number' : 'text',
+                            false,
+                            stringValue(values[specification.key]),
+                        );
+                        if (specification.numeric) {
+                            input.min = '20';
+                            input.max = '2000';
+                        }
+                        inputs.set(specification, input);
+                    }
+                    customAttributes = tagCustomAttributeField(
+                        document,
+                        container,
+                        readInspectedCustomAttributes(values),
+                        catalog,
+                        (message) => message,
+                        managedAttributes,
+                    );
+                },
+                run: () => {
+                    const attributes = customAttributes.value();
+                    if (attributes === undefined) return;
+                    const values: Record<string, string | number | null> = {};
+                    for (const [specification, input] of inputs) {
+                        if (input.value.length === 0 && specification.omitEmpty)
+                            continue;
+                        values[specification.key] =
+                            input.value.length === 0
+                                ? null
+                                : specification.numeric
+                                  ? Number(input.value)
+                                  : input.value;
+                    }
+                    run({ ...values, customAttributes: attributes });
+                },
+            };
+        },
+    );
+}
+
+const tablePropertiesButton = tablePropertyButton(
     'Table properties',
     'table.properties',
-    async (document, run, editor) => {
-        const { readInspectedCustomAttributes, tagCustomAttributeField } =
-            await loadLinkAttributeTools();
-        let caption: HTMLInputElement;
-        let width: HTMLInputElement;
-        let alignment: HTMLInputElement;
-        let responsiveClass: HTMLInputElement;
-        let ariaLabel: HTMLInputElement;
-        let customAttributes: ReturnType<typeof tagCustomAttributeField>;
-        return {
-            content: (container) => {
-                const values = inspectedValues(editor, 'table.inspect');
-                caption = field(
-                    document,
-                    container,
-                    'Caption',
-                    'text',
-                    false,
-                    stringValue(values.caption),
-                );
-                width = field(
-                    document,
-                    container,
-                    'Width (px or %)',
-                    'text',
-                    false,
-                    stringValue(values.width),
-                );
-                alignment = field(
-                    document,
-                    container,
-                    'Alignment (left, center, right)',
-                    'text',
-                    false,
-                    stringValue(values.alignment),
-                );
-                responsiveClass = field(
-                    document,
-                    container,
-                    'Responsive classes',
-                    'text',
-                    false,
-                    stringValue(values.responsiveClass),
-                );
-                ariaLabel = field(
-                    document,
-                    container,
-                    'Accessible label',
-                    'text',
-                    false,
-                    stringValue(values.ariaLabel),
-                );
-                customAttributes = tagCustomAttributeField(
-                    document,
-                    container,
-                    readInspectedCustomAttributes(values),
-                    tableAttributeCatalog,
-                    (message) => message,
-                    ['aria-label', 'class', 'style', 'width'],
-                );
-            },
-            run: () => {
-                const attributes = customAttributes.value();
-                if (attributes === undefined) return;
-                run({
-                    caption: caption.value.length === 0 ? null : caption.value,
-                    width: width.value.length === 0 ? null : width.value,
-                    alignment:
-                        alignment.value.length === 0 ? null : alignment.value,
-                    responsiveClass:
-                        responsiveClass.value.length === 0
-                            ? null
-                            : responsiveClass.value,
-                    ariaLabel:
-                        ariaLabel.value.length === 0 ? null : ariaLabel.value,
-                    customAttributes: attributes,
-                });
-            },
-        };
-    },
+    'table.inspect',
+    [
+        { key: 'caption', label: 'Caption' },
+        { key: 'width', label: 'Width (px or %)' },
+        { key: 'alignment', label: 'Alignment (left, center, right)' },
+        { key: 'responsiveClass', label: 'Responsive classes' },
+        { key: 'ariaLabel', label: 'Accessible label' },
+    ],
+    tableAttributeCatalog,
+    ['aria-label', 'class', 'style', 'width'],
 );
 
-const tableRowPropertiesButton = dialogCommandButton(
+const tableRowPropertiesButton = tablePropertyButton(
     'Table row properties',
     'table.row.properties',
-    async (document, run, editor) => {
-        const { readInspectedCustomAttributes, tagCustomAttributeField } =
-            await loadLinkAttributeTools();
-        let section: HTMLInputElement;
-        let className: HTMLInputElement;
-        let height: HTMLInputElement;
-        let customAttributes: ReturnType<typeof tagCustomAttributeField>;
-        return {
-            content: (container) => {
-                const values = inspectedValues(editor, 'table.row.inspect');
-                section = field(
-                    document,
-                    container,
-                    'Section (head, body, foot)',
-                    'text',
-                    false,
-                    stringValue(values.section),
-                );
-                className = field(
-                    document,
-                    container,
-                    'Row classes',
-                    'text',
-                    false,
-                    stringValue(values.className),
-                );
-                height = field(
-                    document,
-                    container,
-                    'Height',
-                    'number',
-                    false,
-                    stringValue(values.height),
-                );
-                height.min = '20';
-                height.max = '2000';
-                customAttributes = tagCustomAttributeField(
-                    document,
-                    container,
-                    readInspectedCustomAttributes(values),
-                    rowAttributeCatalog,
-                    (message) => message,
-                    ['aria-label', 'class', 'height', 'style'],
-                );
-            },
-            run: () => {
-                const attributes = customAttributes.value();
-                if (attributes === undefined) return;
-                run({
-                    ...(section.value.length === 0
-                        ? {}
-                        : { section: section.value }),
-                    className:
-                        className.value.length === 0 ? null : className.value,
-                    height:
-                        height.value.length === 0 ? null : Number(height.value),
-                    customAttributes: attributes,
-                });
-            },
-        };
-    },
+    'table.row.inspect',
+    [
+        {
+            key: 'section',
+            label: 'Section (head, body, foot)',
+            omitEmpty: true,
+        },
+        { key: 'className', label: 'Row classes' },
+        { key: 'height', label: 'Height', numeric: true },
+    ],
+    rowAttributeCatalog,
+    ['aria-label', 'class', 'height', 'style'],
 );
 
-const tableCellPropertiesButton = dialogCommandButton(
+const tableCellPropertiesButton = tablePropertyButton(
     'Table cell properties',
     'table.cell.properties',
-    async (document, run, editor) => {
-        const { readInspectedCustomAttributes, tagCustomAttributeField } =
-            await loadLinkAttributeTools();
-        let horizontal: HTMLInputElement;
-        let vertical: HTMLInputElement;
-        let scope: HTMLInputElement;
-        let className: HTMLInputElement;
-        let customAttributes: ReturnType<typeof tagCustomAttributeField>;
-        return {
-            content: (container) => {
-                const values = inspectedValues(editor, 'table.cell.inspect');
-                horizontal = field(
-                    document,
-                    container,
-                    'Alignment (left, center, right)',
-                    'text',
-                    false,
-                    stringValue(values.horizontalAlignment),
-                );
-                vertical = field(
-                    document,
-                    container,
-                    'Vertical alignment',
-                    'text',
-                    false,
-                    stringValue(values.verticalAlignment),
-                );
-                scope = field(
-                    document,
-                    container,
-                    'Header scope',
-                    'text',
-                    false,
-                    stringValue(values.scope),
-                );
-                className = field(
-                    document,
-                    container,
-                    'Cell classes',
-                    'text',
-                    false,
-                    stringValue(values.className),
-                );
-                customAttributes = tagCustomAttributeField(
-                    document,
-                    container,
-                    readInspectedCustomAttributes(values),
-                    cellAttributeCatalog,
-                    (message) => message,
-                    [
-                        'aria-label',
-                        'class',
-                        'colspan',
-                        'rowspan',
-                        'scope',
-                        'style',
-                    ],
-                );
-            },
-            run: () => {
-                const attributes = customAttributes.value();
-                if (attributes === undefined) return;
-                run({
-                    horizontalAlignment:
-                        horizontal.value.length === 0 ? null : horizontal.value,
-                    verticalAlignment:
-                        vertical.value.length === 0 ? null : vertical.value,
-                    scope: scope.value.length === 0 ? null : scope.value,
-                    className:
-                        className.value.length === 0 ? null : className.value,
-                    customAttributes: attributes,
-                });
-            },
-        };
-    },
+    'table.cell.inspect',
+    [
+        {
+            key: 'horizontalAlignment',
+            label: 'Alignment (left, center, right)',
+        },
+        { key: 'verticalAlignment', label: 'Vertical alignment' },
+        { key: 'scope', label: 'Header scope' },
+        { key: 'className', label: 'Cell classes' },
+    ],
+    cellAttributeCatalog,
+    ['aria-label', 'class', 'colspan', 'rowspan', 'scope', 'style'],
 );
 
 const textColors = Object.freeze([
@@ -1526,7 +1484,7 @@ const maximumRecentColors = 16;
 
 function colorMenu(
     label: string,
-    command: string,
+    command: 'font.color' | 'font.backgroundColor' | 'font.highlight',
     fallbackIcon: string,
     colors: readonly (readonly [string, string])[],
     options: ColorMenuOptions = {},
@@ -1726,7 +1684,12 @@ function colorMenu(
             details.open = false;
         }
         const toggle = (): void => {
-            if (details.open) renderRecentColors();
+            if (!details.open) return;
+            renderRecentColors();
+            const state = ui.getEditingFormatState?.(command);
+            if (state?.status === 'uniform') stageColor(state.value);
+            else if (state?.status === 'mixed') valueInput.value = '';
+            ui.refresh();
         };
         details.addEventListener('toggle', toggle);
         renderRecentColors();
@@ -1736,6 +1699,23 @@ function colorMenu(
             update: () => {
                 const available = canExecute(editor, command);
                 summary.setAttribute('aria-disabled', String(!available));
+                const state = ui.getEditingFormatState?.(command);
+                showFormatState(summary, label, state, ui, available);
+                if (state?.status === 'uniform')
+                    summary.style.setProperty(
+                        '--soeditor-selected-color',
+                        state.value,
+                    );
+                else summary.style.removeProperty('--soeditor-selected-color');
+                for (const { button } of buttons) {
+                    const selected =
+                        available &&
+                        details.open &&
+                        state?.status === 'uniform' &&
+                        document.defaultView?.getComputedStyle(button)
+                            .backgroundColor === state.value;
+                    button.setAttribute('aria-pressed', String(selected));
+                }
                 for (const { button } of buttons) button.disabled = !available;
                 if (remove !== undefined) {
                     remove.disabled = !canExecute(
@@ -1836,7 +1816,7 @@ function rememberRecentColor(document: Document, value: string): void {
 
 function choiceMenu(
     label: string,
-    command: string,
+    command: 'font.size' | 'font.family',
     fallbackIcon: string,
     choices: readonly (readonly [string, string])[],
 ): ToolbarItemFactory {
@@ -1845,7 +1825,14 @@ function choiceMenu(
         details.className = 'soeditor-ui__menu soeditor-ui__choice-menu';
         const summary = document.createElement('summary');
         summary.className = 'soeditor-ui__button';
-        ui.setIcon(summary, command, fallbackIcon);
+        const currentValue = document.createElement('span');
+        currentValue.className = 'soeditor-ui__current-value';
+        if (command === 'font.size') {
+            summary.classList.add('soeditor-ui__value-control');
+            summary.append(currentValue);
+        } else {
+            ui.setIcon(summary, command, fallbackIcon);
+        }
         summary.title = label;
         summary.setAttribute('aria-label', label);
         const menu = document.createElement('div');
@@ -1874,7 +1861,28 @@ function choiceMenu(
             update: () => {
                 const available = canExecute(editor, command);
                 summary.setAttribute('aria-disabled', String(!available));
-                for (const { button } of buttons) button.disabled = !available;
+                const state = ui.getEditingFormatState?.(command);
+                showFormatState(summary, label, state, ui, available);
+                const currentLabel =
+                    state?.status === 'uniform'
+                        ? state.value
+                        : ui.translate(
+                              state?.status === 'mixed' ? 'Mixed' : label,
+                          );
+                if (currentValue.textContent !== currentLabel)
+                    currentValue.textContent = currentLabel;
+                for (const { button } of buttons) {
+                    button.disabled = !available;
+                    const selected =
+                        available &&
+                        state?.status === 'uniform' &&
+                        state.value.toLowerCase().replaceAll('"', '') ===
+                            button.dataset.value
+                                ?.toLowerCase()
+                                .replaceAll('"', '');
+                    button.setAttribute('aria-pressed', String(selected));
+                    button.classList.toggle('is-active', selected);
+                }
             },
             destroy: () => {
                 for (const { button, click } of buttons) {
@@ -1890,6 +1898,7 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
         ['undo', commandButton('Undo', 'editor.undo')],
         ['redo', commandButton('Redo', 'editor.redo')],
         ['heading', headingMenu],
+        ['moreFormatting', moreFormattingMenu],
         ['bold', commandButton('Bold', 'format.bold', undefined, 'B')],
         ['italic', commandButton('Italic', 'format.italic', undefined, 'I')],
         ['underline', commandButton('Underline', 'format.underline', [], 'U')],
@@ -1910,8 +1919,9 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
         ],
         ['blockquote', commandButton('Block quote', 'blockquote.toggle')],
         ['div', commandButton('DIV block', 'block.div', [], 'DIV')],
-        ['orderedList', commandButton('Ordered list', 'list.ordered')],
-        ['unorderedList', commandButton('Unordered list', 'list.unordered')],
+        ['alignment', blockFormatMenu('alignment')],
+        ['orderedList', blockFormatMenu('ordered')],
+        ['unorderedList', blockFormatMenu('unordered')],
         ['outdent', commandButton('Outdent', 'format.outdent')],
         ['indent', commandButton('Indent', 'format.indent')],
         [
@@ -1975,19 +1985,34 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
         ['tableProperties', tablePropertiesButton],
         ['tableRowProperties', tableRowPropertiesButton],
         ['tableCellProperties', tableCellPropertiesButton],
-        ['source', sourceButton],
-        [
-            'sourceFind',
-            commandButton('Find/Replace', 'editor.source.find', [], 'Find'),
-        ],
-        [
-            'format',
-            sourceOnlyCommandButton('Format source HTML', 'document.format'),
-        ],
-        [
-            'minify',
-            sourceOnlyCommandButton('Minify source HTML', 'document.minify'),
-        ],
+        ...(SOURCE_TOOLBAR
+            ? ([
+                  ['source', sourceButton],
+                  [
+                      'sourceFind',
+                      commandButton(
+                          'Find/Replace',
+                          'editor.source.find',
+                          [],
+                          'Find',
+                      ),
+                  ],
+                  [
+                      'format',
+                      sourceOnlyCommandButton(
+                          'Format source HTML',
+                          'document.format',
+                      ),
+                  ],
+                  [
+                      'minify',
+                      sourceOnlyCommandButton(
+                          'Minify source HTML',
+                          'document.minify',
+                      ),
+                  ],
+              ] satisfies readonly (readonly [string, ToolbarItemFactory])[])
+            : []),
         ['cleanHtml', commandButton('Clean HTML', 'html.cleanup')],
     ]);
 

@@ -1,0 +1,9 @@
+
+Running 4 tests using 2 workers
+
+  ✓  2 [firefox] › tests/browser/classic-editor.spec.ts:1970:1 › element path follows WYSIWYG selection without exposing Source chrome (3.6s)
+  ✓  3 [firefox] › tests/browser/classic-editor.spec.ts:2078:1 › keeps Unicode word and character counts visible in WYSIWYG and Source (2.7s)
+  ✓  1 [webkit] › tests/browser/classic-editor.spec.ts:1970:1 › element path follows WYSIWYG selection without exposing Source chrome (12.2s)
+  ✓  4 [webkit] › tests/browser/classic-editor.spec.ts:2078:1 › keeps Unicode word and character counts visible in WYSIWYG and Source (3.7s)
+
+  4 passed (19.5s)

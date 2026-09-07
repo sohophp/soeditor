@@ -1,3 +1,9 @@
+import { readFormatStates } from './format-state.js';
+import {
+    indentSelectedList,
+    selectedListBlocks,
+    toggleSelectedList,
+} from './list-editing.js';
 import {
     EditorDestroyedError,
     ServiceAlreadyRegisteredError,
@@ -243,6 +249,8 @@ export class WysiwygEditingEngine implements EditingEngine {
         Readonly<{ className: string | null; style: string | null }>
     >();
     readonly #preservedNodes = new Map<string, HtmlChildNode>();
+    #serializedBlocks = new WeakMap<Node, string>();
+    #serializedNodes = new WeakMap<Node, HtmlChildNode>();
     #activeCell: HTMLTableCellElement | undefined;
     #compositionGroup: string | undefined;
     #compositionSequence = 0;
@@ -309,6 +317,8 @@ export class WysiwygEditingEngine implements EditingEngine {
             areBlockAttributesActive: (attributes) =>
                 this.#areBlockAttributesActive(attributes),
             canEdit: () => this.#canEdit(),
+            getFormatStates: () =>
+                readFormatStates(this.element, this.#formatRange()),
             getLinkAttributes: () => this.#getLinkAttributes(),
             getSelectedStructuredBlock: (type) =>
                 this.#getSelectedStructuredBlock(type),
@@ -347,6 +357,9 @@ export class WysiwygEditingEngine implements EditingEngine {
             setStructuredBlockAttributes: (type, attributes) =>
                 this.#setStructuredBlockAttributes(type, attributes),
             toggleList: (list) => this.#toggleList(list),
+            setListStyle: (list, style) => this.#setListStyle(list, style),
+            isListStyleActive: (list, style) =>
+                this.#isListStyleActive(list, style),
             toggleMark: (mark) => this.#toggleMark(mark),
         };
         this.#service = Object.freeze(service);
@@ -386,9 +399,14 @@ export class WysiwygEditingEngine implements EditingEngine {
             MutationObserverConstructor === undefined
                 ? undefined
                 : new MutationObserverConstructor((records) => {
+                      this.#invalidateSerializedBlocks(records);
                       if (
                           records.some(
                               (record) =>
+                                  !(
+                                      record.target === this.element &&
+                                      record.type === 'attributes'
+                                  ) &&
                                   (record.target === this.element ||
                                       this.element.contains(record.target)) &&
                                   !isTableSelectionProjectionMutation(record),
@@ -412,13 +430,17 @@ export class WysiwygEditingEngine implements EditingEngine {
             'editor:destroy',
             () => this.destroy(),
         );
-        this.#disposeModeChange = this.editor.events.on('mode:change', () =>
-            this.#updateEditableState(),
-        );
+        this.#disposeModeChange = this.editor.events.on('mode:change', () => {
+            if (this.#projectionActivity === undefined)
+                this.#updateEditableState();
+        });
         this.#disposeStateChange = this.editor.events.on(
             'state:change',
             ({ current, previous }) => {
-                if (current.readonly !== previous.readonly) {
+                if (
+                    current.readonly !== previous.readonly &&
+                    this.#projectionActivity === undefined
+                ) {
                     this.#updateEditableState();
                 }
             },
@@ -432,7 +454,92 @@ export class WysiwygEditingEngine implements EditingEngine {
                     this.#updateEditableState();
                 },
             });
+        for (const position of ['before', 'after'] as const) {
+            this.editor.commands.register({
+                id: `block.paragraph.${position}`,
+                canExecute: () =>
+                    this.#canEdit() && this.#paragraphBoundary() !== undefined,
+                execute: (_context, ...args) => {
+                    if (args.length !== 0)
+                        throw new TypeError(
+                            'Block paragraph commands take no arguments.',
+                        );
+                    const block = this.#paragraphBoundary();
+                    if (block === undefined) return;
+                    this.#mutate(() => {
+                        const paragraph = this.#document.createElement('p');
+                        paragraph.append(this.#document.createElement('br'));
+                        block[position](paragraph);
+                        this.#activeCell?.classList.remove('is-editing');
+                        this.#activeCell = undefined;
+                        this.#tableSelection = undefined;
+                        this.#selectedElement = undefined;
+                        this.#paintTableSelection();
+                        const range = this.#document.createRange();
+                        range.setStart(paragraph, 0);
+                        range.collapse(true);
+                        return range;
+                    });
+                    this.element.focus({ preventScroll: true });
+                },
+            });
+        }
         this.#updateEditableState();
+    }
+
+    #paragraphBoundary(selected = this.#selectedElement): Element | undefined {
+        if (selected === undefined || !this.element.contains(selected))
+            return undefined;
+        const image = selected.closest('img');
+        let block: Element | null;
+        if (image !== null) {
+            const figure = image.closest('figure');
+            block =
+                figure !== null &&
+                figure.closest('table') === image.closest('table')
+                    ? figure
+                    : (image.closest('p,h1,h2,h3,h4,h5,h6,pre') ??
+                      image.closest('a') ??
+                      image);
+        } else {
+            const table = selected.closest('table');
+            block =
+                table?.parentElement?.tagName === 'FIGURE'
+                    ? table.parentElement
+                    : table;
+        }
+        while (
+            block?.parentElement !== null &&
+            block?.parentElement !== undefined &&
+            block.parentElement !== this.element &&
+            block.parentElement.matches(
+                'a,span,strong,b,em,i,u,s,small,mark,code,sub,sup',
+            )
+        ) {
+            block = block.parentElement;
+        }
+        return block !== null &&
+            block !== undefined &&
+            block !== this.element &&
+            this.element.contains(block)
+            ? block
+            : undefined;
+    }
+
+    #paragraphAction(element: Element): (position: 'before' | 'after') => void {
+        return (position) => {
+            if (!this.element.contains(element) || !this.#canEdit(false))
+                return;
+            this.#activateFromUserIntent();
+            const range = this.#document.createRange();
+            range.selectNodeContents(element);
+            range.collapse(true);
+            this.#selectRange(range);
+            this.#selectedElement = element;
+            const command = `block.paragraph.${position}`;
+            if (this.editor.commands.canExecute(command))
+                this.editor.execute(command);
+        };
     }
 
     focus(): void {
@@ -517,6 +624,8 @@ export class WysiwygEditingEngine implements EditingEngine {
             );
         }
         this.#mutationObserver?.disconnect();
+        this.#serializedBlocks = new WeakMap();
+        this.#serializedNodes = new WeakMap();
         this.#disposeProjection?.();
         this.#disposeProjection = undefined;
         this.#disposeDocumentChange();
@@ -524,6 +633,8 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.#disposeModeChange();
         this.#disposeStateChange();
         try {
+            this.editor.commands.unregister('block.paragraph.before');
+            this.editor.commands.unregister('block.paragraph.after');
             if (
                 this.editor.services.tryGet(visualEditingServiceToken) ===
                 this.#service
@@ -558,6 +669,14 @@ export class WysiwygEditingEngine implements EditingEngine {
             this.#mergeParagraphBoundary(
                 event.inputType === 'deleteContentBackward',
             )
+        ) {
+            event.preventDefault();
+            this.#resetInputHistory();
+            return;
+        }
+        if (
+            event.inputType === 'insertParagraph' &&
+            this.#splitListParagraph()
         ) {
             event.preventDefault();
             this.#resetInputHistory();
@@ -683,7 +802,7 @@ export class WysiwygEditingEngine implements EditingEngine {
             !event.ctrlKey &&
             !event.metaKey &&
             !event.altKey &&
-            this.#selectedBlock()?.tagName === 'LI'
+            this.#closestFromSelection('li') !== undefined
         ) {
             event.preventDefault();
             this.#adjustIndent(event.shiftKey ? -1 : 1);
@@ -807,6 +926,18 @@ export class WysiwygEditingEngine implements EditingEngine {
                 ? (target.closest<HTMLTableCellElement>('td,th') ?? undefined)
                 : undefined;
         this.#tableDragMoved = false;
+        if (
+            event.button === 0 &&
+            target instanceof Element &&
+            target.closest('td,th') === null
+        ) {
+            this.#activeCell?.classList.remove('is-editing');
+            this.#activeCell = undefined;
+            this.#tableSelection = undefined;
+            if (this.#selectedElement?.matches('td,th') === true)
+                this.#selectedElement = undefined;
+            this.#paintTableSelection();
+        }
         if (this.#tableDragAnchor !== undefined && !event.shiftKey) {
             this.#activateCell(this.#tableDragAnchor, false, false);
         }
@@ -815,6 +946,34 @@ export class WysiwygEditingEngine implements EditingEngine {
     readonly #handlePointerOver = (event: PointerEvent): void => {
         const anchor = this.#tableDragAnchor;
         const target = event.target;
+        if (
+            event.buttons === 0 &&
+            target instanceof Element &&
+            this.#canEdit(false)
+        ) {
+            const container = target.closest('img,figcaption,table');
+            const media =
+                container?.matches('figcaption') === true
+                    ? container.closest('figure')?.querySelector('img')
+                    : container;
+            const block =
+                media === null || media === undefined
+                    ? undefined
+                    : this.#paragraphBoundary(media);
+            if (block !== undefined && media !== null && media !== undefined) {
+                const EventConstructor =
+                    this.#document.defaultView?.CustomEvent ?? CustomEvent;
+                media.dispatchEvent(
+                    new EventConstructor('soeditor:block-hover', {
+                        bubbles: true,
+                        detail: {
+                            ['block']: block,
+                            ['insertParagraph']: this.#paragraphAction(media),
+                        },
+                    }),
+                );
+            }
+        }
         const cell =
             target instanceof Element
                 ? target.closest<HTMLTableCellElement>('td,th')
@@ -843,6 +1002,9 @@ export class WysiwygEditingEngine implements EditingEngine {
         if (image !== null && this.element.contains(image)) {
             this.#selectedElement = image;
             this.#dispatchImageEvent(image, 'soeditor:image-select');
+            this.#tableDragAnchor = undefined;
+            this.#tableDragMoved = false;
+            return;
         }
         const cell =
             target instanceof Element
@@ -885,6 +1047,11 @@ export class WysiwygEditingEngine implements EditingEngine {
         image: HTMLImageElement,
         type: 'soeditor:image-activate' | 'soeditor:image-select',
     ): void {
+        // WebKit may leave no native range when a bare image is clicked.
+        // Keep an explicit bookmark before focus moves to contextual controls.
+        const range = this.#document.createRange();
+        range.selectNode(image);
+        this.#selectRange(range);
         const EventConstructor =
             this.#document.defaultView?.CustomEvent ?? CustomEvent;
         image.dispatchEvent(
@@ -892,6 +1059,8 @@ export class WysiwygEditingEngine implements EditingEngine {
                 bubbles: true,
                 detail: Object.freeze({
                     element: image,
+                    ['block']: this.#paragraphBoundary(image),
+                    ['insertParagraph']: this.#paragraphAction(image),
                     remove: () => {
                         image.remove();
                         this.#selectedElement = undefined;
@@ -1115,6 +1284,8 @@ export class WysiwygEditingEngine implements EditingEngine {
                 detail: Object.freeze({
                     ...(selected?.focus ?? { column: 0, row: 0 }),
                     activate,
+                    ['block']: this.#paragraphBoundary(cell),
+                    ['insertParagraph']: this.#paragraphAction(cell),
                     range:
                         selected === undefined
                             ? undefined
@@ -1248,6 +1419,8 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     #render(source: string): void {
+        this.#serializedBlocks = new WeakMap();
+        this.#serializedNodes = new WeakMap();
         const parsed = parseHtmlFragment(source);
         if (
             parsed.diagnostics.some(
@@ -1426,17 +1599,64 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     #serialize(): string {
-        const children = Array.from(this.element.childNodes).flatMap((node) => {
-            const converted = this.#serializeNode(node);
-            return converted === undefined ? [] : [converted];
-        });
-        return serializeHtmlFragment({
-            children: Object.freeze(children),
-            type: 'document-fragment',
-        });
+        // Consume synchronous native/command mutations before reading the cache.
+        // Without an observer there is no safe invalidation signal.
+        if (this.#mutationObserver === undefined) {
+            this.#serializedBlocks = new WeakMap();
+            this.#serializedNodes = new WeakMap();
+        }
+        this.#invalidateSerializedBlocks(
+            this.#mutationObserver?.takeRecords() ?? [],
+        );
+        return Array.from(this.element.childNodes, (node) => {
+            const cached = this.#serializedBlocks.get(node);
+            if (cached !== undefined) return cached;
+            const converted = this.#serializeNode(node, true);
+            const source = serializeHtmlFragment({
+                children: converted === undefined ? [] : [converted],
+                type: 'document-fragment',
+            });
+            this.#serializedBlocks.set(node, source);
+            return source;
+        }).join('');
     }
 
-    #serializeNode(node: Node): HtmlChildNode | undefined {
+    #invalidateSerializedBlocks(records: readonly MutationRecord[]): void {
+        for (const record of records) {
+            // Reinserted nodes may have changed while detached and unobserved.
+            for (const added of Array.from(record.addedNodes)) {
+                this.#serializedBlocks.delete(added);
+                // Detached descendants may have changed outside observation.
+                const pending = [added];
+                for (let index = 0; index < pending.length; index += 1) {
+                    const node = pending[index];
+                    if (node === undefined) continue;
+                    this.#serializedNodes.delete(node);
+                    for (const child of Array.from(node.childNodes))
+                        pending.push(child);
+                }
+            }
+            let node: Node | null = record.target;
+            while (node !== null && node !== this.element) {
+                this.#serializedBlocks.delete(node);
+                this.#serializedNodes.delete(node);
+                node = node.parentNode;
+            }
+        }
+    }
+
+    #serializeNode(node: Node, cached = false): HtmlChildNode | undefined {
+        if (cached) {
+            const previous = this.#serializedNodes.get(node);
+            if (previous !== undefined) return previous;
+        }
+        const converted = this.#convertNode(node, cached);
+        if (cached && converted !== undefined)
+            this.#serializedNodes.set(node, converted);
+        return converted;
+    }
+
+    #convertNode(node: Node, cached: boolean): HtmlChildNode | undefined {
         if (node.nodeType === 3) {
             return { type: 'text', value: node.nodeValue ?? '' };
         }
@@ -1492,7 +1712,7 @@ export class WysiwygEditingEngine implements EditingEngine {
             attributes: Object.freeze(attributes),
             children: Object.freeze(
                 Array.from(node.childNodes).flatMap((child) => {
-                    const converted = this.#serializeNode(child);
+                    const converted = this.#serializeNode(child, cached);
                     return converted === undefined ? [] : [converted];
                 }),
             ),
@@ -1520,7 +1740,9 @@ export class WysiwygEditingEngine implements EditingEngine {
             // The native input mutation has just been serialized into the
             // canonical document. Do not parse and serialize the whole
             // document again when its queued observer record is delivered.
-            this.#mutationObserver?.takeRecords();
+            this.#invalidateSerializedBlocks(
+                this.#mutationObserver?.takeRecords() ?? [],
+            );
         } finally {
             this.#pendingSource = undefined;
         }
@@ -1559,21 +1781,28 @@ export class WysiwygEditingEngine implements EditingEngine {
             (this.#projectionActivity?.readonly ??
                 (this.editor.state.readonly ||
                     this.editor.state.mode !== 'wysiwyg'));
-        this.element.hidden = !visible;
-        this.element.contentEditable = readonly ? 'false' : 'true';
-        this.element.setAttribute('aria-readonly', String(readonly));
+        if (!visible && !this.element.hidden) this.element.hidden = true;
+        const editable = readonly ? 'false' : 'true';
+        if (this.element.contentEditable !== editable)
+            this.element.contentEditable = editable;
+        if (this.element.getAttribute('aria-readonly') !== String(readonly))
+            this.element.setAttribute('aria-readonly', String(readonly));
+        if (visible && this.element.hidden) this.element.hidden = false;
     }
 
-    #canEdit(): boolean {
+    #canEdit(requireRange = true): boolean {
         return (
             !this.#destroyed &&
             !this.#locked &&
             this.element.isContentEditable &&
-            this.#range() !== undefined
+            (!requireRange || this.#range() !== undefined)
         );
     }
 
     #range(): Range | undefined {
+        // Inactive Source transitions can refresh toolbar commands repeatedly.
+        // Do not force layout by reading the live selection of a hidden surface.
+        if (this.element.hidden) return this.#savedRange?.cloneRange();
         const range = selectionRangeFor(this.element, this.#document);
         if (
             range !== undefined &&
@@ -1586,6 +1815,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     #captureRange(): void {
+        if (this.element.hidden) return;
         const range = selectionRangeFor(this.element, this.#document);
         if (range === undefined) return;
         if (!this.element.contains(range.commonAncestorContainer)) return;
@@ -2198,73 +2428,41 @@ export class WysiwygEditingEngine implements EditingEngine {
         });
     }
 
+    #formatRange(): Range | undefined {
+        const range = this.#range();
+        const cell = this.#activeCell;
+        if (
+            cell?.isConnected &&
+            (!range || !cell.contains(range.startContainer))
+        ) {
+            const selected = this.#document.createRange();
+            selected.selectNodeContents(cell);
+            return selected;
+        }
+        return range;
+    }
+
     #isAlignmentActive(
         alignment: 'center' | 'justify' | 'left' | 'right' | undefined,
     ): boolean {
+        const current = readFormatStates(
+            this.element,
+            this.#formatRange(),
+        ).alignment;
         return (
-            (this.#selectedBlock()?.style.textAlign || undefined) === alignment
+            current.status === 'uniform' &&
+            current.value === (alignment ?? 'left')
         );
     }
 
     #adjustIndent(delta: -1 | 1): void {
-        const blocks = this.#selectedBlocks();
+        const range = this.#range();
+        if (range === undefined) return;
+        const blocks = selectedListBlocks(this.element, range);
         if (blocks.length === 0) return;
         if (blocks.every((block) => block.tagName === 'LI')) {
-            const selection = this.#getSelection();
-            this.#mutate(() => {
-                let focus: HTMLElement | undefined;
-                for (const block of blocks) {
-                    if (delta > 0) {
-                        const previous = block.previousElementSibling;
-                        const parentList = block.parentElement;
-                        if (
-                            previous instanceof HTMLElement &&
-                            previous.tagName === 'LI' &&
-                            parentList !== null
-                        ) {
-                            let nested = Array.from(previous.children).find(
-                                (
-                                    child,
-                                ): child is
-                                    HTMLOListElement | HTMLUListElement =>
-                                    child.tagName === 'OL' ||
-                                    child.tagName === 'UL',
-                            );
-                            if (nested === undefined) {
-                                nested = this.#document.createElement(
-                                    parentList.tagName.toLowerCase() as
-                                        'ol' | 'ul',
-                                );
-                                previous.append(nested);
-                            }
-                            nested.append(block);
-                            focus = block;
-                        }
-                    } else {
-                        const parentList = block.parentElement;
-                        const parentItem = parentList?.parentElement;
-                        if (
-                            parentList !== null &&
-                            parentList !== undefined &&
-                            parentItem instanceof HTMLElement &&
-                            parentItem.tagName === 'LI'
-                        ) {
-                            parentItem.after(block);
-                            if (parentList.children.length === 0) {
-                                parentList.remove();
-                            }
-                            focus = block;
-                        }
-                    }
-                }
-                return (
-                    (selection === undefined
-                        ? undefined
-                        : this.#rangeFromEditingSelection(selection)) ??
-                    (focus === undefined
-                        ? this.#range()
-                        : rangeAtEnd(this.#document, focus))
-                );
+            this.#mutateList(() => {
+                indentSelectedList(this.element, range, delta);
             });
             return;
         }
@@ -2280,40 +2478,128 @@ export class WysiwygEditingEngine implements EditingEngine {
         });
     }
 
-    #toggleList(list: 'ol' | 'ul'): void {
-        const block = this.#selectedBlock();
-        if (block === undefined) return;
+    #convertList(list: 'ol' | 'ul'): HTMLElement | undefined {
+        const blocks = this.#selectedBlocks();
+        const block = this.#selectedBlock() ?? blocks[0];
+        if (block === undefined) return undefined;
         const existing = block.closest('ol,ul');
-        const selection = this.#getSelection();
-        this.#mutate(() => {
-            if (existing !== null && existing.tagName.toLowerCase() === list) {
-                const replacement = this.#document.createElement('p');
-                replacement.append(...Array.from(block.childNodes));
-                existing.replaceWith(replacement);
-                return (
-                    (selection === undefined
-                        ? undefined
-                        : this.#rangeFromEditingSelection(selection)) ??
-                    rangeAtEnd(this.#document, replacement)
-                );
+        if (existing !== null) {
+            if (existing.tagName.toLowerCase() === list)
+                return existing as HTMLElement;
+            const replacement = this.#document.createElement(list);
+            for (const attribute of Array.from(existing.attributes)) {
+                if (!['type', 'start', 'reversed'].includes(attribute.name)) {
+                    replacement.setAttribute(attribute.name, attribute.value);
+                }
             }
-            const container = this.#document.createElement(list);
+            replacement.style.removeProperty('list-style-type');
+            replacement.append(...Array.from(existing.childNodes));
+            existing.replaceWith(replacement);
+            return replacement;
+        }
+        const container = this.#document.createElement(list);
+        if (block.matches('td,th,figcaption')) {
             const item = this.#document.createElement('li');
             item.append(...Array.from(block.childNodes));
             container.append(item);
-            block.replaceWith(container);
-            return (
-                (selection === undefined
-                    ? undefined
-                    : this.#rangeFromEditingSelection(selection)) ??
-                rangeAtEnd(this.#document, item)
-            );
+            block.append(container);
+            return container;
+        }
+        const candidates = blocks.filter(
+            (candidate) =>
+                candidate.parentNode === block.parentNode &&
+                !candidate.closest('ol,ul'),
+        );
+        block.before(container);
+        for (const candidate of candidates.length > 0 ? candidates : [block]) {
+            const item = this.#document.createElement('li');
+            candidate.replaceWith(item);
+            item.append(candidate);
+            container.append(item);
+        }
+        return container;
+    }
+
+    #toggleList(list: 'ol' | 'ul'): void {
+        this.#mutateList(() => {
+            const range = this.#range();
+            if (range !== undefined)
+                toggleSelectedList(this.element, range, list);
         });
     }
 
+    #setListStyle(list: 'ol' | 'ul', style: string): void {
+        const allowed =
+            list === 'ol'
+                ? [
+                      'decimal',
+                      'decimal-leading-zero',
+                      'lower-roman',
+                      'upper-roman',
+                      'lower-alpha',
+                      'upper-alpha',
+                  ]
+                : ['disc', 'circle', 'square'];
+        if (!allowed.includes(style)) return;
+        this.#mutateList(() => {
+            const element = this.#convertList(list);
+            if (element !== undefined) {
+                element.removeAttribute('type');
+                element.style.listStyleType = style;
+            }
+        });
+    }
+
+    #mutateList(operation: () => void): void {
+        this.#mutate(() => {
+            const before = this.#range();
+            if (before === undefined) return undefined;
+            const { startContainer, startOffset, endContainer, endOffset } =
+                before;
+            operation();
+            if (!startContainer.isConnected || !endContainer.isConnected)
+                return this.#range();
+            const restored = this.#document.createRange();
+            restored.setStart(
+                startContainer,
+                Math.min(
+                    startOffset,
+                    startContainer.nodeType === 3
+                        ? (startContainer.textContent?.length ?? 0)
+                        : startContainer.childNodes.length,
+                ),
+            );
+            restored.setEnd(
+                endContainer,
+                Math.min(
+                    endOffset,
+                    endContainer.nodeType === 3
+                        ? (endContainer.textContent?.length ?? 0)
+                        : endContainer.childNodes.length,
+                ),
+            );
+            return restored;
+        });
+    }
+
+    #isListStyleActive(list: 'ol' | 'ul', style: string): boolean {
+        const current = readFormatStates(
+            this.element,
+            this.#formatRange(),
+        ).list;
+        return (
+            current.status === 'uniform' && current.value === `${list}:${style}`
+        );
+    }
+
     #isListActive(list: 'ol' | 'ul'): boolean {
-        const block = this.#selectedBlock();
-        return block !== undefined && block.closest(list) !== null;
+        const current = readFormatStates(
+            this.element,
+            this.#formatRange(),
+        ).list;
+        return (
+            current.status === 'uniform' && current.value.startsWith(`${list}:`)
+        );
     }
 
     #setListProperties(properties: VisualListProperties): void {
@@ -2750,6 +3036,18 @@ export class WysiwygEditingEngine implements EditingEngine {
                     wrapper.replaceWith(figure);
                 }
                 figure.append(wrapper);
+                // A block image must not remain inside a paragraph or heading,
+                // including through inline formatting wrappers.
+                const phrasingBlock = figure.parentElement?.closest(
+                    'p,h1,h2,h3,h4,h5,h6,pre',
+                );
+                if (phrasingBlock && this.element.contains(phrasingBlock)) {
+                    while (phrasingBlock.contains(figure)) {
+                        const parent = figure.parentElement;
+                        if (parent === null) break;
+                        splitInlineAncestorAround(figure, parent);
+                    }
+                }
             }
             if (figure !== null) {
                 setOptional(figure, 'data-align', alignment);
@@ -2802,6 +3100,74 @@ export class WysiwygEditingEngine implements EditingEngine {
             range.selectNode(image);
             return range;
         });
+    }
+
+    #splitListParagraph(): boolean {
+        const range = this.#range();
+        const paragraph = this.#closestFromSelection('p');
+        const item = paragraph?.parentElement;
+        // WebKit splits the P inside LI, while other engines split the item.
+        // Keep empty-item exit and non-paragraph list content on their existing paths.
+        if (
+            !range?.collapsed ||
+            !paragraph?.textContent?.trim() ||
+            item?.tagName !== 'LI'
+        )
+            return false;
+        this.#mutate(() => {
+            const partialAncestors: Element[] = [];
+            for (
+                let node =
+                    range.startContainer instanceof Element
+                        ? range.startContainer
+                        : range.startContainer.parentElement;
+                node && node !== item;
+                node = node.parentElement
+            ) {
+                partialAncestors.push(node);
+            }
+            const tail = range.cloneRange();
+            tail.setEnd(item, item.childNodes.length);
+            const next = this.#document.createElement('li');
+            for (const attribute of Array.from(item.attributes)) {
+                if (attribute.name !== 'id' && attribute.name !== 'value')
+                    next.setAttribute(attribute.name, attribute.value);
+            }
+            next.append(tail.extractContents());
+            // Range clones DOM attributes only. Carry inert source metadata too.
+            let clone: Node | null = next;
+            for (const original of [item, ...partialAncestors.reverse()]) {
+                if (
+                    !(clone instanceof Element) ||
+                    clone.tagName !== original.tagName
+                )
+                    break;
+                clone.removeAttribute('id');
+                const unsafe = this.#unsafeAttributes.get(original);
+                if (unsafe) this.#unsafeAttributes.set(clone, unsafe);
+                clone = clone.firstChild;
+            }
+            if (next.childNodes.length === 0) {
+                const empty = paragraph.cloneNode(false);
+                if (empty instanceof Element) empty.removeAttribute('id');
+                next.append(empty);
+            }
+            const first = next.firstChild;
+            for (const block of [paragraph, first]) {
+                if (
+                    block instanceof Element &&
+                    !block.textContent &&
+                    !block.querySelector('br,img,svg,math')
+                )
+                    block.append(this.#document.createElement('br'));
+            }
+            item.after(next);
+            const caret = this.#document.createRange();
+            caret.selectNodeContents(first ?? next);
+            caret.collapse(true);
+            return caret;
+        });
+        return true;
     }
 
     #mutateRange(range: Range, operation: (range: Range) => Range): void {
@@ -2977,32 +3343,6 @@ export class WysiwygEditingEngine implements EditingEngine {
         }
     }
 
-    #rangeFromEditingSelection(selection: EditingSelection): Range | undefined {
-        const blocks = this.#blocks();
-        const anchorBlock = blocks[selection.anchor.block];
-        const focusBlock = blocks[selection.focus.block];
-        if (anchorBlock === undefined || focusBlock === undefined) {
-            return undefined;
-        }
-        const anchor = resolveTextPoint(anchorBlock, selection.anchor.offset);
-        const focus = resolveTextPoint(focusBlock, selection.focus.offset);
-        if (anchor === undefined || focus === undefined) return undefined;
-        const anchorBeforeFocus =
-            selection.anchor.block < selection.focus.block ||
-            (selection.anchor.block === selection.focus.block &&
-                selection.anchor.offset <= selection.focus.offset);
-        const start = anchorBeforeFocus ? anchor : focus;
-        const end = anchorBeforeFocus ? focus : anchor;
-        const range = this.#document.createRange();
-        try {
-            range.setStart(start.node, start.offset);
-            range.setEnd(end.node, end.offset);
-            return range;
-        } catch {
-            return undefined;
-        }
-    }
-
     #executeHistory(command: 'editor.undo' | 'editor.redo'): void {
         if (
             this.editor.commands.has(command) &&
@@ -3113,8 +3453,16 @@ function setImageDimension(
         Number(normalized) > 0
     ) {
         image.setAttribute(name, normalized);
+        if (image.style.getPropertyValue(name) !== '') {
+            image.style.setProperty(
+                name,
+                `${normalized}px`,
+                image.style.getPropertyPriority(name),
+            );
+        }
     } else if (normalized === '' || normalized === null) {
         image.removeAttribute(name);
+        image.style.removeProperty(name);
     }
 }
 
@@ -3353,6 +3701,7 @@ function splitInlineAncestorAround(
         before.append(ancestor.firstChild);
     }
     while (marker.nextSibling !== null) after.append(marker.nextSibling);
+    if (before.hasChildNodes()) after.removeAttribute('id');
     ancestor.replaceWith(
         ...(before.hasChildNodes() ? [before] : []),
         marker,

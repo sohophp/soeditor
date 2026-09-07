@@ -1,5 +1,17 @@
 # 1.0 and CMS qualification evidence
 
+> 2026-09-07：当前工作区的优化状态、测量与验证统一见 [CMS 性能与稳定性优化](cms-optimization-2026-09-07.zh-CN.md)。以下日期更早的数字为历史记录；人工设备验收单独列出。
+
+## WYSIWYG + Source automated acceptance (2026-09-05)
+
+Local automated acceptance passes: 233 compatibility Chromium tests, 96
+Firefox/WebKit tests with 4 existing Chromium-only skips, and 21 three-browser
+Source checks. The full test chain, packed consumers, loading/size budgets,
+source-load recovery and Winstar integration pass. See
+[current evidence](wysiwyg-source-evidence.zh-CN.md), including raw measurement
+artifacts and remaining manual Safari/assistive-technology limits. Earlier
+qualification records below describe the pre-WS candidate.
+
 Phase 35 qualified the frozen 1.0 contract with executable evidence. This is a
 regression record, not a claim of universal device, browser, assistive-
 technology, security, or performance certification.
@@ -45,7 +57,7 @@ Phase 48 adds one uninterrupted public-path browser scenario that proves:
 7. dangerous source retained canonically but absent from executable Visual DOM;
 8. terminal destruction restoring the exact textarea and final source.
 
-The repository now contains 226 Chromium scenarios. The focused CMS project
+The pre-WS repository contained 229 Chromium scenarios. The focused CMS project
 runs all three CMS scenarios on Chromium desktop and mobile (six passing runs).
 The original full-matrix attempt could not launch Firefox or WebKit on the
 Rocky Linux development host because its C++ and desktop runtime libraries are

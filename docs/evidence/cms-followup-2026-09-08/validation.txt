@@ -1,0 +1,2386 @@
+$ pnpm test:unit && pnpm test:performance && pnpm test:api && pnpm test:docs && pnpm test:consumer && pnpm test:distribution && pnpm test:release && pnpm test:browser && pnpm test:browser:cms
+$ pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk --filter @soeditor/comments --filter @soeditor/revisions --filter @soeditor/workspace --filter @soeditor/react --filter @soeditor/vue --filter @soeditor/plugin-tools test
+Scope: 24 of 26 workspace projects
+packages/core test$ vitest run
+packages/html test$ vitest run
+packages/plugin-tools test$ vitest run
+packages/html test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/html
+packages/plugin-tools test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/plugin-tools
+packages/core test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/core
+packages/core test:  ✓ tests/event-bus.test.ts (7 tests) 9ms
+packages/html test:  ✓ tests/parser.test.ts (4 tests) 21ms
+packages/html test:  ✓ tests/source-and-diagnostics.test.ts (5 tests) 23ms
+packages/html test:  ✓ tests/namespaces-and-special-content.test.ts (8 tests) 29ms
+packages/html test:  ✓ tests/serializer.test.ts (7 tests) 90ms
+packages/html test:  Test Files  4 passed (4)
+packages/html test:       Tests  24 passed (24)
+packages/html test:    Start at  00:43:22
+packages/html test:    Duration  1.24s (transform 436ms, setup 0ms, collect 882ms, tests 164ms, environment 2ms, prepare 1.63s)
+packages/core test:  ✓ tests/service-registry.test.ts (5 tests) 8ms
+packages/core test:  ✓ tests/command.test.ts (12 tests) 20ms
+packages/core test:  ✓ tests/config.test.ts (18 tests) 17ms
+packages/core test:  ✓ tests/plugin.test.ts (14 tests) 23ms
+packages/core test:  ✓ tests/transaction.test.ts (10 tests) 25ms
+packages/core test:  ✓ tests/editor.test.ts (20 tests) 31ms
+packages/core test:  ✓ tests/lifecycle.test.ts (10 tests) 30ms
+packages/core test:  Test Files  8 passed (8)
+packages/core test:       Tests  96 passed (96)
+packages/core test:    Start at  00:43:22
+packages/core test:    Duration  1.30s (transform 823ms, setup 0ms, collect 2.06s, tests 164ms, environment 4ms, prepare 1.92s)
+packages/html test: Done
+packages/core test: Done
+packages/plugin-tools test:  ✓ tests/plugin-tools.test.ts (5 tests) 615ms
+packages/plugin-tools test:    ✓ plugin package tooling > checks packed files without running package lifecycle scripts  545ms
+packages/plugin-tools test:  Test Files  1 passed (1)
+packages/plugin-tools test:       Tests  5 passed (5)
+packages/plugin-tools test:    Start at  00:43:22
+packages/plugin-tools test:    Duration  1.70s (transform 218ms, setup 0ms, collect 151ms, tests 615ms, environment 0ms, prepare 313ms)
+packages/plugin-tools test: Done
+packages/projections test$ vitest run
+packages/ui test$ vitest run
+packages/html-tools test$ vitest run
+packages/workspace test$ vitest run
+packages/ui test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/ui
+packages/projections test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/projections
+packages/html-tools test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/html-tools
+packages/workspace test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/workspace
+packages/ui test:  ✓ tests/document-statistics.test.ts (2 tests) 16ms
+packages/projections test:  ✓ tests/projection-coordinator.test.ts (11 tests) 29ms
+packages/projections test:  Test Files  1 passed (1)
+packages/projections test:       Tests  11 passed (11)
+packages/projections test:    Start at  00:43:24
+packages/projections test:    Duration  1.26s (transform 339ms, setup 0ms, collect 306ms, tests 29ms, environment 1ms, prepare 436ms)
+packages/workspace test:  ✓ tests/save-workflow.test.ts (6 tests) 39ms
+packages/html-tools test:  ✓ tests/diagnostics-workflow.test.ts (8 tests) 31ms
+packages/projections test: Done
+packages/html-tools test:  ✓ tests/diagnostics.test.ts (9 tests) 40ms
+packages/workspace test:  ✓ tests/workspace.test.ts (14 tests) 139ms
+packages/html-tools test:  ✓ tests/quality-diagnostics.test.ts (11 tests) 60ms
+packages/workspace test:  Test Files  2 passed (2)
+packages/workspace test:       Tests  20 passed (20)
+packages/workspace test:    Start at  00:43:24
+packages/workspace test:    Duration  1.42s (transform 288ms, setup 0ms, collect 393ms, tests 178ms, environment 1ms, prepare 483ms)
+packages/ui test:  ✓ tests/ui-plugin.test.ts (8 tests) 19ms
+packages/ui test:  Test Files  2 passed (2)
+packages/ui test:       Tests  10 passed (10)
+packages/ui test:    Start at  00:43:24
+packages/ui test:    Duration  1.54s (transform 568ms, setup 0ms, collect 604ms, tests 36ms, environment 1ms, prepare 800ms)
+packages/html-tools test:  ✓ tests/formatting.test.ts (16 tests) 143ms
+packages/html-tools test:  Test Files  4 passed (4)
+packages/html-tools test:       Tests  44 passed (44)
+packages/html-tools test:    Start at  00:43:24
+packages/html-tools test:    Duration  1.54s (transform 649ms, setup 0ms, collect 1.42s, tests 274ms, environment 2ms, prepare 1.67s)
+packages/workspace test: Done
+packages/ui test: Done
+packages/html-tools test: Done
+packages/engine test$ vitest run
+packages/layout test$ vitest run
+packages/preview test$ vitest run
+packages/revisions test$ vitest run
+packages/preview test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/preview
+packages/layout test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/layout
+packages/revisions test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/revisions
+packages/engine test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/engine
+packages/layout test:  ✓ tests/split-view-plugin.test.ts (4 tests) 21ms
+packages/layout test:  Test Files  1 passed (1)
+packages/layout test:       Tests  4 passed (4)
+packages/layout test:    Start at  00:43:26
+packages/layout test:    Duration  1.32s (transform 255ms, setup 0ms, collect 259ms, tests 21ms, environment 0ms, prepare 368ms)
+packages/engine test:  ✓ tests/paste-pipeline.test.ts (5 tests) 17ms
+packages/preview test:  ✓ tests/configuration.test.ts (5 tests) 21ms
+packages/preview test:  Test Files  1 passed (1)
+packages/preview test:       Tests  5 passed (5)
+packages/preview test:    Start at  00:43:26
+packages/preview test:    Duration  1.40s (transform 383ms, setup 0ms, collect 314ms, tests 21ms, environment 0ms, prepare 507ms)
+packages/engine test:  ✓ tests/history.test.ts (7 tests) 21ms
+packages/revisions test:  ✓ tests/revisions-service.test.ts (8 tests) 46ms
+packages/layout test: Done
+packages/engine test:  ✓ tests/model.test.ts (10 tests) 34ms
+packages/react test$ vitest run
+packages/engine test:  ✓ tests/clipboard.test.ts (10 tests) 29ms
+packages/engine test:  ✓ tests/structured-editing.test.ts (6 tests) 42ms
+packages/engine test:  ✓ tests/operations.test.ts (19 tests) 48ms
+packages/preview test: Done
+packages/vue test$ vitest run
+packages/engine test:  ✓ tests/visual-decorations.test.ts (2 tests) 16ms
+packages/engine test:  Test Files  7 passed (7)
+packages/engine test:       Tests  59 passed (59)
+packages/engine test:    Start at  00:43:26
+packages/engine test:    Duration  1.58s (transform 1.02s, setup 0ms, collect 2.51s, tests 209ms, environment 2ms, prepare 2.22s)
+packages/revisions test:  ✓ tests/comparison.test.ts (4 tests) 140ms
+packages/revisions test:  Test Files  2 passed (2)
+packages/revisions test:       Tests  12 passed (12)
+packages/revisions test:    Start at  00:43:26
+packages/revisions test:    Duration  1.74s (transform 533ms, setup 0ms, collect 758ms, tests 186ms, environment 1ms, prepare 623ms)
+packages/engine test: Done
+packages/revisions test: Done
+packages/react test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/react
+packages/vue test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/vue
+packages/react test:  ✓ tests/ssr.test.tsx (1 test) 15ms
+packages/react test:  Test Files  1 passed (1)
+packages/react test:       Tests  1 passed (1)
+packages/react test:    Start at  00:43:28
+packages/react test:    Duration  776ms (transform 160ms, setup 0ms, collect 237ms, tests 15ms, environment 0ms, prepare 244ms)
+packages/vue test:  ✓ tests/ssr.test.ts (1 test) 13ms
+packages/vue test:  Test Files  1 passed (1)
+packages/vue test:       Tests  1 passed (1)
+packages/vue test:    Start at  00:43:28
+packages/vue test:    Duration  837ms (transform 156ms, setup 0ms, collect 316ms, tests 13ms, environment 0ms, prepare 127ms)
+packages/react test: Done
+packages/vue test: Done
+packages/rich-text test$ vitest run
+packages/comments test$ vitest run
+packages/source test$ vitest run
+packages/markdown test$ vitest run
+packages/source test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/source
+packages/markdown test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/markdown
+packages/rich-text test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/rich-text
+packages/comments test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/comments
+packages/rich-text test:  ✓ tests/email.test.ts (1 test) 23ms
+packages/rich-text test:  ✓ tests/paste.test.ts (9 tests) 44ms
+packages/rich-text test:  ✓ tests/video.test.ts (1 test) 14ms
+packages/comments test:  ✓ tests/mapping.test.ts (3 tests) 7ms
+packages/source test:  ✓ tests/source-editing-plugin.test.ts (5 tests) 15ms
+packages/comments test:  ✓ tests/comments-service.test.ts (6 tests) 29ms
+packages/source test:  Test Files  1 passed (1)
+packages/source test:       Tests  5 passed (5)
+packages/source test:    Start at  00:43:30
+packages/source test:    Duration  1.73s (transform 449ms, setup 0ms, collect 667ms, tests 15ms, environment 0ms, prepare 556ms)
+packages/comments test:  Test Files  2 passed (2)
+packages/comments test:       Tests  9 passed (9)
+packages/comments test:    Start at  00:43:30
+packages/comments test:    Duration  1.72s (transform 555ms, setup 0ms, collect 1.25s, tests 36ms, environment 1ms, prepare 762ms)
+packages/markdown test:  ✓ tests/markdown-plugin.test.ts (3 tests) 11ms
+packages/rich-text test:  ✓ tests/cms-objects.test.ts (4 tests) 27ms
+packages/markdown test:  ✓ tests/conversion.test.ts (5 tests) 62ms
+packages/source test: Done
+packages/wysiwyg test$ vitest run
+packages/markdown test:  Test Files  2 passed (2)
+packages/markdown test:       Tests  8 passed (8)
+packages/markdown test:    Start at  00:43:30
+packages/markdown test:    Duration  1.88s (transform 447ms, setup 0ms, collect 1.51s, tests 73ms, environment 1ms, prepare 836ms)
+packages/comments test: Done
+packages/rich-text test:  ✓ tests/media.test.ts (4 tests) 50ms
+packages/rich-text test:  ✓ tests/features.test.ts (12 tests) 90ms
+packages/rich-text test:  ✓ tests/table.test.ts (20 tests) 160ms
+packages/rich-text test:  Test Files  7 passed (7)
+packages/rich-text test:       Tests  51 passed (51)
+packages/rich-text test:    Start at  00:43:30
+packages/rich-text test:    Duration  2.03s (transform 1.22s, setup 0ms, collect 4.63s, tests 407ms, environment 2ms, prepare 2.53s)
+packages/markdown test: Done
+packages/rich-text test: Done
+packages/wysiwyg test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/wysiwyg
+packages/wysiwyg test:  ✓ tests/public-api.test.ts (1 test) 7ms
+packages/wysiwyg test:  Test Files  1 passed (1)
+packages/wysiwyg test:       Tests  1 passed (1)
+packages/wysiwyg test:    Start at  00:43:32
+packages/wysiwyg test:    Duration  1.05s (transform 468ms, setup 0ms, collect 634ms, tests 7ms, environment 0ms, prepare 128ms)
+packages/wysiwyg test: Done
+packages/file-manager test$ vitest run
+packages/dev-tools test$ vitest run
+packages/dev-tools test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/dev-tools
+packages/file-manager test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/file-manager
+packages/file-manager test:  ✓ tests/validation.test.ts (15 tests) 18ms
+packages/file-manager test:  ✓ tests/file-manager-plugin.test.ts (6 tests) 23ms
+packages/file-manager test:  ✓ tests/upload.test.ts (4 tests) 28ms
+packages/file-manager test:  Test Files  3 passed (3)
+packages/file-manager test:       Tests  25 passed (25)
+packages/file-manager test:    Start at  00:43:34
+packages/file-manager test:    Duration  1.46s (transform 903ms, setup 0ms, collect 2.38s, tests 69ms, environment 1ms, prepare 536ms)
+packages/file-manager test: Done
+packages/dev-tools test:  ✓ tests/analysis.test.ts (2 tests) 16ms
+packages/dev-tools test:  ✓ tests/plugin.test.ts (3 tests) 15ms
+packages/dev-tools test:  Test Files  2 passed (2)
+packages/dev-tools test:       Tests  5 passed (5)
+packages/dev-tools test:    Start at  00:43:34
+packages/dev-tools test:    Duration  1.67s (transform 1.15s, setup 0ms, collect 2.04s, tests 31ms, environment 1ms, prepare 367ms)
+packages/dev-tools test: Done
+packages/adapter-sofinder test$ vitest run
+packages/presets test$ vitest run
+packages/plugin-sdk test$ vitest run --passWithNoTests
+packages/adapter-sofinder test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/adapter-sofinder
+packages/presets test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/presets
+packages/plugin-sdk test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/plugin-sdk
+packages/plugin-sdk test: No test files found, exiting with code 0
+packages/plugin-sdk test: include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+packages/plugin-sdk test: exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
+packages/plugin-sdk test: Done
+packages/adapter-sofinder test:  ✓ tests/sofinder-adapter.test.ts (6 tests) 12ms
+packages/adapter-sofinder test:  Test Files  1 passed (1)
+packages/adapter-sofinder test:       Tests  6 passed (6)
+packages/adapter-sofinder test:    Start at  00:43:36
+packages/adapter-sofinder test:    Duration  1.42s (transform 669ms, setup 0ms, collect 856ms, tests 12ms, environment 0ms, prepare 197ms)
+packages/adapter-sofinder test: Done
+packages/presets test:  ✓ tests/presets.test.ts (4 tests) 28ms
+packages/presets test:  Test Files  1 passed (1)
+packages/presets test:       Tests  4 passed (4)
+packages/presets test:    Start at  00:43:36
+packages/presets test:    Duration  2.32s (transform 1.01s, setup 0ms, collect 1.70s, tests 28ms, environment 0ms, prepare 199ms)
+packages/presets test: Done
+packages/soeditor test$ vitest run --passWithNoTests
+packages/soeditor test:  RUN  v3.2.7 /var/www/node/SoEditor/packages/soeditor
+packages/soeditor test: No test files found, exiting with code 0
+packages/soeditor test: include: **/*.{test,spec}.?(c|m)[jt]s?(x)
+packages/soeditor test: exclude:  **/node_modules/**, **/dist/**, **/cypress/**, **/.{idea,git,cache,output,temp}/**, **/{karma,rollup,webpack,vite,vitest,jest,ava,babel,nyc,cypress,tsup,build,eslint,prettier}.config.*
+packages/soeditor test: Done
+$ pnpm --filter @soeditor/comments --filter @soeditor/core --filter @soeditor/engine --filter @soeditor/html --filter @soeditor/projections --filter @soeditor/rich-text --filter @soeditor/workspace build && node --expose-gc scripts/verify-integration-performance.mjs
+Scope: 7 of 26 workspace projects
+packages/core build$ vite build && tsc -p tsconfig.build.json
+packages/html build$ vite build && tsc -p tsconfig.build.json
+packages/core build: vite v7.3.6 building client environment for production...
+packages/html build: vite v7.3.6 building client environment for production...
+packages/core build: transforming...
+packages/html build: transforming...
+packages/html build: ✓ 7 modules transformed.
+packages/html build: rendering chunks...
+packages/core build: ✓ 14 modules transformed.
+packages/html build: computing gzip size...
+packages/html build: dist/index.js  11.30 kB │ gzip: 2.72 kB │ map: 27.37 kB
+packages/html build: ✓ built in 248ms
+packages/core build: rendering chunks...
+packages/core build: computing gzip size...
+packages/core build: dist/index.js  32.25 kB │ gzip: 7.03 kB │ map: 80.75 kB
+packages/core build: ✓ built in 358ms
+packages/html build: Done
+packages/core build: Done
+packages/projections build$ vite build && tsc -p tsconfig.build.json
+packages/workspace build$ vite build && tsc -p tsconfig.build.json
+packages/workspace build: vite v7.3.6 building client environment for production...
+packages/projections build: vite v7.3.6 building client environment for production...
+packages/workspace build: transforming...
+packages/projections build: transforming...
+packages/projections build: ✓ 2 modules transformed.
+packages/projections build: rendering chunks...
+packages/projections build: computing gzip size...
+packages/workspace build: ✓ 4 modules transformed.
+packages/projections build: dist/index.js  10.12 kB │ gzip: 2.36 kB │ map: 21.75 kB
+packages/projections build: ✓ built in 192ms
+packages/workspace build: rendering chunks...
+packages/workspace build: computing gzip size...
+packages/workspace build: dist/save.js    6.46 kB │ gzip: 1.70 kB │ map: 14.81 kB
+packages/workspace build: dist/index.js  21.02 kB │ gzip: 4.63 kB │ map: 42.15 kB
+packages/workspace build: ✓ built in 300ms
+packages/projections build: Done
+packages/workspace build: Done
+packages/engine build$ vite build && tsc -p tsconfig.build.json
+packages/engine build: vite v7.3.6 building client environment for production...
+packages/engine build: transforming...
+packages/engine build: ✓ 12 modules transformed.
+packages/engine build: rendering chunks...
+packages/engine build: computing gzip size...
+packages/engine build: dist/index.js  161.56 kB │ gzip: 31.33 kB │ map: 355.11 kB
+packages/engine build: ✓ built in 779ms
+packages/engine build: Done
+packages/comments build$ vite build && tsc -p tsconfig.build.json
+packages/rich-text build$ vite build && tsc -p tsconfig.build.json
+packages/rich-text build: vite v7.3.6 building client environment for production...
+packages/comments build: vite v7.3.6 building client environment for production...
+packages/rich-text build: transforming...
+packages/comments build: transforming...
+packages/comments build: ✓ 5 modules transformed.
+packages/comments build: rendering chunks...
+packages/comments build: computing gzip size...
+packages/comments build: dist/index.js  32.23 kB │ gzip: 7.15 kB │ map: 68.91 kB
+packages/comments build: ✓ built in 305ms
+packages/rich-text build: ✓ 12 modules transformed.
+packages/rich-text build: rendering chunks...
+packages/rich-text build: computing gzip size...
+packages/rich-text build: dist/index.js  284.61 kB │ gzip: 55.35 kB │ map: 597.24 kB
+packages/rich-text build: ✓ built in 934ms
+packages/comments build: Done
+packages/rich-text build: Done
+Integration performance budgets passed: annotationMapping=60.87ms, canonicalInput=1.18ms, projectionUpdates=3.73ms, recovery=2.30ms, startupTeardown=0.86ms, tableOperations=34.85ms, memoryRetention=0.22MiB.
+$ pnpm build && node scripts/generate-api-report.mjs --check
+$ pnpm -r --if-present run build
+Scope: 25 of 26 workspace projects
+packages/core build$ vite build && tsc -p tsconfig.build.json
+packages/html build$ vite build && tsc -p tsconfig.build.json
+packages/plugin-tools build$ vite build && tsc -p tsconfig.build.json
+packages/plugin-tools build: vite v7.3.6 building client environment for production...
+packages/core build: vite v7.3.6 building client environment for production...
+packages/html build: vite v7.3.6 building client environment for production...
+packages/plugin-tools build: transforming...
+packages/core build: transforming...
+packages/html build: transforming...
+packages/plugin-tools build: ✓ 4 modules transformed.
+packages/plugin-tools build: rendering chunks...
+packages/html build: ✓ 7 modules transformed.
+packages/plugin-tools build: computing gzip size...
+packages/plugin-tools build: dist/index.js               0.21 kB │ gzip: 0.17 kB │ map:  0.48 kB
+packages/plugin-tools build: dist/cli.js                 2.10 kB │ gzip: 0.85 kB │ map:  4.02 kB
+packages/plugin-tools build: dist/scaffold-DQxtxXfQ.js  16.02 kB │ gzip: 4.94 kB │ map: 28.99 kB
+packages/plugin-tools build: ✓ built in 263ms
+packages/html build: rendering chunks...
+packages/html build: computing gzip size...
+packages/html build: dist/index.js  11.30 kB │ gzip: 2.72 kB │ map: 27.37 kB
+packages/html build: ✓ built in 267ms
+packages/core build: ✓ 14 modules transformed.
+packages/core build: rendering chunks...
+packages/core build: computing gzip size...
+packages/core build: dist/index.js  32.25 kB │ gzip: 7.03 kB │ map: 80.75 kB
+packages/core build: ✓ built in 393ms
+packages/html build: Done
+packages/core build: Done
+packages/plugin-tools build: Done
+packages/html-tools build$ vite build && tsc -p tsconfig.build.json
+packages/projections build$ vite build && tsc -p tsconfig.build.json
+packages/ui build$ vite build && tsc -p tsconfig.build.json
+packages/workspace build$ vite build && tsc -p tsconfig.build.json
+packages/projections build: vite v7.3.6 building client environment for production...
+packages/html-tools build: vite v7.3.6 building client environment for production...
+packages/workspace build: vite v7.3.6 building client environment for production...
+packages/ui build: vite v7.3.6 building client environment for production...
+packages/projections build: transforming...
+packages/html-tools build: transforming...
+packages/workspace build: transforming...
+packages/ui build: transforming...
+packages/projections build: ✓ 2 modules transformed.
+packages/projections build: rendering chunks...
+packages/projections build: computing gzip size...
+packages/projections build: dist/index.js  10.12 kB │ gzip: 2.36 kB │ map: 21.75 kB
+packages/projections build: ✓ built in 186ms
+packages/workspace build: ✓ 4 modules transformed.
+packages/workspace build: rendering chunks...
+packages/workspace build: computing gzip size...
+packages/workspace build: dist/save.js    6.46 kB │ gzip: 1.70 kB │ map: 14.81 kB
+packages/workspace build: dist/index.js  21.02 kB │ gzip: 4.63 kB │ map: 42.15 kB
+packages/workspace build: ✓ built in 276ms
+packages/ui build: ✓ 24 modules transformed.
+packages/ui build: rendering chunks...
+packages/ui build: computing gzip size...
+packages/ui build: dist/cms-styles.css                      23.91 kB │ gzip:  4.18 kB
+packages/ui build: dist/styles.css                          26.55 kB │ gzip:  4.57 kB
+packages/ui build: dist/translations.js                      0.13 kB │ gzip:  0.13 kB │ map:   0.10 kB
+packages/ui build: dist/cms.js                               0.32 kB │ gzip:  0.23 kB │ map:   0.09 kB
+packages/ui build: dist/compatibility.js                     0.69 kB │ gzip:  0.36 kB │ map:   1.37 kB
+packages/ui build: dist/index.js                             0.86 kB │ gzip:  0.40 kB │ map:   0.82 kB
+packages/ui build: dist/translation-resolution-Ro7XZZng.js   2.76 kB │ gzip:  0.92 kB │ map:   5.56 kB
+packages/ui build: dist/link-attributes-BtxVCsKd.js          8.06 kB │ gzip:  2.39 kB │ map:  15.28 kB
+packages/ui build: dist/translations-B4SF6ZvX.js            20.38 kB │ gzip:  7.04 kB │ map:  34.79 kB
+packages/ui build: dist/ui-plugin-CfbWoqd_.js               79.05 kB │ gzip: 16.89 kB │ map: 156.18 kB
+packages/ui build: dist/editor-ui-DjLXHxNh.js               95.34 kB │ gzip: 24.99 kB │ map: 172.60 kB
+packages/ui build: ✓ built in 797ms
+packages/projections build: Done
+packages/workspace build: Done
+packages/html-tools build: ✓ 8 modules transformed.
+packages/html-tools build: rendering chunks...
+packages/html-tools build: computing gzip size...
+packages/html-tools build: dist/index.js  676.30 kB │ gzip: 155.58 kB │ map: 92.84 kB
+packages/html-tools build: ✓ built in 2.14s
+packages/ui build: Done
+packages/html-tools build: Done
+packages/engine build$ vite build && tsc -p tsconfig.build.json
+packages/layout build$ vite build && tsc -p tsconfig.build.json
+packages/preview build$ vite build && tsc -p tsconfig.build.json
+packages/react build$ vite build && tsc -p tsconfig.build.json
+packages/layout build: vite v7.3.6 building client environment for production...
+packages/engine build: vite v7.3.6 building client environment for production...
+packages/preview build: vite v7.3.6 building client environment for production...
+packages/react build: vite v7.3.6 building client environment for production...
+packages/layout build: transforming...
+packages/engine build: transforming...
+packages/preview build: transforming...
+packages/react build: transforming...
+packages/react build: ✓ 2 modules transformed.
+packages/layout build: ✓ 4 modules transformed.
+packages/react build: rendering chunks...
+packages/react build: computing gzip size...
+packages/react build: dist/index.js  4.15 kB │ gzip: 1.20 kB │ map: 10.78 kB
+packages/react build: ✓ built in 186ms
+packages/layout build: rendering chunks...
+packages/preview build: ✓ 8 modules transformed.
+packages/layout build: computing gzip size...
+packages/layout build: dist/styles.css   1.98 kB │ gzip: 0.63 kB
+packages/layout build: dist/index.js    28.97 kB │ gzip: 6.48 kB │ map: 58.11 kB
+packages/layout build: ✓ built in 275ms
+packages/preview build: rendering chunks...
+packages/preview build: computing gzip size...
+packages/preview build: dist/index.js  24.74 kB │ gzip: 6.24 kB │ map: 50.62 kB
+packages/preview build: ✓ built in 294ms
+packages/engine build: ✓ 12 modules transformed.
+packages/engine build: rendering chunks...
+packages/engine build: computing gzip size...
+packages/engine build: dist/index.js  161.56 kB │ gzip: 31.33 kB │ map: 355.11 kB
+packages/engine build: ✓ built in 764ms
+packages/preview build: Done
+packages/revisions build$ vite build && tsc -p tsconfig.build.json
+packages/layout build: Done
+packages/vue build$ vite build && tsc -p tsconfig.build.json
+packages/react build: Done
+packages/revisions build: vite v7.3.6 building client environment for production...
+packages/vue build: vite v7.3.6 building client environment for production...
+packages/revisions build: transforming...
+packages/vue build: transforming...
+packages/vue build: ✓ 2 modules transformed.
+packages/vue build: rendering chunks...
+packages/vue build: computing gzip size...
+packages/vue build: dist/index.js  2.97 kB │ gzip: 0.93 kB │ map: 8.07 kB
+packages/vue build: ✓ built in 135ms
+packages/revisions build: ✓ 5 modules transformed.
+packages/revisions build: rendering chunks...
+packages/revisions build: computing gzip size...
+packages/revisions build: dist/index.js  29.36 kB │ gzip: 6.82 kB │ map: 63.12 kB
+packages/revisions build: ✓ built in 276ms
+packages/revisions build: Done
+packages/vue build: Done
+packages/engine build: Done
+packages/comments build$ vite build && tsc -p tsconfig.build.json
+packages/markdown build$ vite build && tsc -p tsconfig.build.json
+packages/rich-text build$ vite build && tsc -p tsconfig.build.json
+packages/source build$ vite build --config vite.recovery.config.ts && vite build && tsc -p tsconfig.build.json
+packages/source build: vite v7.3.6 building client environment for production...
+packages/rich-text build: vite v7.3.6 building client environment for production...
+packages/markdown build: vite v7.3.6 building client environment for production...
+packages/comments build: vite v7.3.6 building client environment for production...
+packages/source build: transforming...
+packages/rich-text build: transforming...
+packages/markdown build: transforming...
+packages/comments build: transforming...
+packages/markdown build: ✓ 6 modules transformed.
+packages/markdown build: rendering chunks...
+packages/markdown build: computing gzip size...
+packages/comments build: ✓ 5 modules transformed.
+packages/markdown build: dist/index.js  13.60 kB │ gzip: 3.72 kB │ map: 28.99 kB
+packages/markdown build: ✓ built in 241ms
+packages/comments build: rendering chunks...
+packages/comments build: computing gzip size...
+packages/comments build: dist/index.js  32.23 kB │ gzip: 7.15 kB │ map: 68.91 kB
+packages/comments build: ✓ built in 318ms
+packages/rich-text build: ✓ 12 modules transformed.
+packages/rich-text build: rendering chunks...
+packages/rich-text build: computing gzip size...
+packages/rich-text build: dist/index.js  284.61 kB │ gzip: 55.35 kB │ map: 597.24 kB
+packages/rich-text build: ✓ built in 933ms
+packages/markdown build: Done
+packages/wysiwyg build$ vite build && tsc -p tsconfig.build.json
+packages/comments build: Done
+packages/wysiwyg build: vite v7.3.6 building client environment for production...
+packages/wysiwyg build: transforming...
+packages/wysiwyg build: ✓ 4 modules transformed.
+packages/wysiwyg build: rendering chunks...
+packages/wysiwyg build: computing gzip size...
+packages/wysiwyg build: dist/index.js  119.68 kB │ gzip: 25.70 kB │ map: 243.02 kB
+packages/wysiwyg build: ✓ built in 567ms
+packages/source build: ✓ 52 modules transformed.
+packages/rich-text build: Done
+packages/wysiwyg build: Done
+packages/source build: rendering chunks...
+packages/source build: computing gzip size...
+packages/source build: node_modules/.cache/source-recovery/source-runtime.NOTICES.txt   26.30 kB │ gzip:   1.73 kB
+packages/source build: node_modules/.cache/source-recovery/runtime.js                  753.22 kB │ gzip: 246.49 kB │ map: 2,962.41 kB
+packages/source build: ✓ built in 11.27s
+packages/source build: vite v7.3.6 building client environment for production...
+packages/source build: transforming...
+packages/source build: ✓ 9 modules transformed.
+packages/source build: rendering chunks...
+packages/source build: computing gzip size...
+packages/source build: dist/source-runtime.NOTICES.txt   26.30 kB │ gzip:  1.73 kB
+packages/source build: dist/runtime.js                  753.22 kB
+packages/source build: dist/recovery.js                   1.03 kB │ gzip:  0.50 kB │ map:   2.32 kB
+packages/source build: dist/index.js                     49.31 kB │ gzip: 12.50 kB │ map: 187.47 kB
+packages/source build: ✓ built in 534ms
+packages/source build: Done
+packages/dev-tools build$ vite build && tsc -p tsconfig.build.json
+packages/file-manager build$ vite build && tsc -p tsconfig.build.json
+packages/dev-tools build: vite v7.3.6 building client environment for production...
+packages/file-manager build: vite v7.3.6 building client environment for production...
+packages/dev-tools build: transforming...
+packages/file-manager build: transforming...
+packages/dev-tools build: ✓ 5 modules transformed.
+packages/file-manager build: ✓ 6 modules transformed.
+packages/dev-tools build: rendering chunks...
+packages/dev-tools build: computing gzip size...
+packages/dev-tools build: dist/index.js  26.09 kB │ gzip: 6.13 kB │ map: 53.38 kB
+packages/dev-tools build: ✓ built in 284ms
+packages/file-manager build: rendering chunks...
+packages/file-manager build: computing gzip size...
+packages/file-manager build: dist/index.js  32.98 kB │ gzip: 7.39 kB │ map: 71.06 kB
+packages/file-manager build: ✓ built in 318ms
+packages/dev-tools build: Done
+packages/file-manager build: Done
+packages/adapter-sofinder build$ vite build && tsc -p tsconfig.build.json
+packages/plugin-sdk build$ vite build && tsc -p tsconfig.build.json
+packages/presets build$ vite build && tsc -p tsconfig.build.json
+packages/adapter-sofinder build: vite v7.3.6 building client environment for production...
+packages/plugin-sdk build: vite v7.3.6 building client environment for production...
+packages/presets build: vite v7.3.6 building client environment for production...
+packages/plugin-sdk build: transforming...
+packages/adapter-sofinder build: transforming...
+packages/presets build: transforming...
+packages/plugin-sdk build: ✓ 1 modules transformed.
+packages/plugin-sdk build: rendering chunks...
+packages/plugin-sdk build: computing gzip size...
+packages/plugin-sdk build: dist/index.js  2.20 kB │ gzip: 0.58 kB │ map: 0.10 kB
+packages/plugin-sdk build: ✓ built in 100ms
+packages/presets build: ✓ 8 modules transformed.
+packages/adapter-sofinder build: ✓ 3 modules transformed.
+packages/presets build: rendering chunks...
+packages/adapter-sofinder build: rendering chunks...
+packages/adapter-sofinder build: computing gzip size...
+packages/adapter-sofinder build: dist/index.js  4.41 kB │ gzip: 1.22 kB │ map: 10.98 kB
+packages/adapter-sofinder build: ✓ built in 187ms
+packages/presets build: computing gzip size...
+packages/presets build: dist/index.js                   0.43 kB │ gzip: 0.20 kB │ map: 0.10 kB
+packages/presets build: dist/minimal.js                 0.46 kB │ gzip: 0.25 kB │ map: 0.65 kB
+packages/presets build: dist/markdown.js                0.60 kB │ gzip: 0.27 kB │ map: 0.84 kB
+packages/presets build: dist/create-preset-mkgk4ioM.js  0.86 kB │ gzip: 0.43 kB │ map: 2.07 kB
+packages/presets build: dist/developer.js               0.94 kB │ gzip: 0.39 kB │ map: 1.37 kB
+packages/presets build: dist/classic.js                 1.61 kB │ gzip: 0.57 kB │ map: 2.53 kB
+packages/presets build: dist/cms-runtime.js             1.82 kB │ gzip: 0.65 kB │ map: 2.97 kB
+packages/presets build: dist/cms.js                     2.01 kB │ gzip: 0.69 kB │ map: 3.24 kB
+packages/presets build: ✓ built in 200ms
+packages/adapter-sofinder build: Done
+packages/plugin-sdk build: Done
+packages/presets build: Done
+packages/soeditor build$ vite build && vite build --config vite.cms.config.ts && vite build --config vite.global.config.ts && tsc -p tsconfig.build.json
+packages/soeditor build: vite v7.3.6 building client environment for production...
+packages/soeditor build: transforming...
+packages/soeditor build: ✓ 17 modules transformed.
+packages/soeditor build: rendering chunks...
+packages/soeditor build: computing gzip size...
+packages/soeditor build: dist/content.css                           0.81 kB │ gzip:  0.23 kB
+packages/soeditor build: dist/cms-styles.css                       55.32 kB │ gzip:  8.38 kB
+packages/soeditor build: dist/styles.css                           57.95 kB │ gzip:  8.80 kB
+packages/soeditor build: dist/index.js                              1.00 kB │ gzip:  0.31 kB │ map:   0.11 kB
+packages/soeditor build: dist/classic-link-context-hg1-4t7t.js      4.20 kB │ gzip:  1.33 kB │ map:   8.31 kB
+packages/soeditor build: dist/classic-block-paragraph-D98qE1wF.js   6.55 kB │ gzip:  1.92 kB │ map:  12.56 kB
+packages/soeditor build: dist/table-editor-attributes-Dwd7B4R3.js  14.28 kB │ gzip:  3.97 kB │ map:  27.84 kB
+packages/soeditor build: dist/classic-image-context-DNNv4NtQ.js    23.94 kB │ gzip:  5.55 kB │ map:  46.65 kB
+packages/soeditor build: dist/classic-table-context-DzU5YXqG.js    88.18 kB │ gzip: 17.34 kB │ map: 178.84 kB
+packages/soeditor build: dist/cms-optional.js                      93.19 kB │ gzip: 20.98 kB │ map: 160.85 kB
+packages/soeditor build: ✓ built in 904ms
+packages/soeditor build: vite v7.3.6 building client environment for production...
+packages/soeditor build: transforming...
+packages/soeditor build: ✓ 78 modules transformed.
+packages/soeditor build: rendering chunks...
+packages/soeditor build: computing gzip size...
+packages/soeditor build: dist/cms.js                                  0.19 kB │ gzip:   0.16 kB │ map:     0.09 kB
+packages/soeditor build: dist/classic-link-context-Dzf3ElxT.js        2.24 kB │ gzip:   1.03 kB │ map:     8.73 kB
+packages/soeditor build: dist/save-DxcxWvBC.js                        3.17 kB │ gzip:   1.24 kB │ map:    10.76 kB
+packages/soeditor build: dist/classic-block-paragraph-B9kgYlKw.js     3.82 kB │ gzip:   1.52 kB │ map:    13.27 kB
+packages/soeditor build: dist/link-attributes-BtxVCsKd-vXf1PTq4.js    4.78 kB │ gzip:   1.90 kB │ map:    13.43 kB
+packages/soeditor build: dist/table-editor-attributes-C0S0tNrQ.js     8.63 kB │ gzip:   3.17 kB │ map:    27.89 kB
+packages/soeditor build: dist/classic-image-context-B02-25hL.js      11.49 kB │ gzip:   4.12 kB │ map:    47.24 kB
+packages/soeditor build: dist/translations-Cug6dJhM.js               17.52 kB │ gzip:   6.52 kB │ map:    29.56 kB
+packages/soeditor build: dist/classic-table-context-B3MBoEfN.js      40.37 kB │ gzip:  11.93 kB │ map:   177.09 kB
+packages/soeditor build: dist/classic-editor-B8XemYqW.js            147.61 kB │ gzip:  44.29 kB │ map:   478.32 kB
+packages/soeditor build: dist/cms-lBL1BIG1.js                       290.03 kB │ gzip:  92.61 kB │ map: 1,333.23 kB
+packages/soeditor build: dist/index-pMI9V0UA.js                     529.86 kB │ gzip: 191.19 kB │ map: 2,235.87 kB
+packages/soeditor build: ✓ built in 18.33s
+packages/soeditor build: vite v7.3.6 building client environment for production...
+packages/soeditor build: transforming...
+packages/soeditor build: ✓ 77 modules transformed.
+packages/soeditor build: rendering chunks...
+packages/soeditor build: computing gzip size...
+packages/soeditor build: dist/soeditor.css         24.94 kB │ gzip:   4.61 kB
+packages/soeditor build: dist/soeditor.global.js  480.73 kB │ gzip: 148.46 kB │ map: 2,022.84 kB
+packages/soeditor build: ✓ built in 14.74s
+packages/soeditor build: Done
+apps/playground build$ vite build
+apps/playground build: vite v7.3.6 building client environment for production...
+apps/playground build: transforming...
+apps/playground build: ✓ 291 modules transformed.
+apps/playground build: rendering chunks...
+apps/playground build: computing gzip size...
+apps/playground build: dist/framework-adapters.html                       1.08 kB │ gzip:   0.44 kB
+apps/playground build: dist/wysiwyg.html                                  1.39 kB │ gzip:   0.55 kB
+apps/playground build: dist/workspace.html                                1.63 kB │ gzip:   0.55 kB
+apps/playground build: dist/index.html                                    8.06 kB │ gzip:   1.93 kB
+apps/playground build: dist/classic.html                                 14.32 kB │ gzip:   3.73 kB
+apps/playground build: dist/assets/runtime-D3iFwSeV.js                  753.22 kB
+apps/playground build: dist/assets/main-Cdkjgu-E.css                      1.59 kB │ gzip:   0.58 kB
+apps/playground build: dist/assets/styles-BwLl4W41.css                   21.27 kB │ gzip:   4.13 kB
+apps/playground build: dist/assets/wysiwyg-Bbjuk9LT.css                  44.74 kB │ gzip:   7.47 kB
+apps/playground build: dist/assets/classic-CLD-VjnY.css                  54.77 kB │ gzip:   9.79 kB
+apps/playground build: dist/assets/errors-BoBlFa4l.js                     1.79 kB │ gzip:   0.64 kB │ map:     6.53 kB
+apps/playground build: dist/assets/workspace-CSuDT9aK.js                  2.17 kB │ gzip:   1.04 kB │ map:     6.85 kB
+apps/playground build: dist/assets/classic-link-context-DwSlpThT.js       2.26 kB │ gzip:   1.04 kB │ map:     8.42 kB
+apps/playground build: dist/assets/wysiwyg-ewsNb13A.js                    2.43 kB │ gzip:   1.20 kB │ map:     5.66 kB
+apps/playground build: dist/assets/save-workflow-DzTcHyOP.js              3.30 kB │ gzip:   1.30 kB │ map:    14.87 kB
+apps/playground build: dist/assets/classic-block-paragraph-BzQLzVEV.js    3.89 kB │ gzip:   1.55 kB │ map:    12.85 kB
+apps/playground build: dist/assets/link-attributes-r3DFj-kk.js            4.78 kB │ gzip:   1.91 kB │ map:    15.81 kB
+apps/playground build: dist/assets/index-Dt4gtIk0.js                      6.10 kB │ gzip:   2.50 kB │ map:    18.09 kB
+apps/playground build: dist/assets/index-C-aW3yBN.js                      7.50 kB │ gzip:   2.59 kB │ map:    22.71 kB
+apps/playground build: dist/assets/preview-plugin-Dw_lXsw0.js             8.41 kB │ gzip:   3.10 kB │ map:    33.57 kB
+apps/playground build: dist/assets/table-editor-attributes-BwkVkTQA.js    8.70 kB │ gzip:   3.23 kB │ map:    28.02 kB
+apps/playground build: dist/assets/classic-BL2DAzlI.js                   10.51 kB │ gzip:   5.26 kB │ map:    33.74 kB
+apps/playground build: dist/assets/workspace-BQzV9Vd8.js                 10.54 kB │ gzip:   3.44 kB │ map:    42.12 kB
+apps/playground build: dist/assets/classic-image-context-Bf4fUrFE.js     11.68 kB │ gzip:   4.19 kB │ map:    47.28 kB
+apps/playground build: dist/assets/visual-editing-service-lERtAxa5.js    11.76 kB │ gzip:   3.91 kB │ map:    60.53 kB
+apps/playground build: dist/assets/editor-BDSJU92z.js                    13.41 kB │ gzip:   4.42 kB │ map:    71.86 kB
+apps/playground build: dist/assets/index-DXtHdHE1.js                     15.98 kB │ gzip:   5.19 kB │ map:    51.42 kB
+apps/playground build: dist/assets/index-DKPSZG6G.js                     17.24 kB │ gzip:   5.42 kB │ map:    55.48 kB
+apps/playground build: dist/assets/translations-ivdjbkgq.js              17.52 kB │ gzip:   6.52 kB │ map:    32.57 kB
+apps/playground build: dist/assets/visual-decorations-B_KQ6FaF.js        23.71 kB │ gzip:   6.71 kB │ map:   107.17 kB
+apps/playground build: dist/assets/styles-Cak-SXLX.js                    36.32 kB │ gzip:  11.13 kB │ map:   158.80 kB
+apps/playground build: dist/assets/classic-table-context-B5mvH7pj.js     42.11 kB │ gzip:  12.78 kB │ map:   177.99 kB
+apps/playground build: dist/assets/ui-plugin-Cf-sxMJ2.js                 44.48 kB │ gzip:  13.92 kB │ map:   160.06 kB
+apps/playground build: dist/assets/standalone-Cayz_KD-.js                81.51 kB │ gzip:  27.17 kB │ map:   181.64 kB
+apps/playground build: dist/assets/cms-optional-BPagw_x-.js             112.89 kB │ gzip:  33.27 kB │ map:   409.98 kB
+apps/playground build: dist/assets/main-CaGrsi3f.js                     144.86 kB │ gzip:  45.75 kB │ map:   730.98 kB
+apps/playground build: dist/assets/html-DwgzGnwN.js                     160.16 kB │ gzip:  50.63 kB │ map:   334.25 kB
+apps/playground build: dist/assets/api-DCHocHHd.js                      170.98 kB │ gzip:  50.85 kB │ map:   529.04 kB
+apps/playground build: dist/assets/cms-CuKaXG5P.js                      222.15 kB │ gzip:  67.11 kB │ map:   875.18 kB
+apps/playground build: dist/assets/frameworks-GDMwojvW.js               263.22 kB │ gzip:  88.15 kB │ map: 1,507.47 kB
+apps/playground build: dist/assets/index-DUh1sYnU.js                    435.27 kB │ gzip: 134.36 kB │ map:    92.62 kB
+apps/playground build: dist/assets/source-editing-plugin-DShBl_Nk.js    576.99 kB │ gzip: 199.45 kB │ map: 2,169.04 kB
+apps/playground build: ✓ built in 11.39s
+apps/playground build: (!) Some chunks are larger than 500 kB after minification. Consider:
+apps/playground build: - Using dynamic import() to code-split the application
+apps/playground build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+apps/playground build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+apps/playground build: Done
+Public API report matches all 24 package entry points.
+$ node scripts/verify-documentation.mjs
+Documentation audit passed for 85 current files and 263 Chromium scenarios.
+$ pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk --filter @soeditor/plugin-tools --filter @soeditor/react --filter @soeditor/vue build && node scripts/test-nodenext-consumer.mjs && node scripts/test-plugin-tools-consumer.mjs
+Scope: 24 of 26 workspace projects
+packages/core build$ vite build && tsc -p tsconfig.build.json
+packages/html build$ vite build && tsc -p tsconfig.build.json
+packages/plugin-tools build$ vite build && tsc -p tsconfig.build.json
+packages/html build: vite v7.3.6 building client environment for production...
+packages/plugin-tools build: vite v7.3.6 building client environment for production...
+packages/core build: vite v7.3.6 building client environment for production...
+packages/plugin-tools build: transforming...
+packages/html build: transforming...
+packages/core build: transforming...
+packages/plugin-tools build: ✓ 4 modules transformed.
+packages/html build: ✓ 7 modules transformed.
+packages/plugin-tools build: rendering chunks...
+packages/plugin-tools build: computing gzip size...
+packages/html build: rendering chunks...
+packages/plugin-tools build: dist/index.js               0.21 kB │ gzip: 0.17 kB │ map:  0.48 kB
+packages/plugin-tools build: dist/cli.js                 2.10 kB │ gzip: 0.85 kB │ map:  4.02 kB
+packages/plugin-tools build: dist/scaffold-DQxtxXfQ.js  16.02 kB │ gzip: 4.94 kB │ map: 28.99 kB
+packages/plugin-tools build: ✓ built in 234ms
+packages/html build: computing gzip size...
+packages/html build: dist/index.js  11.30 kB │ gzip: 2.72 kB │ map: 27.37 kB
+packages/html build: ✓ built in 255ms
+packages/core build: ✓ 14 modules transformed.
+packages/core build: rendering chunks...
+packages/core build: computing gzip size...
+packages/core build: dist/index.js  32.25 kB │ gzip: 7.03 kB │ map: 80.75 kB
+packages/core build: ✓ built in 348ms
+packages/html build: Done
+packages/core build: Done
+packages/plugin-tools build: Done
+packages/projections build$ vite build && tsc -p tsconfig.build.json
+packages/ui build$ vite build && tsc -p tsconfig.build.json
+packages/html-tools build$ vite build && tsc -p tsconfig.build.json
+packages/workspace build$ vite build && tsc -p tsconfig.build.json
+packages/projections build: vite v7.3.6 building client environment for production...
+packages/ui build: vite v7.3.6 building client environment for production...
+packages/html-tools build: vite v7.3.6 building client environment for production...
+packages/workspace build: vite v7.3.6 building client environment for production...
+packages/projections build: transforming...
+packages/html-tools build: transforming...
+packages/ui build: transforming...
+packages/workspace build: transforming...
+packages/projections build: ✓ 2 modules transformed.
+packages/projections build: rendering chunks...
+packages/projections build: computing gzip size...
+packages/projections build: dist/index.js  10.12 kB │ gzip: 2.36 kB │ map: 21.75 kB
+packages/projections build: ✓ built in 181ms
+packages/workspace build: ✓ 4 modules transformed.
+packages/workspace build: rendering chunks...
+packages/workspace build: computing gzip size...
+packages/workspace build: dist/save.js    6.46 kB │ gzip: 1.70 kB │ map: 14.81 kB
+packages/workspace build: dist/index.js  21.02 kB │ gzip: 4.63 kB │ map: 42.15 kB
+packages/workspace build: ✓ built in 257ms
+packages/ui build: ✓ 24 modules transformed.
+packages/ui build: rendering chunks...
+packages/ui build: computing gzip size...
+packages/ui build: dist/cms-styles.css                      23.91 kB │ gzip:  4.18 kB
+packages/ui build: dist/styles.css                          26.55 kB │ gzip:  4.57 kB
+packages/ui build: dist/translations.js                      0.13 kB │ gzip:  0.13 kB │ map:   0.10 kB
+packages/ui build: dist/cms.js                               0.32 kB │ gzip:  0.23 kB │ map:   0.09 kB
+packages/ui build: dist/compatibility.js                     0.69 kB │ gzip:  0.36 kB │ map:   1.37 kB
+packages/ui build: dist/index.js                             0.86 kB │ gzip:  0.40 kB │ map:   0.82 kB
+packages/ui build: dist/translation-resolution-Ro7XZZng.js   2.76 kB │ gzip:  0.92 kB │ map:   5.56 kB
+packages/ui build: dist/link-attributes-BtxVCsKd.js          8.06 kB │ gzip:  2.39 kB │ map:  15.28 kB
+packages/ui build: dist/translations-B4SF6ZvX.js            20.38 kB │ gzip:  7.04 kB │ map:  34.79 kB
+packages/ui build: dist/ui-plugin-CfbWoqd_.js               79.05 kB │ gzip: 16.89 kB │ map: 156.18 kB
+packages/ui build: dist/editor-ui-DjLXHxNh.js               95.34 kB │ gzip: 24.99 kB │ map: 172.60 kB
+packages/ui build: ✓ built in 798ms
+packages/projections build: Done
+packages/workspace build: Done
+packages/html-tools build: ✓ 8 modules transformed.
+packages/html-tools build: rendering chunks...
+packages/html-tools build: computing gzip size...
+packages/html-tools build: dist/index.js  676.30 kB │ gzip: 155.58 kB │ map: 92.84 kB
+packages/html-tools build: ✓ built in 2.29s
+packages/ui build: Done
+packages/html-tools build: Done
+packages/engine build$ vite build && tsc -p tsconfig.build.json
+packages/layout build$ vite build && tsc -p tsconfig.build.json
+packages/preview build$ vite build && tsc -p tsconfig.build.json
+packages/revisions build$ vite build && tsc -p tsconfig.build.json
+packages/revisions build: vite v7.3.6 building client environment for production...
+packages/layout build: vite v7.3.6 building client environment for production...
+packages/engine build: vite v7.3.6 building client environment for production...
+packages/preview build: vite v7.3.6 building client environment for production...
+packages/revisions build: transforming...
+packages/layout build: transforming...
+packages/engine build: transforming...
+packages/preview build: transforming...
+packages/layout build: ✓ 4 modules transformed.
+packages/revisions build: ✓ 5 modules transformed.
+packages/preview build: ✓ 8 modules transformed.
+packages/layout build: rendering chunks...
+packages/revisions build: rendering chunks...
+packages/preview build: rendering chunks...
+packages/revisions build: computing gzip size...
+packages/layout build: computing gzip size...
+packages/preview build: computing gzip size...
+packages/revisions build: dist/index.js  29.36 kB │ gzip: 6.82 kB │ map: 63.12 kB
+packages/revisions build: ✓ built in 285ms
+packages/layout build: dist/styles.css   1.98 kB │ gzip: 0.63 kB
+packages/layout build: dist/index.js    28.97 kB │ gzip: 6.48 kB │ map: 58.11 kB
+packages/layout build: ✓ built in 284ms
+packages/preview build: dist/index.js  24.74 kB │ gzip: 6.24 kB │ map: 50.62 kB
+packages/preview build: ✓ built in 263ms
+packages/engine build: ✓ 12 modules transformed.
+packages/engine build: rendering chunks...
+packages/engine build: computing gzip size...
+packages/engine build: dist/index.js  161.56 kB │ gzip: 31.33 kB │ map: 355.11 kB
+packages/engine build: ✓ built in 716ms
+packages/preview build: Done
+packages/react build$ vite build && tsc -p tsconfig.build.json
+packages/layout build: Done
+packages/vue build$ vite build && tsc -p tsconfig.build.json
+packages/revisions build: Done
+packages/react build: vite v7.3.6 building client environment for production...
+packages/vue build: vite v7.3.6 building client environment for production...
+packages/react build: transforming...
+packages/vue build: transforming...
+packages/react build: ✓ 2 modules transformed.
+packages/vue build: ✓ 2 modules transformed.
+packages/react build: rendering chunks...
+packages/react build: computing gzip size...
+packages/react build: dist/index.js  4.15 kB │ gzip: 1.20 kB │ map: 10.78 kB
+packages/vue build: rendering chunks...
+packages/react build: ✓ built in 143ms
+packages/vue build: computing gzip size...
+packages/vue build: dist/index.js  2.97 kB │ gzip: 0.93 kB │ map: 8.07 kB
+packages/vue build: ✓ built in 146ms
+packages/react build: Done
+packages/vue build: Done
+packages/engine build: Done
+packages/rich-text build$ vite build && tsc -p tsconfig.build.json
+packages/comments build$ vite build && tsc -p tsconfig.build.json
+packages/source build$ vite build --config vite.recovery.config.ts && vite build && tsc -p tsconfig.build.json
+packages/markdown build$ vite build && tsc -p tsconfig.build.json
+packages/source build: vite v7.3.6 building client environment for production...
+packages/comments build: vite v7.3.6 building client environment for production...
+packages/rich-text build: vite v7.3.6 building client environment for production...
+packages/markdown build: vite v7.3.6 building client environment for production...
+packages/source build: transforming...
+packages/comments build: transforming...
+packages/rich-text build: transforming...
+packages/markdown build: transforming...
+packages/markdown build: ✓ 6 modules transformed.
+packages/comments build: ✓ 5 modules transformed.
+packages/markdown build: rendering chunks...
+packages/markdown build: computing gzip size...
+packages/markdown build: dist/index.js  13.60 kB │ gzip: 3.72 kB │ map: 28.99 kB
+packages/markdown build: ✓ built in 237ms
+packages/comments build: rendering chunks...
+packages/comments build: computing gzip size...
+packages/comments build: dist/index.js  32.23 kB │ gzip: 7.15 kB │ map: 68.91 kB
+packages/comments build: ✓ built in 294ms
+packages/rich-text build: ✓ 12 modules transformed.
+packages/rich-text build: rendering chunks...
+packages/rich-text build: computing gzip size...
+packages/rich-text build: dist/index.js  284.61 kB │ gzip: 55.35 kB │ map: 597.24 kB
+packages/rich-text build: ✓ built in 960ms
+packages/markdown build: Done
+packages/wysiwyg build$ vite build && tsc -p tsconfig.build.json
+packages/comments build: Done
+packages/wysiwyg build: vite v7.3.6 building client environment for production...
+packages/wysiwyg build: transforming...
+packages/wysiwyg build: ✓ 4 modules transformed.
+packages/wysiwyg build: rendering chunks...
+packages/wysiwyg build: computing gzip size...
+packages/wysiwyg build: dist/index.js  119.68 kB │ gzip: 25.70 kB │ map: 243.02 kB
+packages/wysiwyg build: ✓ built in 528ms
+packages/source build: ✓ 52 modules transformed.
+packages/rich-text build: Done
+packages/wysiwyg build: Done
+packages/source build: rendering chunks...
+packages/source build: computing gzip size...
+packages/source build: node_modules/.cache/source-recovery/source-runtime.NOTICES.txt   26.30 kB │ gzip:   1.73 kB
+packages/source build: node_modules/.cache/source-recovery/runtime.js                  753.22 kB │ gzip: 246.49 kB │ map: 2,962.41 kB
+packages/source build: ✓ built in 11.04s
+packages/source build: vite v7.3.6 building client environment for production...
+packages/source build: transforming...
+packages/source build: ✓ 9 modules transformed.
+packages/source build: rendering chunks...
+packages/source build: computing gzip size...
+packages/source build: dist/source-runtime.NOTICES.txt   26.30 kB │ gzip:  1.73 kB
+packages/source build: dist/runtime.js                  753.22 kB
+packages/source build: dist/recovery.js                   1.03 kB │ gzip:  0.50 kB │ map:   2.32 kB
+packages/source build: dist/index.js                     49.31 kB │ gzip: 12.50 kB │ map: 187.47 kB
+packages/source build: ✓ built in 519ms
+packages/source build: Done
+packages/file-manager build$ vite build && tsc -p tsconfig.build.json
+packages/dev-tools build$ vite build && tsc -p tsconfig.build.json
+packages/file-manager build: vite v7.3.6 building client environment for production...
+packages/dev-tools build: vite v7.3.6 building client environment for production...
+packages/file-manager build: transforming...
+packages/dev-tools build: transforming...
+packages/file-manager build: ✓ 6 modules transformed.
+packages/dev-tools build: ✓ 5 modules transformed.
+packages/file-manager build: rendering chunks...
+packages/file-manager build: computing gzip size...
+packages/file-manager build: dist/index.js  32.98 kB │ gzip: 7.39 kB │ map: 71.06 kB
+packages/file-manager build: ✓ built in 308ms
+packages/dev-tools build: rendering chunks...
+packages/dev-tools build: computing gzip size...
+packages/dev-tools build: dist/index.js  26.09 kB │ gzip: 6.13 kB │ map: 53.38 kB
+packages/dev-tools build: ✓ built in 327ms
+packages/dev-tools build: Done
+packages/file-manager build: Done
+packages/adapter-sofinder build$ vite build && tsc -p tsconfig.build.json
+packages/presets build$ vite build && tsc -p tsconfig.build.json
+packages/plugin-sdk build$ vite build && tsc -p tsconfig.build.json
+packages/adapter-sofinder build: vite v7.3.6 building client environment for production...
+packages/presets build: vite v7.3.6 building client environment for production...
+packages/plugin-sdk build: vite v7.3.6 building client environment for production...
+packages/adapter-sofinder build: transforming...
+packages/plugin-sdk build: transforming...
+packages/presets build: transforming...
+packages/plugin-sdk build: ✓ 1 modules transformed.
+packages/adapter-sofinder build: ✓ 3 modules transformed.
+packages/plugin-sdk build: rendering chunks...
+packages/plugin-sdk build: computing gzip size...
+packages/plugin-sdk build: dist/index.js  2.20 kB │ gzip: 0.58 kB │ map: 0.10 kB
+packages/plugin-sdk build: ✓ built in 105ms
+packages/presets build: ✓ 8 modules transformed.
+packages/adapter-sofinder build: rendering chunks...
+packages/adapter-sofinder build: computing gzip size...
+packages/adapter-sofinder build: dist/index.js  4.41 kB │ gzip: 1.22 kB │ map: 10.98 kB
+packages/adapter-sofinder build: ✓ built in 162ms
+packages/presets build: rendering chunks...
+packages/presets build: computing gzip size...
+packages/presets build: dist/index.js                   0.43 kB │ gzip: 0.20 kB │ map: 0.10 kB
+packages/presets build: dist/minimal.js                 0.46 kB │ gzip: 0.25 kB │ map: 0.65 kB
+packages/presets build: dist/markdown.js                0.60 kB │ gzip: 0.27 kB │ map: 0.84 kB
+packages/presets build: dist/create-preset-mkgk4ioM.js  0.86 kB │ gzip: 0.43 kB │ map: 2.07 kB
+packages/presets build: dist/developer.js               0.94 kB │ gzip: 0.39 kB │ map: 1.37 kB
+packages/presets build: dist/classic.js                 1.61 kB │ gzip: 0.57 kB │ map: 2.53 kB
+packages/presets build: dist/cms-runtime.js             1.82 kB │ gzip: 0.65 kB │ map: 2.97 kB
+packages/presets build: dist/cms.js                     2.01 kB │ gzip: 0.69 kB │ map: 3.24 kB
+packages/presets build: ✓ built in 213ms
+packages/adapter-sofinder build: Done
+packages/plugin-sdk build: Done
+packages/presets build: Done
+packages/soeditor build$ vite build && vite build --config vite.cms.config.ts && vite build --config vite.global.config.ts && tsc -p tsconfig.build.json
+packages/soeditor build: vite v7.3.6 building client environment for production...
+packages/soeditor build: transforming...
+packages/soeditor build: ✓ 17 modules transformed.
+packages/soeditor build: rendering chunks...
+packages/soeditor build: computing gzip size...
+packages/soeditor build: dist/content.css                           0.81 kB │ gzip:  0.23 kB
+packages/soeditor build: dist/cms-styles.css                       55.32 kB │ gzip:  8.38 kB
+packages/soeditor build: dist/styles.css                           57.95 kB │ gzip:  8.80 kB
+packages/soeditor build: dist/index.js                              1.00 kB │ gzip:  0.31 kB │ map:   0.11 kB
+packages/soeditor build: dist/classic-link-context-hg1-4t7t.js      4.20 kB │ gzip:  1.33 kB │ map:   8.31 kB
+packages/soeditor build: dist/classic-block-paragraph-D98qE1wF.js   6.55 kB │ gzip:  1.92 kB │ map:  12.56 kB
+packages/soeditor build: dist/table-editor-attributes-Dwd7B4R3.js  14.28 kB │ gzip:  3.97 kB │ map:  27.84 kB
+packages/soeditor build: dist/classic-image-context-DNNv4NtQ.js    23.94 kB │ gzip:  5.55 kB │ map:  46.65 kB
+packages/soeditor build: dist/classic-table-context-DzU5YXqG.js    88.18 kB │ gzip: 17.34 kB │ map: 178.84 kB
+packages/soeditor build: dist/cms-optional.js                      93.19 kB │ gzip: 20.98 kB │ map: 160.85 kB
+packages/soeditor build: ✓ built in 867ms
+packages/soeditor build: vite v7.3.6 building client environment for production...
+packages/soeditor build: transforming...
+packages/soeditor build: ✓ 78 modules transformed.
+packages/soeditor build: rendering chunks...
+packages/soeditor build: computing gzip size...
+packages/soeditor build: dist/cms.js                                  0.19 kB │ gzip:   0.16 kB │ map:     0.09 kB
+packages/soeditor build: dist/classic-link-context-Dzf3ElxT.js        2.24 kB │ gzip:   1.03 kB │ map:     8.73 kB
+packages/soeditor build: dist/save-DxcxWvBC.js                        3.17 kB │ gzip:   1.24 kB │ map:    10.76 kB
+packages/soeditor build: dist/classic-block-paragraph-B9kgYlKw.js     3.82 kB │ gzip:   1.52 kB │ map:    13.27 kB
+packages/soeditor build: dist/link-attributes-BtxVCsKd-vXf1PTq4.js    4.78 kB │ gzip:   1.90 kB │ map:    13.43 kB
+packages/soeditor build: dist/table-editor-attributes-C0S0tNrQ.js     8.63 kB │ gzip:   3.17 kB │ map:    27.89 kB
+packages/soeditor build: dist/classic-image-context-B02-25hL.js      11.49 kB │ gzip:   4.12 kB │ map:    47.24 kB
+packages/soeditor build: dist/translations-Cug6dJhM.js               17.52 kB │ gzip:   6.52 kB │ map:    29.56 kB
+packages/soeditor build: dist/classic-table-context-B3MBoEfN.js      40.37 kB │ gzip:  11.93 kB │ map:   177.09 kB
+packages/soeditor build: dist/classic-editor-B8XemYqW.js            147.61 kB │ gzip:  44.29 kB │ map:   478.32 kB
+packages/soeditor build: dist/cms-lBL1BIG1.js                       290.03 kB │ gzip:  92.61 kB │ map: 1,333.23 kB
+packages/soeditor build: dist/index-pMI9V0UA.js                     529.86 kB │ gzip: 191.19 kB │ map: 2,235.87 kB
+packages/soeditor build: ✓ built in 18.00s
+packages/soeditor build: vite v7.3.6 building client environment for production...
+packages/soeditor build: transforming...
+packages/soeditor build: ✓ 77 modules transformed.
+packages/soeditor build: rendering chunks...
+packages/soeditor build: computing gzip size...
+packages/soeditor build: dist/soeditor.css         24.94 kB │ gzip:   4.61 kB
+packages/soeditor build: dist/soeditor.global.js  480.73 kB │ gzip: 148.46 kB │ map: 2,022.84 kB
+packages/soeditor build: ✓ built in 15.23s
+packages/soeditor build: Done
+package: @soeditor/editor@1.1.0
+Tarball Contents
+dist/classic-block-paragraph-B9kgYlKw.js
+dist/classic-block-paragraph-B9kgYlKw.js.map
+dist/classic-block-paragraph-D98qE1wF.js
+dist/classic-block-paragraph-D98qE1wF.js.map
+dist/classic-block-paragraph.d.ts
+dist/classic-block-paragraph.d.ts.map
+dist/classic-dialog-windows.d.ts
+dist/classic-dialog-windows.d.ts.map
+dist/classic-editor-B8XemYqW.js
+dist/classic-editor-B8XemYqW.js.map
+dist/classic-editor-errors.d.ts
+dist/classic-editor-errors.d.ts.map
+dist/classic-editor.d.ts
+dist/classic-editor.d.ts.map
+dist/classic-host.d.ts
+dist/classic-host.d.ts.map
+dist/classic-image-context-B02-25hL.js
+dist/classic-image-context-B02-25hL.js.map
+dist/classic-image-context-DNNv4NtQ.js
+dist/classic-image-context-DNNv4NtQ.js.map
+dist/classic-image-context.d.ts
+dist/classic-image-context.d.ts.map
+dist/classic-link-context-Dzf3ElxT.js
+dist/classic-link-context-Dzf3ElxT.js.map
+dist/classic-link-context-hg1-4t7t.js
+dist/classic-link-context-hg1-4t7t.js.map
+dist/classic-link-context.d.ts
+dist/classic-link-context.d.ts.map
+dist/classic-source-formatting.d.ts
+dist/classic-source-formatting.d.ts.map
+dist/classic-table-context-B3MBoEfN.js
+dist/classic-table-context-B3MBoEfN.js.map
+dist/classic-table-context-DzU5YXqG.js
+dist/classic-table-context-DzU5YXqG.js.map
+dist/classic-table-context.d.ts
+dist/classic-table-context.d.ts.map
+dist/cms-lBL1BIG1.js
+dist/cms-lBL1BIG1.js.map
+dist/cms-optional.d.ts
+dist/cms-optional.d.ts.map
+dist/cms-optional.js
+dist/cms-optional.js.map
+dist/cms-styles.css
+dist/cms.d.ts
+dist/cms.d.ts.map
+dist/cms.js
+dist/cms.js.map
+dist/content.css
+dist/index-pMI9V0UA.js
+dist/index-pMI9V0UA.js.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/link-attributes-BtxVCsKd-vXf1PTq4.js
+dist/link-attributes-BtxVCsKd-vXf1PTq4.js.map
+dist/save-DxcxWvBC.js
+dist/save-DxcxWvBC.js.map
+dist/soeditor.css
+dist/soeditor.global.js
+dist/soeditor.global.js.map
+dist/styles.css
+dist/table-editor-attributes-C0S0tNrQ.js
+dist/table-editor-attributes-C0S0tNrQ.js.map
+dist/table-editor-attributes-Dwd7B4R3.js
+dist/table-editor-attributes-Dwd7B4R3.js.map
+dist/table-editor-attributes.d.ts
+dist/table-editor-attributes.d.ts.map
+dist/translations-Cug6dJhM.js
+dist/translations-Cug6dJhM.js.map
+dist/ui-translation-loader.d.ts
+dist/ui-translation-loader.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-editor-1.1.0.tgz
+package: @soeditor/plugin-sdk@1.1.0
+Tarball Contents
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-plugin-sdk-1.1.0.tgz
+package: @soeditor/presets@1.1.0
+Tarball Contents
+dist/classic.d.ts
+dist/classic.d.ts.map
+dist/classic.js
+dist/classic.js.map
+dist/cms-runtime.d.ts
+dist/cms-runtime.d.ts.map
+dist/cms-runtime.js
+dist/cms-runtime.js.map
+dist/cms.d.ts
+dist/cms.d.ts.map
+dist/cms.js
+dist/cms.js.map
+dist/create-preset-mkgk4ioM.js
+dist/create-preset-mkgk4ioM.js.map
+dist/create-preset.d.ts
+dist/create-preset.d.ts.map
+dist/developer.d.ts
+dist/developer.d.ts.map
+dist/developer.js
+dist/developer.js.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/markdown.d.ts
+dist/markdown.d.ts.map
+dist/markdown.js
+dist/markdown.js.map
+dist/minimal.d.ts
+dist/minimal.d.ts.map
+dist/minimal.js
+dist/minimal.js.map
+dist/types.d.ts
+dist/types.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-presets-1.1.0.tgz
+package: @soeditor/adapter-sofinder@1.1.0
+Tarball Contents
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/sofinder-adapter.d.ts
+dist/sofinder-adapter.d.ts.map
+dist/sofinder-upload-adapter.d.ts
+dist/sofinder-upload-adapter.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-adapter-sofinder-1.1.0.tgz
+package: @soeditor/file-manager@1.1.0
+Tarball Contents
+dist/file-manager-plugin.d.ts
+dist/file-manager-plugin.d.ts.map
+dist/file-manager.d.ts
+dist/file-manager.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/upload-status.d.ts
+dist/upload-status.d.ts.map
+dist/upload.d.ts
+dist/upload.d.ts.map
+dist/validation.d.ts
+dist/validation.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-file-manager-1.1.0.tgz
+package: @soeditor/dev-tools@1.1.0
+Tarball Contents
+dist/analysis.d.ts
+dist/analysis.d.ts.map
+dist/developer-tools-engine.d.ts
+dist/developer-tools-engine.d.ts.map
+dist/developer-tools-plugin.d.ts
+dist/developer-tools-plugin.d.ts.map
+dist/developer-tools-service.d.ts
+dist/developer-tools-service.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-dev-tools-1.1.0.tgz
+package: @soeditor/comments@1.1.0
+Tarball Contents
+dist/comments-plugin.d.ts
+dist/comments-plugin.d.ts.map
+dist/comments-service.d.ts
+dist/comments-service.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/mapping.d.ts
+dist/mapping.d.ts.map
+dist/model.d.ts
+dist/model.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-comments-1.1.0.tgz
+package: @soeditor/revisions@1.1.0
+Tarball Contents
+dist/comparison.d.ts
+dist/comparison.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/model.d.ts
+dist/model.d.ts.map
+dist/revisions-plugin.d.ts
+dist/revisions-plugin.d.ts.map
+dist/revisions-service.d.ts
+dist/revisions-service.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-revisions-1.1.0.tgz
+package: @soeditor/core@1.1.0
+Tarball Contents
+dist/commands/command-collection.d.ts
+dist/commands/command-collection.d.ts.map
+dist/commands/command-registry.d.ts
+dist/commands/command-registry.d.ts.map
+dist/commands/command.d.ts
+dist/commands/command.d.ts.map
+dist/config/config.d.ts
+dist/config/config.d.ts.map
+dist/editor/editor.d.ts
+dist/editor/editor.d.ts.map
+dist/errors/errors.d.ts
+dist/errors/errors.d.ts.map
+dist/events/core-events.d.ts
+dist/events/core-events.d.ts.map
+dist/events/event-bus.d.ts
+dist/events/event-bus.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/internal/value.d.ts
+dist/internal/value.d.ts.map
+dist/plugins/plugin-collection.d.ts
+dist/plugins/plugin-collection.d.ts.map
+dist/plugins/plugin-manager.d.ts
+dist/plugins/plugin-manager.d.ts.map
+dist/plugins/plugin.d.ts
+dist/plugins/plugin.d.ts.map
+dist/services/service-collection.d.ts
+dist/services/service-collection.d.ts.map
+dist/services/service-registry.d.ts
+dist/services/service-registry.d.ts.map
+dist/state/document.d.ts
+dist/state/document.d.ts.map
+dist/state/editor-state.d.ts
+dist/state/editor-state.d.ts.map
+dist/transaction/operation.d.ts
+dist/transaction/operation.d.ts.map
+dist/transaction/transaction.d.ts
+dist/transaction/transaction.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-core-1.1.0.tgz
+package: @soeditor/html-tools@1.1.0
+Tarball Contents
+dist/assets/formatting-worker-DS8WsxrR.js.map
+dist/diagnostics.d.ts
+dist/diagnostics.d.ts.map
+dist/formatting-output.d.ts
+dist/formatting-output.d.ts.map
+dist/formatting-validation.d.ts
+dist/formatting-validation.d.ts.map
+dist/formatting-worker.d.ts
+dist/formatting-worker.d.ts.map
+dist/formatting.d.ts
+dist/formatting.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/problems.d.ts
+dist/problems.d.ts.map
+dist/quality-diagnostics.d.ts
+dist/quality-diagnostics.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-html-tools-1.1.0.tgz
+package: @soeditor/layout@1.1.0
+Tarball Contents
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/split-view-layout.d.ts
+dist/split-view-layout.d.ts.map
+dist/split-view-plugin.d.ts
+dist/split-view-plugin.d.ts.map
+dist/styles.css
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-layout-1.1.0.tgz
+package: @soeditor/ui@1.1.0
+Tarball Contents
+dist/block-format-menu.d.ts
+dist/block-format-menu.d.ts.map
+dist/cms-styles.css
+dist/cms.d.ts
+dist/cms.d.ts.map
+dist/cms.js
+dist/cms.js.map
+dist/compatibility.d.ts
+dist/compatibility.d.ts.map
+dist/compatibility.js
+dist/compatibility.js.map
+dist/create-editor-ui.d.ts
+dist/create-editor-ui.d.ts.map
+dist/defaults.d.ts
+dist/defaults.d.ts.map
+dist/document-statistics.d.ts
+dist/document-statistics.d.ts.map
+dist/editor-ui-DjLXHxNh.js
+dist/editor-ui-DjLXHxNh.js.map
+dist/editor-ui.d.ts
+dist/editor-ui.d.ts.map
+dist/element-path.d.ts
+dist/element-path.d.ts.map
+dist/errors.d.ts
+dist/errors.d.ts.map
+dist/format-state.d.ts
+dist/format-state.d.ts.map
+dist/icons.d.ts
+dist/icons.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/link-attributes-BtxVCsKd.js
+dist/link-attributes-BtxVCsKd.js.map
+dist/link-attributes.d.ts
+dist/link-attributes.d.ts.map
+dist/localization.d.ts
+dist/localization.d.ts.map
+dist/overlays.d.ts
+dist/overlays.d.ts.map
+dist/panels.d.ts
+dist/panels.d.ts.map
+dist/shortcuts.d.ts
+dist/shortcuts.d.ts.map
+dist/source-toolbar.d.ts
+dist/source-toolbar.d.ts.map
+dist/styles.css
+dist/toolbar-menu-position.d.ts
+dist/toolbar-menu-position.d.ts.map
+dist/translation-resolution-Ro7XZZng.js
+dist/translation-resolution-Ro7XZZng.js.map
+dist/translation-resolution.d.ts
+dist/translation-resolution.d.ts.map
+dist/translations-B4SF6ZvX.js
+dist/translations-B4SF6ZvX.js.map
+dist/translations.d.ts
+dist/translations.d.ts.map
+dist/translations.js
+dist/translations.js.map
+dist/types.d.ts
+dist/types.d.ts.map
+dist/ui-plugin-CfbWoqd_.js
+dist/ui-plugin-CfbWoqd_.js.map
+dist/ui-plugin.d.ts
+dist/ui-plugin.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-ui-1.1.0.tgz
+package: @soeditor/projections@1.1.0
+Tarball Contents
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/projection-coordinator.d.ts
+dist/projection-coordinator.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-projections-1.1.0.tgz
+package: @soeditor/preview@1.1.0
+Tarball Contents
+dist/classic-preview-window.d.ts
+dist/classic-preview-window.d.ts.map
+dist/configuration.d.ts
+dist/configuration.d.ts.map
+dist/content-renderer.d.ts
+dist/content-renderer.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/preview-engine.d.ts
+dist/preview-engine.d.ts.map
+dist/preview-plugin.d.ts
+dist/preview-plugin.d.ts.map
+dist/preview-service.d.ts
+dist/preview-service.d.ts.map
+dist/renderer.d.ts
+dist/renderer.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-preview-1.1.0.tgz
+package: @soeditor/markdown@1.1.0
+Tarball Contents
+dist/conversion.d.ts
+dist/conversion.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/markdown-editing-engine.d.ts
+dist/markdown-editing-engine.d.ts.map
+dist/markdown-plugin.d.ts
+dist/markdown-plugin.d.ts.map
+dist/markdown-service.d.ts
+dist/markdown-service.d.ts.map
+dist/preview-renderer.d.ts
+dist/preview-renderer.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-markdown-1.1.0.tgz
+package: @soeditor/source@1.1.0
+Tarball Contents
+dist/classic-source-enhancements.d.ts
+dist/classic-source-enhancements.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/recovery-loader.d.ts
+dist/recovery-loader.d.ts.map
+dist/recovery.js
+dist/recovery.js.map
+dist/runtime.js
+dist/runtime.js.map
+dist/source-editing-engine.d.ts
+dist/source-editing-engine.d.ts.map
+dist/source-editing-plugin.d.ts
+dist/source-editing-plugin.d.ts.map
+dist/source-editing-service.d.ts
+dist/source-editing-service.d.ts.map
+dist/source-mapping.d.ts
+dist/source-mapping.d.ts.map
+dist/source-runtime.NOTICES.txt
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-source-1.1.0.tgz
+package: @soeditor/rich-text@1.1.0
+Tarball Contents
+dist/cms-objects.d.ts
+dist/cms-objects.d.ts.map
+dist/email.d.ts
+dist/email.d.ts.map
+dist/features.d.ts
+dist/features.d.ts.map
+dist/font.d.ts
+dist/font.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/media.d.ts
+dist/media.d.ts.map
+dist/nested-editing.d.ts
+dist/nested-editing.d.ts.map
+dist/paste.d.ts
+dist/paste.d.ts.map
+dist/responsive-image.d.ts
+dist/responsive-image.d.ts.map
+dist/table-editor-service.d.ts
+dist/table-editor-service.d.ts.map
+dist/table.d.ts
+dist/table.d.ts.map
+dist/video.d.ts
+dist/video.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-rich-text-1.1.0.tgz
+package: @soeditor/wysiwyg@1.1.0
+Tarball Contents
+dist/format-state.d.ts
+dist/format-state.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/list-editing.d.ts
+dist/list-editing.d.ts.map
+dist/wysiwyg-editing-engine.d.ts
+dist/wysiwyg-editing-engine.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-wysiwyg-1.1.0.tgz
+package: @soeditor/engine@1.1.0
+Tarball Contents
+dist/clipboard.d.ts
+dist/clipboard.d.ts.map
+dist/dom-projection.d.ts
+dist/dom-projection.d.ts.map
+dist/history-metadata.d.ts
+dist/history-metadata.d.ts.map
+dist/history.d.ts
+dist/history.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/model.d.ts
+dist/model.d.ts.map
+dist/operations.d.ts
+dist/operations.d.ts.map
+dist/paste-pipeline.d.ts
+dist/paste-pipeline.d.ts.map
+dist/structured-editing.d.ts
+dist/structured-editing.d.ts.map
+dist/visual-decorations.d.ts
+dist/visual-decorations.d.ts.map
+dist/visual-editing-engine.d.ts
+dist/visual-editing-engine.d.ts.map
+dist/visual-editing-service.d.ts
+dist/visual-editing-service.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-engine-1.1.0.tgz
+package: @soeditor/html@1.1.0
+Tarball Contents
+dist/api.d.ts
+dist/api.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/internal/from-parse5.d.ts
+dist/internal/from-parse5.d.ts.map
+dist/internal/parse5-parser.d.ts
+dist/internal/parse5-parser.d.ts.map
+dist/internal/parse5-serializer.d.ts
+dist/internal/parse5-serializer.d.ts.map
+dist/internal/source-location.d.ts
+dist/internal/source-location.d.ts.map
+dist/internal/to-parse5.d.ts
+dist/internal/to-parse5.d.ts.map
+dist/nodes.d.ts
+dist/nodes.d.ts.map
+dist/parser.d.ts
+dist/parser.d.ts.map
+dist/serializer.d.ts
+dist/serializer.d.ts.map
+dist/source-location.d.ts
+dist/source-location.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-html-1.1.0.tgz
+package: @soeditor/workspace@1.1.0
+Tarball Contents
+dist/errors.d.ts
+dist/errors.d.ts.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/save-workflow.d.ts
+dist/save-workflow.d.ts.map
+dist/save.js
+dist/save.js.map
+dist/types.d.ts
+dist/types.d.ts.map
+dist/workspace.d.ts
+dist/workspace.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-workspace-1.1.0.tgz
+package: @soeditor/react@1.1.0
+Tarball Contents
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/use-soeditor-workspace.d.ts
+dist/use-soeditor-workspace.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-react-1.1.0.tgz
+package: @soeditor/vue@1.1.0
+Tarball Contents
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/use-soeditor-workspace.d.ts
+dist/use-soeditor-workspace.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-vue-1.1.0.tgz
+package: @soeditor/plugin-tools@1.1.0
+Tarball Contents
+dist/cli.d.ts
+dist/cli.d.ts.map
+dist/cli.js
+dist/cli.js.map
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/plugin-check.d.ts
+dist/plugin-check.d.ts.map
+dist/scaffold-DQxtxXfQ.js
+dist/scaffold-DQxtxXfQ.js.map
+dist/scaffold.d.ts
+dist/scaffold.d.ts.map
+LICENSE
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-nodenext-Q0c74e/package/soeditor-plugin-tools-1.1.0.tgz
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 20, reused 18, downloaded 2, added 0
+Packages: +106
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/jason/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 106, reused 96, downloaded 10, added 106, done
+
+dependencies:
++ @soeditor/adapter-sofinder 1.1.0
++ @soeditor/comments 1.1.0
++ @soeditor/core 1.1.0
++ @soeditor/dev-tools 1.1.0
++ @soeditor/editor 1.1.0
++ @soeditor/engine 1.1.0
++ @soeditor/file-manager 1.1.0
++ @soeditor/html 1.1.0
++ @soeditor/html-tools 1.1.0
++ @soeditor/layout 1.1.0
++ @soeditor/markdown 1.1.0
++ @soeditor/plugin-sdk 1.1.0
++ @soeditor/plugin-tools 1.1.0
++ @soeditor/presets 1.1.0
++ @soeditor/preview 1.1.0
++ @soeditor/projections 1.1.0
++ @soeditor/react 1.1.0
++ @soeditor/revisions 1.1.0
++ @soeditor/rich-text 1.1.0
++ @soeditor/source 1.1.0
++ @soeditor/ui 1.1.0
++ @soeditor/vue 1.1.0
++ @soeditor/workspace 1.1.0
++ @soeditor/wysiwyg 1.1.0
+
+devDependencies:
++ @types/react 19.2.18
++ react 19.2.8
++ typescript 5.9.2 (7.0.2 is available)
++ vue 3.5.42
+
+Done in 3s using pnpm v11.20.0
+Packed publication metadata audit passed.
+NodeNext packed-package consumer passed.
+Node ESM packed-package runtime smoke test passed.
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 25, reused 25, downloaded 0, added 0
+Packages: +113
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/jason/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 164, reused 113, downloaded 0, added 15
+Progress: resolved 164, reused 113, downloaded 0, added 113, done
+
+dependencies:
++ @soeditor/adapter-sofinder 1.1.0
++ @soeditor/comments 1.1.0
++ @soeditor/core 1.1.0
++ @soeditor/dev-tools 1.1.0
++ @soeditor/editor 1.1.0
++ @soeditor/engine 1.1.0
++ @soeditor/file-manager 1.1.0
++ @soeditor/html 1.1.0
++ @soeditor/html-tools 1.1.0
++ @soeditor/layout 1.1.0
++ @soeditor/markdown 1.1.0
++ @soeditor/plugin-sdk 1.1.0
++ @soeditor/plugin-tools 1.1.0
++ @soeditor/presets 1.1.0
++ @soeditor/preview 1.1.0
++ @soeditor/projections 1.1.0
++ @soeditor/react 1.1.0
++ @soeditor/revisions 1.1.0
++ @soeditor/rich-text 1.1.0
++ @soeditor/source 1.1.0
++ @soeditor/ui 1.1.0
++ @soeditor/vue 1.1.0
++ @soeditor/workspace 1.1.0
++ @soeditor/wysiwyg 1.1.0
+
+devDependencies:
++ vite 7.3.6 (8.2.2 is available)
+
+Done in 3.8s using pnpm v11.20.0
+$ vite build
+vite v7.3.6 building client environment for production...
+transforming...
+node_modules/.pnpm/@soeditor+editor@file+..+package+soeditor-editor-1.1.0.tgz/node_modules/@soeditor/editor/dist/classic-editor-B8XemYqW.js (37:28): A comment
+
+"/* @__PURE__ */"
+
+in "node_modules/.pnpm/@soeditor+editor@file+..+package+soeditor-editor-1.1.0.tgz/node_modules/@soeditor/editor/dist/classic-editor-B8XemYqW.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+node_modules/.pnpm/@soeditor+editor@file+..+package+soeditor-editor-1.1.0.tgz/node_modules/@soeditor/editor/dist/classic-editor-B8XemYqW.js (873:94): A comment
+
+"/* @__PURE__ */"
+
+in "node_modules/.pnpm/@soeditor+editor@file+..+package+soeditor-editor-1.1.0.tgz/node_modules/@soeditor/editor/dist/classic-editor-B8XemYqW.js" contains an annotation that Rollup cannot interpret due to the position of the comment. The comment will be removed to avoid issues.
+✓ 88 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/source.html                                             0.49 kB │ gzip:   0.27 kB
+dist/index.html                                              0.50 kB │ gzip:   0.28 kB
+dist/.vite/manifest.json                                    15.15 kB │ gzip:   1.39 kB
+dist/assets/runtime-D3iFwSeV.js                            753.22 kB
+dist/assets/cms-styles-Bbjuk9LT.css                         44.74 kB │ gzip:   7.47 kB
+dist/assets/cms-styles-BxskzijY.js                           1.87 kB │ gzip:   0.97 kB │ map:     0.10 kB
+dist/assets/classic-link-context-Dzf3ElxT-D72TCaxa.js        2.24 kB │ gzip:   1.04 kB │ map:     4.93 kB
+dist/assets/classic-link-context-hg1-4t7t-DwSlpThT.js        2.27 kB │ gzip:   1.05 kB │ map:     7.29 kB
+dist/assets/save-DzTcHyOP.js                                 3.29 kB │ gzip:   1.30 kB │ map:    11.13 kB
+dist/assets/classic-block-paragraph-B9kgYlKw-CEQGlGV1.js     3.83 kB │ gzip:   1.54 kB │ map:     7.95 kB
+dist/assets/classic-block-paragraph-D98qE1wF-BzQLzVEV.js     3.89 kB │ gzip:   1.56 kB │ map:    11.34 kB
+dist/assets/link-attributes-BtxVCsKd-vXf1PTq4-DxAPJjfJ.js    4.76 kB │ gzip:   1.91 kB │ map:     9.61 kB
+dist/assets/link-attributes-BtxVCsKd-r3DFj-kk.js             4.78 kB │ gzip:   1.92 kB │ map:    13.90 kB
+dist/assets/table-editor-attributes-C0S0tNrQ-ClCoupks.js     8.63 kB │ gzip:   3.20 kB │ map:    18.14 kB
+dist/assets/table-editor-attributes-Dwd7B4R3-BwkVkTQA.js     8.71 kB │ gzip:   3.24 kB │ map:    25.28 kB
+dist/assets/classic-image-context-B02-25hL-c7t_PVuQ.js      11.54 kB │ gzip:   4.17 kB │ map:    25.07 kB
+dist/assets/classic-image-context-DNNv4NtQ-Bf4fUrFE.js      11.69 kB │ gzip:   4.20 kB │ map:    40.17 kB
+dist/assets/index-Cvn8N2Ah.js                               14.01 kB │ gzip:   4.88 kB │ map:    40.98 kB
+dist/assets/translations-ivdjbkgq.js                        17.52 kB │ gzip:   6.52 kB │ map:    31.19 kB
+dist/assets/translations-Cug6dJhM-ivdjbkgq.js               17.53 kB │ gzip:   6.53 kB │ map:    27.55 kB
+dist/assets/classic-table-context-B3MBoEfN-Da_6z_W4.js      40.86 kB │ gzip:  12.60 kB │ map:    87.46 kB
+dist/assets/classic-table-context-DzU5YXqG-Ch3EJVIL.js      42.05 kB │ gzip:  12.75 kB │ map:   143.12 kB
+dist/assets/standalone-Cayz_KD-.js                          81.51 kB │ gzip:  27.17 kB │ map:   181.63 kB
+dist/assets/classic-editor-B8XemYqW-BOHLImPL.js            147.63 kB │ gzip:  46.09 kB │ map:   287.89 kB
+dist/assets/html-DwgzGnwN.js                               160.16 kB │ gzip:  50.63 kB │ map:   334.25 kB
+dist/assets/index-DB9zJ-0D.js                              286.59 kB │ gzip:  95.23 kB │ map:   623.69 kB
+dist/assets/source-B19Rivoz.js                             511.95 kB │ gzip: 151.54 kB │ map: 1,847.09 kB
+dist/assets/index-BSGyvSlc.js                              590.62 kB │ gzip: 203.72 kB │ map: 2,212.70 kB
+dist/assets/index-PiQQ7rpV.js                              641.76 kB │ gzip: 152.89 kB │ map:   805.88 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 9.50s
+CMS Vite packed-package build passed (440848 raw / 143293 gzip).
+Packed Source, formatting, isolated CMS CSS and recovery passed under script-src self.
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 20, reused 19, downloaded 0, added 0
+Packages: +114
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/jason/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 165, reused 114, downloaded 0, added 4
+Progress: resolved 165, reused 114, downloaded 0, added 114, done
+
+dependencies:
++ @soeditor/adapter-sofinder 1.1.0
++ @soeditor/comments 1.1.0
++ @soeditor/core 1.1.0
++ @soeditor/dev-tools 1.1.0
++ @soeditor/editor 1.1.0
++ @soeditor/engine 1.1.0
++ @soeditor/file-manager 1.1.0
++ @soeditor/html 1.1.0
++ @soeditor/html-tools 1.1.0
++ @soeditor/layout 1.1.0
++ @soeditor/markdown 1.1.0
++ @soeditor/plugin-sdk 1.1.0
++ @soeditor/plugin-tools 1.1.0
++ @soeditor/presets 1.1.0
++ @soeditor/preview 1.1.0
++ @soeditor/projections 1.1.0
++ @soeditor/react 1.1.0
++ @soeditor/revisions 1.1.0
++ @soeditor/rich-text 1.1.0
++ @soeditor/source 1.1.0
++ @soeditor/ui 1.1.0
++ @soeditor/vue 1.1.0
++ @soeditor/workspace 1.1.0
++ @soeditor/wysiwyg 1.1.0
+
+devDependencies:
++ typescript 5.9.2 (7.0.2 is available)
++ vite 7.3.6 (8.2.2 is available)
+
+Done in 3.9s using pnpm v11.20.0
+$ tsc --noEmit && vite build
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 44 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                  0.55 kB │ gzip:  0.31 kB
+dist/assets/index-B914bkx0.js  254.18 kB │ gzip: 74.53 kB
+✓ built in 1.82s
+Packed third-party widget TypeScript, Vite, Chromium, accessibility, security, and teardown consumer passed.
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 25, reused 25, downloaded 0, added 0
+Packages: +113
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/jason/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 164, reused 113, downloaded 0, added 113, done
+
+dependencies:
++ @soeditor/adapter-sofinder 1.1.0
++ @soeditor/comments 1.1.0
++ @soeditor/core 1.1.0
++ @soeditor/dev-tools 1.1.0
++ @soeditor/editor 1.1.0
++ @soeditor/engine 1.1.0
++ @soeditor/file-manager 1.1.0
++ @soeditor/html 1.1.0
++ @soeditor/html-tools 1.1.0
++ @soeditor/layout 1.1.0
++ @soeditor/markdown 1.1.0
++ @soeditor/plugin-sdk 1.1.0
++ @soeditor/plugin-tools 1.1.0
++ @soeditor/presets 1.1.0
++ @soeditor/preview 1.1.0
++ @soeditor/projections 1.1.0
++ @soeditor/react 1.1.0
++ @soeditor/revisions 1.1.0
++ @soeditor/rich-text 1.1.0
++ @soeditor/source 1.1.0
++ @soeditor/ui 1.1.0
++ @soeditor/vue 1.1.0
++ @soeditor/workspace 1.1.0
++ @soeditor/wysiwyg 1.1.0
+
+devDependencies:
++ vite 7.3.6 (8.2.2 is available)
+
+Done in 3.4s using pnpm v11.20.0
+$ vite build
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 46 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                    0.25 kB │ gzip:  0.19 kB
+dist/.vite/manifest.json                           0.87 kB │ gzip:  0.27 kB
+dist/assets/link-attributes-BtxVCsKd-r3DFj-kk.js   4.78 kB │ gzip:  1.92 kB │ map:  13.90 kB
+dist/assets/index-C4rl4shH.js                     65.68 kB │ gzip: 20.09 kB │ map: 669.02 kB
+✓ built in 1.67s
+Narrow Vite tree-shaking audit passed (65683 bytes).
+Created SoEditor plugin package at /tmp/soeditor-plugin-consumer-doCMEQ/plugin.
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +30
+++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/jason/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 81, reused 30, downloaded 0, added 9
+Progress: resolved 81, reused 30, downloaded 0, added 30, done
+
+devDependencies:
++ @soeditor/comments 1.1.0
++ @soeditor/core 1.1.0
++ @soeditor/engine 1.1.0
++ @soeditor/file-manager 1.1.0
++ @soeditor/html 1.1.0
++ @soeditor/html-tools 1.1.0
++ @soeditor/layout 1.1.0
++ @soeditor/plugin-sdk 1.1.0
++ @soeditor/plugin-tools 1.1.0
++ @soeditor/projections 1.1.0
++ @soeditor/revisions 1.1.0
++ @soeditor/rich-text 1.1.0
++ @soeditor/ui 1.1.0
++ typescript 5.9.2 (7.0.2 is available)
++ vite 7.3.6 (8.2.2 is available)
+
+Done in 2.6s using pnpm v11.20.0
+$ vite build && tsc -p tsconfig.json --emitDeclarationOnly --declaration --outDir dist
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.js  0.18 kB │ gzip: 0.16 kB │ map: 0.33 kB
+✓ built in 91ms
+Valid SoEditor plugin package @example/generated.
+package: @example/generated@0.1.0
+Tarball Contents
+dist/index.d.ts
+dist/index.d.ts.map
+dist/index.js
+dist/index.js.map
+dist/plugin.d.ts
+dist/plugin.d.ts.map
+package.json
+README.md
+Tarball Details
+/tmp/soeditor-plugin-consumer-doCMEQ/pack/example-generated-0.1.0.tgz
+Created SoEditor plugin package at /tmp/soeditor-plugin-consumer-doCMEQ/cms-widget.
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +30
+++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/jason/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 81, reused 30, downloaded 0, added 16
+Progress: resolved 81, reused 30, downloaded 0, added 30, done
+
+devDependencies:
++ @soeditor/comments 1.1.0
++ @soeditor/core 1.1.0
++ @soeditor/engine 1.1.0
++ @soeditor/file-manager 1.1.0
++ @soeditor/html 1.1.0
++ @soeditor/html-tools 1.1.0
++ @soeditor/layout 1.1.0
++ @soeditor/plugin-sdk 1.1.0
++ @soeditor/plugin-tools 1.1.0
++ @soeditor/projections 1.1.0
++ @soeditor/revisions 1.1.0
++ @soeditor/rich-text 1.1.0
++ @soeditor/ui 1.1.0
++ typescript 5.9.2 (7.0.2 is available)
++ vite 7.3.6 (8.2.2 is available)
+
+Done in 2.5s using pnpm v11.20.0
+$ vite build && tsc -p tsconfig.json --emitDeclarationOnly --declaration --outDir dist
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.js  1.28 kB │ gzip: 0.58 kB │ map: 2.88 kB
+✓ built in 122ms
+Valid SoEditor plugin package @example/generated-cms-widget.
+Created SoEditor plugin package at /tmp/soeditor-plugin-consumer-doCMEQ/paste.
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 81, reused 30, downloaded 0, added 0
+Packages: +30
+++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/jason/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 81, reused 30, downloaded 0, added 30, done
+
+devDependencies:
++ @soeditor/comments 1.1.0
++ @soeditor/core 1.1.0
++ @soeditor/engine 1.1.0
++ @soeditor/file-manager 1.1.0
++ @soeditor/html 1.1.0
++ @soeditor/html-tools 1.1.0
++ @soeditor/layout 1.1.0
++ @soeditor/plugin-sdk 1.1.0
++ @soeditor/plugin-tools 1.1.0
++ @soeditor/projections 1.1.0
++ @soeditor/revisions 1.1.0
++ @soeditor/rich-text 1.1.0
++ @soeditor/ui 1.1.0
++ typescript 5.9.2 (7.0.2 is available)
++ vite 7.3.6 (8.2.2 is available)
+
+Done in 2.6s using pnpm v11.20.0
+$ vite build && tsc -p tsconfig.json --emitDeclarationOnly --declaration --outDir dist
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.js  0.63 kB │ gzip: 0.39 kB │ map: 1.44 kB
+✓ built in 120ms
+Valid SoEditor plugin package @example/generated-paste.
+Created SoEditor plugin package at /tmp/soeditor-plugin-consumer-doCMEQ/upload.
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 81, reused 30, downloaded 0, added 0
+Packages: +30
+++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/jason/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 81, reused 30, downloaded 0, added 30, done
+
+devDependencies:
++ @soeditor/comments 1.1.0
++ @soeditor/core 1.1.0
++ @soeditor/engine 1.1.0
++ @soeditor/file-manager 1.1.0
++ @soeditor/html 1.1.0
++ @soeditor/html-tools 1.1.0
++ @soeditor/layout 1.1.0
++ @soeditor/plugin-sdk 1.1.0
++ @soeditor/plugin-tools 1.1.0
++ @soeditor/projections 1.1.0
++ @soeditor/revisions 1.1.0
++ @soeditor/rich-text 1.1.0
++ @soeditor/ui 1.1.0
++ typescript 5.9.2 (7.0.2 is available)
++ vite 7.3.6 (8.2.2 is available)
+
+Done in 2.6s using pnpm v11.20.0
+$ vite build && tsc -p tsconfig.json --emitDeclarationOnly --declaration --outDir dist
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.js  0.67 kB │ gzip: 0.40 kB │ map: 1.68 kB
+✓ built in 150ms
+Valid SoEditor plugin package @example/generated-upload.
+Created SoEditor plugin package at /tmp/soeditor-plugin-consumer-doCMEQ/theme.
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Packages: +30
+++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/jason/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 81, reused 30, downloaded 0, added 20
+Progress: resolved 81, reused 30, downloaded 0, added 30, done
+
+devDependencies:
++ @soeditor/comments 1.1.0
++ @soeditor/core 1.1.0
++ @soeditor/engine 1.1.0
++ @soeditor/file-manager 1.1.0
++ @soeditor/html 1.1.0
++ @soeditor/html-tools 1.1.0
++ @soeditor/layout 1.1.0
++ @soeditor/plugin-sdk 1.1.0
++ @soeditor/plugin-tools 1.1.0
++ @soeditor/projections 1.1.0
++ @soeditor/revisions 1.1.0
++ @soeditor/rich-text 1.1.0
++ @soeditor/ui 1.1.0
++ typescript 5.9.2 (7.0.2 is available)
++ vite 7.3.6 (8.2.2 is available)
+
+Done in 2.4s using pnpm v11.20.0
+$ vite build && tsc -p tsconfig.json --emitDeclarationOnly --declaration --outDir dist
+vite v7.3.6 building client environment for production...
+transforming...
+✓ 2 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.js  0.40 kB │ gzip: 0.29 kB │ map: 0.90 kB
+✓ built in 138ms
+Valid SoEditor plugin package @example/generated-theme.
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 71, reused 36, downloaded 0, added 0
+Packages: +106
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Packages are hard linked from the content-addressable store to the virtual store.
+  Content-addressable store is at: /home/jason/.local/share/pnpm/store/v11
+  Virtual store is at:             node_modules/.pnpm
+Progress: resolved 106, reused 106, downloaded 0, added 106, done
+
+dependencies:
++ @example/generated 0.1.0
++ @soeditor/adapter-sofinder 1.1.0
++ @soeditor/comments 1.1.0
++ @soeditor/core 1.1.0
++ @soeditor/dev-tools 1.1.0
++ @soeditor/editor 1.1.0
++ @soeditor/engine 1.1.0
++ @soeditor/file-manager 1.1.0
++ @soeditor/html 1.1.0
++ @soeditor/html-tools 1.1.0
++ @soeditor/layout 1.1.0
++ @soeditor/markdown 1.1.0
++ @soeditor/plugin-sdk 1.1.0
++ @soeditor/plugin-tools 1.1.0
++ @soeditor/presets 1.1.0
++ @soeditor/preview 1.1.0
++ @soeditor/projections 1.1.0
++ @soeditor/react 1.1.0
++ @soeditor/revisions 1.1.0
++ @soeditor/rich-text 1.1.0
++ @soeditor/source 1.1.0
++ @soeditor/ui 1.1.0
++ @soeditor/vue 1.1.0
++ @soeditor/workspace 1.1.0
++ @soeditor/wysiwyg 1.1.0
+
+devDependencies:
++ typescript 5.9.2 (7.0.2 is available)
+
+Done in 2.9s using pnpm v11.20.0
+Generated basic and CMS-family plugin scaffolds, packed checks, NodeNext consumer, and runtime passed.
+$ node scripts/verify-distribution.mjs
+Distribution artifact audit passed for 24 package directories.
+$ pnpm --filter @soeditor/editor --filter @soeditor/playground build && node scripts/verify-release.mjs
+Scope: 2 of 26 workspace projects
+packages/soeditor build$ vite build && vite build --config vite.cms.config.ts && vite build --config vite.global.config.ts && tsc -p tsconfig.build.json
+packages/soeditor build: vite v7.3.6 building client environment for production...
+packages/soeditor build: transforming...
+packages/soeditor build: ✓ 17 modules transformed.
+packages/soeditor build: rendering chunks...
+packages/soeditor build: computing gzip size...
+packages/soeditor build: dist/content.css                           0.81 kB │ gzip:  0.23 kB
+packages/soeditor build: dist/cms-styles.css                       55.32 kB │ gzip:  8.38 kB
+packages/soeditor build: dist/styles.css                           57.95 kB │ gzip:  8.80 kB
+packages/soeditor build: dist/index.js                              1.00 kB │ gzip:  0.31 kB │ map:   0.11 kB
+packages/soeditor build: dist/classic-link-context-hg1-4t7t.js      4.20 kB │ gzip:  1.33 kB │ map:   8.31 kB
+packages/soeditor build: dist/classic-block-paragraph-D98qE1wF.js   6.55 kB │ gzip:  1.92 kB │ map:  12.56 kB
+packages/soeditor build: dist/table-editor-attributes-Dwd7B4R3.js  14.28 kB │ gzip:  3.97 kB │ map:  27.84 kB
+packages/soeditor build: dist/classic-image-context-DNNv4NtQ.js    23.94 kB │ gzip:  5.55 kB │ map:  46.65 kB
+packages/soeditor build: dist/classic-table-context-DzU5YXqG.js    88.18 kB │ gzip: 17.34 kB │ map: 178.84 kB
+packages/soeditor build: dist/cms-optional.js                      93.19 kB │ gzip: 20.98 kB │ map: 160.85 kB
+packages/soeditor build: ✓ built in 1.07s
+packages/soeditor build: vite v7.3.6 building client environment for production...
+packages/soeditor build: transforming...
+packages/soeditor build: ✓ 78 modules transformed.
+packages/soeditor build: rendering chunks...
+packages/soeditor build: computing gzip size...
+packages/soeditor build: dist/cms.js                                  0.19 kB │ gzip:   0.16 kB │ map:     0.09 kB
+packages/soeditor build: dist/classic-link-context-Dzf3ElxT.js        2.24 kB │ gzip:   1.03 kB │ map:     8.73 kB
+packages/soeditor build: dist/save-DxcxWvBC.js                        3.17 kB │ gzip:   1.24 kB │ map:    10.76 kB
+packages/soeditor build: dist/classic-block-paragraph-B9kgYlKw.js     3.82 kB │ gzip:   1.52 kB │ map:    13.27 kB
+packages/soeditor build: dist/link-attributes-BtxVCsKd-vXf1PTq4.js    4.78 kB │ gzip:   1.90 kB │ map:    13.43 kB
+packages/soeditor build: dist/table-editor-attributes-C0S0tNrQ.js     8.63 kB │ gzip:   3.17 kB │ map:    27.89 kB
+packages/soeditor build: dist/classic-image-context-B02-25hL.js      11.49 kB │ gzip:   4.12 kB │ map:    47.24 kB
+packages/soeditor build: dist/translations-Cug6dJhM.js               17.52 kB │ gzip:   6.52 kB │ map:    29.56 kB
+packages/soeditor build: dist/classic-table-context-B3MBoEfN.js      40.37 kB │ gzip:  11.93 kB │ map:   177.09 kB
+packages/soeditor build: dist/classic-editor-B8XemYqW.js            147.61 kB │ gzip:  44.29 kB │ map:   478.32 kB
+packages/soeditor build: dist/cms-lBL1BIG1.js                       290.03 kB │ gzip:  92.61 kB │ map: 1,333.23 kB
+packages/soeditor build: dist/index-pMI9V0UA.js                     529.86 kB │ gzip: 191.19 kB │ map: 2,235.87 kB
+packages/soeditor build: ✓ built in 18.09s
+packages/soeditor build: vite v7.3.6 building client environment for production...
+packages/soeditor build: transforming...
+packages/soeditor build: ✓ 77 modules transformed.
+packages/soeditor build: rendering chunks...
+packages/soeditor build: computing gzip size...
+packages/soeditor build: dist/soeditor.css         24.94 kB │ gzip:   4.61 kB
+packages/soeditor build: dist/soeditor.global.js  480.73 kB │ gzip: 148.46 kB │ map: 2,022.84 kB
+packages/soeditor build: ✓ built in 15.15s
+packages/soeditor build: Done
+apps/playground build$ vite build
+apps/playground build: vite v7.3.6 building client environment for production...
+apps/playground build: transforming...
+apps/playground build: ✓ 291 modules transformed.
+apps/playground build: rendering chunks...
+apps/playground build: computing gzip size...
+apps/playground build: dist/framework-adapters.html                       1.08 kB │ gzip:   0.44 kB
+apps/playground build: dist/wysiwyg.html                                  1.39 kB │ gzip:   0.55 kB
+apps/playground build: dist/workspace.html                                1.63 kB │ gzip:   0.55 kB
+apps/playground build: dist/index.html                                    8.06 kB │ gzip:   1.93 kB
+apps/playground build: dist/classic.html                                 14.32 kB │ gzip:   3.73 kB
+apps/playground build: dist/assets/runtime-D3iFwSeV.js                  753.22 kB
+apps/playground build: dist/assets/main-Cdkjgu-E.css                      1.59 kB │ gzip:   0.58 kB
+apps/playground build: dist/assets/styles-BwLl4W41.css                   21.27 kB │ gzip:   4.13 kB
+apps/playground build: dist/assets/wysiwyg-Bbjuk9LT.css                  44.74 kB │ gzip:   7.47 kB
+apps/playground build: dist/assets/classic-CLD-VjnY.css                  54.77 kB │ gzip:   9.79 kB
+apps/playground build: dist/assets/errors-BoBlFa4l.js                     1.79 kB │ gzip:   0.64 kB │ map:     6.53 kB
+apps/playground build: dist/assets/workspace-CSuDT9aK.js                  2.17 kB │ gzip:   1.04 kB │ map:     6.85 kB
+apps/playground build: dist/assets/classic-link-context-DwSlpThT.js       2.26 kB │ gzip:   1.04 kB │ map:     8.42 kB
+apps/playground build: dist/assets/wysiwyg-ewsNb13A.js                    2.43 kB │ gzip:   1.20 kB │ map:     5.66 kB
+apps/playground build: dist/assets/save-workflow-DzTcHyOP.js              3.30 kB │ gzip:   1.30 kB │ map:    14.87 kB
+apps/playground build: dist/assets/classic-block-paragraph-BzQLzVEV.js    3.89 kB │ gzip:   1.55 kB │ map:    12.85 kB
+apps/playground build: dist/assets/link-attributes-r3DFj-kk.js            4.78 kB │ gzip:   1.91 kB │ map:    15.81 kB
+apps/playground build: dist/assets/index-Dt4gtIk0.js                      6.10 kB │ gzip:   2.50 kB │ map:    18.09 kB
+apps/playground build: dist/assets/index-C-aW3yBN.js                      7.50 kB │ gzip:   2.59 kB │ map:    22.71 kB
+apps/playground build: dist/assets/preview-plugin-Dw_lXsw0.js             8.41 kB │ gzip:   3.10 kB │ map:    33.57 kB
+apps/playground build: dist/assets/table-editor-attributes-BwkVkTQA.js    8.70 kB │ gzip:   3.23 kB │ map:    28.02 kB
+apps/playground build: dist/assets/classic-BL2DAzlI.js                   10.51 kB │ gzip:   5.26 kB │ map:    33.74 kB
+apps/playground build: dist/assets/workspace-BQzV9Vd8.js                 10.54 kB │ gzip:   3.44 kB │ map:    42.12 kB
+apps/playground build: dist/assets/classic-image-context-Bf4fUrFE.js     11.68 kB │ gzip:   4.19 kB │ map:    47.28 kB
+apps/playground build: dist/assets/visual-editing-service-lERtAxa5.js    11.76 kB │ gzip:   3.91 kB │ map:    60.53 kB
+apps/playground build: dist/assets/editor-BDSJU92z.js                    13.41 kB │ gzip:   4.42 kB │ map:    71.86 kB
+apps/playground build: dist/assets/index-DXtHdHE1.js                     15.98 kB │ gzip:   5.19 kB │ map:    51.42 kB
+apps/playground build: dist/assets/index-DKPSZG6G.js                     17.24 kB │ gzip:   5.42 kB │ map:    55.48 kB
+apps/playground build: dist/assets/translations-ivdjbkgq.js              17.52 kB │ gzip:   6.52 kB │ map:    32.57 kB
+apps/playground build: dist/assets/visual-decorations-B_KQ6FaF.js        23.71 kB │ gzip:   6.71 kB │ map:   107.17 kB
+apps/playground build: dist/assets/styles-Cak-SXLX.js                    36.32 kB │ gzip:  11.13 kB │ map:   158.80 kB
+apps/playground build: dist/assets/classic-table-context-B5mvH7pj.js     42.11 kB │ gzip:  12.78 kB │ map:   177.99 kB
+apps/playground build: dist/assets/ui-plugin-Cf-sxMJ2.js                 44.48 kB │ gzip:  13.92 kB │ map:   160.06 kB
+apps/playground build: dist/assets/standalone-Cayz_KD-.js                81.51 kB │ gzip:  27.17 kB │ map:   181.64 kB
+apps/playground build: dist/assets/cms-optional-BPagw_x-.js             112.89 kB │ gzip:  33.27 kB │ map:   409.98 kB
+apps/playground build: dist/assets/main-CaGrsi3f.js                     144.86 kB │ gzip:  45.75 kB │ map:   730.98 kB
+apps/playground build: dist/assets/html-DwgzGnwN.js                     160.16 kB │ gzip:  50.63 kB │ map:   334.25 kB
+apps/playground build: dist/assets/api-DCHocHHd.js                      170.98 kB │ gzip:  50.85 kB │ map:   529.04 kB
+apps/playground build: dist/assets/cms-CuKaXG5P.js                      222.15 kB │ gzip:  67.11 kB │ map:   875.18 kB
+apps/playground build: dist/assets/frameworks-GDMwojvW.js               263.22 kB │ gzip:  88.15 kB │ map: 1,507.47 kB
+apps/playground build: dist/assets/index-DUh1sYnU.js                    435.27 kB │ gzip: 134.36 kB │ map:    92.62 kB
+apps/playground build: dist/assets/source-editing-plugin-DShBl_Nk.js    576.99 kB │ gzip: 199.45 kB │ map: 2,169.04 kB
+apps/playground build: ✓ built in 11.64s
+apps/playground build: (!) Some chunks are larger than 500 kB after minification. Consider:
+apps/playground build: - Using dynamic import() to code-split the application
+apps/playground build: - Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+apps/playground build: - Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+apps/playground build: Done
+Release audit passed for 24 packages at 1.1.0.
+CMS global: 480.73 kB raw / 148.46 kB gzip.
+Standalone CSS: 24.93 kB; ESM facade: 1.00 kB.
+Largest Playground chunk: runtime-D3iFwSeV.js (753.22 kB).
+$ playwright test --config playwright.product.config.ts
+[WebServer] (node:2076068) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] $ vite --host 127.0.0.1 --port 4173
+[WebServer] (node:2076079) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 145 tests using 9 workers
+
+(node:2076150) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076168) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076148) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076151) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076174) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076187) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076149) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076158) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076184) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076168) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076150) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076174) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076148) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076158) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076149) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076184) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076187) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2076151) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓    1 [chromium] › tests/browser/classic-editor.spec.ts:919:1 › keeps image properties usable while moving and resizing within the viewport (2.2s)
+  ✓    3 [chromium] › tests/browser/classic-editor.spec.ts:14:1 › reuses one popup per editor and isolates popups across editor instances (2.5s)
+  ✓    7 [chromium] › tests/browser/classic-editor.spec.ts:100:1 › keeps table header cells visually distinct from data cells (2.6s)
+  ✓    2 [chromium] › tests/browser/classic-editor.spec.ts:407:1 › reopens table tools after merge, cell editing, and external dismissal (3.3s)
+  ✓   10 [chromium] › tests/browser/classic-editor.spec.ts:995:1 › replaces a native WYSIWYG selection and edits images on double click (1.8s)
+  ✓   11 [chromium] › tests/browser/classic-editor.spec.ts:1094:1 › image alignment renders stored figures and survives Source round trips (1.6s)
+  ✓    8 [chromium] › tests/browser/classic-editor.spec.ts:114:1 › shows the active table scope, block boundaries, and direct row and column resize handles (4.1s)
+  ✓    4 [chromium] › tests/browser/classic-editor.spec.ts:831:1 › keeps native caret placement while switching between table cells (4.3s)
+  ✓   12 [chromium] › tests/browser/classic-editor.spec.ts:1149:1 › applies font family, colors, highlight, and size through native selections (1.7s)
+  ✓   16 [chromium] › tests/browser/classic-editor.spec.ts:1735:1 › keeps the text selection while switching a block from H1 to H2 (1.1s)
+  ✓    9 [chromium] › tests/browser/classic-editor.spec.ts:256:1 › auto-formats Source after debounced WYSIWYG changes in split view (5.2s)
+  ✓   18 [chromium] › tests/browser/classic-editor.spec.ts:1848:1 › keeps the editing range across dialog, balloon, and nested popup controls (1.4s)
+  ✓    6 [chromium] › tests/browser/classic-editor.spec.ts:318:1 › clears stale list state before and during table cell selection (5.8s)
+  ✓   13 [chromium] › tests/browser/classic-editor.spec.ts:1212:1 › accepts typed and picked colors and persists a shared recent-color history (2.7s)
+  ✓   15 [chromium] › tests/browser/classic-editor.spec.ts:1579:1 › previews font families and applies one to a browser-selected range (1.9s)
+  ✓   17 [chromium] › tests/browser/classic-editor.spec.ts:1778:1 › preserves the editing selection across toolbar menus and structural commands (2.5s)
+  ✓   14 [chromium] › tests/browser/classic-editor.spec.ts:1474:1 › retains the author selection through repeated color-control focus transitions (3.0s)
+  ✓   19 [chromium] › tests/browser/classic-editor.spec.ts:1891:1 › applies bold to paragraph, list-item, and table-cell ranges without changing structure (1.7s)
+  ✓   20 [chromium] › tests/browser/classic-editor.spec.ts:1971:1 › element path follows WYSIWYG selection without exposing Source chrome (1.8s)
+  ✓   27 [chromium] › tests/browser/classic-editor.spec.ts:2695:1 › keeps preserved HTML out of the WYSIWYG authoring surface (867ms)
+  ✓   26 [chromium] › tests/browser/classic-editor.spec.ts:2637:1 › optionally synchronizes proportional scrolling in split Source view (1.2s)
+  ✓   25 [chromium] › tests/browser/classic-editor.spec.ts:2595:1 › switches editing layouts with distinct icon buttons (1.5s)
+  ✓   28 [chromium] › tests/browser/classic-editor.spec.ts:2719:1 › keeps legacy Developer Visual query flags on the WYSIWYG path (1.1s)
+  ✓    5 [chromium] › tests/browser/classic-editor.spec.ts:433:1 › presents the complete CMS showcase from the root URL (8.4s)
+  ✓   21 [chromium] › tests/browser/classic-editor.spec.ts:2078:1 › keeps Unicode word and character counts visible in WYSIWYG and Source (2.9s)
+  ✓   24 [chromium] › tests/browser/classic-editor.spec.ts:2499:1 › keeps row resize handles after fullscreen source formatting (2.9s)
+  ✓   23 [chromium] › tests/browser/classic-editor.spec.ts:2380:1 › keeps table resize handles after fullscreen split source formatting (2.9s)
+  ✓   29 [chromium] › tests/browser/classic-editor.spec.ts:2731:1 › exposes the replaceable CMS asset manager for existing images and files (1.2s)
+  ✓   32 [chromium] › tests/browser/classic-editor.spec.ts:2960:1 › restores reset data and the exact caller host on idempotent destruction (807ms)
+  ✓   33 [chromium] › tests/browser/classic-editor.spec.ts:2992:1 › bounds automatic growth for long CMS content (712ms)
+  ✓   22 [chromium] › tests/browser/classic-editor.spec.ts:2207:1 › keeps table cells interactive after source formatting and minification (3.7s)
+  ✓   31 [chromium] › tests/browser/classic-editor.spec.ts:2870:1 › replaces a named textarea and synchronizes native form submission (1.4s)
+  ✓   34 [chromium] › tests/browser/classic-editor.spec.ts:3011:1 › provides responsive toolbar navigation, status, resize, and maximize restoration (1.2s)
+  ✓   35 [chromium] › tests/browser/classic-editor.spec.ts:3093:1 › opens command-backed link actions without content mutation (1.1s)
+  ✓   30 [chromium] › tests/browser/classic-editor.spec.ts:2777:1 › prefills selected link text and edits or removes a clicked link (1.8s)
+  ✓   39 [chromium] › tests/browser/classic-editor.spec.ts:3381:1 › saves canonical source with conflict retry and owned leave protection (893ms)
+  ✓   38 [chromium] › tests/browser/classic-editor.spec.ts:3295:1 › scopes safe SVG icons and chrome theme variables without changing content (952ms)
+  ✓   37 [chromium] › tests/browser/classic-editor.spec.ts:3177:1 › isolates Simplified Chinese, Traditional Chinese, and RTL chrome per instance (1.1s)
+  ✓   36 [chromium] › tests/browser/classic-editor.spec.ts:3123:1 › keeps narrow, zoomed, forced-color chrome operable and restores global layout on destroy (1.4s)
+  ✓   40 [chromium] › tests/browser/classic-editor.spec.ts:3497:1 › applies multi-block CMS formatting and nested-list keyboard commands transactionally (944ms)
+  ✓   41 [chromium] › tests/browser/classic-editor.spec.ts:3539:1 › classifies and cleans external paste/drop while retaining internal clipboard fidelity (866ms)
+  ✓   43 [chromium] › tests/browser/classic-editor.spec.ts:3941:1 › edits safe links and inserts bounded CMS content objects (917ms)
+  ✓   44 [chromium] › tests/browser/classic-editor.spec.ts:4040:1 › supports callbacks, readonly, element hosts, duplicate rejection, and startup cleanup (1.1s)
+  ✓   48 [chromium] › tests/browser/classic-editor.spec.ts:4342:1 › retains invalid Source drafts and prevents both form and adapter submission (1.3s)
+  ✓   42 [chromium] › tests/browser/classic-editor.spec.ts:3668:1 › uploads images with temporary previews, retry, cancellation, and unsafe-result rejection (2.3s)
+  ✓   47 [chromium] › tests/browser/classic-editor.spec.ts:4300:1 › retries a failed Source request without losing the WYSIWYG document (2.1s)
+  ✓   45 [chromium] › tests/browser/classic-editor.spec.ts:4180:1 › loads Source, formatting and Preview only when each is first used (2.4s)
+  ✓   52 [chromium] › tests/browser/classic-editor.spec.ts:4952:1 › disables table splits at logical limits and clamps resize previews (1.4s)
+  ✓   53 [chromium] › tests/browser/classic-editor.spec.ts:5012:1 › honors table cellpadding and cellspacing in source split view (1.0s)
+  ✓   46 [chromium] › tests/browser/classic-editor.spec.ts:4233:1 › keeps the latest view and data while Source loads and never attaches after destroy (2.5s)
+  ✓   55 [chromium] › tests/browser/classic-editor.spec.ts:5158:1 › image resize cancels cleanly and handles keyboard, readonly and source replacement (1.4s)
+  ✓   51 [chromium] › tests/browser/classic-editor.spec.ts:4802:1 › keeps resize transactions on the selected table through cancellation, split view and history (3.5s)
+  ✓   57 [chromium] › tests/browser/classic-editor.spec.ts:5365:1 › table type-around inserts outside the table, preserves cells and supports undo and readonly (2.1s)
+  ✓   49 [chromium] › tests/browser/classic-editor.spec.ts:4412:1 › uses compact table dropdowns for headers, insertion, directional merge and ordinary splits (4.4s)
+  ✓   54 [chromium] › tests/browser/classic-editor.spec.ts:5043:1 › image drag preserves ratio by default, keeps the opposite corner steady and commits once (3.0s)
+  ✓   59 [chromium] › tests/browser/classic-editor.spec.ts:5494:1 › counts semantic body text without source indentation or hidden content (2.9s)
+  ✓   56 [chromium] › tests/browser/classic-editor.spec.ts:5219:1 › image type-around inserts outside the caption and linked inline paragraph with one undo step (3.3s)
+  ✓   60 [chromium] › tests/browser/classic-editor.spec.ts:5554:1 › keeps the declared Classic toolbar controls present and localized (2.1s)
+  ✓   58 [chromium] › tests/browser/classic-editor.spec.ts:5437:1 › keeps Source selection and find state through repeated external history updates (3.2s)
+  ✓   61 [chromium] › tests/browser/cms-multibrowser.spec.ts:10:1 › keeps block serialization current through native edits, history and external repair (1.5s)
+  ✓   62 [chromium] › tests/browser/cms-multibrowser.spec.ts:82:1 › round-trips the synthetic legacy CMS corpus through editing, saving and reopening (1.4s)
+  ✓   69 [chromium] › tests/browser/distribution.spec.ts:13:1 › loads the self-contained CMS CDN editor (350ms)
+  ✓   70 [chromium] › tests/browser/distribution.spec.ts:77:1 › keeps Source outside the standalone CMS global (265ms)
+  ✓   65 [chromium] › tests/browser/cms-multibrowser.spec.ts:362:1 › keeps separate Chinese composition sessions atomic in shared history (885ms)
+  ✓   72 [chromium] › tests/browser/distribution.spec.ts:211:1 › renders saved image alignment with the standalone frontend content stylesheet (506ms)
+  ✓   64 [chromium] › tests/browser/cms-multibrowser.spec.ts:275:1 › preserves one article through paste, formatting, media, Source and submission (2.0s)
+  ✓   68 [chromium] › tests/browser/cms-multibrowser.spec.ts:667:1 › preserves nested cached siblings and repairs detached descendants in one CMS container (1.3s)
+  ✓   73 [chromium] › tests/browser/file-manager.spec.ts:7:1 › inserts through a custom FileManager without changing ImagePlugin (839ms)
+  ✓   67 [chromium] › tests/browser/cms-multibrowser.spec.ts:536:1 › completes the canonical CMS authoring, submit, security, and teardown journey (1.8s)
+  ✓   74 [chromium] › tests/browser/file-manager.spec.ts:19:1 › uses the same image workflow through SoFinderAdapter (910ms)
+  ✓   71 [chromium] › tests/browser/distribution.spec.ts:105:1 › CMS global image resizing and table paragraph controls work after property mangling (1.6s)
+  ✓   75 [chromium] › tests/browser/file-manager.spec.ts:31:1 › uses the latest author selection after the caret moves (970ms)
+  ✓   77 [chromium] › tests/browser/file-manager.spec.ts:74:1 › disables browsing for a readonly editor (879ms)
+  ✓   76 [chromium] › tests/browser/file-manager.spec.ts:55:1 › keeps cancellation inert and reports an unsafe manager result (1.1s)
+  ✓   79 [chromium] › tests/browser/qualification.spec.ts:63:1 › keeps keyboard focus visible in forced colors and honors reduced motion (845ms)
+  ✓   66 [chromium] › tests/browser/cms-multibrowser.spec.ts:407:1 › keeps touch-sized classic controls, logical RTL chrome, and content direction isolated (3.0s)
+  ✓   81 [chromium] › tests/browser/qualification.spec.ts:114:1 › applies application CSP nonces to generated Source and Markdown styles (760ms)
+  ✓   80 [chromium] › tests/browser/qualification.spec.ts:100:1 › returns keyboard focus to the invoking command after dialog cancellation (953ms)
+  ✓   82 [chromium] › tests/browser/table.spec.ts:13:1 › provides keyboard rectangular selection, merge/split, headers, and history (1.5s)
+  ✓   84 [chromium] › tests/browser/table.spec.ts:123:1 › edits semantic table structure and appends a row from the last Tab stop (1.1s)
+  ✓   83 [chromium] › tests/browser/table.spec.ts:71:1 › adds rows and columns and copies, cuts, and pastes semantic cell data (1.5s)
+  ✓   86 [chromium] › tests/browser/table.spec.ts:209:1 › renders a bounded 400-cell table within budget without losing source structure (1.1s)
+  ✓   87 [chromium] › tests/browser/table.spec.ts:235:1 › edits CMS table properties and resizes columns by accessible controls (1.1s)
+  ✓   85 [chromium] › tests/browser/table.spec.ts:166:1 › preserves unsupported table source inertly and enforces readonly controls (1.3s)
+  ✓   78 [chromium] › tests/browser/qualification.spec.ts:6:1 › keeps the dark-theme primary dialog action at AA contrast (2.7s)
+  ✓   63 [chromium] › tests/browser/cms-multibrowser.spec.ts:159:1 › retains instance isolation and host cleanup across repeated CMS sessions (5.7s)
+  ✓   90 [chromium] › tests/browser/wysiwyg-editor.spec.ts:312:1 › mounts WYSIWYG without enabling Developer Visual (786ms)
+  ✓   93 [chromium] › tests/browser/wysiwyg-editor.spec.ts:475:1 › renders the direct semantic fixture and preserves unsupported HTML (813ms)
+  ✓   88 [chromium] › tests/browser/table.spec.ts:284:1 › sanitizes external matrix paste and completes list split/exit behavior (1.2s)
+  ✓   50 [chromium] › tests/browser/classic-editor.spec.ts:4558:1 › keeps logical table selections and header intersections through span edits and source round trips (10.6s)
+  ✓   95 [chromium] › tests/browser/wysiwyg-editor.spec.ts:536:1 › applies readonly to the WYSIWYG surface and tears down cleanly (549ms)
+  ✓   92 [chromium] › tests/browser/wysiwyg-editor.spec.ts:438:1 › passively reveals the matching Source text from a WYSIWYG selection (1.2s)
+  ✓   94 [chromium] › tests/browser/wysiwyg-editor.spec.ts:510:1 › synchronizes WYSIWYG edits with Source and restores WYSIWYG (1.2s)
+  ✓   91 [chromium] › tests/browser/wysiwyg-editor.spec.ts:340:1 › switches between resizable side-by-side and stacked Source layouts (1.6s)
+  ✓   98 [chromium] › tests/browser/wysiwyg-editor.spec.ts:646:1 › extends selection by keyboard and restores content through undo and redo (834ms)
+  ✓   89 [chromium] › tests/browser/table.spec.ts:333:1 › directly edits a cell and preserves safe rich single-cell paste (2.1s)
+  ✓   99 [chromium] › tests/browser/wysiwyg-editor.spec.ts:666:1 › copies, cuts, and pastes through the native WYSIWYG selection (952ms)
+  ✓  102 [chromium] › tests/browser/wysiwyg-editor.spec.ts:808:1 › preserves emoji, combining text, Chinese composition, and RTL input (599ms)
+  ✓   97 [chromium] › tests/browser/wysiwyg-editor.spec.ts:593:1 › supports forward and reverse drag selection and replacement in ordinary content and cells (1.2s)
+  ✓  103 [chromium] › tests/browser/wysiwyg-editor.spec.ts:820:1 › commits native Chinese IME text once and keeps the following Latin input (645ms)
+  ✓  100 [chromium] › tests/browser/wysiwyg-editor.spec.ts:694:1 › keeps double/triple-click selection and toolbar range restoration inside one cell (1.1s)
+  ✓  104 [chromium] › tests/browser/wysiwyg-editor.spec.ts:849:1 › keeps two WYSIWYG instances independent (541ms)
+  ✓  105 [chromium] › tests/browser/wysiwyg-editor.spec.ts:895:1 › repairs out-of-band DOM mutations from canonical WYSIWYG state (627ms)
+  ✓  101 [chromium] › tests/browser/wysiwyg-editor.spec.ts:741:1 › uses native Enter, Shift+Enter, Backspace, and Delete paragraph behavior (1.5s)
+  ✓  106 [chromium] › tests/browser/wysiwyg-editor.spec.ts:921:1 › keeps caret placement usable in a narrow 150 percent zoom viewport (830ms)
+  ✓  107 [chromium] › tests/browser/wysiwyg-editor.spec.ts:941:1 › locks invalid external source and recovers without losing the last valid content (770ms)
+  ✓  112 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1120:1 › does not create nested flow blocks when converting a legacy block to a paragraph (841ms)
+  ✓  111 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1095:1 › converts preformatted newlines and br elements when changing block type (1.0s)
+  ✓  113 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1147:1 › converts nested paragraph breaks when changing a flow block to PRE (793ms)
+  ✓  114 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1171:1 › keeps structural flow content intact when a paragraph conversion is unsafe (789ms)
+  ✓  110 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1053:1 › creates DIV blocks and semantic gradient highlighter markup (1.4s)
+  ✓  115 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1189:1 › keeps block and inline commands usable after pre and remove format (1.2s)
+  ✓  117 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1236:1 › removes inline formatting across blocks without flattening the blocks (707ms)
+  ✓  116 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1214:1 › preserves paragraph ownership when removing a CMS lead wrapper (786ms)
+  ✓  120 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1452:1 › inserts a collapsed link and a named anchor at the active caret (1.4s)
+  ✓  109 [chromium] › tests/browser/wysiwyg-editor.spec.ts:993:1 › applies color, background, font size, and remove-format consistently in body, list, and cell content (2.9s)
+  ✓  122 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1598:1 › edits the table caption in a focused dialog (996ms)
+  ✓  108 [chromium] › tests/browser/wysiwyg-editor.spec.ts:959:1 › applies every semantic inline mark through the same UI path in paragraphs, nested lists, and cells (3.2s)
+  ✓  118 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1268:1 › creates, edits, and removes a selected-text link without losing its range (2.2s)
+  ✓  123 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1654:1 › uses explicit Shift-click rectangular table selection for merge, split, and clear (1.5s)
+  ✓  124 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1702:1 › enables merge for a rectangular body selection below a table header (1.0s)
+  ✓  125 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1728:1 › merges two vertically dragged body cells below a table header (1.0s)
+  ✓  127 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1818:1 › supports Dreamweaver-style drag and row, column, and table selection scopes (1.1s)
+  ✓  119 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1372:1 › applies block, alignment, rule, and nested-list keyboard commands in WYSIWYG (2.8s)
+  ✓  126 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1773:1 › can merge another selection after the table already contains a merged cell (1.4s)
+  ✓  131 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2028:1 › pastes rich semantic content inside a cell as one history step (840ms)
+  ✓  133 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2092:1 › keeps document formatting tools out of the CMS editing surface (631ms)
+  ✓  130 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1978:1 › completes image properties by double click in WYSIWYG (1.1s)
+  ✓  129 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1908:1 › uses one image menu for URL, file manager, and computer upload (1.5s)
+  ✓  134 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2107:1 › reports document counts, uses neutral styles, and inserts a preset character (870ms)
+  ✓  121 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1499:1 › keeps one stable table toolbar, navigates with Tab, and applies visible properties (3.5s)
+  ✓  135 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2183:1 › keeps hidden CMS toolbar commands available to integrations (570ms)
+  ✓  132 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2068:1 › switches between one WYSIWYG or Source writer (1.2s)
+  ✓  128 [chromium] › tests/browser/wysiwyg-editor.spec.ts:1869:1 › adds and removes table rows and columns with one-step history (2.2s)
+  ✓  138 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2338:1 › limits list conversion to selected items and preserves following numbers (1.2s)
+  ✓  140 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2478:1 › keeps list boundary deletion and empty-item exit reversible (1.1s)
+  ✓  141 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2550:1 › shows inherited and mixed formatting without marking an arbitrary value active (1.2s)
+  ✓  136 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2215:1 › has no automated WCAG A or AA violation in direct WYSIWYG authoring (2.0s)
+  ✓  139 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2391:1 › keeps list keyboard operations scoped and ordered across nested block items (1.6s)
+  ✓  142 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2662:1 › reads uniform font and color values and clears mixed heading choices (1.6s)
+  ✓  145 [chromium] › tests/browser/wysiwyg-editor.spec.ts:3037:1 › keeps table context tools away from the edited cell when the table top is clipped (776ms)
+  ✓  144 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2955:1 › offers image context actions without covering resize handles or losing history (1.2s)
+  ✓  137 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2234:1 › chooses alignment and list marker galleries without losing list content (3.0s)
+  ✓  143 [chromium] › tests/browser/wysiwyg-editor.spec.ts:2782:1 › keeps toolbar menu navigation and placement consistent at viewport edges (3.1s)
+  ✓   96 [chromium] › tests/browser/wysiwyg-editor.spec.ts:568:1 › places a native caret at every text boundary in body, lists, caption, and cells (13.3s)
+
+  145 passed (39.5s)
+$ playwright test --config playwright.cms.config.ts --project chromium --project chromium-mobile
+[WebServer] (node:2080009) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] $ vite --host 127.0.0.1 --port 4173
+[WebServer] (node:2080024) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 16 tests using 2 workers
+
+(node:2080345) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2080350) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2080345) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:2080350) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   1 [chromium] › tests/browser/cms-multibrowser.spec.ts:10:1 › keeps block serialization current through native edits, history and external repair (1.6s)
+  ✓   2 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:10:1 › keeps block serialization current through native edits, history and external repair (1.6s)
+  ✓   3 [chromium] › tests/browser/cms-multibrowser.spec.ts:82:1 › round-trips the synthetic legacy CMS corpus through editing, saving and reopening (1.2s)
+  ✓   4 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:82:1 › round-trips the synthetic legacy CMS corpus through editing, saving and reopening (1.2s)
+  ✓   5 [chromium] › tests/browser/cms-multibrowser.spec.ts:159:1 › retains instance isolation and host cleanup across repeated CMS sessions (4.3s)
+  ✓   6 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:159:1 › retains instance isolation and host cleanup across repeated CMS sessions (4.3s)
+  ✓   7 [chromium] › tests/browser/cms-multibrowser.spec.ts:275:1 › preserves one article through paste, formatting, media, Source and submission (1.5s)
+  ✓   8 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:275:1 › preserves one article through paste, formatting, media, Source and submission (1.5s)
+  ✓   9 [chromium] › tests/browser/cms-multibrowser.spec.ts:362:1 › keeps separate Chinese composition sessions atomic in shared history (690ms)
+  ✓  10 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:362:1 › keeps separate Chinese composition sessions atomic in shared history (700ms)
+  ✓  11 [chromium] › tests/browser/cms-multibrowser.spec.ts:407:1 › keeps touch-sized classic controls, logical RTL chrome, and content direction isolated (2.5s)
+  ✓  12 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:407:1 › keeps touch-sized classic controls, logical RTL chrome, and content direction isolated (2.6s)
+  ✓  13 [chromium] › tests/browser/cms-multibrowser.spec.ts:536:1 › completes the canonical CMS authoring, submit, security, and teardown journey (1.4s)
+  ✓  14 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:536:1 › completes the canonical CMS authoring, submit, security, and teardown journey (1.4s)
+  ✓  15 [chromium] › tests/browser/cms-multibrowser.spec.ts:667:1 › preserves nested cached siblings and repairs detached descendants in one CMS container (1.1s)
+  ✓  16 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:667:1 › preserves nested cached siblings and repairs detached descendants in one CMS container (1.0s)
+
+  16 passed (18.2s)

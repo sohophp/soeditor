@@ -1,16 +1,38 @@
-# SoEditor CMS WYSIWYG Roadmap
+# SoEditor CMS WYSIWYG + Source Roadmap
+
+> 2026-09-08：当前工作区的优化状态、测量与验证统一见 [CMS 性能与稳定性优化](cms-followup-2026-09-08.zh-CN.md)。以下日期更早的数字为历史记录；人工设备验收单独列出。
 
 ## Status
 
-Implementation roadmap, reset on 2026-09-01 and completed through automated
-qualification on 2026-09-01.
+Updated on 2026-09-08. The active follow-up is [CMS performance and stability](cms-followup-2026-09-08.zh-CN.md). Its current acceptance record takes precedence over dated measurements below. The completed preceding program is
+[WYSIWYG + Source loading and editing](wysiwyg-source-plan.zh-CN.md), stages
+WS1–WS6. Local implementation and automated acceptance are complete; see
+[measured evidence](wysiwyg-source-evidence.zh-CN.md). Manual Safari and
+assistive-technology qualification remain separate.
 
-Phases 1–57 are implementation and release history. They remain useful evidence
-but no longer define future product breadth. The active roadmap starts at Phase
-58 and is governed by `AGENTS.md`, `docs/PRODUCT.md`, and
-`docs/wysiwyg-editor.md`.
+Phases 58–63 below retain historical status and evidence. Their COMPLETE labels
+are not current-worktree verification and do not qualify first-activation Source
+loading. Phases 1–57 remain historical context, not future product scope.
+
+## Completed implementation program — WS1–WS6
+
+1. WS1: establish current artifact, network and interaction baselines.
+2. WS2: isolate CMS, Source and retained optional/compatibility entry graphs.
+3. WS3: load Source on first activation with reliable lifecycle and retry.
+4. WS4: separate formatting, diagnostics and optional resource loading.
+5. WS5: qualify WYSIWYG/Source round trips and both bounded split views.
+6. WS6: optimize measured costs and qualify distributions and host integration.
+
+Preserve ordinary WYSIWYG capabilities and existing optional packages. Do not
+expand developer, Markdown, review or generic workspace features. Numeric budget
+changes require measured evidence and explicit review, never automatic relaxation.
 
 ## Program objective
+
+The first post-program performance follow-up caches unchanged document counts
+per UI instance. See [large-document measurements](large-document-performance.zh-CN.md)
+for scope, repeat-input evidence and the remaining serialization work. This does
+not reopen optional product families or replace WS1–WS6 historical evidence.
 
 Produce one dependable, lightweight CMS HTML editor:
 

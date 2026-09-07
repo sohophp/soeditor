@@ -20,6 +20,18 @@ export interface VisualInlineStyle {
 export type VisualInlineStyleProperty =
     'background' | 'background-color' | 'color' | 'font-family' | 'font-size';
 
+/** CSS marker styles available in the CMS list gallery. */
+export type VisualListStyle =
+    | 'decimal'
+    | 'decimal-leading-zero'
+    | 'lower-roman'
+    | 'upper-roman'
+    | 'lower-alpha'
+    | 'upper-alpha'
+    | 'disc'
+    | 'circle'
+    | 'square';
+
 /** Bounded ordered/unordered list source properties. */
 export interface VisualListProperties {
     readonly start?: number;
@@ -53,9 +65,26 @@ export interface VisualHtmlInsertionOptions {
     readonly placement?: 'replace-selection' | 'selection-start';
 }
 
+/** Rendered formatting across the current author selection. */
+export type VisualFormatProperty =
+    | 'alignment'
+    | 'heading'
+    | 'list'
+    | 'font.size'
+    | 'font.family'
+    | 'font.color'
+    | 'font.backgroundColor'
+    | 'font.highlight';
+export type VisualFormatState =
+    | { readonly status: 'uniform'; readonly value: string }
+    | { readonly status: 'mixed' | 'unavailable' };
+
 /** Narrow, transaction-backed editing capabilities exposed to feature plugins. */
 export interface VisualEditingService {
     canEdit(): boolean;
+    getFormatStates?(): Readonly<
+        Record<VisualFormatProperty, VisualFormatState>
+    >;
     getSelection(): EditingSelection | undefined;
     setSelection(selection: EditingSelection, focus?: boolean): boolean;
     toggleMark(mark: VisualTextMark): void;
@@ -78,6 +107,9 @@ export interface VisualEditingService {
     toggleList(list: 'ol' | 'ul'): void;
     isListActive(list: 'ol' | 'ul'): boolean;
     setListProperties?(properties: VisualListProperties): void;
+    /** Applies a marker style, creating a list in one transaction when needed. */
+    setListStyle?(list: 'ol' | 'ul', style: VisualListStyle): void;
+    isListStyleActive?(list: 'ol' | 'ul', style: VisualListStyle): boolean;
     setLink(attributes: VisualLinkAttributes | undefined): void;
     isLinkActive(): boolean;
     getLinkAttributes?(): VisualLinkAttributes | undefined;

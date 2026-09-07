@@ -1,0 +1,849 @@
+{
+    "measuredAt": "2026-09-07T13:32:42.022Z",
+    "chromium": "151.0.7922.34",
+    "minutes": 15,
+    "cycles": 81,
+    "elapsedSeconds": 907.682,
+    "checkpoints": [
+        {
+            "elapsedSeconds": 2.389,
+            "cycles": 1,
+            "documents": 2,
+            "nodes": 10656,
+            "jsEventListeners": 152,
+            "usedSize": 7295420,
+            "totalSize": 8241152,
+            "embedderHeapUsedSize": 7868008,
+            "backingStorageSize": 1933805
+        },
+        {
+            "elapsedSeconds": 64.025,
+            "cycles": 24,
+            "documents": 2,
+            "nodes": 11231,
+            "jsEventListeners": 152,
+            "usedSize": 8122292,
+            "totalSize": 9551872,
+            "embedderHeapUsedSize": 8254440,
+            "backingStorageSize": 4292639
+        },
+        {
+            "elapsedSeconds": 121.989,
+            "cycles": 34,
+            "documents": 2,
+            "nodes": 11481,
+            "jsEventListeners": 152,
+            "usedSize": 8261316,
+            "totalSize": 9289728,
+            "embedderHeapUsedSize": 8339248,
+            "backingStorageSize": 5318384
+        },
+        {
+            "elapsedSeconds": 182.359,
+            "cycles": 41,
+            "documents": 2,
+            "nodes": 11656,
+            "jsEventListeners": 152,
+            "usedSize": 8528148,
+            "totalSize": 10735616,
+            "embedderHeapUsedSize": 8397400,
+            "backingStorageSize": 6036465
+        },
+        {
+            "elapsedSeconds": 251.982,
+            "cycles": 47,
+            "documents": 2,
+            "nodes": 11806,
+            "jsEventListeners": 152,
+            "usedSize": 8415180,
+            "totalSize": 10211328,
+            "embedderHeapUsedSize": 8448232,
+            "backingStorageSize": 6650413
+        },
+        {
+            "elapsedSeconds": 308.583,
+            "cycles": 51,
+            "documents": 2,
+            "nodes": 11906,
+            "jsEventListeners": 152,
+            "usedSize": 8291488,
+            "totalSize": 9687040,
+            "embedderHeapUsedSize": 8481424,
+            "backingStorageSize": 7060791
+        },
+        {
+            "elapsedSeconds": 372.318,
+            "cycles": 56,
+            "documents": 2,
+            "nodes": 12031,
+            "jsEventListeners": 152,
+            "usedSize": 8328388,
+            "totalSize": 10211328,
+            "embedderHeapUsedSize": 8523440,
+            "backingStorageSize": 7573786
+        },
+        {
+            "elapsedSeconds": 430.905,
+            "cycles": 60,
+            "documents": 2,
+            "nodes": 12131,
+            "jsEventListeners": 152,
+            "usedSize": 8378900,
+            "totalSize": 9949184,
+            "embedderHeapUsedSize": 8566512,
+            "backingStorageSize": 7984200
+        },
+        {
+            "elapsedSeconds": 480.151,
+            "cycles": 63,
+            "documents": 2,
+            "nodes": 12206,
+            "jsEventListeners": 152,
+            "usedSize": 8409420,
+            "totalSize": 9949184,
+            "embedderHeapUsedSize": 8585120,
+            "backingStorageSize": 8292021
+        },
+        {
+            "elapsedSeconds": 554.989,
+            "cycles": 67,
+            "documents": 2,
+            "nodes": 12307,
+            "jsEventListeners": 152,
+            "usedSize": 8587512,
+            "totalSize": 9687040,
+            "embedderHeapUsedSize": 8618944,
+            "backingStorageSize": 8702484
+        },
+        {
+            "elapsedSeconds": 615.916,
+            "cycles": 70,
+            "documents": 2,
+            "nodes": 12382,
+            "jsEventListeners": 152,
+            "usedSize": 8484576,
+            "totalSize": 9949184,
+            "embedderHeapUsedSize": 8643848,
+            "backingStorageSize": 9010326
+        },
+        {
+            "elapsedSeconds": 662.315,
+            "cycles": 72,
+            "documents": 2,
+            "nodes": 12432,
+            "jsEventListeners": 152,
+            "usedSize": 8657868,
+            "totalSize": 10211328,
+            "embedderHeapUsedSize": 8663432,
+            "backingStorageSize": 9215559
+        },
+        {
+            "elapsedSeconds": 735.205,
+            "cycles": 75,
+            "documents": 2,
+            "nodes": 12507,
+            "jsEventListeners": 152,
+            "usedSize": 8751848,
+            "totalSize": 10211328,
+            "embedderHeapUsedSize": 8689616,
+            "backingStorageSize": 9523416
+        },
+        {
+            "elapsedSeconds": 789.106,
+            "cycles": 77,
+            "documents": 2,
+            "nodes": 12557,
+            "jsEventListeners": 152,
+            "usedSize": 8635844,
+            "totalSize": 9949184,
+            "embedderHeapUsedSize": 8704016,
+            "backingStorageSize": 9728659
+        },
+        {
+            "elapsedSeconds": 845.018,
+            "cycles": 79,
+            "documents": 2,
+            "nodes": 12607,
+            "jsEventListeners": 152,
+            "usedSize": 8800468,
+            "totalSize": 10211328,
+            "embedderHeapUsedSize": 8718864,
+            "backingStorageSize": 9933906
+        },
+        {
+            "elapsedSeconds": 903.345,
+            "cycles": 81,
+            "documents": 2,
+            "nodes": 12657,
+            "jsEventListeners": 152,
+            "usedSize": 8663968,
+            "totalSize": 9949184,
+            "embedderHeapUsedSize": 8733848,
+            "backingStorageSize": 10139157
+        }
+    ],
+    "final": {
+        "documents": 2,
+        "nodes": 287,
+        "jsEventListeners": 52,
+        "usedSize": 7134696,
+        "totalSize": 7979008,
+        "embedderHeapUsedSize": 3919560,
+        "backingStorageSize": 1508100
+    },
+    "snapshots": [
+        {
+            "label": "warm",
+            "path": "docs/evidence/cms-followup-2026-09-07/pre-sync/soak.json.warm.heapsnapshot.gz",
+            "topSelfBytes": [
+                [
+                    "system / ExternalStringData",
+                    {
+                        "count": 342,
+                        "selfBytes": 2343955
+                    }
+                ],
+                [
+                    "system / InstructionStream",
+                    {
+                        "count": 809,
+                        "selfBytes": 774784
+                    }
+                ],
+                [
+                    "system / JSArrayBufferData",
+                    {
+                        "count": 132,
+                        "selfBytes": 580691
+                    }
+                ],
+                [
+                    "system / BytecodeArray",
+                    {
+                        "count": 1833,
+                        "selfBytes": 447920
+                    }
+                ],
+                [
+                    "blink::ComputedStyle",
+                    {
+                        "count": 5628,
+                        "selfBytes": 405216
+                    }
+                ],
+                [
+                    "blink::ConstraintSpace::RareData",
+                    {
+                        "count": 3096,
+                        "selfBytes": 371520
+                    }
+                ],
+                [
+                    "blink::LayoutText",
+                    {
+                        "count": 3542,
+                        "selfBytes": 368368
+                    }
+                ],
+                [
+                    "Text",
+                    {
+                        "count": 4409,
+                        "selfBytes": 365584
+                    }
+                ],
+                [
+                    "blink::PhysicalBoxFragment",
+                    {
+                        "count": 3597,
+                        "selfBytes": 358840
+                    }
+                ],
+                [
+                    "blink::UniqueElementData",
+                    {
+                        "count": 3040,
+                        "selfBytes": 340480
+                    }
+                ],
+                [
+                    "\n        (() => {\n        \n        const module = {};\n        \nvar __commonJS = obj => {\n  let required = false;\n  let result;\n  return function __require() {\n    if (!required) {\n      required = true;\n      let fn;\n      for (const name in obj) { fn = obj[name]; break; }\n      const module = { exports: {} };\n      fn(module.exports, module);\n      result = module.exports;\n    }\n    return result;\n  }\n};\nvar __export = (target, all) => {for (var name in all) target[name] = all[name];};\nvar __toESM = mod => ({ ...mod, 'default': mod });\nvar __toCommonJS = mod => ({ ...mod, __esModule: true });\n\n\n// packages/injected/src/injectedScript.ts\nvar injectedScript_exports = {};\n__export(injectedScript_exports, {\n  InjectedScript: () => InjectedScript\n});\nmodule.exports = __toCommonJS(injectedScript_exports);\n\n// packages/isomorphic/ariaSnapshot.ts\nfunction hasPointerCursor(ariaNode) {\n  return ariaNode.box.cursor === \"pointer\";\n}\nfunction parseAriaSnapshot(yaml, text, options = {}) {\n  var _a;\n  const lineCounter = n",
+                    {
+                        "count": 1,
+                        "selfBytes": 317096
+                    }
+                ],
+                [
+                    "blink::HeapVectorBacking<blink::FragmentItem>",
+                    {
+                        "count": 1777,
+                        "selfBytes": 312248
+                    }
+                ],
+                [
+                    "blink::LayoutResult",
+                    {
+                        "count": 3597,
+                        "selfBytes": 287760
+                    }
+                ],
+                [
+                    "blink::ShapeResultView",
+                    {
+                        "count": 3542,
+                        "selfBytes": 255024
+                    }
+                ],
+                [
+                    "Object",
+                    {
+                        "count": 10460,
+                        "selfBytes": 242564
+                    }
+                ],
+                [
+                    "system / DescriptorArray",
+                    {
+                        "count": 2358,
+                        "selfBytes": 240680
+                    }
+                ],
+                [
+                    "system / FunctionTemplateInfo",
+                    {
+                        "count": 3433,
+                        "selfBytes": 219584
+                    }
+                ],
+                [
+                    "blink::InlineItem",
+                    {
+                        "count": 5315,
+                        "selfBytes": 212600
+                    }
+                ],
+                [
+                    "blink::LayoutBlockFlow",
+                    {
+                        "count": 1352,
+                        "selfBytes": 205504
+                    }
+                ],
+                [
+                    "(object elements)",
+                    {
+                        "count": 2799,
+                        "selfBytes": 196828
+                    }
+                ],
+                [
+                    "blink::PhysicalFragmentRareData",
+                    {
+                        "count": 2683,
+                        "selfBytes": 193176
+                    }
+                ],
+                [
+                    "blink::FragmentDataList",
+                    {
+                        "count": 8034,
+                        "selfBytes": 192816
+                    }
+                ],
+                [
+                    "system / Map",
+                    {
+                        "count": 4881,
+                        "selfBytes": 189516
+                    }
+                ],
+                [
+                    "",
+                    {
+                        "count": 1100,
+                        "selfBytes": 183948
+                    }
+                ],
+                [
+                    "blink::ShapeResultRun",
+                    {
+                        "count": 2219,
+                        "selfBytes": 159768
+                    }
+                ],
+                [
+                    "blink::LayoutTableCell",
+                    {
+                        "count": 884,
+                        "selfBytes": 155584
+                    }
+                ],
+                [
+                    "blink::ShapeResult",
+                    {
+                        "count": 2219,
+                        "selfBytes": 142016
+                    }
+                ],
+                [
+                    "system / TrustedByteArray",
+                    {
+                        "count": 1864,
+                        "selfBytes": 137760
+                    }
+                ],
+                [
+                    "blink::LayoutResult::RareData",
+                    {
+                        "count": 886,
+                        "selfBytes": 120496
+                    }
+                ],
+                [
+                    "blink::HeapVectorBacking<blink::PhysicalFragmentLink>",
+                    {
+                        "count": 3579,
+                        "selfBytes": 105576
+                    }
+                ]
+            ],
+            "detachedNames": []
+        },
+        {
+            "label": "mounted-end",
+            "path": "docs/evidence/cms-followup-2026-09-07/pre-sync/soak.json.mounted-end.heapsnapshot.gz",
+            "topSelfBytes": [
+                [
+                    "system / ExternalStringData",
+                    {
+                        "count": 397,
+                        "selfBytes": 10667352
+                    }
+                ],
+                [
+                    "system / InstructionStream",
+                    {
+                        "count": 1908,
+                        "selfBytes": 2001856
+                    }
+                ],
+                [
+                    "\n        (() => {\n        \n        const module = {};\n        \nvar __commonJS = obj => {\n  let required = false;\n  let result;\n  return function __require() {\n    if (!required) {\n      required = true;\n      let fn;\n      for (const name in obj) { fn = obj[name]; break; }\n      const module = { exports: {} };\n      fn(module.exports, module);\n      result = module.exports;\n    }\n    return result;\n  }\n};\nvar __export = (target, all) => {for (var name in all) target[name] = all[name];};\nvar __toESM = mod => ({ ...mod, 'default': mod });\nvar __toCommonJS = mod => ({ ...mod, __esModule: true });\n\n\n// packages/injected/src/injectedScript.ts\nvar injectedScript_exports = {};\n__export(injectedScript_exports, {\n  InjectedScript: () => InjectedScript\n});\nmodule.exports = __toCommonJS(injectedScript_exports);\n\n// packages/isomorphic/ariaSnapshot.ts\nfunction hasPointerCursor(ariaNode) {\n  return ariaNode.box.cursor === \"pointer\";\n}\nfunction parseAriaSnapshot(yaml, text, options = {}) {\n  var _a;\n  const lineCounter = n",
+                    {
+                        "count": 2,
+                        "selfBytes": 634188
+                    }
+                ],
+                [
+                    "system / JSArrayBufferData",
+                    {
+                        "count": 130,
+                        "selfBytes": 573035
+                    }
+                ],
+                [
+                    "blink::ConstraintSpace::RareData",
+                    {
+                        "count": 3980,
+                        "selfBytes": 477600
+                    }
+                ],
+                [
+                    "blink::PhysicalBoxFragment",
+                    {
+                        "count": 4480,
+                        "selfBytes": 464800
+                    }
+                ],
+                [
+                    "Text",
+                    {
+                        "count": 5059,
+                        "selfBytes": 427824
+                    }
+                ],
+                [
+                    "blink::HeapVectorBacking<blink::FragmentItem>",
+                    {
+                        "count": 2660,
+                        "selfBytes": 418208
+                    }
+                ],
+                [
+                    "system / TrustedByteArray",
+                    {
+                        "count": 4142,
+                        "selfBytes": 417160
+                    }
+                ],
+                [
+                    "(object elements)",
+                    {
+                        "count": 5620,
+                        "selfBytes": 407620
+                    }
+                ],
+                [
+                    "blink::ComputedStyle",
+                    {
+                        "count": 5638,
+                        "selfBytes": 405936
+                    }
+                ],
+                [
+                    "system / BytecodeArray",
+                    {
+                        "count": 1559,
+                        "selfBytes": 401620
+                    }
+                ],
+                [
+                    "blink::UniqueElementData",
+                    {
+                        "count": 3444,
+                        "selfBytes": 385728
+                    }
+                ],
+                [
+                    "blink::LayoutText",
+                    {
+                        "count": 3541,
+                        "selfBytes": 368264
+                    }
+                ],
+                [
+                    "blink::LayoutResult",
+                    {
+                        "count": 4480,
+                        "selfBytes": 358400
+                    }
+                ],
+                [
+                    "system / FunctionTemplateInfo",
+                    {
+                        "count": 5001,
+                        "selfBytes": 319936
+                    }
+                ],
+                [
+                    "",
+                    {
+                        "count": 1133,
+                        "selfBytes": 319396
+                    }
+                ],
+                [
+                    "blink::ShapeResultView",
+                    {
+                        "count": 4425,
+                        "selfBytes": 318600
+                    }
+                ],
+                [
+                    "system / DescriptorArray",
+                    {
+                        "count": 2617,
+                        "selfBytes": 274432
+                    }
+                ],
+                [
+                    "blink::PhysicalFragmentRareData",
+                    {
+                        "count": 3566,
+                        "selfBytes": 256752
+                    }
+                ],
+                [
+                    "Object",
+                    {
+                        "count": 11040,
+                        "selfBytes": 255872
+                    }
+                ],
+                [
+                    "system / Map",
+                    {
+                        "count": 5480,
+                        "selfBytes": 214256
+                    }
+                ],
+                [
+                    "blink::InlineItem",
+                    {
+                        "count": 5314,
+                        "selfBytes": 212560
+                    }
+                ],
+                [
+                    "system / FeedbackVector",
+                    {
+                        "count": 1506,
+                        "selfBytes": 208316
+                    }
+                ],
+                [
+                    "blink::LayoutBlockFlow",
+                    {
+                        "count": 1351,
+                        "selfBytes": 205352
+                    }
+                ],
+                [
+                    "blink::FragmentDataList",
+                    {
+                        "count": 8032,
+                        "selfBytes": 192768
+                    }
+                ],
+                [
+                    "system / WeakArrayList",
+                    {
+                        "count": 1323,
+                        "selfBytes": 185652
+                    }
+                ],
+                [
+                    "blink::ShapeResultRun",
+                    {
+                        "count": 2218,
+                        "selfBytes": 159696
+                    }
+                ],
+                [
+                    "blink::LayoutTableCell",
+                    {
+                        "count": 884,
+                        "selfBytes": 155584
+                    }
+                ],
+                [
+                    "blink::ShapeResult",
+                    {
+                        "count": 2218,
+                        "selfBytes": 141952
+                    }
+                ]
+            ],
+            "detachedNames": []
+        },
+        {
+            "label": "destroyed",
+            "path": "docs/evidence/cms-followup-2026-09-07/pre-sync/soak.json.destroyed.heapsnapshot.gz",
+            "topSelfBytes": [
+                [
+                    "system / ExternalStringData",
+                    {
+                        "count": 320,
+                        "selfBytes": 2459683
+                    }
+                ],
+                [
+                    "system / InstructionStream",
+                    {
+                        "count": 1739,
+                        "selfBytes": 1750464
+                    }
+                ],
+                [
+                    "blink::ShapeResultView",
+                    {
+                        "count": 8851,
+                        "selfBytes": 637272
+                    }
+                ],
+                [
+                    "\n        (() => {\n        \n        const module = {};\n        \nvar __commonJS = obj => {\n  let required = false;\n  let result;\n  return function __require() {\n    if (!required) {\n      required = true;\n      let fn;\n      for (const name in obj) { fn = obj[name]; break; }\n      const module = { exports: {} };\n      fn(module.exports, module);\n      result = module.exports;\n    }\n    return result;\n  }\n};\nvar __export = (target, all) => {for (var name in all) target[name] = all[name];};\nvar __toESM = mod => ({ ...mod, 'default': mod });\nvar __toCommonJS = mod => ({ ...mod, __esModule: true });\n\n\n// packages/injected/src/injectedScript.ts\nvar injectedScript_exports = {};\n__export(injectedScript_exports, {\n  InjectedScript: () => InjectedScript\n});\nmodule.exports = __toCommonJS(injectedScript_exports);\n\n// packages/isomorphic/ariaSnapshot.ts\nfunction hasPointerCursor(ariaNode) {\n  return ariaNode.box.cursor === \"pointer\";\n}\nfunction parseAriaSnapshot(yaml, text, options = {}) {\n  var _a;\n  const lineCounter = n",
+                    {
+                        "count": 2,
+                        "selfBytes": 634188
+                    }
+                ],
+                [
+                    "system / BytecodeArray",
+                    {
+                        "count": 1640,
+                        "selfBytes": 415688
+                    }
+                ],
+                [
+                    "system / TrustedByteArray",
+                    {
+                        "count": 3776,
+                        "selfBytes": 320308
+                    }
+                ],
+                [
+                    "system / FunctionTemplateInfo",
+                    {
+                        "count": 5001,
+                        "selfBytes": 319936
+                    }
+                ],
+                [
+                    "blink::PhysicalLineBoxFragment",
+                    {
+                        "count": 6192,
+                        "selfBytes": 297216
+                    }
+                ],
+                [
+                    "system / DescriptorArray",
+                    {
+                        "count": 2473,
+                        "selfBytes": 261796
+                    }
+                ],
+                [
+                    "blink::InlineBreakToken",
+                    {
+                        "count": 6190,
+                        "selfBytes": 247600
+                    }
+                ],
+                [
+                    "system / FeedbackVector",
+                    {
+                        "count": 1512,
+                        "selfBytes": 209012
+                    }
+                ],
+                [
+                    "system / Map",
+                    {
+                        "count": 4797,
+                        "selfBytes": 186888
+                    }
+                ],
+                [
+                    "system / WeakArrayList",
+                    {
+                        "count": 1088,
+                        "selfBytes": 170872
+                    }
+                ],
+                [
+                    "",
+                    {
+                        "count": 747,
+                        "selfBytes": 166252
+                    }
+                ],
+                [
+                    "system / JSArrayBufferData",
+                    {
+                        "count": 18,
+                        "selfBytes": 148723
+                    }
+                ],
+                [
+                    "system / Code",
+                    {
+                        "count": 1739,
+                        "selfBytes": 125208
+                    }
+                ],
+                [
+                    "system / ScopeInfo",
+                    {
+                        "count": 2479,
+                        "selfBytes": 124952
+                    }
+                ],
+                [
+                    "<section data-cms=\"record\"><h2>CMS article</h2><p>Text <strong>bold</strong> and <a href=\"/page\">link</a>.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</p><table><tbody><tr><td>A</td><td>B</td></tr></tbody></table><!-- cms --><product-card data-id=\"1\"></product-card></section><section data-cms=\"record\"><h2>CMS article</h2><p>Text <strong>bold</strong> and <a href=\"/page\">link</a>.</p><table><tbody><tr><td>A</td><td>B</td></tr></tbody></table><!-- cms --><product-card data-id=\"1\"></product-card></section><section data-cms=\"record\"><h2>CMS article</h2><p>Text <strong>bold</strong> and <a href=\"/page\">link</a>.</p><table><tbody><tr><td>A</td><td>B</td></tr></tbody></table><!-- cms --><product-card data-id=\"1\"></product-card></section><section data-cms=\"record\"><h2>CMS article</h2><p>Text <strong>bold</strong> and <a href=\"/page\">link</a>.</p><table><tbody><tr><td>A</td><td>B</td></tr></tbody></table><!-- cms --><product-card data-id=\"1\"></product-card></section><section data-c",
+                    {
+                        "count": 2,
+                        "selfBytes": 102692
+                    }
+                ],
+                [
+                    "blink::HeapVectorBacking<blink::HarfBuzzRunGlyphData>",
+                    {
+                        "count": 13,
+                        "selfBytes": 100120
+                    }
+                ],
+                [
+                    "(object properties)",
+                    {
+                        "count": 180,
+                        "selfBytes": 99800
+                    }
+                ],
+                [
+                    "(object elements)",
+                    {
+                        "count": 1310,
+                        "selfBytes": 94056
+                    }
+                ],
+                [
+                    "system / FeedbackCell",
+                    {
+                        "count": 5632,
+                        "selfBytes": 90096
+                    }
+                ],
+                [
+                    "(constant pool)",
+                    {
+                        "count": 1531,
+                        "selfBytes": 89676
+                    }
+                ],
+                [
+                    "system / ArrayList",
+                    {
+                        "count": 176,
+                        "selfBytes": 80004
+                    }
+                ],
+                [
+                    "blink::StyleRule",
+                    {
+                        "count": 922,
+                        "selfBytes": 78896
+                    }
+                ],
+                [
+                    "system / UncompiledDataWithoutPreparseData",
+                    {
+                        "count": 3659,
+                        "selfBytes": 73180
+                    }
+                ],
+                [
+                    "blink::ImmutableCSSPropertyValueSet",
+                    {
+                        "count": 679,
+                        "selfBytes": 68192
+                    }
+                ],
+                [
+                    "system / FeedbackMetadata",
+                    {
+                        "count": 1589,
+                        "selfBytes": 64136
+                    }
+                ],
+                [
+                    "(context local names)",
+                    {
+                        "count": 6,
+                        "selfBytes": 53368
+                    }
+                ],
+                [
+                    "Object",
+                    {
+                        "count": 2366,
+                        "selfBytes": 52548
+                    }
+                ]
+            ],
+            "detachedNames": []
+        }
+    ],
+    "errors": [],
+    "note": "One continuously mounted 100 KiB production editor with edit, undo/redo, readonly and all Source views. Forced GC and full heap snapshots are diagnostics, not latency benchmarks or manual IME/Office/Safari qualification. History and the fixture-held destroyed wrapper are intentional retainers; snapshot self sizes are not dominator retained sizes."
+}

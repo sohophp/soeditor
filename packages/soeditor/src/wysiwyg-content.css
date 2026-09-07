@@ -1,3 +1,5 @@
+@import './content.css';
+
 :host {
     display: block;
     min-height: 100%;
@@ -45,10 +47,10 @@
 }
 
 .soeditor-image-resize-overlay {
-    border: 1px solid var(--soeditor-accent, #0969da);
     box-sizing: border-box;
+    outline: 2px solid #377dff;
     pointer-events: none;
-    position: fixed;
+    position: absolute;
     z-index: 8;
 }
 
@@ -60,7 +62,7 @@
 }
 
 .soeditor-image-resize-overlay.is-resizing .soeditor-image-resize-preview {
-    opacity: 0.7;
+    opacity: 1;
 }
 
 .soeditor-image-resize-overlay::after {
@@ -86,17 +88,33 @@
 
 .soeditor-image-resize-handle {
     appearance: none;
-    background: var(--soeditor-bg, #fff);
-    block-size: 12px;
-    border: 2px solid var(--soeditor-accent, #0969da);
-    border-radius: 50%;
+    background: #377dff;
+    block-size: 10px;
+    border: 1px solid #fff;
+    border-radius: 0;
     box-sizing: border-box;
-    inline-size: 12px;
-    margin: -6px;
+    inline-size: 10px;
+    margin: -5px;
     padding: 0;
     pointer-events: auto;
     position: absolute;
     touch-action: none;
+}
+
+.soeditor-image-resize-handle[data-resize-direction='n'],
+.soeditor-image-resize-handle[data-resize-direction='s'] {
+    block-size: 6px;
+    inline-size: 14px;
+    margin-block: -3px;
+    margin-inline: -7px;
+}
+
+.soeditor-image-resize-handle[data-resize-direction='e'],
+.soeditor-image-resize-handle[data-resize-direction='w'] {
+    block-size: 14px;
+    inline-size: 6px;
+    margin-block: -7px;
+    margin-inline: -3px;
 }
 
 .soeditor-image-resize-handle[data-resize-direction='nw'] {
@@ -162,15 +180,31 @@
 }
 
 .soeditor-wysiwyg-content .soeditor-table-widget > table {
-    border-collapse: collapse;
     width: 100%;
 }
 
 .soeditor-wysiwyg-content table.soeditor-table-widget {
-    border-collapse: collapse;
     display: table;
     overflow: visible;
     width: 100%;
+}
+
+/* Legacy table attributes supply native presentational hints. Only supply
+   defaults when the corresponding attribute is absent. */
+.soeditor-wysiwyg-content
+    :is(table.soeditor-table-widget, .soeditor-table-widget > table):not(
+        [cellspacing]
+    ) {
+    border-collapse: collapse;
+}
+
+.soeditor-wysiwyg-content
+    .soeditor-table-widget
+    :is(th, td):not(
+        table[cellpadding] > tr > :is(th, td),
+        table[cellpadding] > :is(thead, tbody, tfoot) > tr > :is(th, td)
+    ) {
+    padding: 0;
 }
 
 .soeditor-wysiwyg-content .soeditor-table-widget caption {
@@ -184,7 +218,6 @@
 .soeditor-wysiwyg-content .soeditor-table-widget td {
     border: 1px solid var(--soeditor-border, #d0d7de);
     min-width: 5rem;
-    padding: 0;
 }
 
 .soeditor-wysiwyg-content .soeditor-table-widget th {
@@ -208,7 +241,6 @@
     font: inherit;
     min-height: 2.5rem;
     min-width: 5rem;
-    padding: 0.55rem 0.7rem;
     text-align: start;
     width: auto;
 }
@@ -234,20 +266,23 @@
 }
 
 .soeditor-wysiwyg-content .soeditor-table-cell.is-editing {
-    background: #fff;
     cursor: text;
-    outline: 2px solid var(--soeditor-ui-accent, #5951df);
-    outline-offset: -2px;
+    outline: none;
+    box-shadow: inset 0 0 0 9999px rgb(173 216 250 / 28%);
     user-select: text;
 }
 
 .soeditor-wysiwyg-content .soeditor-table-cell.is-structurally-selected {
-    background: color-mix(
-        in srgb,
-        var(--soeditor-accent, #5951df) 12%,
-        transparent
-    );
-    box-shadow: inset 0 0 0 2px var(--soeditor-accent, #5951df);
+    outline: none;
+    box-shadow: inset 0 0 0 9999px rgb(173 216 250 / 38%);
+}
+
+.soeditor-wysiwyg-content
+    .soeditor-table-cell.is-structurally-selected::selection,
+.soeditor-wysiwyg-content
+    .soeditor-table-cell.is-structurally-selected
+    ::selection {
+    background: transparent;
 }
 
 .soeditor-wysiwyg-content .soeditor-table-cell[aria-pressed='true'] {
@@ -396,4 +431,107 @@
 
 .soeditor-wysiwyg-content .soeditor-wysiwyg-preserved-inline {
     display: inline;
+}
+
+.soeditor-table-resize-feedback {
+    position: absolute;
+    z-index: 5;
+    pointer-events: none;
+    white-space: nowrap;
+    background: #0969da;
+    color: #fff;
+    padding: 4px 7px;
+    border-radius: 3px;
+    font:
+        12px/1.4 system-ui,
+        sans-serif;
+    box-shadow: 0 1px 4px #0003;
+}
+
+/* Kept outside editable HTML, including figure captions and table contents. */
+.soeditor-block-paragraph {
+    opacity: 0;
+    box-sizing: border-box;
+    outline: 2px solid transparent;
+    pointer-events: none;
+    position: absolute;
+    z-index: 9;
+}
+
+.soeditor-block-paragraph:has(button:hover),
+.soeditor-block-paragraph:has(button:focus-visible) {
+    outline-color: #ffca28;
+}
+
+.soeditor-block-paragraph button {
+    appearance: none;
+    background: #377dff;
+    border: 1px solid #fff;
+    border-radius: 50%;
+    box-shadow: 0 1px 3px rgb(0 0 0 / 25%);
+    color: #fff;
+    cursor: pointer;
+    font:
+        700 16px/22px system-ui,
+        sans-serif;
+    height: 24px;
+    padding: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 24px;
+}
+
+.soeditor-block-paragraph.is-hovered {
+    opacity: 1;
+}
+
+.soeditor-block-paragraph.is-hovered button {
+    pointer-events: auto;
+}
+
+.soeditor-block-paragraph [data-insert-paragraph='before'] {
+    left: min(32px, 15%);
+    top: var(--soeditor-block-offset, -12px);
+}
+
+.soeditor-block-paragraph [data-insert-paragraph='after'] {
+    bottom: var(--soeditor-block-offset, -12px);
+    right: min(32px, 15%);
+}
+
+.soeditor-block-paragraph[data-block-kind='table']
+    [data-insert-paragraph='before'] {
+    left: -24px;
+    top: 0;
+}
+
+.soeditor-block-paragraph[data-block-kind='table']
+    [data-insert-paragraph='after'] {
+    bottom: 0;
+    right: -24px;
+}
+
+.soeditor-block-paragraph button:hover,
+.soeditor-block-paragraph button:focus-visible {
+    background: #ffca28;
+    color: #24292f;
+    outline: 2px solid #fff;
+    outline-offset: 1px;
+}
+
+:host:has(.soeditor-image-resize-overlay.is-resizing)
+    .soeditor-block-paragraph {
+    visibility: hidden;
+}
+
+@media (forced-colors: active) {
+    .soeditor-block-paragraph button,
+    .soeditor-image-resize-handle {
+        border: 2px solid ButtonText;
+    }
+    .soeditor-block-paragraph:has(button:focus-visible),
+    .soeditor-block-paragraph:has(button:hover),
+    .soeditor-image-resize-overlay {
+        outline: 2px solid Highlight;
+    }
 }

@@ -1,0 +1,76 @@
+<!-- Synthetic CMS regression fixture; no customer data. -->
+<!--CMS:block:product-42-->
+<p id="intro" class="lead" data-record="42">
+    产品说明：中文、繁體、English &amp; emoji 👩🏽‍💻。
+</p>
+<div class="legacy-copy" data-layout="article">
+    <p>第一段 <strong>重要内容</strong>。</p>
+    <p>
+        第二段
+        <a href="/products?id=42&amp;lang=zh" data-link="internal">规格详情</a
+        >。
+    </p>
+</div>
+<table
+    id="specifications"
+    class="business-table"
+    cellpadding="6"
+    cellspacing="2"
+    style="width: 80%"
+>
+    <caption>
+        产品规格
+    </caption>
+    <colgroup>
+        <col width="40%" />
+        <col width="60%" />
+    </colgroup>
+    <thead>
+        <tr>
+            <th scope="col">项目</th>
+            <th scope="col">参数</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <th scope="row">尺寸</th>
+            <td data-unit="mm">120 × 80</td>
+        </tr>
+        <tr>
+            <th scope="row">说明</th>
+            <td>
+                <p>支持 <em>多语言</em></p>
+            </td>
+        </tr>
+    </tbody>
+</table>
+<ol start="5" type="A" reversed>
+    <li value="9">
+        准备
+        <ul>
+            <li>检查附件</li>
+        </ul>
+    </li>
+    <li>安装</li>
+</ol>
+<figure class="product-photo">
+    <img src="/uploads/product.png" alt="产品正面" width="320" height="240" />
+    <figcaption>产品示意</figcaption>
+</figure>
+<pre><code>&lt;product id="42"&gt;
+  保留空格 &amp; 换行
+&lt;/product&gt;</code></pre>
+<product-card data-id="42"
+    ><span slot="title">未知 CMS 组件</span></product-card
+>
+<template data-cms="price"><span>{{ product.price }}</span></template>
+<p data-page-break="true"></p>
+<p id="ending">结束段落</p>
+<script>
+    globalThis.__cmsFixtureExecuted = true;
+</script>
+<img
+    src="invalid-cms-image:"
+    onerror="globalThis.__cmsFixtureExecuted = true"
+    alt="保留但不执行"
+/>

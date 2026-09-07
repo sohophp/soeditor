@@ -1,0 +1,30 @@
+{
+    "date": "2026-09-05",
+    "scope": "Paragraph buttons fade after leaving the image/table block",
+    "durationMs": 180,
+    "keyboard": "Focus keeps controls visible",
+    "touch": "No-hover devices keep controls available",
+    "reducedMotion": "Transition disabled",
+    "chromium": {
+        "passed": 6,
+        "includes": "4 image/table interactions and 2 standalone global checks"
+    },
+    "firefoxWebkit": {
+        "startTime": "2026-09-05T13:42:05.053Z",
+        "duration": 32832.856,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+    },
+    "global": {
+        "raw": 488557,
+        "gzip": 149958,
+        "budgetGzip": 150000
+    },
+    "build": true,
+    "typecheck": true,
+    "sourceIconsPreserved": 74,
+    "lint": true,
+    "releaseBudget": true
+}

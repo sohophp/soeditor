@@ -1,0 +1,35 @@
+{
+    "date": "2026-09-05",
+    "reproduced": "Moving from image to wide figure whitespace left opacity at 1",
+    "fixes": [
+        "Use the image and caption for hover containment instead of the entire figure",
+        "Remove focus-within and hover:none rules that force visibility",
+        "Observe real mouse movement and window blur; preserve touch taps and keyboard entry",
+        "Cancel pending hover on leaving the actual media target"
+    ],
+    "chromiumRegressionPassed": 125,
+    "finalChromiumFocusedPassed": 4,
+    "finalFirefoxWebkit": {
+        "startTime": "2026-09-05T14:58:40.506Z",
+        "duration": 23972.213,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+    },
+    "coverage": [
+        "Wide figure whitespace",
+        "Retained button focus then mouse exit",
+        "Keyboard Tab re-entry",
+        "Mouse on a touch-enabled mobile context",
+        "Delayed module loading while moving into figure whitespace"
+    ],
+    "build": true,
+    "typecheck": true,
+    "lint": true,
+    "global": {
+        "raw": 488689,
+        "gzip": 149973,
+        "gzipBudget": 150000
+    }
+}

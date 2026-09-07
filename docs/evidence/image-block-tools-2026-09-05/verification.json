@@ -1,0 +1,90 @@
+{
+    "date": "2026-09-05",
+    "scope": "Image proportional resize and image/table paragraph controls; existing worktree changes preserved",
+    "browser": {
+        "passed": 125,
+        "durationSeconds": 33.1,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+    },
+    "drag": {
+        "changes": 1,
+        "frames": 69,
+        "p95": 16.799999999999955,
+        "max": 16.800000000000182
+    },
+    "build": "pnpm build passed",
+    "typecheck": "pnpm -r --if-present run typecheck passed after full dependency builds",
+    "api": "24 package entry points match",
+    "documentationScenarios": 243,
+    "distribution": "verify-distribution passed; packed NodeNext, Vite CMS/Source and plugin consumers passed",
+    "globalArtifact": {
+        "path": "packages/soeditor/dist/soeditor.global.js",
+        "raw": 488091,
+        "gzip": 149870,
+        "sha256": "ea3ae5a9aee6ee62d83f68958d0aa562d313930454a43a13d6b3e7ec545f6322"
+    },
+    "optionalInitial": {
+        "raw": 511735,
+        "gzip": 151994,
+        "files": ["assets/index-BgMzXdBH.js"],
+        "budgets": {
+            "raw": 514018,
+            "gzip": 152376
+        }
+    },
+    "newContextModulesInitiallyRequested": [],
+    "releaseGate": {
+        "passed": true,
+        "command": "node scripts/verify-release.mjs",
+        "budgetsUnchanged": true
+    },
+    "crossBrowser": {
+        "focused": {
+            "startTime": "2026-09-05T13:25:33.507Z",
+            "duration": 30833.601000000002,
+            "expected": 8,
+            "skipped": 0,
+            "unexpected": 0,
+            "flaky": 0
+        },
+        "expanded": {
+            "startTime": "2026-09-05T13:13:18.772Z",
+            "duration": 180084.723,
+            "expected": 30,
+            "skipped": 0,
+            "unexpected": 12,
+            "flaky": 0
+        },
+        "evidence": "cross-browser.json"
+    },
+    "limitations": [
+        "No real Safari or assistive technology manual qualification",
+        "No release or deployment performed",
+        "Expanded legacy Chromium image/table cases on Firefox/WebKit: 30 passed and 12 failed; this is not full-product cross-browser qualification"
+    ],
+    "cmsBasicRegression": {
+        "passed": 6,
+        "projects": ["chromium", "chromium-mobile"]
+    },
+    "lint": "pnpm lint passed",
+    "unit": {
+        "passed": 403
+    },
+    "fullTest": {
+        "command": "pnpm test",
+        "passed": true,
+        "exitCode": 0
+    },
+    "iconEquivalence": {
+        "count": 74,
+        "equivalent": true,
+        "sourceIconsPreservedInEsm": true
+    },
+    "loadingGate": {
+        "passed": true,
+        "command": "node scripts/measure-cms-loading.mjs /tmp/soeditor-budget/loading-final.json --recovery",
+        "evidence": "loading.json"
+    }
+}

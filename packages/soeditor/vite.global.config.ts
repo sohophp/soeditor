@@ -8,9 +8,18 @@ const classicStylesPath = fileURLToPath(
 );
 const stylesPath = fileURLToPath(new URL('./src/styles.css', import.meta.url));
 const uiStylesPath = fileURLToPath(
-    new URL('../ui/src/styles.css', import.meta.url),
+    new URL('../ui/src/cms.css', import.meta.url),
+);
+const inlineUiTranslationLoaderPath = fileURLToPath(
+    new URL('./src/ui-translation-loader-inline.ts', import.meta.url),
 );
 const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url));
+const fileManagerSourcePath = fileURLToPath(
+    new URL('../file-manager/src/index.ts', import.meta.url),
+);
+const richTextSourcePath = fileURLToPath(
+    new URL('../rich-text/src/index.ts', import.meta.url),
+);
 const globalRuntimePackages = [
     'core',
     'engine',
@@ -29,10 +38,19 @@ const publicPropertyNames = collectPublicPropertyNames(
     ['SoEditor', 'create', 'createClassicEditor'],
 );
 const stripOptionalGlobalStyles = (code: string): string =>
-    code.replace(
-        /\/\* soeditor-global-optional-table-context:start \*\/[\s\S]*?\/\* soeditor-global-optional-table-context:end \*\//u,
-        '',
-    );
+    code
+        .replace(
+            /\/\* soeditor-global-legacy-projection:start \*\/[\s\S]*?\/\* soeditor-global-legacy-projection:end \*\//gu,
+            '',
+        )
+        .replace(
+            /\/\* soeditor-global-optional-table-context:start \*\/[\s\S]*?\/\* soeditor-global-optional-table-context:end \*\//gu,
+            '',
+        )
+        .replace(
+            /\/\* soeditor-global-optional-dialog-windows:start \*\/[\s\S]*?\/\* soeditor-global-optional-dialog-windows:end \*\//u,
+            '',
+        );
 const stripCompatibilityReviewStyles = (code: string): string =>
     code
         .replace(
@@ -49,19 +67,57 @@ const stripCompatibilityReviewStyles = (code: string): string =>
         );
 
 export default defineConfig({
+    resolve: {
+        alias: [
+            ...['', '/cms', '/translations'].map((entry) => ({
+                find: new RegExp(`^@soeditor/ui${entry}$`, 'u'),
+                replacement: fileURLToPath(
+                    new URL(
+                        `../ui/src/${entry === '' ? 'index' : entry.slice(1)}.ts`,
+                        import.meta.url,
+                    ),
+                ),
+            })),
+            {
+                find: /^@soeditor\/file-manager$/u,
+                replacement: fileManagerSourcePath,
+            },
+            {
+                find: /^@soeditor\/rich-text$/u,
+                replacement: richTextSourcePath,
+            },
+        ],
+    },
     define: {
         'import.meta.env.SOEDITOR_OPTIONAL_CLASSIC': JSON.stringify('false'),
         'import.meta.env.SOEDITOR_TABLE_CONTEXT': JSON.stringify('false'),
+        'import.meta.env.SOEDITOR_SOURCE_TOOLBAR': JSON.stringify('false'),
+        'import.meta.env.SOEDITOR_RESPONSIVE_ASSET_METADATA':
+            JSON.stringify('false'),
     },
     plugins: [
+        {
+            enforce: 'pre',
+            name: 'soeditor-inline-ui-translations',
+            resolveId(source, importer) {
+                if (
+                    source === './ui-translation-loader.js' &&
+                    importer?.endsWith('/src/classic-editor.ts') === true
+                ) {
+                    return inlineUiTranslationLoaderPath;
+                }
+            },
+        },
         {
             enforce: 'pre',
             name: 'soeditor-strip-optional-global-styles',
             load(id) {
                 if (id.split('?', 1)[0] !== stylesPath) return;
                 return [
-                    stripCompatibilityReviewStyles(
-                        readFileSync(uiStylesPath, 'utf8'),
+                    stripOptionalGlobalStyles(
+                        stripCompatibilityReviewStyles(
+                            readFileSync(uiStylesPath, 'utf8'),
+                        ),
                     ),
                     stripOptionalGlobalStyles(
                         readFileSync(classicStylesPath, 'utf8'),
@@ -83,6 +139,7 @@ export default defineConfig({
         cssMinify: 'lightningcss',
         minify: 'terser',
         terserOptions: {
+            ecma: 2022,
             compress: {
                 passes: 5,
                 toplevel: true,

@@ -2,7 +2,6 @@ import { Plugin, createServiceToken } from '@soeditor/core';
 import {
     PastePipelinePlugin,
     pastePipelineServiceToken,
-    type PasteInputFile,
 } from '@soeditor/engine';
 import { ImagePlugin, MediaPlugin } from '@soeditor/rich-text';
 import {
@@ -14,6 +13,7 @@ import {
 
 import type { FileManagerResult } from './file-manager.js';
 import { normalizeFileManagerResult } from './validation.js';
+import { createUploadStatus } from './upload-status.js';
 
 export interface UploadRequest {
     readonly attempt: number;
@@ -132,6 +132,13 @@ export class UploadPlugin extends Plugin {
         });
         this.#service = service;
         this.editor.services.register(uploadWorkflowServiceToken, service);
+        this.#dispose.push(
+            this.editor.services
+                .get(uiRegistryServiceToken)
+                .registerStatusItem('image-uploads', (context) =>
+                    createUploadStatus(context, service),
+                ),
+        );
         this.editor.commands.register({
             id: 'image.upload',
             label: 'Upload image',
@@ -154,6 +161,7 @@ export class UploadPlugin extends Plugin {
             id: 'image.upload.retry',
             label: 'Retry image upload',
             canExecute: () =>
+                this.editor.commands.canExecute('media.insert') &&
                 [...this.#uploads.values()].some(
                     (upload) => upload.record.status === 'failed',
                 ),
@@ -178,7 +186,35 @@ export class UploadPlugin extends Plugin {
                             'Only image files can be uploaded here.',
                         );
                     }
-                    for (const file of images) this.#startTransferredFile(file);
+                    const uploads = images.map((file) =>
+                        readUploadOptions({
+                            file: file.data,
+                            name: file.name,
+                            type: file.type,
+                        }),
+                    );
+                    const pending = [...this.#uploads.values()].filter(
+                        (upload) => upload.record.status === 'pending',
+                    ).length;
+                    if (pending + uploads.length > this.#maximumConcurrent) {
+                        throw new Error(
+                            `At most ${String(this.#maximumConcurrent)} uploads may run concurrently.`,
+                        );
+                    }
+                    if (
+                        uploads.some(
+                            (upload) =>
+                                upload.file.size > this.#maximumFileSize,
+                        )
+                    ) {
+                        throw new TypeError(
+                            `Image upload exceeds ${String(this.#maximumFileSize)} bytes.`,
+                        );
+                    }
+                    // Preflight the whole batch synchronously so paste reports
+                    // rejection instead of silently consuming an oversized file.
+                    for (const upload of uploads)
+                        void this.#start(upload).catch(() => undefined);
                     return Object.freeze({
                         consumed: true,
                         html: '',
@@ -263,15 +299,6 @@ export class UploadPlugin extends Plugin {
                 },
             ),
         );
-    }
-
-    #startTransferredFile(file: PasteInputFile): void {
-        if (file.data === undefined) return;
-        void this.#start({
-            file: file.data,
-            name: file.name,
-            type: file.type,
-        }).catch(() => undefined);
     }
 
     async #start(options: ImageUploadOptions): Promise<FileManagerResult> {
@@ -368,11 +395,18 @@ export class UploadPlugin extends Plugin {
             const command =
                 upload.mode === 'replace' ? 'media.update' : 'media.insert';
             this.editor.execute(command, {
+                ...(result.assetId === undefined
+                    ? {}
+                    : { assetId: result.assetId }),
                 alt: result.alt ?? result.name ?? upload.name,
                 ...(result.height === undefined
                     ? {}
                     : { height: result.height }),
                 src: result.url,
+                ...(result.sizes === undefined ? {} : { sizes: result.sizes }),
+                ...(result.srcset === undefined
+                    ? {}
+                    : { srcset: result.srcset }),
                 ...(result.width === undefined ? {} : { width: result.width }),
             });
             return result;

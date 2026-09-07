@@ -126,6 +126,9 @@ export class FileManagerPlugin extends Plugin {
                         visual?.setSelection(selection, true);
                     }
                     editor.execute(insertCommand, {
+                        ...(selected.assetId === undefined
+                            ? {}
+                            : { assetId: selected.assetId }),
                         src: selected.url,
                         alt: selected.alt ?? selected.name ?? '',
                         ...(selected.width === undefined
@@ -134,6 +137,12 @@ export class FileManagerPlugin extends Plugin {
                         ...(selected.height === undefined
                             ? {}
                             : { height: selected.height }),
+                        ...(selected.sizes === undefined
+                            ? {}
+                            : { sizes: selected.sizes }),
+                        ...(selected.srcset === undefined
+                            ? {}
+                            : { srcset: selected.srcset }),
                     });
                     return selected;
                 } finally {

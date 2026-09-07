@@ -8,8 +8,23 @@ import {
     resolveUiTranslation,
     uiRegistryServiceToken,
 } from '../src/index.js';
+import { resolveUiTranslationResources } from '../src/cms.js';
 
 describe('UI contribution registry', () => {
+    it('keeps the narrow CMS resolver free of implicit locale data', () => {
+        const withoutResources = resolveUiTranslationResources('zh-Hant');
+        const withHostResource = resolveUiTranslationResources('zh-Hant', [
+            {
+                locale: 'zh-TW',
+                messages: { Bold: '主機粗體' },
+            },
+        ]);
+
+        expect(withoutResources.locale).toBe('zh-TW');
+        expect(withoutResources.translate('Bold')).toBe('Bold');
+        expect(withHostResource.translate('Bold')).toBe('主機粗體');
+    });
+
     it('resolves isolated Chinese and custom RTL translation resources', () => {
         const simplified = resolveUiTranslation('zh_Hans_CN');
         const traditional = resolveUiTranslation('zh-Hant');

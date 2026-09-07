@@ -1,0 +1,404 @@
+[
+    {
+        "size": 10240,
+        "source": false,
+        "create": {
+            "milliseconds": 81.90000000596046,
+            "characters": 10440
+        },
+        "initialRequests": [
+            "/",
+            "/assets/index-CUTEtgkP.js",
+            "/assets/index-DEIR6ODN.css"
+        ],
+        "destroy": 8.200000017881393,
+        "warmCreate": {
+            "milliseconds": 45,
+            "characters": 10440
+        },
+        "interactions": {
+            "menuFirstOpen": {
+                "alignment": 2.5999999940395355,
+                "orderedList": 7.5,
+                "unorderedList": 9.900000005960464
+            },
+            "inputToFrame": 16.700000017881393,
+            "pasteToFrame": 15.5,
+            "tableToFrame": 34.400000005960464,
+            "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+        },
+        "lifecycle": [
+            {
+                "usedSize": 4016304,
+                "totalSize": 4571136,
+                "embedderHeapUsedSize": 1521728,
+                "backingStorageSize": 632617
+            },
+            {
+                "usedSize": 4049828,
+                "totalSize": 4833280,
+                "embedderHeapUsedSize": 1070872,
+                "backingStorageSize": 632403
+            },
+            {
+                "usedSize": 4105908,
+                "totalSize": 4833280,
+                "embedderHeapUsedSize": 1087360,
+                "backingStorageSize": 632403
+            }
+        ],
+        "heapBefore": {
+            "usedSize": 3791276,
+            "totalSize": 6348800,
+            "embedderHeapUsedSize": 3009496,
+            "backingStorageSize": 609583
+        },
+        "heapAfter": {
+            "usedSize": 2476168,
+            "totalSize": 3465216,
+            "embedderHeapUsedSize": 1277624,
+            "backingStorageSize": 583006
+        }
+    },
+    {
+        "size": 10240,
+        "source": true,
+        "create": {
+            "milliseconds": 105.2000000178814,
+            "characters": 10440
+        },
+        "initialRequests": [
+            "/",
+            "/assets/index-CUTEtgkP.js",
+            "/assets/index-DEIR6ODN.css"
+        ],
+        "sourceFirst": {
+            "milliseconds": 215.69999998807907,
+            "requests": ["/assets/index-DSf_0_D6.js"]
+        },
+        "sourceAgain": 27.69999998807907,
+        "formatting": {
+            "milliseconds": 341.7000000178814,
+            "requests": [
+                "/assets/index-Da0qE7CT.js",
+                "http://127.0.0.1:4188/1db3a818-64ca-4e8e-9d64-60e4eb9479a7"
+            ]
+        },
+        "destroy": 6.5999999940395355,
+        "warmCreate": {
+            "milliseconds": 51.30000001192093,
+            "characters": 10440
+        },
+        "interactions": {
+            "menuFirstOpen": {
+                "alignment": 3.5999999940395355,
+                "orderedList": 8.300000011920929,
+                "unorderedList": 9.299999982118607
+            },
+            "inputToFrame": 14.899999976158142,
+            "pasteToFrame": 15.5,
+            "tableToFrame": 16.200000017881393,
+            "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+        },
+        "lifecycle": [
+            {
+                "usedSize": 6880492,
+                "totalSize": 7720960,
+                "embedderHeapUsedSize": 1558472,
+                "backingStorageSize": 2611405
+            },
+            {
+                "usedSize": 6986184,
+                "totalSize": 7983104,
+                "embedderHeapUsedSize": 1674672,
+                "backingStorageSize": 2611191
+            },
+            {
+                "usedSize": 7121464,
+                "totalSize": 7983104,
+                "embedderHeapUsedSize": 1622248,
+                "backingStorageSize": 2611191
+            }
+        ],
+        "heapBefore": {
+            "usedSize": 3847440,
+            "totalSize": 6348800,
+            "embedderHeapUsedSize": 3936968,
+            "backingStorageSize": 610487
+        },
+        "heapAfter": {
+            "usedSize": 6153908,
+            "totalSize": 7196672,
+            "embedderHeapUsedSize": 2410544,
+            "backingStorageSize": 2551852
+        }
+    },
+    {
+        "size": 102400,
+        "source": false,
+        "create": {
+            "milliseconds": 253.59999999403954,
+            "characters": 102544
+        },
+        "initialRequests": [
+            "/",
+            "/assets/index-CUTEtgkP.js",
+            "/assets/index-DEIR6ODN.css"
+        ],
+        "destroy": 7.600000023841858,
+        "warmCreate": {
+            "milliseconds": 235.90000000596046,
+            "characters": 102544
+        },
+        "interactions": {
+            "menuFirstOpen": {
+                "alignment": 5.5999999940395355,
+                "orderedList": 8.100000023841858,
+                "unorderedList": 7.5
+            },
+            "inputToFrame": 56.099999994039536,
+            "pasteToFrame": 65.19999998807907,
+            "tableToFrame": 83.30000001192093,
+            "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+        },
+        "lifecycle": [
+            {
+                "usedSize": 4038772,
+                "totalSize": 4571136,
+                "embedderHeapUsedSize": 3824288,
+                "backingStorageSize": 839969
+            },
+            {
+                "usedSize": 4071636,
+                "totalSize": 4571136,
+                "embedderHeapUsedSize": 3784480,
+                "backingStorageSize": 839755
+            },
+            {
+                "usedSize": 4123616,
+                "totalSize": 5095424,
+                "embedderHeapUsedSize": 3784880,
+                "backingStorageSize": 839755
+            }
+        ],
+        "heapBefore": {
+            "usedSize": 8422824,
+            "totalSize": 17096704,
+            "embedderHeapUsedSize": 14791608,
+            "backingStorageSize": 727817
+        },
+        "heapAfter": {
+            "usedSize": 2498196,
+            "totalSize": 3465216,
+            "embedderHeapUsedSize": 3941832,
+            "backingStorageSize": 687814
+        }
+    },
+    {
+        "size": 102400,
+        "source": true,
+        "create": {
+            "milliseconds": 303.09999999403954,
+            "characters": 102544
+        },
+        "initialRequests": [
+            "/",
+            "/assets/index-CUTEtgkP.js",
+            "/assets/index-DEIR6ODN.css"
+        ],
+        "sourceFirst": {
+            "milliseconds": 280.7000000178814,
+            "requests": ["/assets/index-DSf_0_D6.js"]
+        },
+        "sourceAgain": 44.5,
+        "formatting": {
+            "milliseconds": 891.6999999880791,
+            "requests": [
+                "/assets/index-Da0qE7CT.js",
+                "http://127.0.0.1:4188/cb9672d7-2b76-4397-8f3a-0afe68221d58"
+            ]
+        },
+        "destroy": 9.800000011920929,
+        "warmCreate": {
+            "milliseconds": 300.5,
+            "characters": 102544
+        },
+        "interactions": {
+            "menuFirstOpen": {
+                "alignment": 7,
+                "orderedList": 8.599999994039536,
+                "unorderedList": 6.699999988079071
+            },
+            "inputToFrame": 57.80000001192093,
+            "pasteToFrame": 56.5,
+            "tableToFrame": 77.89999997615814,
+            "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+        },
+        "lifecycle": [
+            {
+                "usedSize": 7023264,
+                "totalSize": 8769536,
+                "embedderHeapUsedSize": 4379504,
+                "backingStorageSize": 2795630
+            },
+            {
+                "usedSize": 7137044,
+                "totalSize": 8769536,
+                "embedderHeapUsedSize": 4291072,
+                "backingStorageSize": 2795416
+            },
+            {
+                "usedSize": 7266792,
+                "totalSize": 8769536,
+                "embedderHeapUsedSize": 4324072,
+                "backingStorageSize": 2795416
+            }
+        ],
+        "heapBefore": {
+            "usedSize": 8439248,
+            "totalSize": 16834560,
+            "embedderHeapUsedSize": 23400128,
+            "backingStorageSize": 728995
+        },
+        "heapAfter": {
+            "usedSize": 6331444,
+            "totalSize": 7458816,
+            "embedderHeapUsedSize": 12638232,
+            "backingStorageSize": 2772593
+        }
+    },
+    {
+        "size": 512000,
+        "source": false,
+        "create": {
+            "milliseconds": 872.5,
+            "characters": 512024
+        },
+        "initialRequests": [
+            "/",
+            "/assets/index-CUTEtgkP.js",
+            "/assets/index-DEIR6ODN.css"
+        ],
+        "destroy": 27.69999998807907,
+        "warmCreate": {
+            "milliseconds": 952.3999999761581,
+            "characters": 512024
+        },
+        "interactions": {
+            "menuFirstOpen": {
+                "alignment": 31.099999994039536,
+                "orderedList": 8.600000023841858,
+                "unorderedList": 8.5
+            },
+            "inputToFrame": 280.5,
+            "pasteToFrame": 252.2000000178814,
+            "tableToFrame": 273.69999998807907,
+            "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+        },
+        "lifecycle": [
+            {
+                "usedSize": 4059572,
+                "totalSize": 6934528,
+                "embedderHeapUsedSize": 16703456,
+                "backingStorageSize": 1715409
+            },
+            {
+                "usedSize": 4100868,
+                "totalSize": 4575232,
+                "embedderHeapUsedSize": 15418728,
+                "backingStorageSize": 1715195
+            },
+            {
+                "usedSize": 4151212,
+                "totalSize": 4575232,
+                "embedderHeapUsedSize": 15357080,
+                "backingStorageSize": 1715195
+            }
+        ],
+        "heapBefore": {
+            "usedSize": 4674848,
+            "totalSize": 46333952,
+            "embedderHeapUsedSize": 37859192,
+            "backingStorageSize": 1154374
+        },
+        "heapAfter": {
+            "usedSize": 2513048,
+            "totalSize": 3207168,
+            "embedderHeapUsedSize": 15831632,
+            "backingStorageSize": 1153774
+        }
+    },
+    {
+        "size": 512000,
+        "source": true,
+        "create": {
+            "milliseconds": 1125.4000000059605,
+            "characters": 512024
+        },
+        "initialRequests": [
+            "/",
+            "/assets/index-CUTEtgkP.js",
+            "/assets/index-DEIR6ODN.css"
+        ],
+        "sourceFirst": {
+            "milliseconds": 444.5,
+            "requests": ["/assets/index-DSf_0_D6.js"]
+        },
+        "sourceAgain": 113.40000000596046,
+        "formatting": {
+            "milliseconds": 2627,
+            "requests": [
+                "/assets/index-Da0qE7CT.js",
+                "http://127.0.0.1:4188/4b3582a0-3504-4ac0-9735-d4138c647a30"
+            ]
+        },
+        "destroy": 17.700000017881393,
+        "warmCreate": {
+            "milliseconds": 1253.0999999940395,
+            "characters": 512024
+        },
+        "interactions": {
+            "menuFirstOpen": {
+                "alignment": 23.80000001192093,
+                "orderedList": 7.5999999940395355,
+                "unorderedList": 6.700000017881393
+            },
+            "inputToFrame": 312.09999999403954,
+            "pasteToFrame": 232.69999998807907,
+            "tableToFrame": 260.09999999403954,
+            "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+        },
+        "lifecycle": [
+            {
+                "usedSize": 6937432,
+                "totalSize": 8249344,
+                "embedderHeapUsedSize": 16927144,
+                "backingStorageSize": 3614588
+            },
+            {
+                "usedSize": 7043952,
+                "totalSize": 7725056,
+                "embedderHeapUsedSize": 16075856,
+                "backingStorageSize": 3614374
+            },
+            {
+                "usedSize": 7181064,
+                "totalSize": 8249344,
+                "embedderHeapUsedSize": 15927800,
+                "backingStorageSize": 3614374
+            }
+        ],
+        "heapBefore": {
+            "usedSize": 4574524,
+            "totalSize": 47906816,
+            "embedderHeapUsedSize": 83488952,
+            "backingStorageSize": 1155368
+        },
+        "heapAfter": {
+            "usedSize": 7015796,
+            "totalSize": 7991296,
+            "embedderHeapUsedSize": 57391952,
+            "backingStorageSize": 3695688
+        }
+    }
+]

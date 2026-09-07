@@ -1,0 +1,10 @@
+{
+    "checkedAt": "2026-09-07T12:40:20.759Z",
+    "url": "http://127.0.0.1:4173/classic.html?test=1",
+    "httpStatus": 200,
+    "browser": "151.0.7922.34",
+    "ready": true,
+    "html": "<p>人工验收准备：中文输入测试</p>",
+    "errors": [],
+    "note": "Local Chromium server smoke only. insertText is not OS IME qualification; Windows network access and all manual checks remain unverified."
+}

@@ -1,6 +1,6 @@
 # Getting started
 
-SoEditor is an ESM-first CMS HTML WYSIWYG editor. The supported application
+SoEditor is an ESM-first CMS HTML WYSIWYG + Source editor. The supported application
 entry is `@soeditor/editor/cms`; it exposes the Classic Editor without exporting
 historical Markdown, Preview, review, layout or developer-tool product families.
 
@@ -14,7 +14,7 @@ Import the editor and its stylesheet:
 
 ```ts
 import { createClassicEditor } from '@soeditor/editor/cms';
-import '@soeditor/editor/styles.css';
+import '@soeditor/editor/cms/styles.css';
 
 const textarea = document.querySelector<HTMLTextAreaElement>('#content');
 if (textarea === null) throw new Error('Missing #content textarea.');
@@ -51,8 +51,10 @@ const editor = await createClassicEditor(textarea, {
 });
 ```
 
-The optional entry dynamically loads `@soeditor/source` and CodeMirror when
-configured. The default `/cms` entry and standalone browser global reject
+The optional entry dynamically loads `@soeditor/source` and CodeMirror on first
+Source or Source split activation. Configuring the button alone does not load
+them. Await `editor.setWorkspaceView('source')` before accessing the Source
+surface. Formatting and Preview load separately when used. The default `/cms` entry and standalone browser global reject
 Source, Preview and save-adapter options so their cost is never hidden in the
 default artifact.
 

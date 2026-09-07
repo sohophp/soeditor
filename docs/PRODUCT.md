@@ -2,9 +2,11 @@
 
 ## Status
 
-Active product definition, reset on 2026-09-01.
+Active product definition, updated on 2026-09-05. The WYSIWYG + Source
+loading program has completed local implementation and automated acceptance.
+Manual Safari and assistive-technology qualification remain separate.
 
-SoEditor is a lightweight, stable HTML WYSIWYG editor for the administration
+SoEditor is a lightweight, stable HTML WYSIWYG + Source editor for the administration
 area of websites and content-management systems.
 
 ## Product promise
@@ -19,7 +21,7 @@ The product identity is deliberately narrow:
 ```text
 CMS HTML WYSIWYG Editor
     + reliable classic authoring
-    + optional HTML source control
+    + first-class HTML Source editing, loaded on first use
     + safe CMS media integration
 ```
 
@@ -85,10 +87,17 @@ workflows above. Optional functionality must use explicit entry points and must
 not increase default startup or bundle cost.
 
 HTML Source is the only alternate editing mode in the active product direction.
-It is optional and loaded on demand. When Source is enabled, Classic may show
+It is a primary editing capability, optional for hosts to expose, and loaded on
+first activation. Configuring its availability must not fetch or initialize it
+during WYSIWYG startup. An initial Source view is itself an activation. When Source is enabled, Classic may show
 WYSIWYG and Source together in one bounded two-pane view with a resizable
 horizontal or vertical division; this does not authorize Preview or generic
 workspace composition.
+
+Source formatting and advanced diagnostics load separately when used; opening
+Source alone must not load Prettier. Optional resources include CSS, translations
+and workers, not only JavaScript. First-use failures must preserve the active
+editor and content and permit retry.
 
 Focused integrations such as SoFinder, custom save adapters, safe media embeds,
 or advanced diagnostics may remain separate optional packages.
@@ -109,8 +118,9 @@ The active product and roadmap exclude:
 - hosted marketplaces and speculative extension tooling.
 
 Previously published packages covering some of these areas are compatibility
-surfaces, not current product priorities. They may be deprecated separately
-under SemVer and must remain outside the default CMS load path.
+surfaces, not current product priorities. They remain available through explicit independent imports and outside the
+default CMS load path. This program retains these capabilities; deletion or
+public API deprecation requires a separate SemVer decision.
 
 ## HTML contract
 
@@ -139,3 +149,9 @@ verified.
 Performance is a product feature. New functionality may not routinely raise
 budgets. Default bundle size, startup, typing latency, paste latency, memory,
 large-document behavior and repeated lifecycle cleanup are release gates.
+
+## Implementation program
+
+See [the WYSIWYG + Source plan](wysiwyg-source-plan.zh-CN.md) for current code
+gaps, phased work, measurement scenarios and acceptance gates. Product intent
+does not imply that the current release already satisfies these boundaries.

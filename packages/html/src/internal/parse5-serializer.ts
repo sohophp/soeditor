@@ -54,8 +54,10 @@ function normalizeVoidElementSyntax(source: string): string {
             continue;
         }
         if (source[index] !== '<') {
-            output.push(source[index] ?? '');
-            index += 1;
+            const next = source.indexOf('<', index);
+            const end = next < 0 ? source.length : next;
+            output.push(source.slice(index, end));
+            index = end;
             continue;
         }
         const end = findTagEnd(source, index + 1);

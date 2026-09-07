@@ -1,5 +1,24 @@
 # Configuration
 
+## Current loading behavior
+
+In the WYSIWYG + Source worktree, configuring `editingModes: ['wysiwyg', 'source']`
+only exposes the control. First entering Source or either Source split view loads
+its runtime. `initialEditingMode: 'source'` loads it during creation. Await
+`classic.setWorkspaceView('source')` when subsequent host code needs the surface.
+Formatting/minification loads its implementation on use, and popup Preview loads
+on the first preview request. The synchronous `openPreview()` result reports
+whether a popup was reserved; asynchronous loading errors reach `onError`.
+
+Invalid Source drafts stay in `getData()` and the textarea; native form submission
+is canceled and save adapters are not invoked until the source is repaired.
+`onError` or the save rejection reports an error named `ClassicInvalidSourceError`.
+If Source loading fails, select Source again to retry. Recovery uses a separate
+self-contained module with a per-attempt URL, requested only after failure. Deploy
+the generated recovery asset alongside the other chunks; `script-src` must allow
+its origin. This increases installed assets, not normal startup requests. See
+[current evidence](wysiwyg-source-evidence.zh-CN.md).
+
 ## Classic CMS options
 
 Source, Preview and save adapters require the explicit optional CMS entry. It
@@ -73,6 +92,16 @@ palette.
 
 ClassicEditor 的作者工具栏保持紧凑，不显示撤销、重做、分页符、特殊字符、CMS 占位符、源码、源码查找替换、保存和工具栏折叠按钮。这些底层命令及快捷键仍可供集成使用；源码通过编辑视图切换按钮进入，保存由宿主页面按钮、自动保存或 `save()` API 触发。预览、帮助、编辑视图和最大化组成独立末组，在工具栏正常流中靠右对齐并随可用宽度自然换行。
 
+可在 `/cms/optional` 的自定义工具栏中加入 `showBlocks`，以切换仅存在于
+WYSIWYG 投影中的区块边界和 `p`、`div`、`h1` 等标签名称；该状态不会进入规范
+HTML。Classic 状态栏包含编辑模式、保存状态、当前元素路径和字数统计，默认位于
+内容区下方，与传统 CMS 编辑器的布局一致。
+
+SoEditor 对话框使用固定的标题、可滚动正文和底部操作区。Classic 可选构建中，
+可拖动标题在视口内移动窗口，也可拖动右下角调整宽高；调整手柄获得焦点后可用
+方向键精确调整。窗口始终保留在当前视口范围内，并在浏览器尺寸变化时重新约束
+位置与大小。
+
 `setWorkspaceView()` accepts `wysiwyg`, `source`,
 `wysiwyg-source-horizontal` (left/right), and
 `wysiwyg-source-vertical` (top/bottom). The two Source-enabled split views use
@@ -108,7 +137,9 @@ pass `cmsPreset` explicitly when those integrations are required.
 
 `source.autoFormat` debounces WYSIWYG-originated changes and formats the
 canonical HTML in the formatter worker, so a visible split Source pane follows
-the visual edit without formatting on every keystroke. Source-originated edits
+the visual edit without formatting on every keystroke. Formatting is also scheduled when the first split view attaches if a visual
+edit occurred during loading. Merely switching views does not reformat content. It does not start
+during WYSIWYG-only startup. Source-originated edits
 are never automatically reformatted. `autoFormatDelay` defaults to 300 ms and
 accepts 0–10000 ms; `source.formatting` accepts the same options as the explicit
 `document.format` command. CodeMirror applies synchronized updates as the

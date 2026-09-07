@@ -32,3 +32,10 @@ External cell matrices pass through the editor paste pipeline and an
 execution-safe cell allowlist; internal matrices retain versioned clipboard
 fidelity. Controlled list operations split, merge, outdent, and exit empty
 items without relying on browser DOM normalization.
+
+`CmsTablePlugin` provides the same table commands and services for the native
+WYSIWYG engine, without the structured-engine DOM node view. The CMS and CMS
+runtime presets use this plugin so native authoring does not load the legacy
+renderer. `TablePlugin` retains that renderer for existing structured-engine
+consumers; the classic compatibility preset continues to use it. Both plugins
+have the `table` plugin ID: select one per editor, rather than installing both.

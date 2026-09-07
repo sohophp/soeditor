@@ -28,6 +28,30 @@ test('uses the same image workflow through SoFinderAdapter', async ({
     );
 });
 
+test('uses the latest author selection after the caret moves', async ({
+    page,
+}) => {
+    await openEditableEditor(page, '/?developer=1');
+    await page.evaluate(() => {
+        const harness = (
+            window as Window & {
+                __soeditor?: { editor: { setData(html: string): void } };
+            }
+        ).__soeditor;
+        if (harness === undefined) {
+            throw new Error('Playground editor was not exposed.');
+        }
+        harness.editor.setData('<p>Alpha</p><p>Omega</p>');
+    });
+    await setCaret(page, 0, 0);
+    await setCaret(page, 1, 5);
+    await page.locator(browseSelector).click();
+
+    await expect(page.locator(sourceSelector)).toContainText(
+        '<p>Alpha</p><p>Omega<img src="/custom-manager-image.png" alt="Custom manager image"></p>',
+    );
+});
+
 test('keeps cancellation inert and reports an unsafe manager result', async ({
     page,
 }) => {
@@ -64,16 +88,32 @@ async function openEditableEditor(page: Page, url: string): Promise<void> {
     );
 }
 
-async function setCaret(page: Page): Promise<void> {
-    await page.locator(editorSelector).evaluate((host) => {
-        const paragraph = host.querySelector('p');
-        const text = paragraph?.firstChild;
-        if (paragraph === null || text === null || text === undefined) {
-            throw new Error('Editable paragraph was not found.');
-        }
-        document.getSelection()?.setBaseAndExtent(text, 0, text, 0);
-        (host as HTMLElement).focus();
-    });
+async function setCaret(
+    page: Page,
+    paragraphIndex = 0,
+    offset = 0,
+): Promise<void> {
+    await page.locator(editorSelector).evaluate(
+        (host, selection) => {
+            const paragraph = host
+                .querySelectorAll('p')
+                .item(selection.paragraphIndex);
+            const text = paragraph?.firstChild;
+            if (paragraph === null || text === null || text === undefined) {
+                throw new Error('Editable paragraph was not found.');
+            }
+            (host as HTMLElement).focus();
+            document
+                .getSelection()
+                ?.setBaseAndExtent(
+                    text,
+                    selection.offset,
+                    text,
+                    selection.offset,
+                );
+        },
+        { offset, paragraphIndex },
+    );
 }
 
 async function replaceManager(

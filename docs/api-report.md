@@ -7,25 +7,30 @@ symbol list or declaration hash requires explicit API review. CSS exports and
 CLI bins are listed as stable resources. Undeclared `src`/`dist` subpaths and
 implementation modules are internal even when present in a checkout or tarball.
 
-Summary: 24 packages; 910 stable, 383 experimental, and 0 deprecated symbol
+Summary: 24 packages; 944 stable, 395 experimental, and 0 deprecated symbol
 entries.
 
 ## @soeditor/adapter-sofinder
 
 Declaration tree SHA-256:
-`1c4902fc7ca00de919459d6bc7e6af1cd885d95bde888b140121c947a5c591aa`
+`01c1244faa2950c2cd85a3114bc69dfb43c116d47ec69e5ddd4f51cd25c76c22`
 
 ### .
 
 Declaration SHA-256:
-`994043db52f6ac320aa8035d07c763fdadf184b378ab1c4c33c0970dff4ea1ee`
+`efbb945cd37f9df12ddc4b99c665da1c6c91b1dbcfb9dea1c4287c7310cded30`
 
-| Export                   | Kind       | Classification | Signature SHA-256  |
-| ------------------------ | ---------- | -------------- | ------------------ |
-| `SoFinderAdapter`        | type/value | stable         | `76bd8f70c77ffb8a` |
-| `SoFinderAdapterOptions` | type       | stable         | `f21d2b5bf7b8b90e` |
-| `SoFinderPicker`         | type       | stable         | `e5eb60ad036d240e` |
-| `SoFinderSelection`      | type       | stable         | `5e01c6bce6e8dd1f` |
+| Export                         | Kind       | Classification | Signature SHA-256  |
+| ------------------------------ | ---------- | -------------- | ------------------ |
+| `SoFinderAdapter`              | type/value | stable         | `76bd8f70c77ffb8a` |
+| `SoFinderAdapterOptions`       | type       | stable         | `f21d2b5bf7b8b90e` |
+| `SoFinderPicker`               | type       | stable         | `e5eb60ad036d240e` |
+| `SoFinderSelection`            | type       | stable         | `5fed6216498bb5e9` |
+| `SoFinderUploadAdapter`        | type/value | stable         | `9a75b5de9c45dc5e` |
+| `SoFinderUploadAdapterOptions` | type       | stable         | `c0f683d53a1e8540` |
+| `SoFinderUploader`             | type       | stable         | `87a34d0a8ff2d17a` |
+| `SoFinderUploadSnapshot`       | type       | stable         | `622d6fcdf6bf1826` |
+| `SoFinderUploadTask`           | type       | stable         | `fccd8bfce9747161` |
 
 ## @soeditor/comments
 
@@ -159,7 +164,7 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`ace9c53cde6a2295d2b8a6f18b5ba817b84baf69b64a13ef94f8c06423de552c`
+`4511b43628dda952feedfe7ceec593ef6cf08ab8936750816a6f2d9a1673bc6b`
 
 ### .
 
@@ -175,13 +180,13 @@ Declaration SHA-256:
 | `analyzeEmailContent`                                 | value      | experimental   | `b7a96156c7bfef2c` |
 | `applyPreviewTemplate`                                | value      | stable         | `4551f5a1a7045cf7` |
 | `attachClassicSourceEnhancements`                     | value      | stable         | `bd558d8b557de45d` |
-| `BalloonOptions`                                      | type       | stable         | `0eddddafdbeb8f9d` |
+| `BalloonOptions`                                      | type       | stable         | `fe1b841d335c239b` |
 | `BalloonService`                                      | type       | stable         | `5efa888c1e4ca0d2` |
 | `BlockquotePlugin`                                    | type/value | stable         | `057726cf4923a7b5` |
 | `BoldPlugin`                                          | type/value | stable         | `80e810f75ff4e330` |
 | `builtInUiTranslations`                               | value      | experimental   | `a83547fa9b47531e` |
 | `ClassicEditingMode`                                  | type       | experimental   | `66351b7c3ba6bbd0` |
-| `ClassicEditor`                                       | type       | experimental   | `a30c7cf41cac0628` |
+| `ClassicEditor`                                       | type       | experimental   | `347cce25d7713289` |
 | `ClassicEditorAlreadyAttachedError`                   | type/value | experimental   | `5168db0f6ce77de0` |
 | `ClassicEditorChange`                                 | type       | experimental   | `07ca0f0d4bc6a499` |
 | `ClassicEditorDestroyedError`                         | type/value | experimental   | `27394a56a2762fe6` |
@@ -192,10 +197,10 @@ Declaration SHA-256:
 | `ClassicPreviewTemplateOptions`                       | type       | stable         | `992ce37f74009d96` |
 | `ClassicPreviewTemplatesOptions`                      | type       | stable         | `8692d41cc59b60e3` |
 | `ClassicPreviewWindow`                                | type       | stable         | `1044976e9c409301` |
-| `ClassicPreviewWindowOptions`                         | type       | stable         | `dc0a308d47eedc96` |
+| `ClassicPreviewWindowOptions`                         | type       | stable         | `aaadf303a3f428e2` |
 | `ClassicPreviewWindowTemplate`                        | type       | stable         | `30d6bd8da1ef6c15` |
-| `ClassicSourceEnhancementOptions`                     | type       | stable         | `b655c9a058f07dd3` |
-| `ClassicSourceOptions`                                | type       | stable         | `e330916cbaea8e72` |
+| `ClassicSourceEnhancementOptions`                     | type       | stable         | `1edd3fd4f2fe79ef` |
+| `ClassicSourceOptions`                                | type       | stable         | `615409f49de1197a` |
 | `ClassicWorkspaceView`                                | type       | stable         | `c97fa57f190c55a9` |
 | `classifyPasteInput`                                  | value      | experimental   | `c16090d233d8f690` |
 | `cleanupHtml`                                         | value      | experimental   | `ca418444d3270b91` |
@@ -206,6 +211,7 @@ Declaration SHA-256:
 | `CmsObjectsPlugin`                                    | type/value | experimental   | `9fa6c46ee8a65a6f` |
 | `CmsPastePlugin`                                      | type/value | experimental   | `e877dd8eb6694d1d` |
 | `cmsPreset`                                           | value      | experimental   | `03bb3c1c4dca94a3` |
+| `CmsTablePlugin`                                      | type/value | stable         | `7a25d3f87a253f42` |
 | `CodeBlockPlugin`                                     | type/value | stable         | `df60cc4313b8c95f` |
 | `Command`                                             | type       | stable         | `99dcbcbf91fe4daa` |
 | `CommandAlreadyRegisteredError`                       | type/value | stable         | `d18294a71d14ab3f` |
@@ -243,8 +249,9 @@ Declaration SHA-256:
 | `createEditorSaveWorkflow`                            | value      | experimental   | `dcd9a823fa432389` |
 | `CreateEditorSaveWorkflowOptions`                     | type       | experimental   | `b5f550c79a09e664` |
 | `createEditorUi`                                      | value      | stable         | `901a347f76278407` |
-| `CreateEditorUiOptions`                               | type       | stable         | `f8ef2dfebdced65b` |
+| `CreateEditorUiOptions`                               | type       | stable         | `60604ec0ddbd5243` |
 | `createEditorWorkspace`                               | value      | stable         | `61ebfe3a523c1261` |
+| `createHtmlFormattingService`                         | value      | stable         | `0b057d0821ca78d4` |
 | `createMarkdownEditingEngine`                         | value      | stable         | `a82d3174de6ac152` |
 | `createMarkdownPreviewRenderer`                       | value      | stable         | `b6f97b899683a36b` |
 | `createPreviewEngine`                                 | value      | stable         | `8acbf0ff9cf1a80e` |
@@ -329,10 +336,12 @@ Declaration SHA-256:
 | `EditorSaveSuccess`                                   | type       | experimental   | `73935987b399a7c2` |
 | `EditorSaveWorkflow`                                  | type       | experimental   | `c804bed752ba43f8` |
 | `EditorState`                                         | type       | stable         | `5e50c65a795e772b` |
-| `EditorUi`                                            | type       | stable         | `ec40029a325686b2` |
+| `EditorUi`                                            | type       | stable         | `7320bdf24c7a9cca` |
 | `EditorUiAlreadyAttachedError`                        | type/value | stable         | `ff4fec646d257bce` |
 | `EditorUiDestroyedError`                              | type/value | stable         | `f36fc578d3ef1450` |
 | `EditorUiDirection`                                   | type       | experimental   | `4a9f02de07873b7b` |
+| `EditorUiFormatProperty`                              | type       | stable         | `0ecd60fa4ddccee7` |
+| `EditorUiFormatState`                                 | type       | stable         | `cf0441a76a544ffe` |
 | `EditorUiIconResource`                                | type       | experimental   | `c70444b8bfdd9c49` |
 | `EditorUiTheme`                                       | type       | stable         | `edd668b911e22704` |
 | `EditorUiThemeVariable`                               | type       | experimental   | `e94c04af3a3c5403` |
@@ -354,7 +363,7 @@ Declaration SHA-256:
 | `FileManagerKind`                                     | type       | stable         | `785bce4ba9278334` |
 | `FileManagerOpenOptions`                              | type       | stable         | `298ff00c678bd580` |
 | `FileManagerPlugin`                                   | type/value | stable         | `9d0802dde0ce9907` |
-| `FileManagerResult`                                   | type       | stable         | `0d214bdc89c3e91d` |
+| `FileManagerResult`                                   | type       | stable         | `c35ed9d3b4f8e053` |
 | `fileManagerServiceToken`                             | value      | stable         | `703a046ce0f7382b` |
 | `FontPlugin`                                          | type/value | experimental   | `639e078926b6ae62` |
 | `FontStyleCommand`                                    | type       | experimental   | `71d9261430b1825e` |
@@ -397,7 +406,7 @@ Declaration SHA-256:
 | `HtmlText`                                            | type       | stable         | `cb17d1238941137d` |
 | `htmlToMarkdown`                                      | value      | stable         | `613e4f1bc50509d1` |
 | `HtmlToMarkdownResult`                                | type       | stable         | `e73d6441cffde22f` |
-| `ImageInsertOptions`                                  | type       | stable         | `7c79bc70b574f888` |
+| `ImageInsertOptions`                                  | type       | stable         | `df866d6ad90ebcef` |
 | `ImagePlugin`                                         | type/value | stable         | `5b65910bdf1ae805` |
 | `ImageUploadOptions`                                  | type       | experimental   | `07df16dd826c7def` |
 | `IncompatibleProjectionError`                         | type/value | stable         | `3f2de009c779e052` |
@@ -413,8 +422,10 @@ Declaration SHA-256:
 | `InvalidHtmlFormattingSourceError`                    | type/value | stable         | `59bbb258f4b9829d` |
 | `InvalidProjectionTransitionError`                    | type/value | stable         | `176980ac6f3ce575` |
 | `InvalidSplitViewTransitionError`                     | type/value | stable         | `ad623f58d1ea44ff` |
+| `isBoundedResponsiveImageString`                      | value      | stable         | `37de802b1b137942` |
 | `isCompleteHtmlDocument`                              | value      | stable         | `30b25b9382f8fa3c` |
 | `isSafeMediaPreviewUrl`                               | value      | stable         | `3e4094c6fffa89e3` |
+| `isSafeResponsiveImageSourceSet`                      | value      | stable         | `c501866fadb1d69e` |
 | `ItalicPlugin`                                        | type/value | stable         | `92b847fbca4c3091` |
 | `KeyboardShortcutDefinition`                          | type       | stable         | `012f4a9c31738402` |
 | `LinkedCommentThread`                                 | type       | stable         | `f027e8bff715ee00` |
@@ -440,9 +451,9 @@ Declaration SHA-256:
 | `MarkdownRenderOptions`                               | type       | stable         | `b2f74f88ea942737` |
 | `markdownToHtml`                                      | value      | stable         | `793d364eac8cd07f` |
 | `MediaAlignment`                                      | type       | experimental   | `061092f682bf4ff6` |
-| `MediaInsertOptions`                                  | type       | experimental   | `502c09648d86e923` |
+| `MediaInsertOptions`                                  | type       | experimental   | `0070009ec77a8de2` |
 | `MediaPlugin`                                         | type/value | experimental   | `f4fa52c041a02540` |
-| `MediaUpdateOptions`                                  | type       | experimental   | `5d36f0f6d4b19da3` |
+| `MediaUpdateOptions`                                  | type       | experimental   | `bc04617bc95049b9` |
 | `minimalPreset`                                       | value      | stable         | `5afe6accf6573298` |
 | `ModeChangeEvent`                                     | type       | stable         | `55c74f1423097ca5` |
 | `normalizeCommentBody`                                | value      | stable         | `011fb40182c828d5` |
@@ -553,7 +564,12 @@ Declaration SHA-256:
 | `SoFinderAdapter`                                     | type/value | stable         | `76bd8f70c77ffb8a` |
 | `SoFinderAdapterOptions`                              | type       | stable         | `f21d2b5bf7b8b90e` |
 | `SoFinderPicker`                                      | type       | stable         | `e5eb60ad036d240e` |
-| `SoFinderSelection`                                   | type       | stable         | `5e01c6bce6e8dd1f` |
+| `SoFinderSelection`                                   | type       | stable         | `5fed6216498bb5e9` |
+| `SoFinderUploadAdapter`                               | type/value | stable         | `9a75b5de9c45dc5e` |
+| `SoFinderUploadAdapterOptions`                        | type       | stable         | `c0f683d53a1e8540` |
+| `SoFinderUploader`                                    | type       | stable         | `87a34d0a8ff2d17a` |
+| `SoFinderUploadSnapshot`                              | type       | stable         | `622d6fcdf6bf1826` |
+| `SoFinderUploadTask`                                  | type       | stable         | `fccd8bfce9747161` |
 | `SourceEditingEngine`                                 | type/value | stable         | `be507f9fd47cd792` |
 | `SourceEditingEngineDestroyedError`                   | type/value | stable         | `982f8e8bad3b7be1` |
 | `SourceEditingEngineOptions`                          | type       | stable         | `5cfbd6c405a0b156` |
@@ -620,7 +636,7 @@ Declaration SHA-256:
 | `TableEditorSnapshot`                                 | type       | stable         | `adef07f34e2b0a01` |
 | `TableInsertOptions`                                  | type       | experimental   | `19957619ac6da0f5` |
 | `TableOperationCapability`                            | type       | stable         | `3a384505674706b5` |
-| `TablePlugin`                                         | type/value | experimental   | `348f19c98fe256ac` |
+| `TablePlugin`                                         | type/value | experimental   | `e536c32468c98a02` |
 | `TableProperties`                                     | type       | experimental   | `b9d2582b0ceb039a` |
 | `TableRowMoveOptions`                                 | type       | stable         | `85338169275b62fd` |
 | `TableRowProperties`                                  | type       | experimental   | `4a402e707e1f7e6e` |
@@ -684,13 +700,16 @@ Declaration SHA-256:
 | `VisualEditingEngineDestroyedError`                   | type/value | stable         | `523514eedad22095` |
 | `VisualEditingEngineOptions`                          | type       | stable         | `c1c33942454e69d0` |
 | `VisualEditingProjectionId`                           | type       | experimental   | `6937366562e62be8` |
-| `VisualEditingService`                                | type       | stable         | `e845d0155b3e506a` |
+| `VisualEditingService`                                | type       | stable         | `dff8be278b90a0e5` |
 | `visualEditingServiceToken`                           | value      | stable         | `9a32f2a648a6b57e` |
+| `VisualFormatProperty`                                | type       | stable         | `94c4d5271350a3cc` |
+| `VisualFormatState`                                   | type       | stable         | `3262c766141df40e` |
 | `VisualHtmlInsertionOptions`                          | type       | stable         | `e6b7905f86115990` |
 | `VisualInlineStyle`                                   | type       | experimental   | `ceb328a291e63d66` |
 | `VisualInlineStyleProperty`                           | type       | stable         | `a0210ae72b0141dc` |
 | `VisualLinkAttributes`                                | type       | stable         | `ef7fac9e12d16ddb` |
 | `VisualListProperties`                                | type       | experimental   | `b3a668a12ec86d51` |
+| `VisualListStyle`                                     | type       | stable         | `c21122c97aa4b40e` |
 | `VisualTextMark`                                      | type       | stable         | `e771736e78ddaf53` |
 | `WorkspaceAttachment`                                 | type       | stable         | `77db72bad098712b` |
 | `WorkspaceAttachmentContext`                          | type       | stable         | `4b5c8390556c5a02` |
@@ -723,14 +742,14 @@ Declaration SHA-256:
 | Export                              | Kind       | Classification | Signature SHA-256  |
 | ----------------------------------- | ---------- | -------------- | ------------------ |
 | `ClassicEditingMode`                | type       | experimental   | `66351b7c3ba6bbd0` |
-| `ClassicEditor`                     | type       | experimental   | `a30c7cf41cac0628` |
+| `ClassicEditor`                     | type       | experimental   | `347cce25d7713289` |
 | `ClassicEditorAlreadyAttachedError` | type/value | experimental   | `5168db0f6ce77de0` |
 | `ClassicEditorChange`               | type       | experimental   | `07ca0f0d4bc6a499` |
 | `ClassicEditorDestroyedError`       | type/value | experimental   | `27394a56a2762fe6` |
 | `ClassicEditorSaveOptions`          | type       | experimental   | `84d1e35562192eeb` |
 | `ClassicPreviewOptions`             | type       | stable         | `5b865c529a6ca73a` |
 | `ClassicPreviewTemplate`            | type       | stable         | `5d9f30dc13f34f81` |
-| `ClassicSourceOptions`              | type       | stable         | `e330916cbaea8e72` |
+| `ClassicSourceOptions`              | type       | stable         | `615409f49de1197a` |
 | `ClassicWorkspaceView`              | type       | stable         | `c97fa57f190c55a9` |
 | `createClassicEditor`               | value      | experimental   | `0f31728333355113` |
 | `CreateClassicEditorOptions`        | type       | experimental   | `df2057900cdc73e3` |
@@ -743,29 +762,31 @@ Declaration SHA-256:
 | Export                              | Kind       | Classification | Signature SHA-256  |
 | ----------------------------------- | ---------- | -------------- | ------------------ |
 | `ClassicEditingMode`                | type       | experimental   | `66351b7c3ba6bbd0` |
-| `ClassicEditor`                     | type       | experimental   | `a30c7cf41cac0628` |
+| `ClassicEditor`                     | type       | experimental   | `347cce25d7713289` |
 | `ClassicEditorAlreadyAttachedError` | type/value | experimental   | `5168db0f6ce77de0` |
 | `ClassicEditorChange`               | type       | experimental   | `07ca0f0d4bc6a499` |
 | `ClassicEditorDestroyedError`       | type/value | experimental   | `27394a56a2762fe6` |
 | `ClassicEditorSaveOptions`          | type       | experimental   | `84d1e35562192eeb` |
 | `ClassicPreviewOptions`             | type       | stable         | `5b865c529a6ca73a` |
 | `ClassicPreviewTemplate`            | type       | stable         | `5d9f30dc13f34f81` |
-| `ClassicSourceOptions`              | type       | stable         | `e330916cbaea8e72` |
+| `ClassicSourceOptions`              | type       | stable         | `615409f49de1197a` |
 | `ClassicWorkspaceView`              | type       | stable         | `c97fa57f190c55a9` |
 | `createClassicEditor`               | value      | experimental   | `0f31728333355113` |
 | `CreateClassicEditorOptions`        | type       | experimental   | `df2057900cdc73e3` |
 
-- `./styles.css` — stable resource (./dist/soeditor.css)
+- `./styles.css` — stable resource (./dist/styles.css)
+- `./content.css` — stable resource (./dist/content.css)
+- `./cms/styles.css` — stable resource (./dist/cms-styles.css)
 
 ## @soeditor/engine
 
 Declaration tree SHA-256:
-`3fc5720b927956dea6bd148ba1c7095dae9f558aa4fd76b993b45c5f00d5955a`
+`3bfc9c34cff6698d2996791120892ad3415c3832afefc583140fbe35a75fda50`
 
 ### .
 
 Declaration SHA-256:
-`663036bcd106f5c2d7f97bde26f638f38cb7028fb349e30b56fa1ea27dae1aa8`
+`362ff11ed630505066ebfa3b1a7f985d9eabf5a2dcfa1c9847de24c4d53716db`
 
 | Export                                                | Kind       | Classification | Signature SHA-256  |
 | ----------------------------------------------------- | ---------- | -------------- | ------------------ |
@@ -834,19 +855,22 @@ Declaration SHA-256:
 | `VisualEditingEngineDestroyedError`                   | type/value | stable         | `523514eedad22095` |
 | `VisualEditingEngineOptions`                          | type       | stable         | `c1c33942454e69d0` |
 | `VisualEditingProjectionId`                           | type       | experimental   | `6937366562e62be8` |
-| `VisualEditingService`                                | type       | stable         | `e845d0155b3e506a` |
+| `VisualEditingService`                                | type       | stable         | `dff8be278b90a0e5` |
 | `visualEditingServiceToken`                           | value      | stable         | `9a32f2a648a6b57e` |
+| `VisualFormatProperty`                                | type       | stable         | `94c4d5271350a3cc` |
+| `VisualFormatState`                                   | type       | stable         | `3262c766141df40e` |
 | `VisualHtmlInsertionOptions`                          | type       | stable         | `e6b7905f86115990` |
 | `VisualInlineStyle`                                   | type       | experimental   | `ceb328a291e63d66` |
 | `VisualInlineStyleProperty`                           | type       | stable         | `a0210ae72b0141dc` |
 | `VisualLinkAttributes`                                | type       | stable         | `ef7fac9e12d16ddb` |
 | `VisualListProperties`                                | type       | experimental   | `b3a668a12ec86d51` |
+| `VisualListStyle`                                     | type       | stable         | `c21122c97aa4b40e` |
 | `VisualTextMark`                                      | type       | stable         | `e771736e78ddaf53` |
 
 ## @soeditor/file-manager
 
 Declaration tree SHA-256:
-`a50ca42758b958febd032b6c124a6de5bcc9e0bcf8dac2d289d48d9798691c4e`
+`d87bc8aad3c3cae239b03e251590ed12f272bde576b4d0d17bf75886230dacc1`
 
 ### .
 
@@ -859,7 +883,7 @@ Declaration SHA-256:
 | `FileManagerKind`               | type       | stable         | `785bce4ba9278334` |
 | `FileManagerOpenOptions`        | type       | stable         | `298ff00c678bd580` |
 | `FileManagerPlugin`             | type/value | stable         | `9d0802dde0ce9907` |
-| `FileManagerResult`             | type       | stable         | `0d214bdc89c3e91d` |
+| `FileManagerResult`             | type       | stable         | `c35ed9d3b4f8e053` |
 | `fileManagerServiceToken`       | value      | stable         | `703a046ce0f7382b` |
 | `ImageUploadOptions`            | type       | experimental   | `07df16dd826c7def` |
 | `InvalidFileManagerResultError` | type/value | stable         | `7307720f41d4e570` |
@@ -914,18 +938,19 @@ Declaration SHA-256:
 ## @soeditor/html-tools
 
 Declaration tree SHA-256:
-`da7d021172a0aaa9df018658187802f4db3bda0f5139398d04d15030841d1245`
+`01605b5bdd680f84010e30bf3bf51ae0606478d1ca4db02f9a5e9160b8adbcfc`
 
 ### .
 
 Declaration SHA-256:
-`fd24e3e989e66cc6e31ee48b6a5b34d54c478ba5683e24638bdd62598d3847f1`
+`66f02b1d78a340d22e6988449f3930394a51a30051ff9fd3a669219bd7bd9df8`
 
 | Export                                     | Kind       | Classification | Signature SHA-256  |
 | ------------------------------------------ | ---------- | -------------- | ------------------ |
 | `AccessibilityDiagnosticRuleCode`          | type       | stable         | `cbe42f4f1799e480` |
 | `AccessibilityDiagnosticsConfig`           | type       | stable         | `e1bb2c9ff4776f4c` |
 | `AccessibilityDiagnosticsPlugin`           | type/value | stable         | `4e15bfa2e9bd76ef` |
+| `createHtmlFormattingService`              | value      | stable         | `0b057d0821ca78d4` |
 | `Diagnostic`                               | type       | stable         | `d634204bfdbcc32e` |
 | `DiagnosticCounts`                         | type       | stable         | `1ead0e59324a66ce` |
 | `DiagnosticFilter`                         | type       | stable         | `0d1ee6b4450c8196` |
@@ -1081,7 +1106,7 @@ Declaration SHA-256:
 | `Editor`                                              | type/value | stable         | `c08a94ea5df13778` |
 | `EditorEvents`                                        | type       | stable         | `a3eefcfe4f0ffaa7` |
 | `EditorState`                                         | type       | stable         | `5e50c65a795e772b` |
-| `EditorUi`                                            | type       | stable         | `ec40029a325686b2` |
+| `EditorUi`                                            | type       | stable         | `7320bdf24c7a9cca` |
 | `EditorUiDirection`                                   | type       | experimental   | `4a9f02de07873b7b` |
 | `EditorUiIconResource`                                | type       | experimental   | `c70444b8bfdd9c49` |
 | `EditorUiTheme`                                       | type       | stable         | `edd668b911e22704` |
@@ -1093,7 +1118,7 @@ Declaration SHA-256:
 | `FileManager`                                         | type       | stable         | `5db3a008837bea4a` |
 | `FileManagerKind`                                     | type       | stable         | `785bce4ba9278334` |
 | `FileManagerOpenOptions`                              | type       | stable         | `298ff00c678bd580` |
-| `FileManagerResult`                                   | type       | stable         | `0d214bdc89c3e91d` |
+| `FileManagerResult`                                   | type       | stable         | `c35ed9d3b4f8e053` |
 | `fileManagerServiceToken`                             | value      | stable         | `703a046ce0f7382b` |
 | `ImageUploadOptions`                                  | type       | experimental   | `07df16dd826c7def` |
 | `KeyboardShortcutDefinition`                          | type       | stable         | `012f4a9c31738402` |
@@ -1195,7 +1220,7 @@ Declaration SHA-256:
 | `VisualDecorationsService`                            | type       | experimental   | `b0f4a46896dbabd9` |
 | `visualDecorationsServiceToken`                       | value      | experimental   | `66a822aac44b8c56` |
 | `VisualDecorationStatus`                              | type       | experimental   | `5d1e88a2c73eb2f7` |
-| `VisualEditingService`                                | type       | stable         | `e845d0155b3e506a` |
+| `VisualEditingService`                                | type       | stable         | `dff8be278b90a0e5` |
 | `visualEditingServiceToken`                           | value      | stable         | `9a32f2a648a6b57e` |
 | `VisualLinkAttributes`                                | type       | stable         | `ef7fac9e12d16ddb` |
 | `VisualTextMark`                                      | type       | stable         | `e771736e78ddaf53` |
@@ -1301,7 +1326,7 @@ Declaration SHA-256:
 ## @soeditor/preview
 
 Declaration tree SHA-256:
-`eee2b623945bfe179e535b7811da2d033e3c38a508aca8ed05f5941d42dfa2dd`
+`b48380008209fedd97223c033c4c9e84cb49e2a90ef2f182d3aece18d50a9f4b`
 
 ### .
 
@@ -1314,7 +1339,7 @@ Declaration SHA-256:
 | `ClassicPreviewTemplateOptions`         | type       | stable         | `992ce37f74009d96` |
 | `ClassicPreviewTemplatesOptions`        | type       | stable         | `8692d41cc59b60e3` |
 | `ClassicPreviewWindow`                  | type       | stable         | `1044976e9c409301` |
-| `ClassicPreviewWindowOptions`           | type       | stable         | `dc0a308d47eedc96` |
+| `ClassicPreviewWindowOptions`           | type       | stable         | `aaadf303a3f428e2` |
 | `ClassicPreviewWindowTemplate`          | type       | stable         | `30d6bd8da1ef6c15` |
 | `createClassicPreviewTemplates`         | value      | stable         | `5e22309d2ff491af` |
 | `createClassicPreviewWindow`            | value      | stable         | `1baeb80f259cc799` |
@@ -1422,12 +1447,12 @@ Declaration SHA-256:
 ## @soeditor/rich-text
 
 Declaration tree SHA-256:
-`82734cd1a62d1cd27413a16dd8877806c77cea9322cd85aac09418ad9ee06997`
+`fb4e7c0708c583c0c2fa35822d566cb170f3d08d45259be30da4c93673adeaa0`
 
 ### .
 
 Declaration SHA-256:
-`8f97a2bc2d2bffa481f190b2ee742cf6e874573123ff282d6dd8a09f23a72dc2`
+`29f26216bd6ee9c1f799f5c369f787441b7f77df909ab5b3169b519f7224cf6e`
 
 | Export                            | Kind       | Classification | Signature SHA-256  |
 | --------------------------------- | ---------- | -------------- | ------------------ |
@@ -1442,6 +1467,7 @@ Declaration SHA-256:
 | `CmsObjectDefinition`             | type       | experimental   | `1986dc8e33cee031` |
 | `CmsObjectsPlugin`                | type/value | experimental   | `9fa6c46ee8a65a6f` |
 | `CmsPastePlugin`                  | type/value | experimental   | `e877dd8eb6694d1d` |
+| `CmsTablePlugin`                  | type/value | stable         | `7a25d3f87a253f42` |
 | `CodeBlockPlugin`                 | type/value | stable         | `df60cc4313b8c95f` |
 | `DivPlugin`                       | type/value | stable         | `39d6534a38506a81` |
 | `EmailContentAnalysis`            | type       | experimental   | `f277f2b4799fd00c` |
@@ -1455,11 +1481,13 @@ Declaration SHA-256:
 | `HorizontalRulePlugin`            | type/value | experimental   | `bf5fe3b5b69481ad` |
 | `HtmlCleanupPlugin`               | type/value | experimental   | `dbcdeb43b18e9149` |
 | `HtmlCleanupProfile`              | type       | experimental   | `77ac0a29ea7146fb` |
-| `ImageInsertOptions`              | type       | stable         | `7c79bc70b574f888` |
+| `ImageInsertOptions`              | type       | stable         | `df866d6ad90ebcef` |
 | `ImagePlugin`                     | type/value | stable         | `5b65910bdf1ae805` |
 | `IndentationPlugin`               | type/value | experimental   | `1381f43835d2c176` |
 | `InlineCodePlugin`                | type/value | stable         | `a0161d94f0ddd3d5` |
+| `isBoundedResponsiveImageString`  | value      | stable         | `37de802b1b137942` |
 | `isSafeMediaPreviewUrl`           | value      | stable         | `3e4094c6fffa89e3` |
+| `isSafeResponsiveImageSourceSet`  | value      | stable         | `c501866fadb1d69e` |
 | `ItalicPlugin`                    | type/value | stable         | `92b847fbca4c3091` |
 | `LinkOptions`                     | type       | stable         | `3576c1349e0afedd` |
 | `LinkPlugin`                      | type/value | stable         | `dd7d8847520848c7` |
@@ -1468,9 +1496,9 @@ Declaration SHA-256:
 | `LinkTargetSelection`             | type       | experimental   | `39241bd6768f8287` |
 | `ListPropertiesPlugin`            | type/value | experimental   | `0e98cafb9856f3a4` |
 | `MediaAlignment`                  | type       | experimental   | `061092f682bf4ff6` |
-| `MediaInsertOptions`              | type       | experimental   | `502c09648d86e923` |
+| `MediaInsertOptions`              | type       | experimental   | `0070009ec77a8de2` |
 | `MediaPlugin`                     | type/value | experimental   | `f4fa52c041a02540` |
-| `MediaUpdateOptions`              | type       | experimental   | `5d36f0f6d4b19da3` |
+| `MediaUpdateOptions`              | type       | experimental   | `bc04617bc95049b9` |
 | `OrderedListPlugin`               | type/value | stable         | `1bcc94238507db9f` |
 | `ParagraphPlugin`                 | type/value | stable         | `66234508fc000989` |
 | `processCmsPaste`                 | value      | experimental   | `416cb4b498e76485` |
@@ -1501,7 +1529,7 @@ Declaration SHA-256:
 | `TableEditorSnapshot`             | type       | stable         | `adef07f34e2b0a01` |
 | `TableInsertOptions`              | type       | experimental   | `19957619ac6da0f5` |
 | `TableOperationCapability`        | type       | stable         | `3a384505674706b5` |
-| `TablePlugin`                     | type/value | experimental   | `348f19c98fe256ac` |
+| `TablePlugin`                     | type/value | experimental   | `e536c32468c98a02` |
 | `TableProperties`                 | type       | experimental   | `b9d2582b0ceb039a` |
 | `TableRowMoveOptions`             | type       | stable         | `85338169275b62fd` |
 | `TableRowProperties`              | type       | experimental   | `4a402e707e1f7e6e` |
@@ -1522,7 +1550,7 @@ Declaration SHA-256:
 ## @soeditor/source
 
 Declaration tree SHA-256:
-`07da8ecfcb901b428920ed54a5c889d2272b7c324e0549bd860d0417d3b57f11`
+`8adc43a26d0473a358f56c9d8d53b2dbf5b81be1c8d74cad83b7ee6ca07d3a04`
 
 ### .
 
@@ -1532,7 +1560,7 @@ Declaration SHA-256:
 | Export                                 | Kind       | Classification | Signature SHA-256  |
 | -------------------------------------- | ---------- | -------------- | ------------------ |
 | `attachClassicSourceEnhancements`      | value      | stable         | `bd558d8b557de45d` |
-| `ClassicSourceEnhancementOptions`      | type       | stable         | `b655c9a058f07dd3` |
+| `ClassicSourceEnhancementOptions`      | type       | stable         | `1edd3fd4f2fe79ef` |
 | `createSourceEditingEngine`            | value      | stable         | `58744efbcc7e4308` |
 | `SourceEditingEngine`                  | type/value | stable         | `be507f9fd47cd792` |
 | `SourceEditingEngineDestroyedError`    | type/value | stable         | `982f8e8bad3b7be1` |
@@ -1545,35 +1573,47 @@ Declaration SHA-256:
 | `SourceRevealOptions`                  | type       | stable         | `d0546addf0a945e0` |
 | `UnsupportedSourceDocumentFormatError` | type/value | stable         | `ed0bde5a3d082ae9` |
 
+### ./recovery
+
+Declaration SHA-256:
+`2e026393ca45d918c720dbe6b06da7b18294d087e432a6a60afd305fb82c19f3`
+
+| Export                  | Kind  | Classification | Signature SHA-256  |
+| ----------------------- | ----- | -------------- | ------------------ |
+| `loadSourceRecovery`    | value | stable         | `25096bbb23a31e65` |
+| `SourceRecoveryRuntime` | type  | stable         | `86477e3ace9d33c2` |
+
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`6930ce42b9d4763e8d1d6f76d79709f6c28cdf5be910e192c9581bb00f156ea7`
+`7454fbb52af33140155b77bc319334133b7400b41a738dcba0e932eb583fb429`
 
 ### .
 
 Declaration SHA-256:
-`4c202aef70d827aad706513c7281185bc6e33241ef9b1119b72cd946be172ecf`
+`9f4117dc31134930ede964714e795c13ace669cc6c9120d51ef755f231654dec`
 
 | Export                                 | Kind       | Classification | Signature SHA-256  |
 | -------------------------------------- | ---------- | -------------- | ------------------ |
-| `BalloonOptions`                       | type       | stable         | `0eddddafdbeb8f9d` |
+| `BalloonOptions`                       | type       | stable         | `fe1b841d335c239b` |
 | `BalloonService`                       | type       | stable         | `5efa888c1e4ca0d2` |
 | `builtInUiTranslations`                | value      | experimental   | `a83547fa9b47531e` |
 | `ContextMenuItemContext`               | type       | experimental   | `43b4955bcfda3b1c` |
 | `ContextMenuItemDefinition`            | type       | experimental   | `546caad154d3207a` |
 | `createEditorUi`                       | value      | stable         | `901a347f76278407` |
-| `CreateEditorUiOptions`                | type       | stable         | `f8ef2dfebdced65b` |
+| `CreateEditorUiOptions`                | type       | stable         | `60604ec0ddbd5243` |
 | `defaultToolbarConfiguration`          | value      | stable         | `f11a78c87bf29923` |
 | `DialogAction`                         | type       | stable         | `606b5be179931b65` |
 | `DialogHandle`                         | type       | stable         | `69d8c3df12657d5a` |
 | `DialogOptions`                        | type       | stable         | `1da46417d28bf824` |
 | `DialogService`                        | type       | stable         | `a73020dcd4c251eb` |
 | `DismissibleUiHandle`                  | type       | stable         | `e5c208df79f7ccfb` |
-| `EditorUi`                             | type       | stable         | `ec40029a325686b2` |
+| `EditorUi`                             | type       | stable         | `7320bdf24c7a9cca` |
 | `EditorUiAlreadyAttachedError`         | type/value | stable         | `ff4fec646d257bce` |
 | `EditorUiDestroyedError`               | type/value | stable         | `f36fc578d3ef1450` |
 | `EditorUiDirection`                    | type       | experimental   | `4a9f02de07873b7b` |
+| `EditorUiFormatProperty`               | type       | stable         | `0ecd60fa4ddccee7` |
+| `EditorUiFormatState`                  | type       | stable         | `cf0441a76a544ffe` |
 | `EditorUiIconResource`                 | type       | experimental   | `c70444b8bfdd9c49` |
 | `EditorUiTheme`                        | type       | stable         | `edd668b911e22704` |
 | `EditorUiThemeVariable`                | type       | experimental   | `e94c04af3a3c5403` |
@@ -1602,6 +1642,28 @@ Declaration SHA-256:
 | `UiRegistryService`                    | type       | stable         | `5627a9dcadca85a8` |
 | `uiRegistryServiceToken`               | value      | stable         | `b747719ea36087ae` |
 
+### ./cms
+
+Declaration SHA-256:
+`6e48ebe35b2028dc8a46f6aab0e55e19ac355341c33093f2cf0da37a19c4e24c`
+
+| Export                          | Kind  | Classification | Signature SHA-256  |
+| ------------------------------- | ----- | -------------- | ------------------ |
+| `createCmsEditorUi`             | value | stable         | `759f4ae843cb7bb3` |
+| `normalizeUiLocale`             | value | stable         | `9bce9df629a4c458` |
+| `ResolvedUiTranslation`         | type  | experimental   | `1f9cc4f9dee84093` |
+| `resolveUiTranslationResources` | value | stable         | `c57c0b4ce14625f1` |
+| `uiRegistryServiceToken`        | value | stable         | `b747719ea36087ae` |
+
+### ./translations
+
+Declaration SHA-256:
+`772c4997923b962ddd705c8bb40ae9fb5843a3527ae685fb16ef4e9092170141`
+
+| Export                  | Kind  | Classification | Signature SHA-256  |
+| ----------------------- | ----- | -------------- | ------------------ |
+| `builtInUiTranslations` | value | experimental   | `a83547fa9b47531e` |
+
 ### ./compatibility
 
 Declaration SHA-256:
@@ -1612,6 +1674,7 @@ Declaration SHA-256:
 | `CompatibilityUiPlugin` | type/value | stable         | `d5984c7d7735cdd6` |
 
 - `./styles.css` — stable resource (./dist/styles.css)
+- `./cms.css` — stable resource (./dist/cms-styles.css)
 
 ## @soeditor/vue
 
@@ -1676,10 +1739,28 @@ Declaration SHA-256:
 | `WorkspaceValue`                  | type       | stable         | `754f90990f9967c3` |
 | `WorkspaceValuePolicyError`       | type/value | stable         | `0f770d59e6b85c0d` |
 
+### ./save
+
+Declaration SHA-256:
+`9bde8d9f664c5a364457c0270d26425baa25b30ee6e8086473a38d3d772dfce7`
+
+| Export                            | Kind  | Classification | Signature SHA-256  |
+| --------------------------------- | ----- | -------------- | ------------------ |
+| `createEditorSaveWorkflow`        | value | experimental   | `dcd9a823fa432389` |
+| `CreateEditorSaveWorkflowOptions` | type  | experimental   | `b5f550c79a09e664` |
+| `EditorSaveAdapter`               | type  | experimental   | `52961bd6f511f5f8` |
+| `EditorSaveConflict`              | type  | experimental   | `3a704d9bfb274f27` |
+| `EditorSaveReason`                | type  | experimental   | `f1b6b8aa6bfa1a96` |
+| `EditorSaveRequest`               | type  | experimental   | `c410701913cdf8da` |
+| `EditorSaveResult`                | type  | experimental   | `64489e3f129e9a81` |
+| `EditorSaveState`                 | type  | experimental   | `f2525cca648ea9a7` |
+| `EditorSaveSuccess`               | type  | experimental   | `73935987b399a7c2` |
+| `EditorSaveWorkflow`              | type  | experimental   | `c804bed752ba43f8` |
+
 ## @soeditor/wysiwyg
 
 Declaration tree SHA-256:
-`eb6cba9888e95c60ae4c9cbcf2c9059ed8e4ed4f4ce4926b4a7e5dd08ccb4b42`
+`bb18d7a4489d2bcf9ccab1dc9a8f56895c7e018f529590f13a268a631f5c2882`
 
 ### .
 

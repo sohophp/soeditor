@@ -15,10 +15,16 @@ export interface ClassicSourceEnhancementOptions {
     readonly editor: Editor;
     readonly format?: (source: string) => Promise<string>;
     readonly formatDelay?: number;
+    /** Catch up only when a visual edit occurred during asynchronous loading. */
+    readonly formatOnAttach?: boolean;
     readonly isSelectionSyncActive: () => boolean;
+    readonly isScrollSyncActive: () => boolean;
     readonly isDestroyed: () => boolean;
     readonly reportError: (error: unknown) => void;
+    readonly scrollSync?: boolean;
+    readonly source: HTMLElement;
     readonly visual: HTMLElement;
+    readonly visualScroller: HTMLElement;
     readonly visualShadow: ShadowRoot;
 }
 
@@ -28,6 +34,9 @@ export function attachClassicSourceEnhancements(
 ): () => void {
     const disposeStyles = attachSourceStyles(options.document);
     let frame: number | undefined;
+    let scrollFrame: number | undefined;
+    let scrollOrigin: HTMLElement | undefined;
+    let ignoredScrollTarget: HTMLElement | undefined;
     let timer: number | undefined;
     let generation = 0;
     const view = options.document.defaultView;
@@ -52,57 +61,120 @@ export function attachClassicSourceEnhancements(
         if (view === null || frame !== undefined) return;
         frame = view.requestAnimationFrame(synchronizeSelection);
     };
+    const sourceScroller =
+        options.source.querySelector<HTMLElement>('.cm-scroller');
+    const synchronizeScroll = (): void => {
+        scrollFrame = undefined;
+        const origin = scrollOrigin;
+        scrollOrigin = undefined;
+        if (
+            origin === undefined ||
+            sourceScroller === null ||
+            options.isDestroyed() ||
+            !options.isScrollSyncActive()
+        ) {
+            return;
+        }
+        const target =
+            origin === options.visualScroller
+                ? sourceScroller
+                : options.visualScroller;
+        const originRange = origin.scrollHeight - origin.clientHeight;
+        const targetRange = target.scrollHeight - target.clientHeight;
+        if (originRange <= 0 || targetRange <= 0) return;
+        const next = (origin.scrollTop / originRange) * targetRange;
+        if (Math.abs(target.scrollTop - next) < 1) return;
+        ignoredScrollTarget = target;
+        target.scrollTop = next;
+        view?.requestAnimationFrame(() => {
+            if (ignoredScrollTarget === target) ignoredScrollTarget = undefined;
+        });
+    };
+    const scheduleScrollSync = (event: Event): void => {
+        const origin = event.currentTarget;
+        if (!(origin instanceof HTMLElement)) return;
+        if (ignoredScrollTarget === origin) {
+            ignoredScrollTarget = undefined;
+            return;
+        }
+        if (
+            options.scrollSync !== true ||
+            view === null ||
+            !options.isScrollSyncActive()
+        ) {
+            return;
+        }
+        scrollOrigin = origin;
+        if (scrollFrame === undefined) {
+            scrollFrame = view.requestAnimationFrame(synchronizeScroll);
+        }
+    };
     options.visualShadow.addEventListener(
         'selectionchange',
         scheduleSelectionSync,
     );
     options.visual.addEventListener('keyup', scheduleSelectionSync);
     options.visual.addEventListener('pointerup', scheduleSelectionSync);
+    options.visualScroller.addEventListener('scroll', scheduleScrollSync, {
+        passive: true,
+    });
+    sourceScroller?.addEventListener('scroll', scheduleScrollSync, {
+        passive: true,
+    });
+    const scheduleFormatting = (source: string): void => {
+        generation += 1;
+        const currentGeneration = generation;
+        if (timer !== undefined) view?.clearTimeout(timer);
+        timer = view?.setTimeout(() => {
+            timer = undefined;
+            if (
+                options.isDestroyed() ||
+                !options.isSelectionSyncActive() ||
+                options.editor.state.readonly
+            )
+                return;
+            void options
+                .format?.(source)
+                .then((formatted) => {
+                    if (
+                        options.isDestroyed() ||
+                        options.editor.state.readonly ||
+                        !options.isSelectionSyncActive() ||
+                        generation !== currentGeneration ||
+                        options.editor.getData() !== source ||
+                        formatted === source
+                    )
+                        return;
+                    options.editor.update(
+                        (next) => next.replaceDocument(formatted),
+                        { origin: 'plugin' },
+                    );
+                })
+                .catch((error: unknown) => {
+                    if (
+                        !options.isDestroyed() &&
+                        generation === currentGeneration
+                    )
+                        options.reportError(error);
+                });
+        }, options.formatDelay ?? 300);
+    };
     const disposeDocumentChange = options.editor.events.on(
         'document:change',
         ({ current, transaction }) => {
             if (transaction.origin !== 'source') scheduleSelectionSync();
             if (
-                options.format === undefined ||
-                transaction.origin !== 'user' ||
-                !options.isSelectionSyncActive()
-            ) {
-                return;
-            }
-            generation += 1;
-            const currentGeneration = generation;
-            if (timer !== undefined) view?.clearTimeout(timer);
-            timer = view?.setTimeout(() => {
-                timer = undefined;
-                const source = current.source;
-                void options
-                    .format?.(source)
-                    .then((formatted) => {
-                        if (
-                            options.isDestroyed() ||
-                            !options.isSelectionSyncActive() ||
-                            generation !== currentGeneration ||
-                            options.editor.getData() !== source ||
-                            formatted === source
-                        ) {
-                            return;
-                        }
-                        options.editor.update(
-                            (next) => next.replaceDocument(formatted),
-                            { origin: 'plugin' },
-                        );
-                    })
-                    .catch((error: unknown) => {
-                        if (
-                            !options.isDestroyed() &&
-                            generation === currentGeneration
-                        ) {
-                            options.reportError(error);
-                        }
-                    });
-            }, options.formatDelay ?? 300);
+                options.format !== undefined &&
+                transaction.origin === 'user' &&
+                options.isSelectionSyncActive()
+            )
+                scheduleFormatting(current.source);
         },
     );
+    // Catch up with the current caret as well as edits made during lazy loading.
+    scheduleSelectionSync();
+    if (options.format !== undefined && options.formatOnAttach === true)
+        scheduleFormatting(options.editor.getData());
     return () => {
         generation += 1;
         disposeDocumentChange();
@@ -112,10 +184,17 @@ export function attachClassicSourceEnhancements(
         );
         options.visual.removeEventListener('keyup', scheduleSelectionSync);
         options.visual.removeEventListener('pointerup', scheduleSelectionSync);
+        options.visualScroller.removeEventListener(
+            'scroll',
+            scheduleScrollSync,
+        );
+        sourceScroller?.removeEventListener('scroll', scheduleScrollSync);
         if (timer !== undefined) view?.clearTimeout(timer);
         if (frame !== undefined) view?.cancelAnimationFrame(frame);
+        if (scrollFrame !== undefined) view?.cancelAnimationFrame(scrollFrame);
         timer = undefined;
         frame = undefined;
+        scrollFrame = undefined;
         disposeStyles();
     };
 }

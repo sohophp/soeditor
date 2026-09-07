@@ -1,0 +1,44 @@
+{
+    "measuredAt": "2026-09-05T05:08:12.629Z",
+    "node": "v22.14.0",
+    "chromium": "151.0.7922.34",
+    "builds": {
+        "before": "/tmp/soeditor-large-doc/before/profile-dist",
+        "after": "/var/www/node/SoEditor/node_modules/.cache/soeditor-cms-loading/profile-dist"
+    },
+    "methodology": "500 KiB fixture, Source disabled; native beforeinput to next animation frame; 3 fresh instances per build, 1 excluded warmup and 6 samples each; alternating build order. Local diagnostic comparison, not a release P95.",
+    "measurements": {
+        "before": [
+            [
+                250.7999999988824, 245.90000000037253, 252.5, 238,
+                192.69999999925494, 208.5
+            ],
+            [
+                238.30000000074506, 202.2000000011176, 218.2000000011176,
+                218.40000000037253, 197.59999999962747, 253.2000000011176
+            ],
+            [
+                232.89999999850988, 206.90000000037253, 195.7999999988824,
+                201.10000000149012, 211.19999999925494, 188.10000000149012
+            ]
+        ],
+        "after": [
+            [
+                199.40000000037253, 237.69999999925494, 202.5,
+                170.60000000149012, 189.7000000011176, 176
+            ],
+            [
+                275.09999999962747, 208.59999999962747, 214.19999999925494,
+                216.5, 204.89999999850988, 201
+            ],
+            [
+                183.7999999988824, 197.09999999962747, 196.80000000074506,
+                180.5, 167.80000000074506, 168.7000000011176
+            ]
+        ]
+    },
+    "medianMilliseconds": {
+        "before": 214.70000000018626,
+        "after": 198.25
+    }
+}

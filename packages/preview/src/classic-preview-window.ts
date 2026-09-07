@@ -14,6 +14,8 @@ export interface ClassicPreviewWindowOptions {
     readonly getTemplates: () => readonly ClassicPreviewWindowTemplate[];
     readonly initialTemplateId: string;
     readonly owner: Window;
+    /** Window reserved synchronously by a host before loading the preview module. */
+    readonly popup?: Window;
     readonly reportError: (error: unknown) => void;
     readonly templatePickerLabel: string;
 }
@@ -128,7 +130,7 @@ export function createClassicPreviewWindow(
 ): ClassicPreviewWindow {
     validateTemplates(options.getTemplates(), options.initialTemplateId);
     const name = `soeditor-preview-${String(++previewWindowSequence)}`;
-    let popup: Window | null = null;
+    let popup: Window | null = options.popup ?? null;
     let iframe: HTMLIFrameElement | undefined;
     let templateSelect: HTMLSelectElement | undefined;
     let activeTemplateId = options.initialTemplateId;

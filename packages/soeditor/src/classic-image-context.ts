@@ -1,35 +1,67 @@
-import type { EditorUi } from '@soeditor/ui';
+import type { DismissibleUiHandle, EditorUi } from '@soeditor/ui';
 
 export function attachClassicImageContext(
     ui: EditorUi,
     visual: HTMLElement,
+    initialEvent?: Pick<Event, 'target' | 'type'>,
 ): () => void {
     const document = visual.ownerDocument;
+    const view = document.defaultView;
     const shadow = visual.getRootNode();
     let resizeOverlay: HTMLElement | undefined;
     let selectedImage: HTMLImageElement | undefined;
-    let selectedUpdate: ((values: unknown) => unknown) | undefined;
+    let cancelDrag: (() => void) | undefined;
+    let positionFrame: number | undefined;
+    let imageTools: DismissibleUiHandle | undefined;
+    let showImageTools: (() => void) | undefined;
     const removeResizeOverlay = (): void => {
+        cancelDrag?.();
+        showImageTools = undefined;
+        imageTools?.close();
+        imageTools = undefined;
         resizeOverlay?.remove();
         resizeOverlay = undefined;
         selectedImage = undefined;
-        selectedUpdate = undefined;
+        observer?.disconnect();
+        resizeObserver?.disconnect();
+        if (positionFrame !== undefined)
+            view?.cancelAnimationFrame(positionFrame);
+        positionFrame = undefined;
     };
     const positionResizeOverlay = (): void => {
+        positionFrame = undefined;
+        if (resizeOverlay === undefined) return;
         if (
-            resizeOverlay === undefined ||
-            selectedImage?.isConnected !== true
+            selectedImage?.isConnected !== true ||
+            !visual.isContentEditable ||
+            visual.getClientRects().length === 0
         ) {
             removeResizeOverlay();
             return;
         }
+        // Scroll/layout observation must never reset an active drag preview.
+        if (cancelDrag !== undefined) return;
         const rectangle = selectedImage.getBoundingClientRect();
-        resizeOverlay.style.insetInlineStart = `${String(rectangle.left)}px`;
-        resizeOverlay.style.insetBlockStart = `${String(rectangle.top)}px`;
+        const containingBlock =
+            resizeOverlay.offsetParent instanceof HTMLElement
+                ? resizeOverlay.offsetParent
+                : ui.element;
+        const containingRectangle = containingBlock.getBoundingClientRect();
+        resizeOverlay.style.left = `${String(rectangle.left - containingRectangle.left - containingBlock.clientLeft + containingBlock.scrollLeft)}px`;
+        resizeOverlay.style.top = `${String(rectangle.top - containingRectangle.top - containingBlock.clientTop + containingBlock.scrollTop)}px`;
         resizeOverlay.style.inlineSize = `${String(rectangle.width)}px`;
         resizeOverlay.style.blockSize = `${String(rectangle.height)}px`;
+        showImageTools?.();
     };
-    const select = (event: Event): void => {
+    const schedulePosition = (): void => {
+        if (resizeOverlay !== undefined && positionFrame === undefined)
+            positionFrame = view?.requestAnimationFrame(positionResizeOverlay);
+    };
+    const observer =
+        view === null ? undefined : new view.MutationObserver(schedulePosition);
+    const resizeObserver =
+        view === null ? undefined : new view.ResizeObserver(schedulePosition);
+    const select = (event: Pick<Event, 'target' | 'type'>): void => {
         const detail: unknown = Reflect.get(event, 'detail');
         if (typeof detail !== 'object' || detail === null) return;
         const element: unknown = Reflect.get(detail, 'element');
@@ -37,19 +69,132 @@ export function attachClassicImageContext(
         if (
             !(element instanceof HTMLImageElement) ||
             !visual.contains(element) ||
+            !visual.isContentEditable ||
             typeof update !== 'function' ||
             !(shadow instanceof ShadowRoot)
-        ) {
+        )
             return;
-        }
         removeResizeOverlay();
         selectedImage = element;
-        selectedUpdate = (values) => Reflect.apply(update, undefined, [values]);
+        showImageTools = (): void => {
+            if (imageTools?.element.isConnected) return;
+            imageTools = ui.balloons.show({
+                anchor: element,
+                placement: 'above',
+                avoid: () =>
+                    Array.from(
+                        overlay.querySelectorAll(
+                            '.soeditor-image-resize-handle',
+                        ),
+                        (handle) => handle.getBoundingClientRect(),
+                    ),
+                content: (container) => {
+                    container.setAttribute('data-image-tools', 'true');
+                    container.setAttribute('role', 'toolbar');
+                    container.setAttribute(
+                        'aria-label',
+                        ui.translate('Image tools'),
+                    );
+                    container.style.display = 'flex';
+                    container.style.gap = '0.125rem';
+                    const buttons: HTMLButtonElement[] = [];
+                    for (const [value, label, icon] of [
+                        ['left', 'Align left', 'format.alignment.left'],
+                        ['center', 'Align center', 'format.alignment.center'],
+                        ['right', 'Align right', 'format.alignment.right'],
+                        ['properties', 'Image properties', 'image.insert'],
+                    ] as const) {
+                        const button = document.createElement('button');
+                        button.type = 'button';
+                        button.className = 'soeditor-ui__button';
+                        button.setAttribute('aria-label', ui.translate(label));
+                        button.title = ui.translate(label);
+                        ui.setIcon(button, icon, label);
+                        if (value !== 'properties')
+                            button.setAttribute(
+                                'aria-pressed',
+                                String(
+                                    element
+                                        .closest('figure')
+                                        ?.getAttribute('data-align') === value,
+                                ),
+                            );
+                        button.addEventListener('click', () => {
+                            if (
+                                !visual.isContentEditable ||
+                                !element.isConnected
+                            )
+                                return;
+                            if (value === 'properties') {
+                                removeResizeOverlay();
+                                activate(event);
+                            } else {
+                                ui.restoreEditingSelection();
+                                Reflect.apply(update, undefined, [
+                                    { alignment: value },
+                                ]);
+                                imageTools?.close();
+                                imageTools = undefined;
+                                positionResizeOverlay();
+                            }
+                        });
+                        buttons.push(button);
+                        container.append(button);
+                    }
+                    container.addEventListener('keydown', (key) => {
+                        if (
+                            ![
+                                'ArrowLeft',
+                                'ArrowRight',
+                                'Home',
+                                'End',
+                            ].includes(key.key)
+                        )
+                            return;
+                        const current = buttons.findIndex(
+                            (button) => button === document.activeElement,
+                        );
+                        const forward =
+                            (key.key === 'ArrowRight') !==
+                            (getComputedStyle(container).direction === 'rtl');
+                        const next =
+                            key.key === 'Home'
+                                ? 0
+                                : key.key === 'End'
+                                  ? buttons.length - 1
+                                  : (current +
+                                        (forward ? 1 : -1) +
+                                        buttons.length) %
+                                    buttons.length;
+                        key.preventDefault();
+                        key.stopPropagation();
+                        buttons[next]?.focus();
+                    });
+                },
+            });
+        };
         const overlay = document.createElement('div');
         overlay.className = 'soeditor-image-resize-overlay';
+        // Hide only this projected image while previewing, without mutating
+        // its attributes or waking the document's content observer per frame.
+        const path: string[] = [];
+        let node: Element = element;
+        while (node !== visual && node.parentElement !== null) {
+            path.unshift(
+                `:nth-child(${String(Array.from(node.parentElement.children).indexOf(node) + 1)})`,
+            );
+            node = node.parentElement;
+        }
+        const conceal = document.createElement('style');
+        const nonce =
+            shadow.querySelector<HTMLStyleElement>('style[nonce]')?.nonce;
+        if (nonce !== undefined) conceal.nonce = nonce;
+        conceal.textContent = `:host:has(.soeditor-image-resize-overlay.is-resizing) .soeditor-wysiwyg-content > ${path.join(' > ')} { visibility: hidden; }`;
+        overlay.append(conceal);
         const preview = document.createElement('img');
         preview.src = element.currentSrc || element.src;
         preview.alt = '';
+        preview.draggable = false;
         preview.className = 'soeditor-image-resize-preview';
         preview.setAttribute('aria-hidden', 'true');
         overlay.append(preview);
@@ -57,16 +202,56 @@ export function attachClassicImageContext(
             const handle = document.createElement('button');
             handle.type = 'button';
             handle.className = 'soeditor-image-resize-handle';
-            handle.dataset.resizeDirection = direction;
-            handle.setAttribute('aria-label', `Resize image ${direction}`);
+            handle.setAttribute('data-resize-direction', direction);
+            handle.setAttribute(
+                'aria-label',
+                `${ui.translate('Resize image')} ${direction.toUpperCase()}`,
+            );
             let originX = 0;
             let originY = 0;
             let pointerX = 0;
             let pointerY = 0;
             let originWidth = 0;
             let originHeight = 0;
+            let maxWidth = 0;
             let width = 0;
             let height = 0;
+            let dragPointer: number | undefined;
+            let frame: number | undefined;
+            const paint = (): void => {
+                frame = undefined;
+                overlay.style.inlineSize = `${String(width)}px`;
+                overlay.style.blockSize = `${String(height)}px`;
+                overlay.style.left = `${String(originX + (direction.includes('w') ? originWidth - width : 0))}px`;
+                overlay.style.top = `${String(originY + (direction.includes('n') ? originHeight - height : 0))}px`;
+                overlay.setAttribute(
+                    'data-dimensions',
+                    `${String(width)} × ${String(height)}`,
+                );
+            };
+            const measure = (): boolean => {
+                positionResizeOverlay();
+                const rectangle = element.getBoundingClientRect();
+                if (rectangle.width <= 0 || rectangle.height <= 0) return false;
+                originX = Number.parseFloat(overlay.style.left);
+                originY = Number.parseFloat(overlay.style.top);
+                originWidth = rectangle.width;
+                originHeight = rectangle.height;
+                const bounds = visual.getBoundingClientRect();
+                const styles = view?.getComputedStyle(visual);
+                const padding =
+                    Number.parseFloat(styles?.paddingRight ?? '0') || 0;
+                maxWidth = Math.min(
+                    9999,
+                    Math.max(
+                        originWidth,
+                        bounds.right - rectangle.left - padding,
+                    ),
+                );
+                width = Math.round(originWidth);
+                height = Math.round(originHeight);
+                return true;
+            };
             const resize = (
                 deltaX: number,
                 deltaY: number,
@@ -82,17 +267,15 @@ export function attachClassicImageContext(
                     : direction.includes('n')
                       ? -deltaY
                       : 0;
-                const rawWidth = originWidth + horizontal;
-                const rawHeight = originHeight + vertical;
                 const locked =
                     preserveRatio ||
-                    element.closest('figure')?.dataset.aspectLock === 'true';
+                    element
+                        .closest('figure')
+                        ?.getAttribute('data-aspect-lock') !== 'false';
                 if (locked) {
-                    const horizontalScale = rawWidth / originWidth;
-                    const verticalScale = rawHeight / originHeight;
-                    const scale = Math.max(
-                        24 / originWidth,
-                        24 / originHeight,
+                    const horizontalScale = 1 + horizontal / originWidth;
+                    const verticalScale = 1 + vertical / originHeight;
+                    const requested =
                         horizontal === 0
                             ? verticalScale
                             : vertical === 0
@@ -100,111 +283,155 @@ export function attachClassicImageContext(
                               : Math.abs(horizontalScale - 1) >=
                                   Math.abs(verticalScale - 1)
                                 ? horizontalScale
-                                : verticalScale,
+                                : verticalScale;
+                    const scale = Math.min(
+                        maxWidth / originWidth,
+                        9999 / originHeight,
+                        Math.max(
+                            24 / originWidth,
+                            24 / originHeight,
+                            requested,
+                        ),
                     );
                     width = Math.round(originWidth * scale);
                     height = Math.round(originHeight * scale);
                 } else {
-                    width = Math.max(24, Math.round(rawWidth));
-                    height = Math.max(24, Math.round(rawHeight));
+                    width = Math.min(
+                        Math.round(maxWidth),
+                        Math.max(24, Math.round(originWidth + horizontal)),
+                    );
+                    height = Math.min(
+                        9999,
+                        Math.max(24, Math.round(originHeight + vertical)),
+                    );
                 }
-                overlay.style.inlineSize = `${String(width)}px`;
-                overlay.style.blockSize = `${String(height)}px`;
-                if (direction.includes('w')) {
-                    overlay.style.insetInlineStart = `${String(
-                        originX + originWidth - width,
-                    )}px`;
-                }
-                if (direction.includes('n')) {
-                    overlay.style.insetBlockStart = `${String(
-                        originY + originHeight - height,
-                    )}px`;
-                }
-                overlay.dataset.dimensions = `${String(width)} × ${String(height)}`;
             };
-            const commit = (event: PointerEvent): void => {
-                if (!handle.hasPointerCapture(event.pointerId)) return;
-                handle.releasePointerCapture(event.pointerId);
-                selectedUpdate?.({ height, width });
-                document.defaultView?.requestAnimationFrame(
-                    positionResizeOverlay,
-                );
+            const finish = (): void => {
+                if (frame !== undefined) view?.cancelAnimationFrame(frame);
+                frame = undefined;
+                const pointer = dragPointer;
+                dragPointer = undefined;
+                cancelDrag = undefined;
+                overlay.classList.remove('is-resizing');
+                overlay.removeAttribute('data-dimensions');
+                if (pointer !== undefined && handle.hasPointerCapture(pointer))
+                    handle.releasePointerCapture(pointer);
+            };
+            const cancel = (): void => {
+                if (dragPointer === undefined) return;
+                finish();
+                positionResizeOverlay();
+            };
+            const commit = (): void => {
+                const changed =
+                    width !== Math.round(originWidth) ||
+                    height !== Math.round(originHeight);
+                finish();
+                if (changed && visual.isContentEditable && element.isConnected)
+                    Reflect.apply(update, undefined, [{ height, width }]);
+                positionResizeOverlay();
+                visual.focus({ preventScroll: true });
             };
             handle.addEventListener('pointerdown', (event) => {
-                if (event.button !== 0) return;
+                if (event.button !== 0 || !visual.isContentEditable) return;
                 event.preventDefault();
                 event.stopPropagation();
-                const rectangle = element.getBoundingClientRect();
-                originX = rectangle.left;
-                originY = rectangle.top;
-                originWidth = rectangle.width;
-                originHeight = rectangle.height;
+                cancelDrag?.();
+                if (!measure()) return;
                 pointerX = event.clientX;
                 pointerY = event.clientY;
-                width = Math.round(originWidth);
-                height = Math.round(originHeight);
+                dragPointer = event.pointerId;
+                cancelDrag = cancel;
+                imageTools?.close();
+                imageTools = undefined;
                 handle.setPointerCapture(event.pointerId);
                 overlay.classList.add('is-resizing');
+                paint();
             });
             handle.addEventListener('pointermove', (event) => {
-                if (!handle.hasPointerCapture(event.pointerId)) return;
+                if (dragPointer !== event.pointerId) return;
                 resize(
                     event.clientX - pointerX,
                     event.clientY - pointerY,
                     event.shiftKey,
                 );
+                if (frame === undefined)
+                    frame = view?.requestAnimationFrame(paint);
             });
             handle.addEventListener('pointerup', (event) => {
-                overlay.classList.remove('is-resizing');
-                commit(event);
+                if (dragPointer !== event.pointerId) return;
+                resize(
+                    event.clientX - pointerX,
+                    event.clientY - pointerY,
+                    event.shiftKey,
+                );
+                commit();
             });
-            handle.addEventListener('pointercancel', () => {
-                overlay.classList.remove('is-resizing');
-                positionResizeOverlay();
-            });
+            handle.addEventListener('pointercancel', cancel);
+            handle.addEventListener('lostpointercapture', cancel);
             handle.addEventListener('keydown', (event) => {
-                if (!event.key.startsWith('Arrow')) return;
+                if (
+                    !event.key.startsWith('Arrow') ||
+                    dragPointer !== undefined ||
+                    !visual.isContentEditable
+                )
+                    return;
                 event.preventDefault();
-                const rectangle = element.getBoundingClientRect();
-                originX = rectangle.left;
-                originY = rectangle.top;
-                originWidth = rectangle.width;
-                originHeight = rectangle.height;
+                if (!measure()) return;
                 const step = event.shiftKey ? 10 : 1;
-                const deltaX =
+                resize(
                     event.key === 'ArrowRight'
                         ? step
                         : event.key === 'ArrowLeft'
                           ? -step
-                          : 0;
-                const deltaY =
+                          : 0,
                     event.key === 'ArrowDown'
                         ? step
                         : event.key === 'ArrowUp'
                           ? -step
-                          : 0;
-                resize(deltaX, deltaY, event.shiftKey);
-                selectedUpdate?.({ height, width });
-                document.defaultView?.requestAnimationFrame(
-                    positionResizeOverlay,
+                          : 0,
+                    event.shiftKey,
                 );
+                const changed =
+                    width !== Math.round(originWidth) ||
+                    height !== Math.round(originHeight);
+                if (changed)
+                    Reflect.apply(update, undefined, [{ height, width }]);
+                positionResizeOverlay();
             });
             overlay.append(handle);
         }
         shadow.append(overlay);
         resizeOverlay = overlay;
+        observer?.observe(visual, {
+            attributes: true,
+            childList: true,
+            subtree: true,
+        });
+        resizeObserver?.observe(element);
+        resizeObserver?.observe(visual);
+        resizeObserver?.observe(shadow.host);
         positionResizeOverlay();
     };
     const dismissResizeOverlay = (event: PointerEvent): void => {
         if (
             resizeOverlay !== undefined &&
             !event.composedPath().includes(resizeOverlay) &&
+            (imageTools === undefined ||
+                !event.composedPath().includes(imageTools.element)) &&
             event.composedPath()[0] !== selectedImage
-        ) {
+        )
             removeResizeOverlay();
-        }
     };
-    const activate = (event: Event): void => {
+    const escape = (event: KeyboardEvent): void => {
+        if (event.key !== 'Escape' || resizeOverlay === undefined) return;
+        event.preventDefault();
+        if (cancelDrag !== undefined) cancelDrag();
+        else removeResizeOverlay();
+        visual.focus({ preventScroll: true });
+    };
+    const blur = (): void => cancelDrag?.();
+    const activate = (event: Pick<Event, 'target' | 'type'>): void => {
         const detail: unknown = Reflect.get(event, 'detail');
         if (typeof detail !== 'object' || detail === null) return;
         const element: unknown = Reflect.get(detail, 'element');
@@ -213,11 +440,13 @@ export function attachClassicImageContext(
         if (
             !(element instanceof HTMLImageElement) ||
             !visual.contains(element) ||
+            !visual.isContentEditable ||
             typeof update !== 'function' ||
             typeof remove !== 'function'
         ) {
             return;
         }
+        removeResizeOverlay();
         const figure = element.closest('figure');
         const link =
             element.parentElement?.tagName === 'A'
@@ -323,7 +552,7 @@ export function attachClassicImageContext(
         const aspectLocked = document.createElement('input');
         aspectLocked.type = 'checkbox';
         aspectLocked.checked =
-            figure?.getAttribute('data-aspect-lock') === 'true';
+            figure?.getAttribute('data-aspect-lock') !== 'false';
         aspectLocked.setAttribute('aria-label', 'Lock aspect ratio');
         const aspectText = document.createElement('span');
         aspectText.textContent = 'Lock aspect ratio';
@@ -490,17 +719,23 @@ export function attachClassicImageContext(
     visual.addEventListener('soeditor:image-activate', activate);
     visual.addEventListener('soeditor:image-select', select);
     document.addEventListener('pointerdown', dismissResizeOverlay, true);
-    document.defaultView?.addEventListener('resize', positionResizeOverlay);
-    document.addEventListener('scroll', positionResizeOverlay, true);
+    view?.addEventListener('resize', schedulePosition);
+    view?.addEventListener('blur', blur);
+    document.addEventListener('keydown', escape, true);
+    document.addEventListener('scroll', schedulePosition, true);
+    if (initialEvent !== undefined) {
+        if (initialEvent.type === 'soeditor:image-activate')
+            activate(initialEvent);
+        else select(initialEvent);
+    }
     return () => {
         visual.removeEventListener('soeditor:image-activate', activate);
         visual.removeEventListener('soeditor:image-select', select);
         document.removeEventListener('pointerdown', dismissResizeOverlay, true);
-        document.defaultView?.removeEventListener(
-            'resize',
-            positionResizeOverlay,
-        );
-        document.removeEventListener('scroll', positionResizeOverlay, true);
+        document.defaultView?.removeEventListener('resize', schedulePosition);
+        document.removeEventListener('scroll', schedulePosition, true);
+        view?.removeEventListener('blur', blur);
+        document.removeEventListener('keydown', escape, true);
         removeResizeOverlay();
     };
 }

@@ -1,0 +1,1 @@
+Public API report matches all 24 package entry points.

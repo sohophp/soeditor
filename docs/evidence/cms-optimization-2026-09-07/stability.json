@@ -1,0 +1,84 @@
+{
+    "measuredAt": "2026-09-07T12:24:15.126Z",
+    "node": "v22.14.0",
+    "chromium": "151.0.7922.34",
+    "methodology": "100 KiB minified production fixture; 3 warmup + 30 create/edit/destroy sessions, 3 Source round trips per session; 100ms settling and forced GC. CDP includes browser/library caches and the fixture retains its last destroyed wrapper. Diagnostic trend, not proof of absence of all leaks or a real multi-hour human session.",
+    "checkpoints": [
+        {
+            "round": 3,
+            "documents": 2,
+            "nodes": 292,
+            "jsEventListeners": 52,
+            "usedSize": 6978652,
+            "totalSize": 8716288,
+            "embedderHeapUsedSize": 4338720,
+            "backingStorageSize": 1611257
+        },
+        {
+            "round": 8,
+            "documents": 2,
+            "nodes": 292,
+            "jsEventListeners": 52,
+            "usedSize": 7528064,
+            "totalSize": 9764864,
+            "embedderHeapUsedSize": 4521912,
+            "backingStorageSize": 1611257
+        },
+        {
+            "round": 13,
+            "documents": 2,
+            "nodes": 292,
+            "jsEventListeners": 52,
+            "usedSize": 8018380,
+            "totalSize": 9764864,
+            "embedderHeapUsedSize": 4431792,
+            "backingStorageSize": 1611257
+        },
+        {
+            "round": 18,
+            "documents": 2,
+            "nodes": 292,
+            "jsEventListeners": 52,
+            "usedSize": 8041484,
+            "totalSize": 9764864,
+            "embedderHeapUsedSize": 4664176,
+            "backingStorageSize": 1611257
+        },
+        {
+            "round": 23,
+            "documents": 2,
+            "nodes": 292,
+            "jsEventListeners": 52,
+            "usedSize": 8074112,
+            "totalSize": 9764864,
+            "embedderHeapUsedSize": 4679000,
+            "backingStorageSize": 1611257
+        },
+        {
+            "round": 28,
+            "documents": 2,
+            "nodes": 292,
+            "jsEventListeners": 52,
+            "usedSize": 8090716,
+            "totalSize": 10027008,
+            "embedderHeapUsedSize": 4667720,
+            "backingStorageSize": 1611257
+        },
+        {
+            "round": 33,
+            "documents": 2,
+            "nodes": 292,
+            "jsEventListeners": 52,
+            "usedSize": 8108160,
+            "totalSize": 9502720,
+            "embedderHeapUsedSize": 4714112,
+            "backingStorageSize": 1611257
+        }
+    ],
+    "delta": {
+        "nodes": 0,
+        "jsEventListeners": 0,
+        "usedSize": 1129508
+    },
+    "errors": []
+}

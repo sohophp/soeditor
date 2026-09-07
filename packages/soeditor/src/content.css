@@ -1,0 +1,33 @@
+/* Render the persisted image alignment contract inside the isolated surface. */
+:is(.soeditor-content, .soeditor-wysiwyg-content) figure[data-align='left'] {
+    text-align: left;
+}
+
+:is(.soeditor-content, .soeditor-wysiwyg-content) figure[data-align='center'] {
+    text-align: center;
+}
+
+:is(.soeditor-content, .soeditor-wysiwyg-content) figure[data-align='right'] {
+    text-align: right;
+}
+
+:is(.soeditor-content, .soeditor-wysiwyg-content)
+    figure[data-align='left']
+    img {
+    margin-left: 0;
+    margin-right: auto;
+}
+
+:is(.soeditor-content, .soeditor-wysiwyg-content)
+    figure[data-align='center']
+    img {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+:is(.soeditor-content, .soeditor-wysiwyg-content)
+    figure[data-align='right']
+    img {
+    margin-left: auto;
+    margin-right: 0;
+}

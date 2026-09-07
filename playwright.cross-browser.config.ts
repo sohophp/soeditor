@@ -5,10 +5,20 @@ export default defineConfig({
     testDir: './tests/browser',
     testMatch: ['cms-multibrowser.spec.ts', 'wysiwyg-editor.spec.ts'],
     fullyParallel: false,
-    projects: [
-        { name: 'firefox', use: { browserName: 'firefox' } },
-        { name: 'webkit', use: { browserName: 'webkit' } },
-    ],
+    projects: (['firefox', 'webkit'] as const).flatMap((browserName) => [
+        { name: browserName, use: { browserName } },
+        {
+            name: `${browserName}-distribution`,
+            use: { browserName },
+            testMatch: ['distribution.spec.ts'],
+        },
+        {
+            name: `${browserName}-image-tools`,
+            use: { browserName },
+            testMatch: ['classic-editor.spec.ts'],
+            grep: /image drag preserves|image resize cancels|image alignment renders|element path follows|counts semantic body|declared Classic toolbar|type-around/u,
+        },
+    ]),
     use: {
         baseURL: 'http://127.0.0.1:4173',
         headless: true,

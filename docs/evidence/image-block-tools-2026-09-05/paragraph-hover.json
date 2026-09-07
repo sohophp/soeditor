@@ -1,0 +1,45 @@
+{
+    "date": "2026-09-05",
+    "behavior": "Hover images or tables without clicking to show paragraph buttons; leave block/buttons to hide immediately",
+    "animationMs": 0,
+    "hoverChangesSelection": false,
+    "staleLazyHoverCancelled": true,
+    "chromiumFocused": {
+        "passed": 6
+    },
+    "firefoxWebkit": {
+        "startTime": "2026-09-05T14:03:37.565Z",
+        "duration": 32125.813000000002,
+        "expected": 8,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+    },
+    "unit": {
+        "passed": 9
+    },
+    "typecheck": true,
+    "lint": true,
+    "api": true,
+    "documentation": true,
+    "global": {
+        "raw": 488593,
+        "gzip": 149943,
+        "gzipBudget": 150000
+    },
+    "releaseBudget": true,
+    "chromiumProduct": {
+        "editingTestsPassed": 122,
+        "rebuiltDistributionTestsPassed": 3,
+        "totalPassed": 125
+    },
+    "finalParagraphCross": {
+        "startTime": "2026-09-05T14:10:52.077Z",
+        "duration": 23863.469,
+        "expected": 4,
+        "skipped": 0,
+        "unexpected": 0,
+        "flaky": 0
+    },
+    "tableControls": "Outside the table edges to avoid intercepting caption/cell caret placement"
+}

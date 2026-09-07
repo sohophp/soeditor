@@ -1,0 +1,33 @@
+{
+    "measuredAt": "2026-09-07T14:22:02.545Z",
+    "chromium": "151.0.7922.34",
+    "results": [
+        {
+            "name": "before",
+            "fixture": "/tmp/soeditor-followup-20260907/pre-sync-dist",
+            "undo": [
+                218.59999999403954, 199.89999997615814, 197.5, 194.5,
+                280.30000001192093, 296.2000000178814, 311.7999999821186, 413,
+                548.3000000119209, 518.3000000119209, 661.5999999940395,
+                778.8000000119209
+            ],
+            "earlyMean": 205.33333332339922,
+            "lateMean": 652.9000000059605,
+            "cpuProfile": "docs/evidence/cms-followup-2026-09-07/history-scaling.json.before.cpuprofile.json.gz"
+        },
+        {
+            "name": "after",
+            "fixture": "/tmp/soeditor-followup-20260907/after-dist",
+            "undo": [
+                216.30000001192093, 138, 116.40000000596046, 121.59999999403954,
+                117.40000000596046, 140.40000000596046, 137.69999998807907,
+                199.89999997615814, 176.89999997615814, 131.40000000596046,
+                132.2999999821186, 125.5
+            ],
+            "earlyMean": 156.90000000596046,
+            "lateMean": 129.73333332935968,
+            "cpuProfile": "docs/evidence/cms-followup-2026-09-07/history-scaling.json.after.cpuprofile.json.gz"
+        }
+    ],
+    "note": "Twelve 100 KiB edit/history/Source cycles per build followed by a separate three-pair CPU profile. A diagnostic comparison, not a cross-device latency SLA. Use the retained pre-sync build to isolate the Source synchronization change."
+}

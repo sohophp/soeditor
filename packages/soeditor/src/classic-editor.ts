@@ -4,8 +4,19 @@ import {
     type PluginConstructor,
     type TransactionOrigin,
 } from '@soeditor/core';
-import { pastePipelineServiceToken } from '@soeditor/engine';
-import type { HtmlFormattingOptions } from '@soeditor/html-tools';
+import {
+    pastePipelineServiceToken,
+    visualEditingServiceToken,
+} from '@soeditor/engine';
+import type {
+    HtmlFormattingOptions,
+    HtmlFormattingService,
+} from '@soeditor/html-tools';
+import {
+    loadSourceRecovery,
+    type SourceRecoveryRuntime,
+} from '@soeditor/source/recovery';
+import type { SourceEngine } from '@soeditor/source';
 import type { PreviewConfiguration } from '@soeditor/preview';
 import {
     createWysiwygEditingEngine,
@@ -20,7 +31,6 @@ import {
     type ProjectionId,
 } from '@soeditor/projections';
 import {
-    createEditorUi,
     type EditorUi,
     type EditorUiDirection,
     type EditorUiIconResource,
@@ -30,22 +40,27 @@ import {
     type ToolbarConfiguration,
     type ToolbarLayoutOptions,
     type UiRegistryService,
-    uiRegistryServiceToken,
-    resolveUiTranslation,
 } from '@soeditor/ui';
 import {
-    createEditorWorkspace,
-    type EditorSaveAdapter,
-    type EditorSaveResult,
-    type EditorSaveState,
-    type EditorSaveWorkflow,
-    type EditorWorkspace,
+    createCmsEditorUi,
+    resolveUiTranslationResources,
+    uiRegistryServiceToken,
+} from '@soeditor/ui/cms';
+import { loadBuiltInUiTranslations } from './ui-translation-loader.js';
+import { createClassicHost, type ClassicHost } from './classic-host.js';
+import type {
+    EditorSaveAdapter,
+    EditorSaveResult,
+    EditorSaveState,
+    EditorSaveWorkflow,
 } from '@soeditor/workspace';
 import {
     ClassicEditorAlreadyAttachedError,
     ClassicEditorDestroyedError,
 } from './classic-editor-errors.js';
+import { attachClassicDialogWindows } from './classic-dialog-windows.js';
 import type { ClassicPreviewWindow } from '@soeditor/preview';
+import { attachClassicSourceFormatting } from './classic-source-formatting.js';
 
 const attachedHosts = new WeakMap<HTMLElement, ClassicEditor>();
 const maximizedDocuments = new WeakMap<
@@ -62,6 +77,38 @@ const protectedWindows = new WeakMap<
 const EMPTY_HTML = /^(?:\s*|<p(?:\s[^>]*)?>\s*(?:<br\s*\/?>)?\s*<\/p>)$/iu;
 const OPTIONAL_CLASSIC_FEATURES =
     import.meta.env.SOEDITOR_OPTIONAL_CLASSIC !== 'false';
+const SHOW_BLOCK_TAGS = [
+    'address',
+    'article',
+    'aside',
+    'blockquote',
+    'div',
+    'figure',
+    'footer',
+    'form',
+    'h1',
+    'h2',
+    'h3',
+    'h4',
+    'h5',
+    'h6',
+    'header',
+    'hr',
+    'li',
+    'main',
+    'nav',
+    'ol',
+    'p',
+    'pre',
+    'section',
+    'table',
+    'ul',
+] as const;
+const SHOW_BLOCKS_ROOT =
+    ".soeditor-wysiwyg-content[data-soeditor-show-blocks='true']";
+const SHOW_BLOCKS_STYLES = OPTIONAL_CLASSIC_FEATURES
+    ? `${SHOW_BLOCKS_ROOT} :is(${SHOW_BLOCK_TAGS.join(',')}){outline:1px dashed color-mix(in srgb,var(--soeditor-accent,#0969da) 65%,transparent);outline-offset:-1px;position:relative}${SHOW_BLOCKS_ROOT} :is(${SHOW_BLOCK_TAGS.join(',')})::before{background:color-mix(in srgb,var(--soeditor-accent,#0969da) 88%,#000);border-radius:0 0 .2rem 0;color:#fff;display:block;font:600 9px/1.35 ui-monospace,SFMono-Regular,Consolas,monospace;inset-block-start:0;inset-inline-start:0;letter-spacing:.02em;padding:0 .25rem;pointer-events:none;position:absolute;text-transform:lowercase;z-index:2}${SHOW_BLOCK_TAGS.map((tag) => `${SHOW_BLOCKS_ROOT} ${tag}::before{content:'${tag}'}`).join('')}`
+    : '';
 const CLASSIC_TABLE_CONTEXT =
     import.meta.env.SOEDITOR_TABLE_CONTEXT !== 'false';
 const HIDDEN_CLASSIC_TOOLBAR_ITEMS = new Set([
@@ -79,6 +126,16 @@ const CLASSIC_TRANSLATIONS: readonly EditorUiTranslationResource[] =
               {
                   locale: 'zh-CN',
                   messages: {
+                      'HTML Source contains errors. Repair Source before saving.':
+                          'HTML 源码包含错误，请修复源码后再保存。',
+                      'HTML Source contains errors. WYSIWYG stays read-only until Source is repaired.':
+                          'HTML 源码包含错误，修复前所见即所得视图保持只读。',
+                      'Loading preview…': '正在加载预览…',
+                      'Preview failed to load. Your content is preserved.':
+                          '预览加载失败，编辑内容已保留。',
+                      'Loading HTML Source…': '正在加载 HTML 源码…',
+                      'HTML Source failed to load. Select Source to retry.':
+                          'HTML 源码加载失败，请再次选择源码重试。',
                       'Preview in new window': '在新窗口中预览',
                       'Preview template': '预览模板',
                       'Web page': '网页',
@@ -88,6 +145,8 @@ const CLASSIC_TRANSLATIONS: readonly EditorUiTranslationResource[] =
                       'Word document preview': 'Word 文档预览',
                       'The preview window was blocked by the browser.':
                           '浏览器阻止了预览窗口。',
+                      'Hide block boundaries': '隐藏区块边界',
+                      'Show block boundaries': '显示区块边界',
                       'Resize WYSIWYG and Source height':
                           '调整所见即所得与源码高度',
                       'Resize WYSIWYG and Source width':
@@ -100,6 +159,16 @@ const CLASSIC_TRANSLATIONS: readonly EditorUiTranslationResource[] =
               {
                   locale: 'zh-TW',
                   messages: {
+                      'HTML Source contains errors. Repair Source before saving.':
+                          'HTML 原始碼包含錯誤，請修復原始碼後再儲存。',
+                      'HTML Source contains errors. WYSIWYG stays read-only until Source is repaired.':
+                          'HTML 原始碼包含錯誤，修復前所見即所得檢視保持唯讀。',
+                      'Loading preview…': '正在載入預覽…',
+                      'Preview failed to load. Your content is preserved.':
+                          '預覽載入失敗，編輯內容已保留。',
+                      'Loading HTML Source…': '正在載入 HTML 原始碼…',
+                      'HTML Source failed to load. Select Source to retry.':
+                          'HTML 原始碼載入失敗，請再次選擇原始碼重試。',
                       'Preview in new window': '在新視窗中預覽',
                       'Preview template': '預覽範本',
                       'Web page': '網頁',
@@ -109,6 +178,8 @@ const CLASSIC_TRANSLATIONS: readonly EditorUiTranslationResource[] =
                       'Word document preview': 'Word 文件預覽',
                       'The preview window was blocked by the browser.':
                           '瀏覽器阻止了預覽視窗。',
+                      'Hide block boundaries': '隱藏區塊邊界',
+                      'Show block boundaries': '顯示區塊邊界',
                       'Resize WYSIWYG and Source height':
                           '調整所見即所得與原始碼高度',
                       'Resize WYSIWYG and Source width':
@@ -145,6 +216,8 @@ export interface ClassicSourceOptions {
     /** Idle delay before automatic formatting. Defaults to 300 milliseconds. */
     readonly autoFormatDelay?: number;
     readonly formatting?: HtmlFormattingOptions;
+    /** Proportionally mirrors scrolling while WYSIWYG and Source are both visible. */
+    readonly scrollSync?: boolean;
 }
 
 /** Optional isolated preview rendered in a reusable browser window. */
@@ -226,7 +299,7 @@ export interface ClassicEditor {
     getData(): string;
     maximize(maximized?: boolean): void;
     openPreview(): boolean;
-    setWorkspaceView(view: ClassicWorkspaceView): void;
+    setWorkspaceView(view: ClassicWorkspaceView): void | Promise<void>;
     retrySave(): Promise<EditorSaveResult>;
     save(): Promise<EditorSaveResult>;
     setData(source: string): void;
@@ -284,11 +357,13 @@ export async function createClassicEditor(
         'placeholder',
     );
     const locale = optionalNonEmptyString(options.locale, 'locale') ?? 'en';
+    const builtInTranslations = await loadBuiltInUiTranslations(locale);
     const translations = [
+        ...builtInTranslations,
         ...CLASSIC_TRANSLATIONS,
         ...(options.translations ?? []),
     ];
-    const translation = resolveUiTranslation(
+    const translation = resolveUiTranslationResources(
         locale,
         translations,
         options.direction,
@@ -306,37 +381,14 @@ export async function createClassicEditor(
     const editingModes = OPTIONAL_CLASSIC_FEATURES
         ? readEditingModes(options.editingModes)
         : new Set<ClassicEditingMode>(['wysiwyg']);
-    const sourceModule =
-        OPTIONAL_CLASSIC_FEATURES && editingModes.has('source')
-            ? await import('@soeditor/source')
-            : undefined;
-    const htmlToolsModule =
-        OPTIONAL_CLASSIC_FEATURES && editingModes.has('source')
-            ? await import('@soeditor/html-tools')
-            : undefined;
-    const previewWindowModule =
-        !OPTIONAL_CLASSIC_FEATURES || previewOptions === undefined
-            ? undefined
-            : await import('@soeditor/preview');
-    const configuredPlugins = options.plugins ?? preset.plugins;
-    const sourcePlugins: readonly PluginConstructor[] = [
-        ...(sourceModule === undefined
-            ? []
-            : [sourceModule.SourceEditingPlugin]),
-        ...(htmlToolsModule === undefined
-            ? []
-            : [
-                  htmlToolsModule.DiagnosticsPlugin,
-                  htmlToolsModule.HtmlFormattingPlugin,
-              ]),
-    ];
-    const plugins = sourcePlugins.reduce<readonly PluginConstructor[]>(
-        (current, plugin) =>
-            current.some((candidate) => candidate.id === plugin.id)
-                ? current
-                : [...current, plugin],
-        configuredPlugins,
-    );
+    let sourceModule: SourceRecoveryRuntime | undefined;
+    let sourceEngine: SourceEngine | undefined;
+    let sourceLoading: Promise<void> | undefined;
+    let sourceAttempts = 0;
+    let visualChangedWhileSourceLoads = false;
+    let formattingService: HtmlFormattingService | undefined;
+    let viewRequest = 0;
+    const plugins = options.plugins ?? preset.plugins;
     const initialEditingMode = readInitialEditingMode(
         options.initialEditingMode,
         editingModes,
@@ -371,7 +423,7 @@ export async function createClassicEditor(
     let initialized = false;
     let latestSource = initialSource(host, options.data);
     let animationFrame: number | undefined;
-    let workspace: EditorWorkspace | undefined;
+    let workspace: ClassicHost | undefined;
     let coreEditor: Editor | undefined;
     let disposeEditorDestroy: (() => void) | undefined;
     let focusWithin = false;
@@ -383,6 +435,8 @@ export async function createClassicEditor(
     let disposeTableContext: (() => void) | undefined;
     let disposeLinkContext: (() => void) | undefined;
     let disposeImageContext: (() => void) | undefined;
+    let disposeBlockParagraphContext: (() => void) | undefined;
+    let disposeDialogWindows: (() => void) | undefined;
     let disposePasteDiagnostics: (() => void) | undefined;
     let disposeEditingFeedback: (() => void) | undefined;
     let disposeModeChrome: (() => void) | undefined;
@@ -390,11 +444,14 @@ export async function createClassicEditor(
     let refreshWorkspaceChrome = (): void => undefined;
     let disposeSourceEnhancements: (() => void) | undefined;
     let previewWindow: ClassicPreviewWindow | undefined;
+    let pendingPreview: Window | undefined;
     let manualHeight = false;
     let resizeStart:
         { readonly height: number; readonly y: number } | undefined;
     let paneResizeStart = false;
 
+    if (editingModes.has('source'))
+        dom.root.dataset.soeditorSourceState = 'unloaded';
     host.after(dom.root);
     host.hidden = true;
 
@@ -426,7 +483,11 @@ export async function createClassicEditor(
         focusWithin = false;
         options.onBlur?.(publicApi());
     };
-    const onSubmit = (): void => {
+    const onSubmit = (event: Event): void => {
+        if (OPTIONAL_CLASSIC_FEATURES && hasInvalidSource()) {
+            event.preventDefault();
+            reportError(invalidSourceError());
+        }
         if (textarea !== undefined && coreEditor !== undefined) {
             textarea.value = coreEditor.getData();
         }
@@ -607,16 +668,10 @@ export async function createClassicEditor(
             }
             setMaximized(value);
         },
-        openPreview: () => {
-            assertAlive();
-            if (previewWindow === undefined) {
-                throw new Error('Classic popup preview is not enabled.');
-            }
-            return previewWindow.open();
-        },
+        openPreview: () => openPreview(),
         setWorkspaceView: (view: ClassicWorkspaceView) => {
             assertAlive();
-            requireEditor().execute('classic.workspace.set', view);
+            return setWorkspaceView(view);
         },
         retrySave: () => requireSaveWorkflow().retry(),
         save: () => requireSaveWorkflow().save(),
@@ -726,7 +781,275 @@ export async function createClassicEditor(
         }
     }
 
-    function setWorkspaceView(view: ClassicWorkspaceView): void {
+    function hasInvalidSource(): boolean {
+        return (
+            sourceModule !== undefined &&
+            sourceEngine !== undefined &&
+            requireEditor()
+                .services.get(sourceModule.sourceEditingServiceToken)
+                .getDiagnostics()
+                .some((diagnostic) => diagnostic.severity === 'error')
+        );
+    }
+
+    function invalidSourceError(): Error {
+        const message = translation.translate(
+            'HTML Source contains errors. Repair Source before saving.',
+        );
+        ui?.notifications.show({ message, severity: 'error' });
+        const error = new Error(message);
+        error.name = 'ClassicInvalidSourceError';
+        return error;
+    }
+
+    function openPreview(): boolean {
+        assertAlive();
+        if (!OPTIONAL_CLASSIC_FEATURES || previewOptions === undefined)
+            throw new Error('Classic popup preview is not enabled.');
+        if (previewWindow !== undefined) return previewWindow.open();
+        if (pendingPreview !== undefined && !pendingPreview.closed) {
+            pendingPreview.focus();
+            return true;
+        }
+        const owner = document.defaultView;
+        if (owner === null)
+            throw new Error('Classic popup preview requires a window.');
+        // Reserve the window inside the user gesture, before awaiting optional code.
+        const popup = owner.open(
+            'about:blank',
+            '_blank',
+            previewOptions.windowFeatures ??
+                'popup=yes,width=1024,height=768,resizable=yes,scrollbars=yes',
+        );
+        if (popup === null) return false;
+        pendingPreview = popup;
+        popup.document.title = translation.translate('Loading preview…');
+        popup.document.body.textContent =
+            translation.translate('Loading preview…');
+        void import('@soeditor/preview')
+            .then((module) => {
+                if (destroyed || popup.closed || pendingPreview !== popup) {
+                    popup.close();
+                    return;
+                }
+                previewWindow = module.createClassicPreviewWindow({
+                    editor: requireEditor(),
+                    popup,
+                    ...(previewOptions.windowFeatures === undefined
+                        ? {}
+                        : { features: previewOptions.windowFeatures }),
+                    getTemplates: () =>
+                        module.createClassicPreviewTemplates(
+                            previewOptions,
+                            contentStylePreset,
+                            wysiwygContentStyles,
+                            options.contentStyles,
+                            translation.translate,
+                        ),
+                    initialTemplateId:
+                        previewOptions.initialTemplateId ?? 'webpage',
+                    owner,
+                    reportError: (error) => {
+                        reportError(error);
+                    },
+                    templatePickerLabel:
+                        translation.translate('Preview template'),
+                });
+                pendingPreview = undefined;
+                previewWindow.open();
+            })
+            .catch((error: unknown) => {
+                popup.close();
+                if (pendingPreview === popup) pendingPreview = undefined;
+                if (!destroyed) {
+                    ui?.notifications.show({
+                        message: ui.translate(
+                            'Preview failed to load. Your content is preserved.',
+                        ),
+                        severity: 'error',
+                    });
+                    reportError(error);
+                }
+            });
+        return true;
+    }
+
+    function ensureSource(): Promise<void> {
+        if (sourceEngine !== undefined) return Promise.resolve();
+        if (sourceLoading !== undefined) return sourceLoading;
+        visualChangedWhileSourceLoads = false;
+        dom.root.dataset.soeditorSourceState = 'loading';
+        dom.root.setAttribute('aria-busy', 'true');
+        ui?.notifications.show({
+            message: ui.translate('Loading HTML Source…'),
+            severity: 'info',
+        });
+        const load =
+            sourceAttempts++ === 0
+                ? import('@soeditor/source')
+                : loadSourceRecovery(sourceAttempts);
+        sourceLoading = load
+            .then((module) => {
+                assertAlive();
+                const editor = requireEditor();
+                sourceModule = module;
+                sourceEngine = module.createSourceEditingEngine({
+                    activateOnFocus: true,
+                    ...(options.cspNonce === undefined
+                        ? {}
+                        : { cspNonce: options.cspNonce }),
+                    ariaLabel: `${ariaLabel} HTML source`,
+                    editor,
+                    element: dom.source,
+                });
+                const coordinator = editor.services.get(
+                    projectionCoordinatorServiceToken,
+                );
+                if (coordinator.get('source').visible)
+                    editor.execute('projection.hide', 'source');
+                const sourceOptions = options.source;
+                const formatter = formattingService;
+                disposeSourceEnhancements =
+                    module.attachClassicSourceEnhancements({
+                        document,
+                        editor,
+                        ...(sourceOptions?.autoFormat === true &&
+                        formatter !== undefined
+                            ? {
+                                  format: (source: string) =>
+                                      formatter.format(
+                                          source,
+                                          sourceOptions.formatting,
+                                      ),
+                                  formatDelay:
+                                      sourceOptions.autoFormatDelay ?? 300,
+                              }
+                            : {}),
+                        formatOnAttach: visualChangedWhileSourceLoads,
+                        isDestroyed: () => destroyed,
+                        isSelectionSyncActive: () =>
+                            classicSplitOrientation(workspaceView) !==
+                                undefined &&
+                            coordinator.snapshot.primary === 'wysiwyg',
+                        isScrollSyncActive: () =>
+                            classicSplitOrientation(workspaceView) !==
+                            undefined,
+                        reportError: (error) => {
+                            reportError(error);
+                        },
+                        scrollSync: sourceOptions?.scrollSync === true,
+                        source: dom.source,
+                        visual: dom.visualContent,
+                        visualScroller: dom.visual,
+                        visualShadow: dom.visualShadow,
+                    });
+                dom.root.dataset.soeditorSourceState = 'ready';
+                ui?.refresh();
+            })
+            .catch((error: unknown) => {
+                disposeSourceEnhancements?.();
+                disposeSourceEnhancements = undefined;
+                sourceEngine?.destroy();
+                sourceEngine = undefined;
+                sourceLoading = undefined;
+                if (!destroyed) {
+                    dom.root.dataset.soeditorSourceState = 'failed';
+                    ui?.notifications.show({
+                        message: ui.translate(
+                            'HTML Source failed to load. Select Source to retry.',
+                        ),
+                        severity: 'error',
+                    });
+                    reportError(error);
+                }
+                throw error;
+            })
+            .finally(() => {
+                dom.root.removeAttribute('aria-busy');
+            });
+        return sourceLoading;
+    }
+
+    function attachSourceCommands(editor: Editor): void {
+        for (const [id, view] of [
+            ['editor.source', 'source'],
+            ['editor.visual', 'wysiwyg'],
+        ] as const) {
+            if (editor.commands.has(id)) continue;
+            editor.commands.register({
+                id,
+                canExecute: () => !destroyed,
+                isActive: () => editor.state.mode === view,
+                execute: (_context, ...args) => {
+                    if (args.length !== 0)
+                        throw new TypeError(
+                            `Command "${id}" does not accept arguments.`,
+                        );
+                    return setWorkspaceView(view);
+                },
+            });
+        }
+        if (!editor.commands.has('editor.source.find')) {
+            editor.commands.register({
+                id: 'editor.source.find',
+                execute: async (_context, ...args) => {
+                    const query = args[0];
+                    if (
+                        args.length > 1 ||
+                        (query !== undefined && typeof query !== 'string')
+                    )
+                        throw new TypeError(
+                            'Source find accepts one optional string.',
+                        );
+                    await setWorkspaceView('source');
+                    assertAlive();
+                    if (
+                        sourceModule !== undefined &&
+                        editor.state.mode === 'source'
+                    )
+                        editor.services
+                            .get(sourceModule.sourceEditingServiceToken)
+                            .openSearchPanel(query);
+                },
+            });
+        }
+    }
+
+    function setWorkspaceView(
+        view: ClassicWorkspaceView,
+    ): void | Promise<void> {
+        const request = ++viewRequest;
+        const needsSource =
+            view === 'source' || classicSplitOrientation(view) !== undefined;
+        if (needsSource && !editingModes.has('source')) {
+            throw new Error('HTML Source is not enabled.');
+        }
+        if (
+            OPTIONAL_CLASSIC_FEATURES &&
+            needsSource &&
+            sourceEngine === undefined
+        ) {
+            return ensureSource().then(() => {
+                if (!destroyed && request === viewRequest)
+                    applyWorkspaceView(view);
+            });
+        }
+        applyWorkspaceView(view);
+    }
+
+    function applyWorkspaceView(view: ClassicWorkspaceView): void {
+        if (
+            OPTIONAL_CLASSIC_FEATURES &&
+            view !== 'source' &&
+            hasInvalidSource()
+        ) {
+            ui?.notifications.show({
+                message: translation.translate(
+                    'HTML Source contains errors. WYSIWYG stays read-only until Source is repaired.',
+                ),
+                severity: 'error',
+            });
+        }
         const editor = requireEditor();
         const coordinator = editor.services.get(
             projectionCoordinatorServiceToken,
@@ -831,6 +1154,8 @@ export async function createClassicEditor(
     }
 
     async function performDestroy(): Promise<void> {
+        destroyed = true;
+        ++viewRequest;
         const errors: unknown[] = [];
         try {
             latestSource = coreEditor?.getData() ?? latestSource;
@@ -847,8 +1172,12 @@ export async function createClassicEditor(
             disposeTableContext = undefined;
             disposeLinkContext?.();
             disposeLinkContext = undefined;
+            disposeBlockParagraphContext?.();
+            disposeBlockParagraphContext = undefined;
             disposeImageContext?.();
             disposeImageContext = undefined;
+            disposeDialogWindows?.();
+            disposeDialogWindows = undefined;
             disposePasteDiagnostics?.();
             disposePasteDiagnostics = undefined;
             disposeEditingFeedback?.();
@@ -860,8 +1189,12 @@ export async function createClassicEditor(
             refreshWorkspaceChrome = () => undefined;
             disposeSourceEnhancements?.();
             disposeSourceEnhancements = undefined;
+            sourceEngine?.destroy();
+            sourceEngine = undefined;
             previewWindow?.destroy();
             previewWindow = undefined;
+            pendingPreview?.close();
+            pendingPreview = undefined;
             if (workspace !== undefined) await workspace.destroy();
         } catch (error: unknown) {
             errors.push(error);
@@ -903,109 +1236,41 @@ export async function createClassicEditor(
 
     attachedHosts.set(host, publicValue);
     try {
-        workspace = await createEditorWorkspace({
+        workspace = await createClassicHost({
             attachments: [
-                {
-                    id: 'classic.wysiwyg',
-                    requirements: { formats: ['html'] as const },
-                    attach: ({ editor }: { editor: Editor }) =>
-                        createWysiwygEditingEngine({
-                            activateOnFocus: true,
-                            ariaLabel,
-                            editor,
-                            element: dom.visualContent,
-                        }),
-                },
-                ...(editingModes.has('source')
-                    ? [
-                          {
-                              id: 'classic.source',
-                              requirements: { formats: ['html'] as const },
-                              attach: ({ editor }: { editor: Editor }) => {
-                                  if (sourceModule === undefined) {
-                                      throw new Error(
-                                          'HTML Source failed to load.',
-                                      );
-                                  }
-                                  return sourceModule.createSourceEditingEngine(
-                                      {
-                                          activateOnFocus: true,
-                                          ...(options.cspNonce === undefined
-                                              ? {}
-                                              : { cspNonce: options.cspNonce }),
-                                          ariaLabel: `${ariaLabel} HTML source`,
-                                          editor,
-                                          element: dom.source,
-                                      },
-                                  );
-                              },
-                          },
-                      ]
-                    : []),
-                {
-                    id: 'classic.ui',
-                    requirements: { formats: ['html'] },
-                    attach: ({ editor }) => attachClassicUi(editor),
-                },
+                (editor) =>
+                    createWysiwygEditingEngine({
+                        activateOnFocus: true,
+                        ariaLabel,
+                        editor,
+                        element: dom.visualContent,
+                    }),
+                (editor) => attachClassicUi(editor),
             ],
-            createEditor: ({ source }) =>
+            createEditor: () =>
                 Editor.create({
                     ...(options.config === undefined
                         ? {}
                         : { config: options.config }),
-                    data: source,
-                    format: 'html' as const,
+                    data: latestSource,
+                    format: 'html',
                     plugins,
                     readonly:
                         options.readonly ??
                         (textarea?.readOnly === true ||
                             textarea?.disabled === true),
                 }),
-            onDiagnostic: (diagnostic) => {
-                if (diagnostic.severity === 'error') {
-                    const callbackError = reportError(
-                        diagnostic.error ?? diagnostic.message,
-                    );
-                    if (callbackError !== undefined) throw callbackError;
-                }
-            },
-            value: {
-                initialValue: latestSource,
-                kind: 'uncontrolled',
-                onChange: (change) => {
-                    updateHost(change.source);
-                    options.onChange?.(Object.freeze({ ...change }));
-                },
+            isDestroyed: () => destroyed,
+            onChange: (change) => {
+                if (OPTIONAL_CLASSIC_FEATURES && sourceLoading !== undefined)
+                    visualChangedWhileSourceLoads = change.origin === 'user';
+                updateHost(change.source);
+                options.onChange?.(change);
             },
         });
         coreEditor = workspace.editor;
-        if (previewOptions !== undefined && previewWindowModule !== undefined) {
-            const owner = document.defaultView;
-            if (owner === null) {
-                throw new Error('Classic popup preview requires a window.');
-            }
-            previewWindow = previewWindowModule.createClassicPreviewWindow({
-                editor: coreEditor,
-                ...(previewOptions.windowFeatures === undefined
-                    ? {}
-                    : { features: previewOptions.windowFeatures }),
-                getTemplates: () =>
-                    previewWindowModule.createClassicPreviewTemplates(
-                        previewOptions,
-                        contentStylePreset,
-                        wysiwygContentStyles,
-                        options.contentStyles,
-                        translation.translate,
-                    ),
-                initialTemplateId:
-                    previewOptions.initialTemplateId ?? 'webpage',
-                owner,
-                reportError: (error) => {
-                    reportError(error);
-                },
-                templatePickerLabel: translation.translate('Preview template'),
-            });
-        }
+        if (OPTIONAL_CLASSIC_FEATURES && initialEditingMode === 'source')
+            await ensureSource();
         const coordinator = coreEditor.services.get(
             projectionCoordinatorServiceToken,
         );
@@ -1013,50 +1278,17 @@ export async function createClassicEditor(
             coreEditor.execute('projection.show', initialEditingMode);
         }
         coreEditor.execute('projection.activate', initialEditingMode);
-        if (sourceModule !== undefined) {
-            const sourceOptions = options.source;
-            const formattingService = (() => {
-                if (sourceOptions?.autoFormat !== true) return undefined;
-                if (htmlToolsModule === undefined) {
-                    throw new Error(
-                        'Classic Source auto-format requires the "source" editing mode.',
-                    );
-                }
-                return coreEditor.services.get(
-                    htmlToolsModule.htmlFormattingServiceToken,
-                );
-            })();
-            disposeSourceEnhancements =
-                sourceModule.attachClassicSourceEnhancements({
-                    document,
-                    editor: coreEditor,
-                    ...(formattingService === undefined
-                        ? {}
-                        : {
-                              format: (source) =>
-                                  formattingService.format(
-                                      source,
-                                      sourceOptions?.formatting,
-                                  ),
-                              formatDelay:
-                                  sourceOptions?.autoFormatDelay ?? 300,
-                          }),
-                    isDestroyed: () => destroyed,
-                    isSelectionSyncActive: () =>
-                        classicSplitOrientation(workspaceView) !== undefined &&
-                        coordinator.snapshot.primary === 'wysiwyg',
-                    reportError: (error) => {
-                        reportError(error);
-                    },
-                    visual: dom.visualContent,
-                    visualShadow: dom.visualShadow,
-                });
-        }
         if (OPTIONAL_CLASSIC_FEATURES && options.save !== undefined) {
+            const saveOptions = options.save;
             const { createEditorSaveWorkflow } =
-                await import('@soeditor/workspace');
+                await import('@soeditor/workspace/save');
             saveWorkflow = createEditorSaveWorkflow({
-                adapter: options.save.adapter,
+                adapter: {
+                    save: (request) => {
+                        if (hasInvalidSource()) throw invalidSourceError();
+                        return saveOptions.adapter.save(request);
+                    },
+                },
                 ...(options.save.autoSaveDelay === undefined
                     ? {}
                     : { autoSaveDelay: options.save.autoSaveDelay }),
@@ -1136,10 +1368,24 @@ export async function createClassicEditor(
     function attachClassicUi(editor: Editor): EditorUi {
         const registry = editor.services.get(uiRegistryServiceToken);
         const commandSurface = dom.visualContent;
-        if (previewOptions !== undefined) {
-            registerClassicPreviewTool(registry, () => previewWindow?.open());
+        if (OPTIONAL_CLASSIC_FEATURES && editingModes.has('source')) {
+            formattingService = attachClassicSourceFormatting(
+                editor,
+                () => destroyed,
+            );
+            attachSourceCommands(editor);
         }
-        ui = createEditorUi({
+        if (previewOptions !== undefined) {
+            registerClassicPreviewTool(registry, openPreview);
+        }
+        if (OPTIONAL_CLASSIC_FEATURES) {
+            registerClassicShowBlocksTool(editor, registry, commandSurface);
+        }
+        ui = createCmsEditorUi({
+            readFormatStates: () =>
+                editor.services
+                    .tryGet(visualEditingServiceToken)
+                    ?.getFormatStates?.() ?? {},
             accessibilityHelp: true,
             documentStatus: true,
             direction: translation.direction,
@@ -1166,6 +1412,17 @@ export async function createClassicEditor(
             },
             translations,
         });
+        const statusBar = ui.statusElement.closest<HTMLElement>(
+            '.soeditor-ui__status-bar',
+        );
+        if (statusBar !== null) dom.surfaces.after(statusBar);
+        if (OPTIONAL_CLASSIC_FEATURES) {
+            disposeDialogWindows = attachClassicDialogWindows(
+                dom.root,
+                ui.translate,
+                translation.locale,
+            );
+        }
         if (CLASSIC_TABLE_CONTEXT) {
             disposeTableContext = attachClassicTableContext(
                 editor,
@@ -1179,6 +1436,25 @@ export async function createClassicEditor(
             commandSurface,
         );
         disposeImageContext = attachClassicImageContext(ui, commandSurface);
+        const blockUi = ui;
+        disposeBlockParagraphContext = attachLazyBlockContext(
+            ui,
+            commandSurface,
+            [
+                'soeditor:image-select',
+                'soeditor:table-selection',
+                'soeditor:block-hover',
+            ],
+            () =>
+                import('./classic-block-paragraph.js').then(
+                    (module) => (event: Pick<Event, 'target' | 'type'>) =>
+                        module.attachBlockParagraphContext(
+                            blockUi,
+                            commandSurface,
+                            event,
+                        ),
+                ),
+        );
         disposePasteDiagnostics = editor.services
             .tryGet(pastePipelineServiceToken)
             ?.subscribe((diagnostic) => {
@@ -1220,7 +1496,10 @@ export async function createClassicEditor(
                     .get(projectionCoordinatorServiceToken)
                     .snapshot.activities.filter((activity) => activity.visible);
                 if (visible.length !== 1 || visible[0]?.id !== target) {
-                    setWorkspaceView(target);
+                    // Loading errors are already reported by ensureSource.
+                    void Promise.resolve(setWorkspaceView(target)).catch(
+                        () => undefined,
+                    );
                 }
             }
         };
@@ -1261,7 +1540,7 @@ export async function createClassicEditor(
                         `Unknown Classic workspace view "${String(view)}".`,
                     );
                 }
-                setWorkspaceView(view);
+                return setWorkspaceView(view);
             },
         });
         if (!editingModes.has('source')) return;
@@ -1301,7 +1580,9 @@ export async function createClassicEditor(
             button.setAttribute('aria-pressed', 'false');
             ui?.setIcon(button, icons[view], translated);
             button.addEventListener('click', () => {
-                editor.execute('classic.workspace.set', view);
+                void Promise.resolve(
+                    editor.execute('classic.workspace.set', view),
+                ).catch(() => undefined);
             });
             workspaceButtons.set(view, button);
             workspacePicker.append(button);
@@ -1378,7 +1659,7 @@ function createDom(
     });
     const visualStyle = document.createElement('style');
     if (cspNonce !== undefined) visualStyle.nonce = cspNonce;
-    visualStyle.textContent = wysiwygContentStyles;
+    visualStyle.textContent = wysiwygContentStyles + SHOW_BLOCKS_STYLES;
     const visualContent = document.createElement('div');
     visualContent.className = 'soeditor-wysiwyg-content';
     if (placeholder !== undefined) {
@@ -1536,9 +1817,11 @@ function createCustomContentStyle(
     return style;
 }
 
-function attachClassicImageContext(
+function attachLazyBlockContext(
     ui: EditorUi,
     visual: HTMLElement,
+    events: readonly string[],
+    load: () => Promise<(event: Pick<Event, 'target' | 'type'>) => () => void>,
 ): () => void {
     let destroyed = false;
     let dispose: (() => void) | undefined;
@@ -1546,49 +1829,80 @@ function attachClassicImageContext(
     let pending:
         | { detail: unknown; target: EventTarget | null; type: string }
         | undefined;
+    const leave = (event: Event): void => {
+        if (pending?.type !== 'soeditor:block-hover') return;
+        const block = pending.target;
+        if (
+            event instanceof MouseEvent &&
+            block instanceof Element &&
+            !(
+                event.relatedTarget instanceof Node &&
+                block.contains(event.relatedTarget)
+            )
+        ) {
+            pending = undefined;
+        }
+    };
+    const listen = (enabled: boolean): void => {
+        if (enabled) visual.addEventListener('pointerout', leave);
+        else visual.removeEventListener('pointerout', leave);
+        for (const type of events) {
+            if (enabled) visual.addEventListener(type, activate);
+            else visual.removeEventListener(type, activate);
+        }
+    };
     const activate = (event: Event): void => {
-        const detail: unknown = Reflect.get(event, 'detail');
         if (dispose !== undefined) return;
-        pending = { detail, target: event.target, type: event.type };
+        pending = {
+            detail: Reflect.get(event, 'detail'),
+            target: event.target,
+            type: event.type,
+        };
         if (loading) return;
         loading = true;
-        void import('./classic-image-context.js')
-            .then((module) => {
+        void load()
+            .then((attach) => {
                 if (destroyed) return;
-                visual.removeEventListener('soeditor:image-activate', activate);
-                visual.removeEventListener('soeditor:image-select', activate);
-                dispose = module.attachClassicImageContext(ui, visual);
                 const replay = pending;
                 pending = undefined;
-                if (replay === undefined) return;
-                const { detail, target, type } = replay;
-                if (!(target instanceof Element)) return;
-                const EventConstructor =
-                    visual.ownerDocument.defaultView?.CustomEvent ??
-                    CustomEvent;
-                target.dispatchEvent(
-                    new EventConstructor(type, { bubbles: true, detail }),
-                );
+                loading = false;
+                if (replay !== undefined) {
+                    listen(false);
+                    dispose = attach(replay);
+                }
             })
             .catch(() => {
                 if (destroyed) return;
                 loading = false;
-                visual.addEventListener('soeditor:image-activate', activate);
-                visual.addEventListener('soeditor:image-select', activate);
+                listen(true);
                 ui.notifications.show({
-                    message: 'Image tools failed to load. Please try again.',
+                    message: 'Block tools failed to load. Please try again.',
                     severity: 'error',
                 });
             });
     };
-    visual.addEventListener('soeditor:image-activate', activate);
-    visual.addEventListener('soeditor:image-select', activate);
+    listen(true);
     return () => {
         destroyed = true;
-        visual.removeEventListener('soeditor:image-activate', activate);
-        visual.removeEventListener('soeditor:image-select', activate);
+        listen(false);
         dispose?.();
     };
+}
+
+function attachClassicImageContext(
+    ui: EditorUi,
+    visual: HTMLElement,
+): () => void {
+    return attachLazyBlockContext(
+        ui,
+        visual,
+        ['soeditor:image-activate', 'soeditor:image-select'],
+        () =>
+            import('./classic-image-context.js').then(
+                (module) => (event: Pick<Event, 'target' | 'type'>) =>
+                    module.attachClassicImageContext(ui, visual, event),
+            ),
+    );
 }
 function attachClassicLinkContext(
     editor: Editor,
@@ -1602,6 +1916,7 @@ function attachClassicLinkContext(
     const activate = (event: MouseEvent): void => {
         if (dispose !== undefined || event.button !== 0) return;
         const origin = event.target;
+        if (origin instanceof Element && origin.closest('img') !== null) return;
         const link =
             origin instanceof Element
                 ? origin.closest('a[data-soeditor-link="true"], a[href]')
@@ -1650,55 +1965,16 @@ function attachClassicTableContext(
     ui: EditorUi,
     visual: HTMLElement,
 ): () => void {
-    let destroyed = false;
-    let dispose: (() => void) | undefined;
-    let loading = false;
-    let pending: { detail: unknown; target: EventTarget | null } | undefined;
-    const activate = (event: Event): void => {
-        const detail: unknown = Reflect.get(event, 'detail');
-        if (dispose !== undefined) return;
-        pending = { detail, target: event.target };
-        if (loading) return;
-        loading = true;
-        void import('./classic-table-context.js')
-            .then((module) => {
-                if (destroyed) return;
-                visual.removeEventListener(
-                    'soeditor:table-selection',
-                    activate,
-                );
-                dispose = module.attachClassicTableContext(editor, ui, visual);
-                const replay = pending;
-                pending = undefined;
-                if (replay === undefined) return;
-                const { detail, target } = replay;
-                if (!(target instanceof Element)) return;
-                const EventConstructor =
-                    visual.ownerDocument.defaultView?.CustomEvent ??
-                    CustomEvent;
-                target.dispatchEvent(
-                    new EventConstructor('soeditor:table-selection', {
-                        bubbles: true,
-                        detail,
-                    }),
-                );
-            })
-            .catch(() => {
-                if (destroyed) return;
-                loading = false;
-                visual.addEventListener('soeditor:table-selection', activate);
-                ui.notifications.show({
-                    message: '表格操作工具加载失败，请重试。',
-                    severity: 'error',
-                });
-            });
-    };
-    visual.addEventListener('soeditor:table-selection', activate);
-    return () => {
-        destroyed = true;
-        visual.removeEventListener('soeditor:table-selection', activate);
-        dispose?.();
-    };
+    return attachLazyBlockContext(
+        ui,
+        visual,
+        ['soeditor:table-selection'],
+        () =>
+            import('./classic-table-context.js').then(
+                (module) => (event: Pick<Event, 'target' | 'type'>) =>
+                    module.attachClassicTableContext(editor, ui, visual, event),
+            ),
+    );
 }
 
 function enterMaximizedDocument(document: Document, owner: object): void {
@@ -1900,6 +2176,61 @@ function registerClassicPreviewTool(
     });
 }
 
+function registerClassicShowBlocksTool(
+    editor: Editor,
+    registry: UiRegistryService,
+    visual: HTMLElement,
+): void {
+    let visible = false;
+    editor.commands.register({
+        id: 'classic.blocks.toggle',
+        label: 'Show block boundaries',
+        execute: (_context, ...args) => {
+            if (args.length !== 0) {
+                throw new TypeError(
+                    'Command "classic.blocks.toggle" does not accept arguments.',
+                );
+            }
+            visible = !visible;
+            visual.dataset.soeditorShowBlocks = String(visible);
+            return visible;
+        },
+        isActive: () => visible,
+    });
+    registry.registerToolbarItem('showBlocks', ({ document, ui }) => {
+        const button = document.createElement('button');
+        button.type = 'button';
+        button.className = 'soeditor-ui__button';
+        button.dataset.classicAction = 'show-blocks';
+        ui.setIcon(
+            button,
+            'view.blocks',
+            ui.translate('Show block boundaries'),
+        );
+        const update = (): void => {
+            const active = editor.commands.isActive('classic.blocks.toggle');
+            const label = ui.translate(
+                active ? 'Hide block boundaries' : 'Show block boundaries',
+            );
+            button.classList.toggle('is-active', active);
+            button.setAttribute('aria-pressed', String(active));
+            button.setAttribute('aria-label', label);
+            button.title = label;
+        };
+        const click = (): void => {
+            editor.execute('classic.blocks.toggle');
+            update();
+        };
+        button.addEventListener('click', click);
+        update();
+        return {
+            destroy: () => button.removeEventListener('click', click),
+            element: button,
+            update,
+        };
+    });
+}
+
 function validateHost(host: HTMLElement): void {
     const view = host.ownerDocument.defaultView;
     if (view === null || !(host instanceof view.HTMLElement)) {
@@ -1979,6 +2310,12 @@ function validateClassicSourceOptions(
     }
     if (options.autoFormatDelay !== undefined) {
         readSourceAutoFormatDelay(options);
+    }
+    if (
+        options.scrollSync !== undefined &&
+        typeof options.scrollSync !== 'boolean'
+    ) {
+        throw new TypeError('Classic Source scrollSync must be a boolean.');
     }
     if (
         options.formatting !== undefined &&

@@ -1,0 +1,796 @@
+{
+    "timestamp": "2026-09-05T18:02:11.961Z",
+    "commit": "6735db6b30a7e353554ea608a47686b08d82210d",
+    "node": "v22.14.0",
+    "dirty": " M .github/workflows/ci.yml\n M AGENTS.md\n M README.md\n M apps/playground/src/classic-demo.ts\n M apps/playground/src/classic.css\n M apps/playground/src/wysiwyg-demo.ts\n M apps/playground/vite.config.ts\n M docs/PRODUCT.md\n M docs/ROADMAP.md\n M docs/api-overview.md\n M docs/api-report.md\n M docs/cms-integration.md\n M docs/configuration.md\n M docs/distribution.md\n M docs/getting-started.md\n M docs/package-disposition.md\n M docs/qualification.md\n M docs/status.md\n M docs/troubleshooting.md\n M docs/wysiwyg-editor.md\n M docs/wysiwyg-release-decision.md\n M package.json\n M packages/adapter-sofinder/CHANGELOG.md\n M packages/adapter-sofinder/README.md\n M packages/adapter-sofinder/package.json\n M packages/adapter-sofinder/src/index.ts\n M packages/adapter-sofinder/src/sofinder-adapter.ts\n M packages/adapter-sofinder/tests/sofinder-adapter.test.ts\n M packages/engine/src/index.ts\n M packages/engine/src/visual-editing-service.ts\n M packages/file-manager/README.md\n M packages/file-manager/src/file-manager-plugin.ts\n M packages/file-manager/src/file-manager.ts\n M packages/file-manager/src/upload.ts\n M packages/file-manager/src/validation.ts\n M packages/file-manager/tests/validation.test.ts\n M packages/html-tools/CHANGELOG.md\n M packages/html-tools/src/formatting.ts\n M packages/html-tools/src/index.ts\n M packages/html-tools/tests/formatting.test.ts\n M packages/presets/src/cms-runtime.ts\n M packages/presets/src/cms.ts\n M packages/preview/src/classic-preview-window.ts\n M packages/rich-text/CHANGELOG.md\n M packages/rich-text/README.md\n M packages/rich-text/src/features.ts\n M packages/rich-text/src/index.ts\n M packages/rich-text/src/media.ts\n M packages/rich-text/src/table.ts\n M packages/rich-text/tests/features.test.ts\n M packages/rich-text/tests/media.test.ts\n M packages/rich-text/tests/table.test.ts\n M packages/soeditor/CHANGELOG.md\n M packages/soeditor/README.md\n M packages/soeditor/package.json\n M packages/soeditor/src/classic-editor.css\n M packages/soeditor/src/classic-editor.ts\n M packages/soeditor/src/classic-image-context.ts\n M packages/soeditor/src/classic-link-context.ts\n M packages/soeditor/src/classic-table-context.ts\n M packages/soeditor/src/wysiwyg-content.css\n M packages/soeditor/vite.config.ts\n M packages/soeditor/vite.global.config.ts\n M packages/source/README.md\n M packages/source/package.json\n M packages/source/src/classic-source-enhancements.ts\n M packages/source/src/source-editing-engine.ts\n M packages/source/vite.config.ts\n M packages/ui/CHANGELOG.md\n M packages/ui/README.md\n M packages/ui/package.json\n M packages/ui/src/defaults.ts\n M packages/ui/src/editor-ui.ts\n M packages/ui/src/icons.ts\n M packages/ui/src/index.ts\n M packages/ui/src/localization.ts\n M packages/ui/src/styles.css\n M packages/ui/src/types.ts\n M packages/ui/tests/ui-plugin.test.ts\n M packages/ui/vite.config.ts\n M packages/workspace/package.json\n M packages/workspace/vite.config.ts\n M packages/wysiwyg/src/wysiwyg-editing-engine.ts\n M playwright.cross-browser.config.ts\n M scripts/test-nodenext-consumer.mjs\n M scripts/verify-distribution.mjs\n M scripts/verify-documentation.mjs\n M scripts/verify-release.mjs\n M tests/browser/classic-editor.spec.ts\n M tests/browser/distribution.spec.ts\n M tests/browser/file-manager.spec.ts\n M tests/browser/wysiwyg-editor.spec.ts\n M tests/consumers/vite/src/main.ts\n M tests/consumers/vite/vite.config.ts\n?? docs/cms-ux-improvement-plan.zh-CN.md\n?? docs/evidence/\n?? docs/image-block-tools.zh-CN.md\n?? docs/large-document-performance.zh-CN.md\n?? docs/list-alignment-controls.zh-CN.md\n?? docs/wysiwyg-source-evidence.zh-CN.md\n?? docs/wysiwyg-source-plan.zh-CN.md\n?? packages/adapter-sofinder/src/sofinder-upload-adapter.ts\n?? packages/rich-text/src/responsive-image.ts\n?? packages/soeditor/src/classic-block-paragraph.ts\n?? packages/soeditor/src/classic-dialog-windows.ts\n?? packages/soeditor/src/classic-host.ts\n?? packages/soeditor/src/classic-source-formatting.ts\n?? packages/soeditor/src/cms-styles.css\n?? packages/soeditor/src/ui-translation-loader-inline.ts\n?? packages/soeditor/src/ui-translation-loader.ts\n?? packages/source/src/recovery-loader.ts\n?? packages/source/vite.recovery.config.ts\n?? packages/ui/src/block-format-menu.ts\n?? packages/ui/src/cms.css\n?? packages/ui/src/cms.ts\n?? packages/ui/src/compatibility.css\n?? packages/ui/src/create-editor-ui.ts\n?? packages/ui/src/format-state.ts\n?? packages/ui/src/source-toolbar.ts\n?? packages/ui/src/toolbar-menu-position.ts\n?? packages/ui/src/translation-resolution.ts\n?? packages/ui/src/translations.ts\n?? packages/wysiwyg/src/format-state.ts\n?? packages/wysiwyg/src/list-editing.ts\n?? playwright.source.config.ts\n?? scripts/cms-loading-budgets.mjs\n?? scripts/compare-cms-input.mjs\n?? scripts/measure-cms-loading.mjs\n?? tests/consumers/vite/source.html\n?? tests/consumers/vite/src/source.ts\n",
+    "budgets": {
+        "globalRaw": 500000,
+        "globalGzip": 150000,
+        "standaloneCssRaw": 27000,
+        "optionalInitialRaw": 514018,
+        "optionalInitialGzip": 152376,
+        "sourceIncrementRaw": 600000,
+        "sourceIncrementGzip": 210000,
+        "formatterIncrementRaw": 650000,
+        "formatterIncrementGzip": 160000,
+        "recoveryRaw": 800000,
+        "recoveryGzip": 260000,
+        "sourceLatency": {
+            "10240": {
+                "first": 1000,
+                "again": 300
+            },
+            "102400": {
+                "first": 2000,
+                "again": 1000
+            },
+            "512000": {
+                "first": 5000,
+                "again": 3000
+            }
+        }
+    },
+    "verification": {
+        "passed": true,
+        "limits": {
+            "globalRaw": 500000,
+            "globalGzip": 150000,
+            "standaloneCssRaw": 27000,
+            "optionalInitialRaw": 514018,
+            "optionalInitialGzip": 152376,
+            "sourceIncrementRaw": 600000,
+            "sourceIncrementGzip": 210000,
+            "formatterIncrementRaw": 650000,
+            "formatterIncrementGzip": 160000,
+            "recoveryRaw": 800000,
+            "recoveryGzip": 260000,
+            "sourceLatency": {
+                "10240": {
+                    "first": 1000,
+                    "again": 300
+                },
+                "102400": {
+                    "first": 2000,
+                    "again": 1000
+                },
+                "512000": {
+                    "first": 5000,
+                    "again": 3000
+                }
+            }
+        }
+    },
+    "artifacts": [
+        {
+            "path": "packages/soeditor/dist/soeditor.global.js",
+            "raw": 474066,
+            "gzip": 145686
+        },
+        {
+            "path": "packages/soeditor/dist/soeditor.css",
+            "raw": 26842,
+            "gzip": 4903
+        },
+        {
+            "path": "packages/soeditor/dist/cms.js",
+            "raw": 189,
+            "gzip": 157
+        }
+    ],
+    "assets": [
+        {
+            "file": "assets/runtime-ByRIN7il.js",
+            "raw": 753010,
+            "gzip": 246421
+        },
+        {
+            "file": "assets/index-C4AGPKRK.css",
+            "raw": 44629,
+            "gzip": 7467
+        },
+        {
+            "file": "assets/classic-block-paragraph-B7BYtK19.js.map",
+            "raw": 12565,
+            "gzip": 3820
+        },
+        {
+            "file": "assets/link-attributes-BtxVCsKd-r3DFj-kk.js.map",
+            "raw": 13747,
+            "gzip": 4364
+        },
+        {
+            "file": "assets/save-DzTcHyOP.js.map",
+            "raw": 10958,
+            "gzip": 3361
+        },
+        {
+            "file": "assets/index-Cffbty6Z.js.map",
+            "raw": 40804,
+            "gzip": 11501
+        },
+        {
+            "file": "assets/classic-link-context-DwSlpThT.js.map",
+            "raw": 8427,
+            "gzip": 2695
+        },
+        {
+            "file": "assets/translations-BlzA1sth.js.map",
+            "raw": 34397,
+            "gzip": 8982
+        },
+        {
+            "file": "assets/classic-image-context-DOfFAQIP.js.map",
+            "raw": 40260,
+            "gzip": 10039
+        },
+        {
+            "file": "assets/classic-table-context-BSJcIC-I.js.map",
+            "raw": 179045,
+            "gzip": 37609
+        },
+        {
+            "file": "assets/table-editor-attributes-BwkVkTQA.js.map",
+            "raw": 28019,
+            "gzip": 7619
+        },
+        {
+            "file": "assets/standalone-Cayz_KD-.js.map",
+            "raw": 181624,
+            "gzip": 48934
+        },
+        {
+            "file": "assets/html-DwgzGnwN.js.map",
+            "raw": 334238,
+            "gzip": 78328
+        },
+        {
+            "file": "assets/index-ALDwFQsq.js.map",
+            "raw": 805863,
+            "gzip": 167071
+        },
+        {
+            "file": "assets/index-oQ-xhb15.js.map",
+            "raw": 1835696,
+            "gzip": 406752
+        },
+        {
+            "file": "assets/index-C2j34-6v.js.map",
+            "raw": 2207836,
+            "gzip": 598331
+        }
+    ],
+    "recovery": {
+        "passed": true,
+        "scriptPolicy": "script-src 'self'",
+        "attempts": [
+            "http://127.0.0.1:4188/assets/runtime-ByRIN7il.js?soeditor-retry=2",
+            "http://127.0.0.1:4188/assets/runtime-ByRIN7il.js?soeditor-retry=3"
+        ]
+    },
+    "chunks": [
+        {
+            "file": "assets/index-oQ-xhb15.js",
+            "entry": true,
+            "imports": [],
+            "dynamicImports": [
+                "assets/link-attributes-BtxVCsKd-r3DFj-kk.js",
+                "assets/translations-BlzA1sth.js",
+                "assets/index-ALDwFQsq.js",
+                "assets/index-Cffbty6Z.js",
+                "assets/index-C2j34-6v.js",
+                "assets/save-DzTcHyOP.js",
+                "assets/classic-block-paragraph-B7BYtK19.js",
+                "assets/classic-image-context-DOfFAQIP.js",
+                "assets/classic-link-context-DwSlpThT.js",
+                "assets/classic-table-context-BSJcIC-I.js"
+            ],
+            "modules": [
+                "\u0000vite/modulepreload-polyfill.js",
+                "packages/core/dist/index.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/unicode.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/error-codes.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/preprocessor.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/token.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/decode-codepoint.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/internal/decode-shared.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/generated/decode-data-html.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/internal/bin-trie-flags.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/decode.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/html.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/open-element-stack.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/formatting-element-list.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/tree-adapters/default.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/doctype.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/foreign-content.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/index.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/escape.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/index.js",
+                "packages/html/dist/index.js",
+                "packages/projections/dist/index.js",
+                "packages/engine/dist/index.js",
+                "packages/rich-text/dist/index.js",
+                "\u0000vite/preload-helper.js",
+                "packages/ui/dist/ui-plugin-DkOhYcxK.js",
+                "packages/ui/dist/translation-resolution-Ro7XZZng.js",
+                "packages/ui/dist/editor-ui-DIuivyWt.js",
+                "packages/presets/dist/create-preset-mkgk4ioM.js",
+                "packages/presets/dist/cms-runtime.js",
+                "packages/source/dist/recovery.js",
+                "packages/wysiwyg/dist/index.js",
+                "packages/soeditor/src/wysiwyg-content.css?inline",
+                "packages/soeditor/src/ui-translation-loader.ts",
+                "packages/soeditor/src/classic-editor-errors.ts",
+                "packages/soeditor/src/classic-host.ts",
+                "packages/soeditor/src/classic-dialog-windows.ts",
+                "packages/soeditor/src/classic-source-formatting.ts",
+                "packages/soeditor/src/classic-editor.ts",
+                "packages/soeditor/src/cms-optional.ts",
+                "packages/soeditor/src/cms-styles.css",
+                "node_modules/.cache/soeditor-cms-loading/main.js",
+                "node_modules/.cache/soeditor-cms-loading/index.html"
+            ],
+            "raw": 501651,
+            "gzip": 148833
+        },
+        {
+            "file": "assets/index-Cffbty6Z.js",
+            "entry": false,
+            "imports": ["assets/index-oQ-xhb15.js"],
+            "dynamicImports": [],
+            "modules": ["packages/preview/dist/index.js"],
+            "raw": 13973,
+            "gzip": 4859
+        },
+        {
+            "file": "assets/index-C2j34-6v.js",
+            "entry": false,
+            "imports": ["assets/index-oQ-xhb15.js"],
+            "dynamicImports": [],
+            "modules": [
+                "node_modules/.pnpm/@lezer+common@1.5.2/node_modules/@lezer/common/dist/index.js",
+                "node_modules/.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js",
+                "node_modules/.pnpm/@lezer+highlight@1.2.3/node_modules/@lezer/highlight/dist/index.js",
+                "node_modules/.pnpm/@lezer+html@1.3.13/node_modules/@lezer/html/dist/index.js",
+                "node_modules/.pnpm/@lezer+css@1.3.6/node_modules/@lezer/css/dist/index.js",
+                "node_modules/.pnpm/@marijn+find-cluster-break@1.0.4/node_modules/@marijn/find-cluster-break/src/index.js",
+                "node_modules/.pnpm/@codemirror+state@6.7.1/node_modules/@codemirror/state/dist/index.js",
+                "node_modules/.pnpm/style-mod@4.1.3/node_modules/style-mod/src/style-mod.js",
+                "node_modules/.pnpm/w3c-keyname@2.2.8/node_modules/w3c-keyname/index.js",
+                "node_modules/.pnpm/crelt@1.0.7/node_modules/crelt/index.js",
+                "node_modules/.pnpm/@codemirror+view@6.43.9/node_modules/@codemirror/view/dist/index.js",
+                "node_modules/.pnpm/@codemirror+language@6.12.4/node_modules/@codemirror/language/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lang-css@6.3.1/node_modules/@codemirror/lang-css/dist/index.js",
+                "node_modules/.pnpm/@lezer+javascript@1.5.4/node_modules/@lezer/javascript/dist/index.js",
+                "node_modules/.pnpm/@codemirror+autocomplete@6.20.3/node_modules/@codemirror/autocomplete/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lang-javascript@6.2.5/node_modules/@codemirror/lang-javascript/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lang-html@6.4.12/node_modules/@codemirror/lang-html/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lint@6.9.7/node_modules/@codemirror/lint/dist/index.js",
+                "node_modules/.pnpm/@codemirror+search@6.7.1/node_modules/@codemirror/search/dist/index.js",
+                "node_modules/.pnpm/@codemirror+commands@6.11.0/node_modules/@codemirror/commands/dist/index.js",
+                "node_modules/.pnpm/codemirror@6.0.2/node_modules/codemirror/dist/index.js",
+                "packages/source/dist/index.js"
+            ],
+            "raw": 589475,
+            "gzip": 203264
+        },
+        {
+            "file": "assets/save-DzTcHyOP.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/workspace/dist/save.js"],
+            "raw": 3290,
+            "gzip": 1295
+        },
+        {
+            "file": "assets/classic-block-paragraph-B7BYtK19.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/classic-block-paragraph.ts"],
+            "raw": 3811,
+            "gzip": 1511
+        },
+        {
+            "file": "assets/classic-image-context-DOfFAQIP.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/classic-image-context.ts"],
+            "raw": 10115,
+            "gzip": 3673
+        },
+        {
+            "file": "assets/classic-link-context-DwSlpThT.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/classic-link-context.ts"],
+            "raw": 2261,
+            "gzip": 1038
+        },
+        {
+            "file": "assets/classic-table-context-BSJcIC-I.js",
+            "entry": false,
+            "imports": ["assets/index-oQ-xhb15.js"],
+            "dynamicImports": [
+                "assets/table-editor-attributes-BwkVkTQA.js",
+                "assets/table-editor-attributes-BwkVkTQA.js",
+                "assets/table-editor-attributes-BwkVkTQA.js"
+            ],
+            "modules": ["packages/soeditor/src/classic-table-context.ts"],
+            "raw": 41867,
+            "gzip": 12672
+        },
+        {
+            "file": "assets/link-attributes-BtxVCsKd-r3DFj-kk.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/ui/dist/link-attributes-BtxVCsKd.js"],
+            "raw": 4784,
+            "gzip": 1917
+        },
+        {
+            "file": "assets/translations-BlzA1sth.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": [
+                "packages/ui/dist/translations-BKdX13W3.js",
+                "packages/ui/dist/translations.js"
+            ],
+            "raw": 21621,
+            "gzip": 6919
+        },
+        {
+            "file": "assets/index-ALDwFQsq.js",
+            "entry": false,
+            "imports": ["assets/index-oQ-xhb15.js"],
+            "dynamicImports": [
+                "assets/standalone-Cayz_KD-.js",
+                "assets/html-DwgzGnwN.js"
+            ],
+            "modules": ["packages/html-tools/dist/index.js"],
+            "raw": 641723,
+            "gzip": 152869
+        },
+        {
+            "file": "assets/table-editor-attributes-BwkVkTQA.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/table-editor-attributes.ts"],
+            "raw": 8698,
+            "gzip": 3229
+        },
+        {
+            "file": "assets/standalone-Cayz_KD-.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": [
+                "node_modules/.pnpm/prettier@3.9.6/node_modules/prettier/standalone.mjs"
+            ],
+            "raw": 81506,
+            "gzip": 27166
+        },
+        {
+            "file": "assets/html-DwgzGnwN.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": [
+                "node_modules/.pnpm/prettier@3.9.6/node_modules/prettier/plugins/html.mjs"
+            ],
+            "raw": 160156,
+            "gzip": 50634
+        }
+    ],
+    "runs": [
+        {
+            "size": 10240,
+            "source": false,
+            "create": {
+                "milliseconds": 387,
+                "characters": 10440
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-oQ-xhb15.js",
+                "/assets/index-C4AGPKRK.css"
+            ],
+            "destroy": 4.4000000059604645,
+            "warmCreate": {
+                "milliseconds": 79.80000000447035,
+                "characters": 10440
+            },
+            "interactions": {
+                "menuFirstOpen": {
+                    "alignment": 3.600000001490116,
+                    "orderedList": 7.399999998509884,
+                    "unorderedList": 1.2000000029802322
+                },
+                "inputToFrame": 11.699999995529652,
+                "pasteToFrame": 14.5,
+                "tableToFrame": 53.29999999701977,
+                "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+            },
+            "lifecycle": [
+                {
+                    "usedSize": 4036756,
+                    "totalSize": 4571136,
+                    "embedderHeapUsedSize": 1145448,
+                    "backingStorageSize": 634642
+                },
+                {
+                    "usedSize": 4053080,
+                    "totalSize": 4571136,
+                    "embedderHeapUsedSize": 1053024,
+                    "backingStorageSize": 634428
+                },
+                {
+                    "usedSize": 4106632,
+                    "totalSize": 4833280,
+                    "embedderHeapUsedSize": 1146576,
+                    "backingStorageSize": 634428
+                }
+            ],
+            "heapBefore": {
+                "usedSize": 4953008,
+                "totalSize": 9756672,
+                "embedderHeapUsedSize": 3034072,
+                "backingStorageSize": 603845
+            },
+            "heapAfter": {
+                "usedSize": 2566368,
+                "totalSize": 3203072,
+                "embedderHeapUsedSize": 1273304,
+                "backingStorageSize": 574987
+            }
+        },
+        {
+            "size": 10240,
+            "source": true,
+            "create": {
+                "milliseconds": 135.40000000596046,
+                "characters": 10440
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-oQ-xhb15.js",
+                "/assets/index-C4AGPKRK.css"
+            ],
+            "sourceFirst": {
+                "milliseconds": 236.09999999403954,
+                "requests": ["/assets/index-C2j34-6v.js"]
+            },
+            "sourceAgain": 44.900000005960464,
+            "formatting": {
+                "milliseconds": 343.29999999701977,
+                "requests": [
+                    "/assets/index-ALDwFQsq.js",
+                    "http://127.0.0.1:4188/16768734-a434-4ea7-a417-22f114132660"
+                ]
+            },
+            "destroy": 21,
+            "warmCreate": {
+                "milliseconds": 90.60000000149012,
+                "characters": 10440
+            },
+            "interactions": {
+                "menuFirstOpen": {
+                    "alignment": 3.7000000029802322,
+                    "orderedList": 7.699999995529652,
+                    "unorderedList": 6.0999999940395355
+                },
+                "inputToFrame": 11.200000002980232,
+                "pasteToFrame": 15.700000002980232,
+                "tableToFrame": 16.100000001490116,
+                "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+            },
+            "lifecycle": [
+                {
+                    "usedSize": 6891848,
+                    "totalSize": 7983104,
+                    "embedderHeapUsedSize": 1604928,
+                    "backingStorageSize": 2604276
+                },
+                {
+                    "usedSize": 6994124,
+                    "totalSize": 7983104,
+                    "embedderHeapUsedSize": 1601800,
+                    "backingStorageSize": 2604062
+                },
+                {
+                    "usedSize": 7118460,
+                    "totalSize": 7983104,
+                    "embedderHeapUsedSize": 1665080,
+                    "backingStorageSize": 2604062
+                }
+            ],
+            "heapBefore": {
+                "usedSize": 4994492,
+                "totalSize": 9494528,
+                "embedderHeapUsedSize": 4175432,
+                "backingStorageSize": 604862
+            },
+            "heapAfter": {
+                "usedSize": 6351116,
+                "totalSize": 7720960,
+                "embedderHeapUsedSize": 2466304,
+                "backingStorageSize": 2545114
+            }
+        },
+        {
+            "size": 102400,
+            "source": false,
+            "create": {
+                "milliseconds": 480.5,
+                "characters": 102544
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-oQ-xhb15.js",
+                "/assets/index-C4AGPKRK.css"
+            ],
+            "destroy": 10.299999997019768,
+            "warmCreate": {
+                "milliseconds": 436.29999999701977,
+                "characters": 102544
+            },
+            "interactions": {
+                "menuFirstOpen": {
+                    "alignment": 5.5,
+                    "orderedList": 8.799999997019768,
+                    "unorderedList": 11.5
+                },
+                "inputToFrame": 63.5,
+                "pasteToFrame": 61.20000000298023,
+                "tableToFrame": 66.5,
+                "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+            },
+            "lifecycle": [
+                {
+                    "usedSize": 4147636,
+                    "totalSize": 7454720,
+                    "embedderHeapUsedSize": 4015528,
+                    "backingStorageSize": 818850
+                },
+                {
+                    "usedSize": 4169432,
+                    "totalSize": 6144000,
+                    "embedderHeapUsedSize": 3773952,
+                    "backingStorageSize": 818636
+                },
+                {
+                    "usedSize": 4223236,
+                    "totalSize": 5881856,
+                    "embedderHeapUsedSize": 3774888,
+                    "backingStorageSize": 818636
+                }
+            ],
+            "heapBefore": {
+                "usedSize": 24191456,
+                "totalSize": 43450368,
+                "embedderHeapUsedSize": 15955184,
+                "backingStorageSize": 730917
+            },
+            "heapAfter": {
+                "usedSize": 2668324,
+                "totalSize": 3989504,
+                "embedderHeapUsedSize": 4078496,
+                "backingStorageSize": 667091
+            }
+        },
+        {
+            "size": 102400,
+            "source": true,
+            "create": {
+                "milliseconds": 511.6000000014901,
+                "characters": 102544
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-oQ-xhb15.js",
+                "/assets/index-C4AGPKRK.css"
+            ],
+            "sourceFirst": {
+                "milliseconds": 350.8999999985099,
+                "requests": ["/assets/index-C2j34-6v.js"]
+            },
+            "sourceAgain": 108.89999999850988,
+            "formatting": {
+                "milliseconds": 765.2999999970198,
+                "requests": [
+                    "/assets/index-ALDwFQsq.js",
+                    "http://127.0.0.1:4188/ce145620-a2a5-4faa-854c-adb10a25f15b"
+                ]
+            },
+            "destroy": 84.39999999850988,
+            "warmCreate": {
+                "milliseconds": 473.30000000447035,
+                "characters": 102544
+            },
+            "interactions": {
+                "menuFirstOpen": {
+                    "alignment": 5.700000002980232,
+                    "orderedList": 8.600000001490116,
+                    "unorderedList": 9.299999997019768
+                },
+                "inputToFrame": 55.69999999552965,
+                "pasteToFrame": 59.80000000447035,
+                "tableToFrame": 72.20000000298023,
+                "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+            },
+            "lifecycle": [
+                {
+                    "usedSize": 7120672,
+                    "totalSize": 7720960,
+                    "embedderHeapUsedSize": 4554176,
+                    "backingStorageSize": 2788501
+                },
+                {
+                    "usedSize": 7222392,
+                    "totalSize": 7983104,
+                    "embedderHeapUsedSize": 4224520,
+                    "backingStorageSize": 2788287
+                },
+                {
+                    "usedSize": 7355428,
+                    "totalSize": 8769536,
+                    "embedderHeapUsedSize": 4261840,
+                    "backingStorageSize": 2788287
+                }
+            ],
+            "heapBefore": {
+                "usedSize": 25275060,
+                "totalSize": 43450368,
+                "embedderHeapUsedSize": 24688312,
+                "backingStorageSize": 731951
+            },
+            "heapAfter": {
+                "usedSize": 6776796,
+                "totalSize": 8245248,
+                "embedderHeapUsedSize": 12668800,
+                "backingStorageSize": 2637233
+            }
+        },
+        {
+            "size": 512000,
+            "source": false,
+            "create": {
+                "milliseconds": 1664.1000000014901,
+                "characters": 512024
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-oQ-xhb15.js",
+                "/assets/index-C4AGPKRK.css"
+            ],
+            "destroy": 33.30000000447035,
+            "warmCreate": {
+                "milliseconds": 1665,
+                "characters": 512024
+            },
+            "interactions": {
+                "menuFirstOpen": {
+                    "alignment": 33.5,
+                    "orderedList": 9.900000005960464,
+                    "unorderedList": 7.300000004470348
+                },
+                "inputToFrame": 217.80000000447035,
+                "pasteToFrame": 263.3999999985099,
+                "tableToFrame": 307.1000000014901,
+                "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+            },
+            "lifecycle": [
+                {
+                    "usedSize": 4581656,
+                    "totalSize": 5615616,
+                    "embedderHeapUsedSize": 15342552,
+                    "backingStorageSize": 1637810
+                },
+                {
+                    "usedSize": 4606104,
+                    "totalSize": 5091328,
+                    "embedderHeapUsedSize": 15549704,
+                    "backingStorageSize": 1637596
+                },
+                {
+                    "usedSize": 4662516,
+                    "totalSize": 5353472,
+                    "embedderHeapUsedSize": 15441208,
+                    "backingStorageSize": 1637596
+                }
+            ],
+            "heapBefore": {
+                "usedSize": 62143068,
+                "totalSize": 116121600,
+                "embedderHeapUsedSize": 71503952,
+                "backingStorageSize": 1197974
+            },
+            "heapAfter": {
+                "usedSize": 3094968,
+                "totalSize": 5558272,
+                "embedderHeapUsedSize": 15759896,
+                "backingStorageSize": 1076571
+            }
+        },
+        {
+            "size": 512000,
+            "source": true,
+            "create": {
+                "milliseconds": 1966,
+                "characters": 512024
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-oQ-xhb15.js",
+                "/assets/index-C4AGPKRK.css"
+            ],
+            "sourceFirst": {
+                "milliseconds": 793.1000000014901,
+                "requests": ["/assets/index-C2j34-6v.js"]
+            },
+            "sourceAgain": 453.69999999552965,
+            "formatting": {
+                "milliseconds": 2711.89999999851,
+                "requests": [
+                    "/assets/index-ALDwFQsq.js",
+                    "http://127.0.0.1:4188/d3e3d00c-6937-44d5-a643-7ea208059ba6"
+                ]
+            },
+            "destroy": 470.5,
+            "warmCreate": {
+                "milliseconds": 2129.89999999851,
+                "characters": 512024
+            },
+            "interactions": {
+                "menuFirstOpen": {
+                    "alignment": 32.30000000447035,
+                    "orderedList": 7.799999997019768,
+                    "unorderedList": 29
+                },
+                "inputToFrame": 273.1000000014901,
+                "pasteToFrame": 293.69999999552965,
+                "tableToFrame": 310.20000000298023,
+                "pasteMethod": "synthetic globalThis.ClipboardEvent with text and image HTML"
+            },
+            "lifecycle": [
+                {
+                    "usedSize": 7456616,
+                    "totalSize": 12173312,
+                    "embedderHeapUsedSize": 15893864,
+                    "backingStorageSize": 3607459
+                },
+                {
+                    "usedSize": 7565856,
+                    "totalSize": 9814016,
+                    "embedderHeapUsedSize": 15968456,
+                    "backingStorageSize": 3607245
+                },
+                {
+                    "usedSize": 7705448,
+                    "totalSize": 8765440,
+                    "embedderHeapUsedSize": 15993840,
+                    "backingStorageSize": 3607245
+                }
+            ],
+            "heapBefore": {
+                "usedSize": 81350516,
+                "totalSize": 123015168,
+                "embedderHeapUsedSize": 117501576,
+                "backingStorageSize": 1198968
+            },
+            "heapAfter": {
+                "usedSize": 7843648,
+                "totalSize": 9158656,
+                "embedderHeapUsedSize": 57403032,
+                "backingStorageSize": 3688950
+            }
+        }
+    ]
+}

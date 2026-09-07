@@ -34,10 +34,14 @@
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/index.js"
+        },
+        "./recovery": {
+            "types": "./dist/recovery-loader.d.ts",
+            "import": "./dist/recovery.js"
         }
     },
     "scripts": {
-        "build": "vite build && tsc -p tsconfig.build.json",
+        "build": "vite build --config vite.recovery.config.ts && vite build && tsc -p tsconfig.build.json",
         "test": "vitest run",
         "typecheck": "tsc -p tsconfig.json"
     },

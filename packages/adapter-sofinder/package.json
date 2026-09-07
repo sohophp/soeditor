@@ -2,7 +2,7 @@
     "name": "@soeditor/adapter-sofinder",
     "version": "1.1.0",
     "license": "MIT",
-    "description": "Dependency-free SoFinder picker adapter for SoEditor.",
+    "description": "Dependency-free SoFinder picker and upload adapters for SoEditor.",
     "keywords": [
         "content-editor",
         "html",

@@ -9,17 +9,23 @@ describe('file-manager result validation', () => {
     it('freezes a valid result and nested JSON-like metadata', () => {
         const metadata = { folder: { id: 3 }, tags: ['hero', true] };
         const result = normalizeFileManagerResult({
+            assetId: 'asset-7',
             url: '/image.png',
             name: 'Image',
             width: 640,
             height: 480,
             metadata,
+            sizes: '(max-width: 640px) 100vw, 640px',
+            srcset: '/image-320.png 320w, /image.png 640w',
         });
 
         expect(result).toMatchObject({
+            assetId: 'asset-7',
             url: '/image.png',
             width: 640,
             height: 480,
+            sizes: '(max-width: 640px) 100vw, 640px',
+            srcset: '/image-320.png 320w, /image.png 640w',
         });
         expect(Object.isFrozen(result)).toBe(true);
         expect(Object.isFrozen(result?.metadata)).toBe(true);
@@ -33,6 +39,25 @@ describe('file-manager result validation', () => {
         expect(
             (result?.metadata?.folder as Readonly<Record<string, unknown>>).id,
         ).toBe(3);
+    });
+
+    it('can normalize its own null-prototype metadata again', () => {
+        const first = normalizeFileManagerResult({
+            metadata: { folder: { id: 3 }, resource: 'Images' },
+            url: '/image.png',
+        });
+        const second = normalizeFileManagerResult(first);
+
+        expect(second).toMatchObject({
+            metadata: { folder: { id: 3 }, resource: 'Images' },
+            url: '/image.png',
+        });
+        expect(Object.getPrototypeOf(second?.metadata)).toBeNull();
+        expect(
+            Object.getPrototypeOf(
+                second?.metadata?.folder as Readonly<Record<string, unknown>>,
+            ),
+        ).toBeNull();
     });
 
     it('accepts cancellation and safe data/blob/http/relative URLs', () => {
@@ -55,6 +80,8 @@ describe('file-manager result validation', () => {
         [{ url: '/x', width: 0 }, 'positive safe integer'],
         [{ url: '/x', height: 2.5 }, 'positive safe integer'],
         [{ url: '/x', metadata: new Date() }, 'plain object'],
+        [{ url: '/x', srcset: 'javascript:alert(1) 2x' }, 'unsafe URL'],
+        [{ url: '/x', assetId: '' }, 'bounded string'],
     ])('rejects malformed result %#', (value, message) => {
         expect(() => normalizeFileManagerResult(value)).toThrow(
             InvalidFileManagerResultError,

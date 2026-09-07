@@ -171,6 +171,8 @@ export interface BalloonOptions {
     readonly content: UiContent;
     /** Preferred side; automatically flips when that side is clipped. */
     readonly placement?: 'above' | 'below';
+    /** Live editing/handle bounds that the floating surface should avoid. */
+    readonly avoid?: () => readonly DOMRectReadOnly[];
 }
 
 /** Anchored floating-surface capability. */
@@ -201,6 +203,10 @@ export interface EditorUi {
     refresh(): void;
     /** Reads plain text from the latest selection captured in an editing surface. */
     getEditingSelectionText(): string;
+    /** Reads one cached formatting value during the current UI refresh. */
+    getEditingFormatState?(
+        property: EditorUiFormatProperty,
+    ): EditorUiFormatState | undefined;
     /** Restores the latest selection captured inside an owned editing surface. */
     restoreEditingSelection(): boolean;
     setToolbarExpanded(expanded: boolean): void;
@@ -212,6 +218,10 @@ export interface EditorUi {
 
 /** Options used to attach a reusable UI to one host. */
 export interface CreateEditorUiOptions {
+    /** Host bridge to the active engine; called at most once per UI refresh. */
+    readonly readFormatStates?: () => Readonly<
+        Record<string, EditorUiFormatState>
+    >;
     readonly accessibilityHelp?: boolean;
     readonly editor: Editor;
     readonly direction?: EditorUiDirection;
@@ -223,7 +233,7 @@ export interface CreateEditorUiOptions {
     readonly translations?: readonly EditorUiTranslationResource[];
     readonly toolbar?: ToolbarConfiguration;
     readonly toolbarLayout?: ToolbarLayoutOptions;
-    /** Adds canonical element-path and text-count projections to the status. */
+    /** Adds WYSIWYG element ancestry and text counts; Source hides DOM ancestry. */
     readonly documentStatus?: boolean;
 }
 
@@ -237,3 +247,19 @@ export interface UiRegistryService {
     registerStatusItem(id: string, factory: StatusItemFactory): () => void;
     registerToolbarItem(id: string, factory: ToolbarItemFactory): () => void;
 }
+
+/** Uniform, mixed, or unavailable formatting provided by the active editing engine. */
+export type EditorUiFormatState =
+    | { readonly status: 'uniform'; readonly value: string }
+    | { readonly status: 'mixed' | 'unavailable' };
+
+/** Formatting fields exposed by the CMS toolbar. */
+export type EditorUiFormatProperty =
+    | 'alignment'
+    | 'heading'
+    | 'list'
+    | 'font.size'
+    | 'font.family'
+    | 'font.color'
+    | 'font.backgroundColor'
+    | 'font.highlight';

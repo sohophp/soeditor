@@ -1,9 +1,15 @@
+import { countDocumentStatus } from './document-statistics.js';
+import { createElementPath, elementPathForRange } from './element-path.js';
+import {
+    bindToolbarMenus,
+    navigateToolbarMenu,
+} from './toolbar-menu-position.js';
 import {
     defaultToolbarConfiguration,
     destroyToolbarItems,
 } from './defaults.js';
 import { EditorUiDestroyedError } from './errors.js';
-import { resolveUiTranslation } from './localization.js';
+import { resolveUiTranslationResources } from './translation-resolution.js';
 import { createOverlayServices } from './overlays.js';
 import { createPanelService } from './panels.js';
 import { matchesShortcut } from './shortcuts.js';
@@ -18,6 +24,7 @@ import type {
     DialogService,
     EditorUi,
     EditorUiTheme,
+    EditorUiFormatState,
     EditorUiThemeVariables,
     StatusItemFactory,
     StatusItemInstance,
@@ -48,7 +55,9 @@ export class EditorUiAlreadyAttachedError extends Error {
 }
 
 /** Attaches one configurable, framework-independent DOM UI. */
-export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
+export function createEditorUiWithTranslations(
+    options: CreateEditorUiOptions,
+): EditorUi {
     if (attachedHosts.has(options.element)) {
         throw new EditorUiAlreadyAttachedError();
     }
@@ -56,7 +65,7 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
     const registry = getUiRegistryRecord(registryService);
     const document = options.element.ownerDocument;
     const icons = readIcons(options.icons);
-    const translation = resolveUiTranslation(
+    const translation = resolveUiTranslationResources(
         options.locale,
         options.translations,
         options.direction,
@@ -84,7 +93,25 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
     const documentStatus = document.createElement('span');
     documentStatus.className = 'soeditor-ui__document-status';
     documentStatus.hidden = options.documentStatus !== true;
-    status.append(primaryStatus, documentStatus, contributedStatus);
+    const elementPath = createElementPath(document, () => {
+        if (options.editor.state.mode !== 'wysiwyg') return [];
+        const range = selectionTargets
+            .map((target) => selectionRangeForTarget(target, document))
+            .find(
+                (candidate) =>
+                    candidate !== undefined &&
+                    isEditingNode(candidate.startContainer, options.element) &&
+                    isEditingNode(candidate.endContainer, options.element),
+            );
+        return elementPathForRange(range);
+    });
+    elementPath.element.hidden = true;
+    status.append(
+        primaryStatus,
+        elementPath.element,
+        documentStatus,
+        contributedStatus,
+    );
     const panelLayer = document.createElement('div');
     panelLayer.className = 'soeditor-ui__panels';
     const notificationRegion = document.createElement('div');
@@ -103,13 +130,18 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
     );
     const panelService = createPanelService(document, panelLayer);
     const items: ToolbarItemInstance[] = [];
+    let disposeToolbarMenus: (() => void) | undefined;
     const statusItems: StatusItemInstance[] = [];
     let editingSelection: SelectionBookmark | undefined;
     let editingRange: Range | undefined;
+    let formatStates: Readonly<Record<string, EditorUiFormatState>> | undefined;
     let editingSelectionFrozen = false;
     let selectionHighlightElements: HTMLElement[] = [];
     let destroyed = false;
     let manualStatus: string | undefined;
+    let countedSource: string | undefined;
+    let countTimer: ReturnType<typeof setTimeout> | undefined;
+    let documentCounts: ReturnType<typeof countDocumentStatus> | undefined;
     let theme = validateTheme(options.theme ?? 'auto');
     let toolbarExpanded = true;
     let collapseButton: HTMLButtonElement | undefined;
@@ -202,6 +234,19 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
             assertAlive();
             return editingRange?.toString() ?? '';
         },
+        getEditingFormatState: (
+            property: string,
+        ): EditorUiFormatState | undefined => {
+            assertAlive();
+            if (options.readFormatStates === undefined) return undefined;
+            if (
+                !editingRange?.startContainer.isConnected ||
+                !editingRange.endContainer.isConnected
+            )
+                return { status: 'unavailable' };
+            formatStates ??= options.readFormatStates?.() ?? {};
+            return formatStates[property] ?? { status: 'unavailable' };
+        },
         refresh: () => update(),
         restoreEditingSelection: () => restoreEditingSelection(),
         setToolbarExpanded: (expanded: boolean) => {
@@ -251,6 +296,7 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
         if (destroyed) {
             return;
         }
+        formatStates = undefined;
         for (const item of items) {
             try {
                 item.update?.();
@@ -264,6 +310,12 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
             } catch (error: unknown) {
                 showError(error);
             }
+        }
+        for (const summary of Array.from(
+            toolbar.querySelectorAll('summary[aria-disabled="true"]'),
+        )) {
+            const menu = summary.closest('details');
+            if (menu) menu.open = false;
         }
         resetToolbarTabStop(toolbar);
         renderStatus();
@@ -417,7 +469,8 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
         if (
             editingSelection !== undefined &&
             activeElement !== null &&
-            shell.contains(activeElement)
+            shell.contains(activeElement) &&
+            !isEditingNode(activeElement, options.element)
         ) {
             // Keyboard focus can enter chrome without a preceding pointer
             // boundary. Preserve the last author range until focus/pointer
@@ -450,6 +503,9 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
             !isEditingNode(anchor, options.element) ||
             !isEditingNode(focus, options.element)
         ) {
+            editingSelection = undefined;
+            editingRange = undefined;
+            update();
             return;
         }
         editingSelection = Object.freeze({
@@ -671,6 +727,11 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
             return;
         }
         destroyed = true;
+        clearTimeout(countTimer);
+        countTimer = undefined;
+        countedSource = undefined;
+        documentCounts = undefined;
+        disposeToolbarMenus?.();
         const errors: unknown[] = [];
         options.element.removeEventListener('keydown', keydown, true);
         options.element.removeEventListener('contextmenu', contextmenu);
@@ -699,8 +760,11 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
         for (const target of selectionTargets) {
             target.removeEventListener('selectionchange', selectionChange);
         }
+        elementPath.destroy();
         localizationObserver?.disconnect();
         localizationObserver = undefined;
+        countedSource = undefined;
+        documentCounts = undefined;
         clearEditingSelectionHighlight();
         disposeState();
         disposeCommand();
@@ -807,7 +871,8 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
                     highlight.setAttribute('aria-hidden', 'true');
                     highlight.style.position = 'fixed';
                     highlight.style.pointerEvents = 'none';
-                    highlight.style.zIndex = '2147483000';
+                    // Show the range above content but below menus and dialogs.
+                    highlight.style.zIndex = '1';
                     highlight.style.left = `${String(rectangle.left)}px`;
                     highlight.style.top = `${String(rectangle.top)}px`;
                     highlight.style.width = `${String(rectangle.width)}px`;
@@ -834,10 +899,29 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
                 options.editor.state.dirty ? 'Unsaved' : 'Saved',
             )}`;
         if (options.documentStatus === true) {
+            elementPath.update();
+            const source = options.editor.getData();
+            // Selection and command refreshes do not change document counts.
+            // Keep the cache local and compare content, not length or dirty state.
+            if (documentCounts === undefined) {
+                documentCounts = countDocumentStatus(document, source);
+                countedSource = source;
+            } else if (countedSource !== source && countTimer === undefined) {
+                // Counts are presentation, not the synchronous save/dirty contract.
+                // Coalesce changes without postponing indefinitely during typing.
+                countTimer = setTimeout(() => {
+                    countTimer = undefined;
+                    if (destroyed) return;
+                    const latest = options.editor.getData();
+                    if (countedSource !== latest) {
+                        documentCounts = countDocumentStatus(document, latest);
+                        countedSource = latest;
+                    }
+                    renderStatus();
+                }, 100);
+            }
             const snapshot = renderDocumentStatus(
-                document,
-                options.element,
-                options.editor.getData(),
+                documentCounts,
                 translation.translate,
             );
             documentStatus.textContent = snapshot.text;
@@ -866,6 +950,7 @@ export function createEditorUi(options: CreateEditorUiOptions): EditorUi {
             { document, editor: options.editor, ui },
             items,
         );
+        disposeToolbarMenus = bindToolbarMenus(toolbar);
         collapseButton = toolbarLayout.collapsible
             ? createCollapseButton(document, ui)
             : undefined;
@@ -1425,7 +1510,14 @@ function toolbarControls(toolbar: HTMLElement): HTMLElement[] {
         toolbar.querySelectorAll<HTMLElement>(
             'button:not(:disabled), summary:not([aria-disabled="true"])',
         ),
-    ).filter((element) => !element.closest('[hidden]'));
+    ).filter((element) => {
+        if (element.closest('[hidden]')) return false;
+        const closedMenu = element.closest('details:not([open])');
+        return (
+            closedMenu === null ||
+            element === closedMenu.querySelector('summary')
+        );
+    });
 }
 
 function resetToolbarTabStop(toolbar: HTMLElement): void {
@@ -1445,6 +1537,7 @@ function handleToolbarNavigation(
     if (!(target instanceof HTMLElement) || !toolbar.contains(target)) {
         return false;
     }
+    if (navigateToolbarMenu(event, toolbar)) return true;
     const controls = toolbarControls(toolbar);
     const current = controls.indexOf(target);
     if (current < 0) return false;
@@ -1471,9 +1564,7 @@ function handleToolbarNavigation(
 }
 
 function renderDocumentStatus(
-    document: Document,
-    host: HTMLElement,
-    source: string,
+    counts: ReturnType<typeof countDocumentStatus>,
     translate: (message: string) => string,
 ): {
     readonly characters: number;
@@ -1481,16 +1572,10 @@ function renderDocumentStatus(
     readonly text: string;
     readonly words: number;
 } {
-    const template = document.createElement('template');
-    template.innerHTML = source;
-    const text = template.content.textContent ?? '';
-    const characters = Array.from(text).length;
-    const sourceCharacters = Array.from(source).length;
-    const words = countWords(text);
-    const path = selectedElementPath(document, host);
+    const { characters, sourceCharacters, words } = counts;
     return Object.freeze({
         characters,
-        text: `${translate(path)} · ${String(words)} ${translate(
+        text: `${String(words)} ${translate(
             'words',
         )} · ${String(characters)} ${translate(
             'characters',
@@ -1498,28 +1583,6 @@ function renderDocumentStatus(
         sourceCharacters,
         words,
     });
-}
-
-function countWords(text: string): number {
-    if (text.trim().length === 0) return 0;
-    return text.match(/[\p{L}\p{N}]+(?:['’][\p{L}\p{N}]+)*/gu)?.length ?? 0;
-}
-
-function selectedElementPath(document: Document, host: HTMLElement): string {
-    const node = document.getSelection()?.anchorNode;
-    let element =
-        node?.nodeType === 1 ? (node as Element) : node?.parentElement;
-    const parts: string[] = [];
-    while (
-        element !== undefined &&
-        element !== null &&
-        host.contains(element)
-    ) {
-        if (element.hasAttribute('contenteditable')) break;
-        parts.unshift(element.localName);
-        element = element.parentElement;
-    }
-    return parts.length === 0 ? 'document' : parts.join(' › ');
 }
 
 function localizeUiTree(

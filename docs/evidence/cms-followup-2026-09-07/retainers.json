@@ -1,0 +1,1472 @@
+{
+    "analyzedAt": "2026-09-07T14:22:05.786Z",
+    "results": [
+        {
+            "file": "docs/evidence/cms-followup-2026-09-07/soak.json.warm.heapsnapshot.gz",
+            "totalNodes": 240212,
+            "detachedCount": 1,
+            "detachedTypes": [
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button\" title=\"Alignment\" aria-label=\"Alignment\" disabled=\"\" aria-pressed=\"false\">",
+                    1
+                ]
+            ],
+            "historyEntryCount": 0,
+            "detachedExamples": [
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 23,
+                            "name": "(Global handles)",
+                            "selfBytes": 0,
+                            "edge": "10",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 7281,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "9 / DevTools console",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111363,
+                            "name": "visual",
+                            "selfBytes": 28,
+                            "edge": "visual",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85911,
+                            "name": "system / Context / scope @59453",
+                            "selfBytes": 3364,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111819,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "lr",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 111827,
+                            "name": "<div class=\"soeditor-classic soeditor-ui\" data-soeditor-source-state=\"ready\" data-soeditor-theme=\"auto\" data-soeditor-pane-count=\"1\" data-soeditor-projections=\"",
+                            "selfBytes": 104,
+                            "edge": "element",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 114093,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "3 / part of key (HTMLDivElement @111827) -> value (Object @114093) pair in WeakMap (table @99677)",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 66651,
+                            "name": "getEditingFormatState",
+                            "selfBytes": 28,
+                            "edge": "getEditingFormatState",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85875,
+                            "name": "system / Context / scope @60659",
+                            "selfBytes": 244,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 233393,
+                            "name": "Array",
+                            "selfBytes": 16,
+                            "edge": "R",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 233469,
+                            "name": "Object",
+                            "selfBytes": 24,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 233573,
+                            "name": "update",
+                            "selfBytes": 28,
+                            "edge": "update",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 192685,
+                            "name": "system / Context / scope @63479",
+                            "selfBytes": 64,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 233625,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button\" title=\"Alignment\" aria-label=\"Alignment\" disabled=\"\" aria-pressed=\"false\">",
+                            "selfBytes": 176,
+                            "edge": "d",
+                            "edgeType": "context"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "docs/evidence/cms-followup-2026-09-07/soak.json.mounted-end.heapsnapshot.gz",
+            "totalNodes": 283115,
+            "detachedCount": 3881,
+            "detachedTypes": [
+                ["Text", 1552],
+                ["<td class=\"soeditor-table-cell\">", 388],
+                ["Comment", 388],
+                ["<p>", 194],
+                ["<section data-cms=\"record\">", 194],
+                ["<tr>", 194],
+                ["<table class=\"soeditor-table-widget\">", 194],
+                ["<tbody>", 194],
+                ["<a href=\"/page\">", 194],
+                ["<strong>", 194],
+                ["<h2>", 194],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button\" title=\"Alignment\" aria-label=\"Alignment\" aria-pressed=\"false\">",
+                    1
+                ]
+            ],
+            "historyEntryCount": 101,
+            "historyExample": {
+                "reachableWithoutWeakEdges": true,
+                "steps": [
+                    {
+                        "id": 3,
+                        "name": "(GC roots)",
+                        "selfBytes": 0,
+                        "edge": "1",
+                        "edgeType": "element"
+                    },
+                    {
+                        "id": 23,
+                        "name": "(Global handles)",
+                        "selfBytes": 0,
+                        "edge": "10",
+                        "edgeType": "element"
+                    },
+                    {
+                        "id": 7281,
+                        "name": "Object",
+                        "selfBytes": 12,
+                        "edge": "9 / DevTools console",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 111363,
+                        "name": "visual",
+                        "selfBytes": 28,
+                        "edge": "visual",
+                        "edgeType": "property"
+                    },
+                    {
+                        "id": 85911,
+                        "name": "system / Context / scope @59453",
+                        "selfBytes": 3364,
+                        "edge": "context",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 233125,
+                        "name": "system / SourceTextModule",
+                        "selfBytes": 76,
+                        "edge": "extension",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 93457,
+                        "name": "Generator",
+                        "selfBytes": 80,
+                        "edge": "5",
+                        "edgeType": "hidden"
+                    },
+                    {
+                        "id": 93459,
+                        "name": "",
+                        "selfBytes": 32,
+                        "edge": "function",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 282417,
+                        "name": "system / FeedbackCell",
+                        "selfBytes": 16,
+                        "edge": "feedback_cell",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 94299,
+                        "name": "system / ClosureFeedbackCellArray",
+                        "selfBytes": 5232,
+                        "edge": "value",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 96053,
+                        "name": "system / FeedbackCell",
+                        "selfBytes": 16,
+                        "edge": "1055",
+                        "edgeType": "hidden"
+                    },
+                    {
+                        "id": 378125,
+                        "name": "system / FeedbackVector",
+                        "selfBytes": 440,
+                        "edge": "value",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 310263,
+                        "name": "system / AllocationSite",
+                        "selfBytes": 28,
+                        "edge": "8",
+                        "edgeType": "hidden"
+                    },
+                    {
+                        "id": 310265,
+                        "name": "Object",
+                        "selfBytes": 36,
+                        "edge": "transition_info",
+                        "edgeType": "internal"
+                    }
+                ]
+            },
+            "detachedExamples": [
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 458641,
+                            "name": "C++ Persistent roots",
+                            "selfBytes": 0,
+                            "edge": "29",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 30,
+                            "name": "blink::WebLocalFrameImpl",
+                            "selfBytes": 272,
+                            "edge": "blink::WebLocalFrameImpl::WebLocalFrameImpl(base::PassKey<WebLocalFrameImpl>, mojom::blink::TreeScopeType, WebLocalFrameClient *, blink::InterfaceRegistry *, const LocalFrameToken &)@../../third_party/blink/renderer/core/frame/web_local_frame_impl.cc:2296",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 2116,
+                            "name": "blink::LocalFrame",
+                            "selfBytes": 1504,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 89282,
+                            "name": "blink::Editor",
+                            "selfBytes": 112,
+                            "edge": "12",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 45660,
+                            "name": "blink::UndoStack",
+                            "selfBytes": 48,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 209582,
+                            "name": "blink::HeapVectorBacking<cppgc::internal::BasicMember<blink::UndoStep, cppgc::internal::StrongMemberTag, cppgc::internal::DijkstraWriteBarrierPolicy>>",
+                            "selfBytes": 944,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 363872,
+                            "name": "blink::UndoStep",
+                            "selfBytes": 192,
+                            "edge": "112",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 306337,
+                            "name": "Text",
+                            "selfBytes": 96,
+                            "edge": "2",
+                            "edgeType": "element"
+                        }
+                    ]
+                },
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 458641,
+                            "name": "C++ Persistent roots",
+                            "selfBytes": 0,
+                            "edge": "29",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 30,
+                            "name": "blink::WebLocalFrameImpl",
+                            "selfBytes": 272,
+                            "edge": "blink::WebLocalFrameImpl::WebLocalFrameImpl(base::PassKey<WebLocalFrameImpl>, mojom::blink::TreeScopeType, WebLocalFrameClient *, blink::InterfaceRegistry *, const LocalFrameToken &)@../../third_party/blink/renderer/core/frame/web_local_frame_impl.cc:2296",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 2116,
+                            "name": "blink::LocalFrame",
+                            "selfBytes": 1504,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 89282,
+                            "name": "blink::Editor",
+                            "selfBytes": 112,
+                            "edge": "12",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 45660,
+                            "name": "blink::UndoStack",
+                            "selfBytes": 48,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 209582,
+                            "name": "blink::HeapVectorBacking<cppgc::internal::BasicMember<blink::UndoStep, cppgc::internal::StrongMemberTag, cppgc::internal::DijkstraWriteBarrierPolicy>>",
+                            "selfBytes": 944,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 363872,
+                            "name": "blink::UndoStep",
+                            "selfBytes": 192,
+                            "edge": "112",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 306337,
+                            "name": "Text",
+                            "selfBytes": 96,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 306339,
+                            "name": "<p>",
+                            "selfBytes": 104,
+                            "edge": "4",
+                            "edgeType": "element"
+                        }
+                    ]
+                },
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 458641,
+                            "name": "C++ Persistent roots",
+                            "selfBytes": 0,
+                            "edge": "29",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 30,
+                            "name": "blink::WebLocalFrameImpl",
+                            "selfBytes": 272,
+                            "edge": "blink::WebLocalFrameImpl::WebLocalFrameImpl(base::PassKey<WebLocalFrameImpl>, mojom::blink::TreeScopeType, WebLocalFrameClient *, blink::InterfaceRegistry *, const LocalFrameToken &)@../../third_party/blink/renderer/core/frame/web_local_frame_impl.cc:2296",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 2116,
+                            "name": "blink::LocalFrame",
+                            "selfBytes": 1504,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 89282,
+                            "name": "blink::Editor",
+                            "selfBytes": 112,
+                            "edge": "12",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 45660,
+                            "name": "blink::UndoStack",
+                            "selfBytes": 48,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 209582,
+                            "name": "blink::HeapVectorBacking<cppgc::internal::BasicMember<blink::UndoStep, cppgc::internal::StrongMemberTag, cppgc::internal::DijkstraWriteBarrierPolicy>>",
+                            "selfBytes": 944,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 363872,
+                            "name": "blink::UndoStep",
+                            "selfBytes": 192,
+                            "edge": "112",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 306337,
+                            "name": "Text",
+                            "selfBytes": 96,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 306339,
+                            "name": "<p>",
+                            "selfBytes": 104,
+                            "edge": "4",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 306341,
+                            "name": "<section data-cms=\"record\">",
+                            "selfBytes": 104,
+                            "edge": "6",
+                            "edgeType": "element"
+                        }
+                    ]
+                },
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 458641,
+                            "name": "C++ Persistent roots",
+                            "selfBytes": 0,
+                            "edge": "29",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 30,
+                            "name": "blink::WebLocalFrameImpl",
+                            "selfBytes": 272,
+                            "edge": "blink::WebLocalFrameImpl::WebLocalFrameImpl(base::PassKey<WebLocalFrameImpl>, mojom::blink::TreeScopeType, WebLocalFrameClient *, blink::InterfaceRegistry *, const LocalFrameToken &)@../../third_party/blink/renderer/core/frame/web_local_frame_impl.cc:2296",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 2116,
+                            "name": "blink::LocalFrame",
+                            "selfBytes": 1504,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 89282,
+                            "name": "blink::Editor",
+                            "selfBytes": 112,
+                            "edge": "12",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 45660,
+                            "name": "blink::UndoStack",
+                            "selfBytes": 48,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 209582,
+                            "name": "blink::HeapVectorBacking<cppgc::internal::BasicMember<blink::UndoStep, cppgc::internal::StrongMemberTag, cppgc::internal::DijkstraWriteBarrierPolicy>>",
+                            "selfBytes": 944,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 364554,
+                            "name": "blink::UndoStep",
+                            "selfBytes": 192,
+                            "edge": "107",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 401203,
+                            "name": "Text",
+                            "selfBytes": 96,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 401205,
+                            "name": "<p>",
+                            "selfBytes": 104,
+                            "edge": "4",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 307279,
+                            "name": "<table class=\"soeditor-table-widget\">",
+                            "selfBytes": 120,
+                            "edge": "8",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 307523,
+                            "name": "<tbody>",
+                            "selfBytes": 104,
+                            "edge": "6",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 307277,
+                            "name": "<tr>",
+                            "selfBytes": 104,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 307275,
+                            "name": "<td class=\"soeditor-table-cell\">",
+                            "selfBytes": 104,
+                            "edge": "4",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 307273,
+                            "name": "<td class=\"soeditor-table-cell\">",
+                            "selfBytes": 104,
+                            "edge": "8",
+                            "edgeType": "element"
+                        }
+                    ]
+                },
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 458641,
+                            "name": "C++ Persistent roots",
+                            "selfBytes": 0,
+                            "edge": "29",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 30,
+                            "name": "blink::WebLocalFrameImpl",
+                            "selfBytes": 272,
+                            "edge": "blink::WebLocalFrameImpl::WebLocalFrameImpl(base::PassKey<WebLocalFrameImpl>, mojom::blink::TreeScopeType, WebLocalFrameClient *, blink::InterfaceRegistry *, const LocalFrameToken &)@../../third_party/blink/renderer/core/frame/web_local_frame_impl.cc:2296",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 2116,
+                            "name": "blink::LocalFrame",
+                            "selfBytes": 1504,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 89282,
+                            "name": "blink::Editor",
+                            "selfBytes": 112,
+                            "edge": "12",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 45660,
+                            "name": "blink::UndoStack",
+                            "selfBytes": 48,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 209582,
+                            "name": "blink::HeapVectorBacking<cppgc::internal::BasicMember<blink::UndoStep, cppgc::internal::StrongMemberTag, cppgc::internal::DijkstraWriteBarrierPolicy>>",
+                            "selfBytes": 944,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 364554,
+                            "name": "blink::UndoStep",
+                            "selfBytes": 192,
+                            "edge": "107",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 401203,
+                            "name": "Text",
+                            "selfBytes": 96,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 401205,
+                            "name": "<p>",
+                            "selfBytes": 104,
+                            "edge": "4",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 307279,
+                            "name": "<table class=\"soeditor-table-widget\">",
+                            "selfBytes": 120,
+                            "edge": "8",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 307523,
+                            "name": "<tbody>",
+                            "selfBytes": 104,
+                            "edge": "6",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 307277,
+                            "name": "<tr>",
+                            "selfBytes": 104,
+                            "edge": "3",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 307275,
+                            "name": "<td class=\"soeditor-table-cell\">",
+                            "selfBytes": 104,
+                            "edge": "4",
+                            "edgeType": "element"
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "file": "docs/evidence/cms-followup-2026-09-07/soak.json.destroyed.heapsnapshot.gz",
+            "totalNodes": 165957,
+            "detachedCount": 69,
+            "detachedTypes": [
+                ["Text", 4],
+                [
+                    "<span class=\"soeditor-ui__format-arrow\" aria-hidden=\"true\">",
+                    3
+                ],
+                ["<details class=\"soeditor-ui__menu\">", 3],
+                ["<td class=\"soeditor-table-cell\">", 2],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button is-active\" data-workspace-view=\"wysiwyg\" title=\"WYSIWYG\" aria-label=\"WYSIWYG\" aria-pressed=\"true\" tabindex=\"-1\"",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button\" data-workspace-view=\"source\" title=\"Source\" aria-label=\"Source\" aria-pressed=\"false\" tabindex=\"-1\">",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button\" data-workspace-view=\"wysiwyg-source-horizontal\" title=\"WYSIWYG + Source (side by side)\" aria-label=\"WYSIWYG + ",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button\" data-workspace-view=\"wysiwyg-source-vertical\" title=\"WYSIWYG + Source (stacked)\" aria-label=\"WYSIWYG + Source ",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Filled circle\" aria-label=\"Filled circle\" role=\"menuitemradio\" data-format-c",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Hollow circle\" aria-label=\"Hollow circle\" role=\"menuitemradio\" data-format-c",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Square\" aria-label=\"Square\" role=\"menuitemradio\" data-format-command=\"list.u",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Decimal\" aria-label=\"Decimal\" role=\"menuitemradio\" data-format-command=\"list",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Decimal with leading zero\" aria-label=\"Decimal with leading zero\" role=\"menu",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Lowercase Roman\" aria-label=\"Lowercase Roman\" role=\"menuitemradio\" data-form",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Uppercase Roman\" aria-label=\"Uppercase Roman\" role=\"menuitemradio\" data-form",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Lowercase letters\" aria-label=\"Lowercase letters\" role=\"menuitemradio\" data-",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Uppercase letters\" aria-label=\"Uppercase letters\" role=\"menuitemradio\" data-",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice is-active\" title=\"Align left\" aria-label=\"Align left\" role=\"menuitemradio\" data-form",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Align center\" aria-label=\"Align center\" role=\"menuitemradio\" data-format-com",
+                    1
+                ],
+                [
+                    "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Align right\" aria-label=\"Align right\" role=\"menuitemradio\" data-format-comma",
+                    1
+                ]
+            ],
+            "historyEntryCount": 1,
+            "historyExample": {
+                "reachableWithoutWeakEdges": true,
+                "steps": [
+                    {
+                        "id": 3,
+                        "name": "(GC roots)",
+                        "selfBytes": 0,
+                        "edge": "1",
+                        "edgeType": "element"
+                    },
+                    {
+                        "id": 23,
+                        "name": "(Global handles)",
+                        "selfBytes": 0,
+                        "edge": "10",
+                        "edgeType": "element"
+                    },
+                    {
+                        "id": 7281,
+                        "name": "Object",
+                        "selfBytes": 12,
+                        "edge": "9 / DevTools console",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 111363,
+                        "name": "visual",
+                        "selfBytes": 28,
+                        "edge": "visual",
+                        "edgeType": "property"
+                    },
+                    {
+                        "id": 85911,
+                        "name": "system / Context / scope @59453",
+                        "selfBytes": 3364,
+                        "edge": "context",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 233125,
+                        "name": "system / SourceTextModule",
+                        "selfBytes": 76,
+                        "edge": "extension",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 93457,
+                        "name": "Generator",
+                        "selfBytes": 80,
+                        "edge": "5",
+                        "edgeType": "hidden"
+                    },
+                    {
+                        "id": 93459,
+                        "name": "",
+                        "selfBytes": 32,
+                        "edge": "function",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 282417,
+                        "name": "system / FeedbackCell",
+                        "selfBytes": 16,
+                        "edge": "feedback_cell",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 94299,
+                        "name": "system / ClosureFeedbackCellArray",
+                        "selfBytes": 5232,
+                        "edge": "value",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 96053,
+                        "name": "system / FeedbackCell",
+                        "selfBytes": 16,
+                        "edge": "1055",
+                        "edgeType": "hidden"
+                    },
+                    {
+                        "id": 378125,
+                        "name": "system / FeedbackVector",
+                        "selfBytes": 440,
+                        "edge": "value",
+                        "edgeType": "internal"
+                    },
+                    {
+                        "id": 310263,
+                        "name": "system / AllocationSite",
+                        "selfBytes": 28,
+                        "edge": "8",
+                        "edgeType": "hidden"
+                    },
+                    {
+                        "id": 310265,
+                        "name": "Object",
+                        "selfBytes": 36,
+                        "edge": "transition_info",
+                        "edgeType": "internal"
+                    }
+                ]
+            },
+            "detachedExamples": [
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 23,
+                            "name": "(Global handles)",
+                            "selfBytes": 0,
+                            "edge": "10",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 7281,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "9 / DevTools console",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111363,
+                            "name": "visual",
+                            "selfBytes": 28,
+                            "edge": "visual",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85911,
+                            "name": "system / Context / scope @59453",
+                            "selfBytes": 3364,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111819,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "lr",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 111821,
+                            "name": "focus",
+                            "selfBytes": 28,
+                            "edge": "focus",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85935,
+                            "name": "system / Context / scope @59705",
+                            "selfBytes": 392,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 114093,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "Y",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 232529,
+                            "name": "<div class=\"soeditor-ui__toolbar is-sticky\" role=\"toolbar\" aria-label=\"Editor toolbar\" data-overflow=\"wrap\" data-expanded=\"true\">",
+                            "selfBytes": 104,
+                            "edge": "toolbarElement",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 233559,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button\" title=\"Bold\" aria-label=\"Bold\" data-toolbar-item=\"bold\" aria-pressed=\"false\" tabindex=\"0\">",
+                            "selfBytes": 176,
+                            "edge": "4",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 50208,
+                            "name": "<div class=\"soeditor-classic__toolbar-end\" role=\"group\" aria-label=\"Editor views and preview\">",
+                            "selfBytes": 88,
+                            "edge": "7",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 286725,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__help-button\" title=\"Accessibility help\" aria-label=\"Accessibility help\" tabindex=\"-1\">",
+                            "selfBytes": 176,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 49872,
+                            "name": "<div class=\"soeditor-classic__workspace-picker\" data-classic-action=\"workspace-view\" role=\"group\" aria-label=\"Editing view\">",
+                            "selfBytes": 88,
+                            "edge": "8",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 192827,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button is-active\" data-workspace-view=\"wysiwyg\" title=\"WYSIWYG\" aria-label=\"WYSIWYG\" aria-pressed=\"true\" tabindex=\"-1\"",
+                            "selfBytes": 176,
+                            "edge": "2",
+                            "edgeType": "element"
+                        }
+                    ]
+                },
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 23,
+                            "name": "(Global handles)",
+                            "selfBytes": 0,
+                            "edge": "10",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 7281,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "9 / DevTools console",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111363,
+                            "name": "visual",
+                            "selfBytes": 28,
+                            "edge": "visual",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85911,
+                            "name": "system / Context / scope @59453",
+                            "selfBytes": 3364,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111819,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "lr",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 111821,
+                            "name": "focus",
+                            "selfBytes": 28,
+                            "edge": "focus",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85935,
+                            "name": "system / Context / scope @59705",
+                            "selfBytes": 392,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 114093,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "Y",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 232529,
+                            "name": "<div class=\"soeditor-ui__toolbar is-sticky\" role=\"toolbar\" aria-label=\"Editor toolbar\" data-overflow=\"wrap\" data-expanded=\"true\">",
+                            "selfBytes": 104,
+                            "edge": "toolbarElement",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 233559,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button\" title=\"Bold\" aria-label=\"Bold\" data-toolbar-item=\"bold\" aria-pressed=\"false\" tabindex=\"0\">",
+                            "selfBytes": 176,
+                            "edge": "4",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 50208,
+                            "name": "<div class=\"soeditor-classic__toolbar-end\" role=\"group\" aria-label=\"Editor views and preview\">",
+                            "selfBytes": 88,
+                            "edge": "7",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 286725,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__help-button\" title=\"Accessibility help\" aria-label=\"Accessibility help\" tabindex=\"-1\">",
+                            "selfBytes": 176,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 49872,
+                            "name": "<div class=\"soeditor-classic__workspace-picker\" data-classic-action=\"workspace-view\" role=\"group\" aria-label=\"Editing view\">",
+                            "selfBytes": 88,
+                            "edge": "8",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 192827,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button is-active\" data-workspace-view=\"wysiwyg\" title=\"WYSIWYG\" aria-label=\"WYSIWYG\" aria-pressed=\"true\" tabindex=\"-1\"",
+                            "selfBytes": 176,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 192829,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button\" data-workspace-view=\"source\" title=\"Source\" aria-label=\"Source\" aria-pressed=\"false\" tabindex=\"-1\">",
+                            "selfBytes": 176,
+                            "edge": "8",
+                            "edgeType": "element"
+                        }
+                    ]
+                },
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 23,
+                            "name": "(Global handles)",
+                            "selfBytes": 0,
+                            "edge": "10",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 7281,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "9 / DevTools console",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111363,
+                            "name": "visual",
+                            "selfBytes": 28,
+                            "edge": "visual",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85911,
+                            "name": "system / Context / scope @59453",
+                            "selfBytes": 3364,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111819,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "lr",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 111821,
+                            "name": "focus",
+                            "selfBytes": 28,
+                            "edge": "focus",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85935,
+                            "name": "system / Context / scope @59705",
+                            "selfBytes": 392,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 114093,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "Y",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 232529,
+                            "name": "<div class=\"soeditor-ui__toolbar is-sticky\" role=\"toolbar\" aria-label=\"Editor toolbar\" data-overflow=\"wrap\" data-expanded=\"true\">",
+                            "selfBytes": 104,
+                            "edge": "toolbarElement",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 233559,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button\" title=\"Bold\" aria-label=\"Bold\" data-toolbar-item=\"bold\" aria-pressed=\"false\" tabindex=\"0\">",
+                            "selfBytes": 176,
+                            "edge": "4",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 50208,
+                            "name": "<div class=\"soeditor-classic__toolbar-end\" role=\"group\" aria-label=\"Editor views and preview\">",
+                            "selfBytes": 88,
+                            "edge": "7",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 286725,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__help-button\" title=\"Accessibility help\" aria-label=\"Accessibility help\" tabindex=\"-1\">",
+                            "selfBytes": 176,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 49872,
+                            "name": "<div class=\"soeditor-classic__workspace-picker\" data-classic-action=\"workspace-view\" role=\"group\" aria-label=\"Editing view\">",
+                            "selfBytes": 88,
+                            "edge": "8",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 192827,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button is-active\" data-workspace-view=\"wysiwyg\" title=\"WYSIWYG\" aria-label=\"WYSIWYG\" aria-pressed=\"true\" tabindex=\"-1\"",
+                            "selfBytes": 176,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 192833,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button\" data-workspace-view=\"wysiwyg-source-vertical\" title=\"WYSIWYG + Source (stacked)\" aria-label=\"WYSIWYG + Source ",
+                            "selfBytes": 176,
+                            "edge": "7",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 192831,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button\" data-workspace-view=\"wysiwyg-source-horizontal\" title=\"WYSIWYG + Source (side by side)\" aria-label=\"WYSIWYG + ",
+                            "selfBytes": 176,
+                            "edge": "7",
+                            "edgeType": "element"
+                        }
+                    ]
+                },
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 23,
+                            "name": "(Global handles)",
+                            "selfBytes": 0,
+                            "edge": "10",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 7281,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "9 / DevTools console",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111363,
+                            "name": "visual",
+                            "selfBytes": 28,
+                            "edge": "visual",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85911,
+                            "name": "system / Context / scope @59453",
+                            "selfBytes": 3364,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111819,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "lr",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 111821,
+                            "name": "focus",
+                            "selfBytes": 28,
+                            "edge": "focus",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85935,
+                            "name": "system / Context / scope @59705",
+                            "selfBytes": 392,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 114093,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "Y",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 232529,
+                            "name": "<div class=\"soeditor-ui__toolbar is-sticky\" role=\"toolbar\" aria-label=\"Editor toolbar\" data-overflow=\"wrap\" data-expanded=\"true\">",
+                            "selfBytes": 104,
+                            "edge": "toolbarElement",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 233559,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button\" title=\"Bold\" aria-label=\"Bold\" data-toolbar-item=\"bold\" aria-pressed=\"false\" tabindex=\"0\">",
+                            "selfBytes": 176,
+                            "edge": "4",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 50208,
+                            "name": "<div class=\"soeditor-classic__toolbar-end\" role=\"group\" aria-label=\"Editor views and preview\">",
+                            "selfBytes": 88,
+                            "edge": "7",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 286725,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__help-button\" title=\"Accessibility help\" aria-label=\"Accessibility help\" tabindex=\"-1\">",
+                            "selfBytes": 176,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 49872,
+                            "name": "<div class=\"soeditor-classic__workspace-picker\" data-classic-action=\"workspace-view\" role=\"group\" aria-label=\"Editing view\">",
+                            "selfBytes": 88,
+                            "edge": "8",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 192827,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button is-active\" data-workspace-view=\"wysiwyg\" title=\"WYSIWYG\" aria-label=\"WYSIWYG\" aria-pressed=\"true\" tabindex=\"-1\"",
+                            "selfBytes": 176,
+                            "edge": "2",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 192833,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button\" data-workspace-view=\"wysiwyg-source-vertical\" title=\"WYSIWYG + Source (stacked)\" aria-label=\"WYSIWYG + Source ",
+                            "selfBytes": 176,
+                            "edge": "7",
+                            "edgeType": "element"
+                        }
+                    ]
+                },
+                {
+                    "reachableWithoutWeakEdges": true,
+                    "steps": [
+                        {
+                            "id": 3,
+                            "name": "(GC roots)",
+                            "selfBytes": 0,
+                            "edge": "1",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 23,
+                            "name": "(Global handles)",
+                            "selfBytes": 0,
+                            "edge": "10",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 7281,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "9 / DevTools console",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111363,
+                            "name": "visual",
+                            "selfBytes": 28,
+                            "edge": "visual",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85911,
+                            "name": "system / Context / scope @59453",
+                            "selfBytes": 3364,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 111819,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "lr",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 111821,
+                            "name": "focus",
+                            "selfBytes": 28,
+                            "edge": "focus",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85935,
+                            "name": "system / Context / scope @59705",
+                            "selfBytes": 392,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 114093,
+                            "name": "Object",
+                            "selfBytes": 12,
+                            "edge": "Y",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 66651,
+                            "name": "getEditingFormatState",
+                            "selfBytes": 28,
+                            "edge": "getEditingFormatState",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 85875,
+                            "name": "system / Context / scope @60659",
+                            "selfBytes": 244,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 233393,
+                            "name": "Array",
+                            "selfBytes": 16,
+                            "edge": "R",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 233473,
+                            "name": "Object",
+                            "selfBytes": 24,
+                            "edge": "4",
+                            "edgeType": "element"
+                        },
+                        {
+                            "id": 233585,
+                            "name": "update",
+                            "selfBytes": 28,
+                            "edge": "update",
+                            "edgeType": "property"
+                        },
+                        {
+                            "id": 192723,
+                            "name": "system / Context / scope @63479",
+                            "selfBytes": 64,
+                            "edge": "context",
+                            "edgeType": "internal"
+                        },
+                        {
+                            "id": 233669,
+                            "name": "<div class=\"soeditor-ui__menu-items soeditor-ui__format-choices\" role=\"menu\" aria-label=\"Unordered list\">",
+                            "selfBytes": 104,
+                            "edge": "h",
+                            "edgeType": "context"
+                        },
+                        {
+                            "id": 233713,
+                            "name": "<button type=\"button\" class=\"soeditor-ui__button soeditor-ui__format-choice\" title=\"Filled circle\" aria-label=\"Filled circle\" role=\"menuitemradio\" data-format-c",
+                            "selfBytes": 176,
+                            "edge": "4",
+                            "edgeType": "element"
+                        }
+                    ]
+                }
+            ]
+        }
+    ],
+    "note": "Snapshot graph diagnostics. History entries are identified by beforeSource/afterSource properties; shortest paths omit explicitly weak edges but do not calculate retained sizes or fully model ephemeron reachability. Detached DOM and reachable objects alone do not establish a leak."
+}

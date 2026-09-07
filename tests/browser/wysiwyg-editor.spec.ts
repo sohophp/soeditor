@@ -1,6 +1,15 @@
 import AxeBuilder from '@axe-core/playwright';
 import { expect, test, type Locator, type Page } from '@playwright/test';
 
+async function clickFormattingItem(page: Page, item: string): Promise<void> {
+    if (['strike', 'subscript', 'superscript', 'removeFormat'].includes(item)) {
+        await page
+            .locator('[data-toolbar-item="moreFormatting"] summary')
+            .click();
+    }
+    await page.locator(`[data-toolbar-item="${item}"]`).click();
+}
+
 async function textPoint(
     locator: Locator,
     offset: number,
@@ -575,7 +584,8 @@ test('places a native caret at every text boundary in body, lists, caption, and 
     for (const [selector, text] of cases) {
         const target = surface.locator(selector);
         for (let offset = 0; offset <= text.length; offset += 1) {
-            await clickTextBoundary(page, target, offset);
+            await test.step(`${selector} boundary ${offset}`, () =>
+                clickTextBoundary(page, target, offset));
         }
     }
 });
@@ -691,7 +701,13 @@ test('keeps double/triple-click selection and toolbar range restoration inside o
         .poll(() => selectionSnapshot(cell).then(({ text }) => text))
         .toBe('Selection');
     for (const item of ['orderedList', 'unorderedList']) {
-        const button = page.locator(`[data-toolbar-item="${item}"]`);
+        const button = page
+            .locator(`[data-toolbar-item="${item}"]`)
+            .locator(
+                item === 'orderedList' || item === 'unorderedList'
+                    ? ':scope > button'
+                    : ':scope',
+            );
         await expect(button).toHaveAttribute('aria-pressed', 'false');
         await expect(button).not.toHaveClass(/is-active/u);
     }
@@ -968,7 +984,7 @@ test('applies every semantic inline mark through the same UI path in paragraphs,
             await setFixtureData(page, html);
             const target = surface.locator(selector);
             await selectElementText(target);
-            await page.locator(`[data-toolbar-item="${toolbarItem}"]`).click();
+            await clickFormattingItem(page, toolbarItem);
             await expect(target.locator(tagName)).toHaveText('Target');
         }
     }
@@ -1026,7 +1042,7 @@ test('applies color, background, font size, and remove-format consistently in bo
         await setFixtureData(page, styledHtml);
         target = surface.locator('#style-target');
         await selectElementText(target);
-        await page.locator('[data-toolbar-item="removeFormat"]').click();
+        await clickFormattingItem(page, 'removeFormat');
         await expect(target).toHaveText('Target');
         await expect
             .poll(() => target.evaluate((element) => element.innerHTML))
@@ -1184,7 +1200,7 @@ test('keeps block and inline commands usable after pre and remove format', async
     await formatMenu.locator('summary').click();
     await formatMenu.getByRole('button', { name: 'Preformatted' }).click();
     await selectElementText(surface.locator('pre'));
-    await page.locator('[data-toolbar-item="removeFormat"]').click();
+    await clickFormattingItem(page, 'removeFormat');
     await selectElementText(surface.locator('pre'));
     await formatMenu.locator('summary').click();
     await expect(formatMenu.getByRole('button', { name: 'DIV' })).toBeEnabled();
@@ -1204,7 +1220,7 @@ test('preserves paragraph ownership when removing a CMS lead wrapper', async ({
         '<h1>用 SoEditor 构建现代内容体验</h1><p>\n  <span class="cms-lead">这是一段由 CMS 语义样式控制的导语。</span>\n  编辑者可以使用熟悉的工具栏，同时保留开发者需要的 HTML 自由。 未知标签与 CMS\n  标记会被保留；危险脚本不会在可视化编辑区执行。\n </p>',
     );
     await selectElementText(surface.locator('.soeditor-wysiwyg-content > p'));
-    await page.locator('[data-toolbar-item="removeFormat"]').click();
+    await clickFormattingItem(page, 'removeFormat');
     await expect
         .poll(() =>
             surface
@@ -1242,7 +1258,7 @@ test('removes inline formatting across blocks without flattening the blocks', as
             .getSelection()
             ?.setBaseAndExtent(heading, 0, last, last.data.length);
     });
-    await page.locator('[data-toolbar-item="removeFormat"]').click();
+    await clickFormattingItem(page, 'removeFormat');
     await expect(surface.locator('h1')).toHaveText(
         '用 SoEditor 构建现代内容体验',
     );
@@ -1400,7 +1416,10 @@ test('applies block, alignment, rule, and nested-list keyboard commands in WYSIW
     }
     const target = surface.locator('#heading-2');
     await clickTextBoundary(page, target, 3);
-    await page.locator('[data-toolbar-item="alignCenter"]').click();
+    await page.locator('[data-toolbar-item="alignment"] summary').click();
+    await page
+        .getByRole('menuitemradio', { name: 'Align center', exact: true })
+        .click();
     await expect(target).toHaveAttribute('style', /text-align:\s*center/u);
 
     await setFixtureData(page, '<p id="quote-target">Quoted</p>');
@@ -1508,6 +1527,7 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
         .poll(() => selectionSnapshot(first).then(({ inside }) => inside))
         .toBe(true);
 
+    await openTableDropdown(page, 'properties');
     await toolbar.getByRole('button', { name: 'Table properties' }).click();
     const tableDialog = page.getByRole('dialog', { name: 'Table properties' });
     await tableDialog.getByLabel('Table width', { exact: true }).fill('65');
@@ -1520,7 +1540,9 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
     await expect(table).toHaveAttribute('style', /margin-inline:\s*auto/u);
 
     await first.click();
+    await openTableDropdown(page, 'row');
     await toolbar.getByRole('button', { name: 'Select row' }).click();
+    await openTableDropdown(page, 'properties');
     await toolbar.getByRole('button', { name: 'Row properties' }).click();
     const rowDialog = page.getByRole('dialog', { name: 'Row properties' });
     await rowDialog.getByLabel('Section').selectOption('head');
@@ -1532,8 +1554,10 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
     await expect(surface.locator('thead tr')).toHaveClass(/featured-row/u);
 
     await surface.locator('thead td, thead th').first().click();
-    await toolbar.getByRole('button', { name: 'Toggle header' }).click();
+    await openTableDropdown(page, 'row');
+    await toolbar.getByRole('switch', { name: 'Header row' }).click();
     await surface.locator('thead th').first().click();
+    await openTableDropdown(page, 'properties');
     await toolbar.getByRole('button', { name: 'Cell properties' }).click();
     const cellDialog = page.getByRole('dialog', { name: 'Cell properties' });
     await cellDialog.getByLabel('Horizontal alignment').selectOption('center');
@@ -1552,6 +1576,7 @@ test('keeps one stable table toolbar, navigates with Tab, and applies visible pr
     await expect(updatedCell).toHaveAttribute('scope', 'col');
 
     await updatedCell.click();
+    await openTableDropdown(page, 'properties');
     await toolbar.getByRole('button', { name: 'Edit cell HTML' }).click();
     const cellHtmlDialog = page.getByRole('dialog', {
         name: 'Edit cell HTML',
@@ -1578,6 +1603,7 @@ test('edits the table caption in a focused dialog', async ({ page }) => {
     );
     await surface.locator('#structure-ui').click();
     const toolbar = page.locator('.soeditor-ui__table-balloon');
+    await openTableDropdown(page, 'properties');
     await toolbar.getByRole('button', { name: 'Table caption' }).click();
     const dialog = page.getByRole('dialog', { name: '表格标题' });
     await expect(
@@ -1642,9 +1668,11 @@ test('uses explicit Shift-click rectangular table selection for merge, split, an
     await expect(
         surface.locator('.soeditor-table-cell.is-structurally-selected'),
     ).toHaveCount(4);
+    await openTableDropdown(page, 'merge');
     await expect(
         toolbar.getByRole('button', { name: 'Merge cells' }),
     ).toBeEnabled();
+    await openTableDropdown(page, 'merge');
     await toolbar.getByRole('button', { name: 'Merge cells' }).click();
     let cells = surface.locator('td,th');
     await expect(cells).toHaveCount(1);
@@ -1653,9 +1681,11 @@ test('uses explicit Shift-click rectangular table selection for merge, split, an
     await expect(
         toolbar.getByRole('button', { name: 'Merge cells' }),
     ).toBeHidden();
+    await openTableDropdown(page, 'properties');
     await expect(
         toolbar.getByRole('button', { name: 'Split completely' }),
     ).toBeEnabled();
+    await openTableDropdown(page, 'properties');
     await toolbar.getByRole('button', { name: 'Split completely' }).click();
     cells = surface.locator('td,th');
     await expect(cells).toHaveCount(4);
@@ -1664,6 +1694,7 @@ test('uses explicit Shift-click rectangular table selection for merge, split, an
 
     await cells.first().click();
     await cells.nth(3).click({ modifiers: ['Shift'] });
+    await openTableDropdown(page, 'properties');
     await toolbar.getByRole('button', { name: 'Clear cells' }).click();
     await expect(cells).toHaveText(['', '', '', '']);
 });
@@ -1682,9 +1713,11 @@ test('enables merge for a rectangular body selection below a table header', asyn
     await expect(
         surface.locator('.soeditor-table-cell.is-structurally-selected'),
     ).toHaveCount(4);
+    await openTableDropdown(page, 'merge');
     await expect(
         toolbar.getByRole('button', { name: 'Merge cells' }),
     ).toBeEnabled();
+    await openTableDropdown(page, 'merge');
     await toolbar.getByRole('button', { name: 'Merge cells' }).click();
     await expect(surface.locator('td,th')).toHaveCount(9);
     const merged = surface.locator('tbody td').first();
@@ -1721,10 +1754,13 @@ test('merges two vertically dragged body cells below a table header', async ({
     await expect(
         surface.locator('.soeditor-table-cell.is-structurally-selected'),
     ).toHaveCount(2);
+    await openTableDropdown(page, 'merge');
     const merge = toolbar.getByRole('button', { name: 'Merge cells' });
     await expect(merge).toBeEnabled();
     await expect(merge).toHaveClass(/soeditor-table-context__button--primary/);
-    await expect(toolbar.getByRole('button', { name: 'Add row' })).toBeHidden();
+    await expect(
+        toolbar.getByRole('button', { name: 'Insert row below' }),
+    ).toBeHidden();
     await expect(
         toolbar.getByRole('button', { name: 'Select column' }),
     ).toBeHidden();
@@ -1761,6 +1797,7 @@ test('can merge another selection after the table already contains a merged cell
     };
     const toolbar = page.locator('.soeditor-ui__table-balloon');
     await dragCells('#first-a', '#first-b');
+    await openTableDropdown(page, 'merge');
     await toolbar.getByRole('button', { name: 'Merge cells' }).click();
     await expect(surface.locator('tbody td').first()).toHaveAttribute(
         'rowspan',
@@ -1771,6 +1808,7 @@ test('can merge another selection after the table already contains a merged cell
     await expect(
         surface.locator('.soeditor-table-cell.is-structurally-selected'),
     ).toHaveCount(2);
+    await openTableDropdown(page, 'merge');
     const secondMerge = toolbar.getByRole('button', { name: 'Merge cells' });
     await expect(secondMerge).toBeEnabled();
     await secondMerge.click();
@@ -1802,16 +1840,18 @@ test('supports Dreamweaver-style drag and row, column, and table selection scope
         surface.locator('.soeditor-table-cell.is-structurally-selected'),
     ).toHaveCount(4);
     const toolbar = page.locator('.soeditor-ui__table-balloon');
+    await openTableDropdown(page, 'merge');
     await expect(
         toolbar.getByRole('button', { name: 'Merge cells' }),
     ).toBeEnabled();
 
+    await openTableDropdown(page, 'row');
     await toolbar.getByRole('button', { name: 'Select row' }).click();
     await expect(
         surface.locator('.soeditor-table-cell.is-structurally-selected'),
     ).toHaveCount(6);
     await expect(
-        toolbar.getByRole('button', { name: 'Add column' }),
+        toolbar.getByRole('button', { name: 'Insert column right' }),
     ).toBeHidden();
 
     await expect(
@@ -1820,6 +1860,7 @@ test('supports Dreamweaver-style drag and row, column, and table selection scope
     await expect(
         toolbar.getByRole('button', { name: 'Delete table' }),
     ).toBeHidden();
+    await openTableDropdown(page, 'merge');
     await expect(
         toolbar.getByRole('button', { name: 'Merge cells' }),
     ).toBeVisible();
@@ -1835,7 +1876,8 @@ test('adds and removes table rows and columns with one-step history', async ({
     );
     await surface.locator('#structure-target').click();
     let toolbar = page.locator('.soeditor-ui__table-balloon');
-    await toolbar.getByRole('button', { name: 'Add row' }).click();
+    await openTableDropdown(page, 'row');
+    await toolbar.getByRole('button', { name: 'Insert row below' }).click();
     await expect(surface.locator('tr')).toHaveCount(3);
     await page.keyboard.press('Control+z');
     await expect(surface.locator('tr')).toHaveCount(2);
@@ -1844,19 +1886,23 @@ test('adds and removes table rows and columns with one-step history', async ({
 
     await surface.locator('td,th').first().click();
     toolbar = page.locator('.soeditor-ui__table-balloon');
+    await openTableDropdown(page, 'row');
     await toolbar.getByRole('button', { name: 'Delete row' }).click();
     await expect(surface.locator('tr')).toHaveCount(2);
 
     await surface.locator('td,th').first().click();
-    await toolbar.getByRole('button', { name: 'Add column' }).click();
+    await openTableDropdown(page, 'column');
+    await toolbar.getByRole('button', { name: 'Insert column right' }).click();
     await expect(surface.locator('tr').first().locator('td,th')).toHaveCount(3);
     await surface.locator('td,th').first().click();
+    await openTableDropdown(page, 'column');
     await toolbar.getByRole('button', { name: 'Delete column' }).click();
     await expect(surface.locator('tr').first().locator('td,th')).toHaveCount(2);
 
     await surface.locator('td,th').first().click();
-    await toolbar.getByRole('button', { name: 'Toggle header' }).click();
-    await expect(surface.locator('th')).toHaveCount(1);
+    await openTableDropdown(page, 'row');
+    await toolbar.getByRole('switch', { name: 'Header row' }).click();
+    await expect(surface.locator('th')).toHaveCount(2);
 });
 
 test('uses one image menu for URL, file manager, and computer upload', async ({
@@ -2065,7 +2111,7 @@ test('reports document counts, uses neutral styles, and inserts a preset charact
     const surface = editor.locator('.soeditor-classic__visual');
     await setFixtureData(page, '<p id="count-target">Hello 世界</p>');
     const status = editor.locator('.soeditor-ui__document-status');
-    await expect(status).toHaveAttribute('data-words', '2');
+    await expect(status).toHaveAttribute('data-words', '3');
     await expect(status).toHaveAttribute('data-characters', '8');
     await expect(status).toHaveAttribute('data-source-characters', '33');
 
@@ -2174,4 +2220,856 @@ test('has no automated WCAG A or AA violation in direct WYSIWYG authoring', asyn
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
         .analyze();
     expect(results.violations).toEqual([]);
+});
+
+async function openTableDropdown(
+    page: Page,
+    kind: 'column' | 'row' | 'merge' | 'properties',
+): Promise<void> {
+    const trigger = page.locator(`[data-table-menu="${kind}"]`);
+    if ((await trigger.getAttribute('aria-expanded')) !== 'true')
+        await trigger.click();
+}
+
+test('chooses alignment and list marker galleries without losing list content', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<ol start="7" data-cms="kept"><li>Alpha</li><li>Beta<ul><li>Nested</li></ul></li><li>Gamma</li></ol>',
+    );
+    await clickTextBoundary(page, surface.locator('ol > li').first(), 2);
+    const ordered = page.locator('[data-toolbar-item="orderedList"]');
+    const styles = [
+        'decimal',
+        'decimal-leading-zero',
+        'lower-roman',
+        'upper-roman',
+        'lower-alpha',
+        'upper-alpha',
+    ];
+    for (const style of styles) {
+        await ordered.locator('summary').click();
+        if (style === 'decimal')
+            await page.screenshot({
+                path: test.info().outputPath('ordered-gallery.png'),
+            });
+        await ordered
+            .locator(`[data-format-command="list.ordered.${style}"]`)
+            .click();
+        await expect(surface.locator('ol')).toHaveCSS('list-style-type', style);
+        await expect(surface.locator('ol')).toHaveAttribute('start', '7');
+        await expect(surface.locator('ol')).toHaveAttribute('data-cms', 'kept');
+        await expect(surface.locator('ol > li')).toHaveCount(3);
+        await ordered.locator('summary').click();
+        await expect(
+            ordered.locator(`[data-format-command="list.ordered.${style}"]`),
+        ).toHaveAttribute('aria-checked', 'true');
+        await page.keyboard.press('Escape');
+    }
+    const unordered = page.locator('[data-toolbar-item="unorderedList"]');
+    await unordered.locator('summary').click();
+    await page.screenshot({
+        path: test.info().outputPath('bullet-gallery.png'),
+    });
+    await unordered
+        .getByRole('menuitemradio', { name: 'Square', exact: true })
+        .click();
+    await expect(surface.locator('ul[data-cms="kept"] > li')).toHaveCount(3);
+    await expect(surface.locator('ul[data-cms="kept"]')).toHaveCSS(
+        'list-style-type',
+        'square',
+    );
+    await expect(surface.locator('ul ul li')).toHaveText('Nested');
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(surface.locator('ol[data-cms="kept"]')).toHaveCSS(
+        'list-style-type',
+        'upper-alpha',
+    );
+    await expect(surface.locator('ol > li')).toHaveCount(3);
+    await ordered.locator(':scope > button').click();
+    await expect(surface.locator('ol > li')).toHaveCount(2);
+    await expect(surface.locator('ol')).toHaveAttribute('start', '8');
+    await expect(surface).toContainText('Alpha');
+    await expect(surface).toContainText('Beta');
+    await expect(surface).toContainText('Gamma');
+    await expect(surface.locator('ul li')).toHaveText('Nested');
+
+    await setFixtureData(page, '<p id="align-gallery">Alignment</p>');
+    await clickTextBoundary(page, surface.locator('#align-gallery'), 3);
+    for (const alignment of ['left', 'center', 'right', 'justify']) {
+        await page.locator('[data-toolbar-item="alignment"] summary').click();
+        await page
+            .locator(`[data-format-command="format.alignment.${alignment}"]`)
+            .click();
+        await expect(surface.locator('#align-gallery')).toHaveCSS(
+            'text-align',
+            alignment,
+        );
+    }
+    await page.locator('[data-toolbar-item="alignment"] summary').click();
+    await page.screenshot({
+        path: test.info().outputPath('alignment-gallery.png'),
+    });
+    await page.keyboard.press('Escape');
+    await ordered.locator('summary').focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(
+        ordered.getByRole('menuitemradio', { name: 'Decimal', exact: true }),
+    ).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await page.keyboard.press('Enter');
+    await expect(surface.locator('ol')).toHaveCSS(
+        'list-style-type',
+        'decimal-leading-zero',
+    );
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(surface.locator('ol')).toHaveCount(0);
+    await expect(surface.locator('#align-gallery')).toHaveText('Alignment');
+    await page.setViewportSize({ width: 375, height: 812 });
+    await ordered.locator('summary').click();
+    const bounds = await ordered.getByRole('menu').boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(375);
+});
+
+test('limits list conversion to selected items and preserves following numbers', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<ol id="original" start="7" data-cms="record"><li id="one">Alpha</li><li id="two">Beta<ul><li id="nested">Nested</li></ul></li><li id="three" value="15">Gamma</li><li id="four">Delta</li></ol>',
+    );
+    await clickTextBoundary(page, surface.locator('#two'), 2);
+    await page.locator('[data-toolbar-item="orderedList"] > button').click();
+    await expect(surface.locator('ol')).toHaveCount(2);
+    await expect(surface.locator('ol').first()).toHaveAttribute('start', '7');
+    await expect(surface.locator('ol').last()).toHaveAttribute('start', '15');
+    await expect(surface.locator('#two')).toHaveJSProperty('tagName', 'DIV');
+    await expect(surface.locator('#two ul #nested')).toHaveText('Nested');
+    await expect(surface.locator('#original')).toHaveCount(1);
+    await expect(surface.locator('ol[data-cms="record"]')).toHaveCount(2);
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(surface.locator('ol')).toHaveCount(1);
+    await expect(surface.locator('ol > li')).toHaveCount(4);
+    await surface.locator('#two').evaluate((element) => {
+        const end = element.parentElement?.querySelector('#four')?.firstChild;
+        if (!element.firstChild || !end)
+            throw new Error('Missing list fixture');
+        document
+            .getSelection()
+            ?.setBaseAndExtent(element.firstChild, 0, end, 0);
+    });
+    await page.locator('[data-toolbar-item="unorderedList"] > button').click();
+    await expect(surface.locator('ol')).toHaveCount(2);
+    await expect(surface.locator('ol').last()).toHaveAttribute('start', '16');
+    await expect(surface.locator('#two')).toHaveJSProperty('tagName', 'LI');
+    await expect(surface.locator('#two').locator('..')).toHaveJSProperty(
+        'tagName',
+        'UL',
+    );
+    await expect(surface.locator('#three').locator('..')).toHaveJSProperty(
+        'tagName',
+        'UL',
+    );
+    await expect(surface.locator('#four').locator('..')).toHaveJSProperty(
+        'tagName',
+        'OL',
+    );
+    await expect(surface.locator('#nested')).toHaveCount(1);
+    await page.keyboard.press('ControlOrMeta+z');
+    await clickTextBoundary(page, surface.locator('#nested'), 2);
+    await page.locator('[data-toolbar-item="unorderedList"] > button').click();
+    await expect(surface.locator('ol > li')).toHaveCount(4);
+    await expect(surface.locator('#two ul')).toHaveCount(0);
+    await expect(surface.locator('#nested')).toHaveText('Nested');
+});
+
+test('keeps list keyboard operations scoped and ordered across nested block items', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<ol><li id="a"><p>Alpha</p></li><li id="b"><p>Beta</p></li><li id="c"><p>Gamma</p></li><li id="d"><p>Delta</p></li></ol>',
+    );
+    await surface.locator('#b p').evaluate((element) => {
+        const end = element.closest('ol')?.querySelector('#c p')?.firstChild;
+        if (!element.firstChild || !end)
+            throw new Error('Missing list fixture');
+        document
+            .getSelection()
+            ?.setBaseAndExtent(element.firstChild, 0, end, 5);
+    });
+    await page.locator('[data-toolbar-item="indent"]').click();
+    await expect(surface.locator('#a > ol > li')).toHaveCount(2);
+    await expect(surface.locator('#a > ol > li')).toHaveText(['Beta', 'Gamma']);
+    await page.locator('[data-toolbar-item="outdent"]').click();
+    await expect(
+        surface.locator('.soeditor-wysiwyg-content > ol > li'),
+    ).toHaveText(['Alpha', 'Beta', 'Gamma', 'Delta']);
+    await clickTextBoundary(page, surface.locator('#b p'), 2);
+    await page.keyboard.press('Tab');
+    await expect(surface.locator('#a > ol > #b')).toHaveCount(1);
+    await page.keyboard.press('Shift+Tab');
+    await expect(
+        surface.locator('.soeditor-wysiwyg-content > ol > #b'),
+    ).toHaveCount(1);
+    await page.keyboard.press('Enter');
+    await expect(
+        surface.locator('.soeditor-wysiwyg-content > ol > li'),
+    ).toHaveCount(5);
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(
+        surface.locator('.soeditor-wysiwyg-content > ol > li'),
+    ).toHaveCount(4);
+    const nested =
+        '<ol start="4"><li id="item" value="9" data-cms="part"><p id="copy" class="lead"><strong id="word" onclick="globalThis.__listExecuted = true">Beta</strong></p><ul id="nested"><li>Keep</li></ul></li></ol>';
+    for (const offset of [0, 2, 4]) {
+        await setFixtureData(page, nested);
+        await clickTextBoundary(page, surface.locator('#copy'), offset);
+        await page.keyboard.press('Enter');
+        const items = surface.locator('.soeditor-wysiwyg-content > ol > li');
+        await expect(items).toHaveCount(2);
+        await expect(items.first()).toHaveAttribute('value', '9');
+        await expect(items.last()).not.toHaveAttribute('value');
+        await expect(items.last()).toHaveAttribute('data-cms', 'part');
+        await expect(items.last().locator('#nested')).toHaveText('Keep');
+        await expect(surface.locator('#copy')).toHaveCount(1);
+        await expect(surface.locator('#word')).toHaveCount(1);
+        await expect(surface.locator('[onclick]')).toHaveCount(0);
+        expect(
+            await page.evaluate(() =>
+                Reflect.get(globalThis, '__listExecuted'),
+            ),
+        ).toBeUndefined();
+        expect(
+            await page.evaluate(() => {
+                const fixture: unknown = Reflect.get(
+                    globalThis,
+                    '__wysiwygFixture',
+                );
+                const getData =
+                    typeof fixture === 'object' && fixture !== null
+                        ? Reflect.get(fixture, 'getData')
+                        : undefined;
+                return typeof getData === 'function'
+                    ? String(Reflect.apply(getData, fixture, [])).match(
+                          /onclick=/gu,
+                      )?.length
+                    : 0;
+            }),
+        ).toBe(2);
+        await expect(items.last().locator('p')).toHaveClass('lead');
+        await page.keyboard.insertText('X');
+        await expect(items.last().locator('p')).toHaveText(
+            `X${'Beta'.slice(offset)}`,
+        );
+        await page.keyboard.press('ControlOrMeta+z');
+        await page.keyboard.press('ControlOrMeta+z');
+        await expect(items).toHaveCount(1);
+        await expect(surface.locator('#copy')).toHaveText('Beta');
+    }
+});
+
+test('keeps list boundary deletion and empty-item exit reversible', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<ol><li id="first">Alpha</li><li id="second">Beta</li><li id="third">Gamma</li></ol>',
+    );
+    await clickTextBoundary(page, surface.locator('#second'), 0);
+    await page.keyboard.press('Backspace');
+    await expect(surface.locator('ol > li')).toHaveText(['AlphaBeta', 'Gamma']);
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(surface.locator('ol > li')).toHaveText([
+        'Alpha',
+        'Beta',
+        'Gamma',
+    ]);
+    await setFixtureData(
+        page,
+        '<ol><li>Alpha</li><li id="empty"><br></li><li>Gamma</li></ol>',
+    );
+    await surface.locator('#empty').click();
+    await page.keyboard.press('Enter');
+    await expect(surface.locator('ol > li')).toHaveText(['Alpha', 'Gamma']);
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(surface.locator('ol > li')).toHaveCount(3);
+    await setFixtureData(
+        page,
+        '<ol reversed start="10" data-cms="reverse"><li id="rev-a">Alpha</li><li id="rev-b">Beta</li><li id="rev-c">Gamma</li></ol>',
+    );
+    await clickTextBoundary(page, surface.locator('#rev-b'), 2);
+    await page.locator('[data-toolbar-item="orderedList"] > button').click();
+    await expect(surface.locator('ol').last()).toHaveAttribute('start', '8');
+    await expect(surface.locator('ol').last()).toHaveAttribute('reversed', '');
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(surface.locator('ol')).toHaveCount(1);
+    await setFixtureData(
+        page,
+        '<ol><li id="cross-a">Alpha</li><li id="cross-b">Beta</li></ol><p id="between">Between</p><ol><li id="cross-c">Gamma</li><li id="cross-d">Delta</li></ol>',
+    );
+    await surface.locator('#cross-b').evaluate((element) => {
+        const root = element.getRootNode();
+        const end =
+            root instanceof ShadowRoot || root instanceof Document
+                ? root.querySelector('#cross-c')?.firstChild
+                : undefined;
+        if (!element.firstChild || !end)
+            throw new Error('Missing cross-list fixture');
+        document
+            .getSelection()
+            ?.setBaseAndExtent(element.firstChild, 0, end, 5);
+    });
+    await page.locator('[data-toolbar-item="unorderedList"] > button').click();
+    await expect(surface.locator('#cross-a').locator('..')).toHaveJSProperty(
+        'tagName',
+        'OL',
+    );
+    await expect(surface.locator('#cross-d').locator('..')).toHaveJSProperty(
+        'tagName',
+        'OL',
+    );
+    await expect(surface.locator('#cross-b').locator('..')).toHaveJSProperty(
+        'tagName',
+        'UL',
+    );
+    await expect(surface.locator('#cross-c').locator('..')).toHaveJSProperty(
+        'tagName',
+        'UL',
+    );
+    await expect(surface.locator('ul li #between')).toHaveText('Between');
+});
+
+test('shows inherited and mixed formatting without marking an arbitrary value active', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<div class="cms-format-class"><p id="inherited">Inherited</p></div><p id="different" style="text-align: center; color: rgb(0, 0, 255); font-size: 16px">Different</p>',
+    );
+    await surface.locator('#inherited').evaluate((element) => {
+        const style = document.createElement('style');
+        style.textContent =
+            '.cms-format-class { text-align: right; color: rgb(255, 0, 0); font-size: 20px; }';
+        element.getRootNode().appendChild(style);
+    });
+    await clickTextBoundary(page, surface.locator('#inherited'), 3);
+    const alignment = page.locator('[data-toolbar-item="alignment"] summary');
+    await expect(alignment).toHaveAttribute('data-format-state', 'uniform');
+    await expect(alignment).toHaveAttribute('data-format-value', 'right');
+    await expect(
+        page.locator('[data-toolbar-item="fontSize"] summary'),
+    ).toHaveAttribute('data-format-value', '20px');
+    await expect(
+        page.locator('[data-toolbar-item="fontColor"] summary'),
+    ).toHaveAttribute('data-format-value', 'rgb(255, 0, 0)');
+    await alignment.click();
+    await expect(
+        page.getByRole('menuitemradio', { name: 'Align right', exact: true }),
+    ).toHaveAttribute('aria-checked', 'true');
+    await page.keyboard.press('Escape');
+    await surface.locator('#inherited').evaluate((element) => {
+        const root = element.getRootNode();
+        const end =
+            root instanceof ShadowRoot
+                ? root.querySelector('#different')?.firstChild
+                : undefined;
+        if (!element.firstChild || !end)
+            throw new Error('Missing mixed format fixture');
+        document
+            .getSelection()
+            ?.setBaseAndExtent(element.firstChild, 0, end, 4);
+    });
+    for (const name of ['alignment', 'fontSize', 'fontColor']) {
+        await expect(
+            page.locator(`[data-toolbar-item="${name}"] summary`),
+        ).toHaveAttribute('data-format-state', 'mixed');
+    }
+    await alignment.click();
+    await expect(
+        page.locator('[data-toolbar-item="alignment"] [aria-checked="true"]'),
+    ).toHaveCount(0);
+    await page
+        .getByRole('menuitemradio', { name: 'Align center', exact: true })
+        .click();
+    await expect(alignment).toHaveAttribute('data-format-value', 'center');
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(alignment).toHaveAttribute('data-format-state', 'mixed');
+    await setFixtureData(
+        page,
+        '<ul><li id="mixed-bullet">Bullet</li></ul><ol><li id="mixed-number">Number</li></ol>',
+    );
+    await surface.locator('#mixed-bullet').evaluate((element) => {
+        const root = element.getRootNode();
+        const end =
+            root instanceof ShadowRoot
+                ? root.querySelector('#mixed-number')?.firstChild
+                : undefined;
+        if (!element.firstChild || !end)
+            throw new Error('Missing mixed list fixture');
+        document
+            .getSelection()
+            ?.setBaseAndExtent(element.firstChild, 0, end, 4);
+    });
+    await expect(
+        page.locator('[data-toolbar-item="orderedList"] summary'),
+    ).toHaveAttribute('data-format-state', 'mixed');
+    await expect(
+        page.locator('[data-toolbar-item="orderedList"] > button'),
+    ).toHaveAttribute('aria-pressed', 'false');
+    await expect(
+        page.locator('[data-toolbar-item="unorderedList"] > button'),
+    ).toHaveAttribute('aria-pressed', 'false');
+    await page.evaluate(() => {
+        const fixture: unknown = Reflect.get(globalThis, '__wysiwygFixture');
+        if (typeof fixture !== 'object' || fixture === null)
+            throw new Error('Missing fixture');
+        Reflect.apply(Reflect.get(fixture, 'setReadonly'), fixture, [true]);
+    });
+    for (const name of ['alignment', 'fontSize', 'fontColor', 'orderedList']) {
+        await expect(
+            page.locator(`[data-toolbar-item="${name}"] summary`),
+        ).toHaveAttribute('data-format-state', 'unavailable');
+    }
+    await expect(
+        page.locator('[data-toolbar-item="orderedList"] > button'),
+    ).toBeDisabled();
+    await page.evaluate(() => {
+        const fixture: unknown = Reflect.get(globalThis, '__wysiwygFixture');
+        if (typeof fixture !== 'object' || fixture === null)
+            throw new Error('Missing fixture');
+        Reflect.apply(Reflect.get(fixture, 'setReadonly'), fixture, [false]);
+    });
+    await clickTextBoundary(page, surface.locator('#mixed-bullet'), 2);
+    await expect(
+        page.locator('[data-toolbar-item="unorderedList"] > button'),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await page.evaluate(() => document.getSelection()?.removeAllRanges());
+    await expect(alignment).toHaveAttribute('data-format-state', 'unavailable');
+    await expect(
+        page.locator('[data-toolbar-item="unorderedList"] > button'),
+    ).toHaveAttribute('aria-pressed', 'false');
+});
+
+test('reads uniform font and color values and clears mixed heading choices', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<h2 id="state-heading"><mark style="background-color: #ffff66"><span style="font-size: 20px; color: #dc2626; font-family: Arial">Heading</span></mark></h2><p id="state-paragraph">Paragraph</p>',
+    );
+    await clickTextBoundary(page, surface.locator('#state-heading'), 3);
+    await expect(
+        page.locator(
+            '[data-toolbar-item="heading"] .soeditor-ui__current-value',
+        ),
+    ).toHaveText('Heading 2');
+    await expect(
+        page.locator(
+            '[data-toolbar-item="fontSize"] .soeditor-ui__current-value',
+        ),
+    ).toHaveText('20px');
+
+    for (const name of ['fontBackgroundColor', 'highlight']) {
+        await expect(
+            page.locator(`[data-toolbar-item="${name}"] summary`),
+        ).toHaveAttribute('data-format-value', 'rgb(255, 255, 102)');
+    }
+    await page.locator('[data-toolbar-item="fontSize"] summary').click();
+    await expect(
+        page.locator('[data-toolbar-item="fontSize"] [data-value="20px"]'),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await page.keyboard.press('Escape');
+    await page.locator('[data-toolbar-item="fontFamily"] summary').click();
+    await expect(
+        page.locator('[data-toolbar-item="fontFamily"] [data-value="arial"]'),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await page.keyboard.press('Escape');
+    await page.locator('[data-toolbar-item="fontColor"] summary').click();
+    await expect(
+        page.locator('[data-toolbar-item="fontColor"] [data-value="#dc2626"]'),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await expect(
+        page.locator('[data-toolbar-item="fontColor"] input[type="text"]'),
+    ).toHaveValue('rgb(220, 38, 38)');
+    await page.keyboard.press('Escape');
+    await surface.locator('#state-heading span').evaluate((element) => {
+        const root = element.getRootNode();
+        const end =
+            root instanceof ShadowRoot
+                ? root.querySelector('#state-paragraph')?.firstChild
+                : undefined;
+        if (!element.firstChild || !end)
+            throw new Error('Missing heading fixture');
+        document
+            .getSelection()
+            ?.setBaseAndExtent(element.firstChild, 0, end, 5);
+    });
+    for (const name of ['fontBackgroundColor', 'highlight']) {
+        await expect(
+            page.locator(`[data-toolbar-item="${name}"] summary`),
+        ).toHaveAttribute('data-format-state', 'mixed');
+    }
+    await page.locator('[data-toolbar-item="heading"] summary').click();
+    await expect(
+        page.locator('[data-toolbar-item="heading"] summary'),
+    ).toHaveAttribute('data-format-state', 'mixed');
+    await expect(
+        page.locator(
+            '[data-toolbar-item="heading"] .soeditor-ui__current-value',
+        ),
+    ).toHaveText('Mixed');
+    await expect(
+        page.locator(
+            '[data-toolbar-item="heading"] [data-block][aria-pressed="true"]',
+        ),
+    ).toHaveCount(0);
+    await page.getByRole('button', { name: 'Heading 3', exact: true }).click();
+    await expect(
+        page.locator('[data-toolbar-item="heading"] summary'),
+    ).toHaveAttribute('data-format-value', 'h3');
+    await expect(
+        page.locator(
+            '[data-toolbar-item="heading"] .soeditor-ui__current-value',
+        ),
+    ).toHaveText('Heading 3');
+    for (const width of [1280, 375]) {
+        await page.setViewportSize({ width, height: 900 });
+        for (const item of ['heading', 'fontSize']) {
+            const control = page.locator(
+                `[data-toolbar-item="${item}"] summary`,
+            );
+            const box = await control.boundingBox();
+            if (!box) throw new Error('Current-value control is not visible');
+            expect(box.width).toBeGreaterThan(36);
+            expect(box.x).toBeGreaterThanOrEqual(0);
+            expect(box.x + box.width).toBeLessThanOrEqual(width);
+        }
+        await page
+            .locator('[data-toolbar-item="moreFormatting"] summary')
+            .click();
+        await expect(
+            page.locator('[data-toolbar-item="moreFormatting"] button'),
+        ).toHaveCount(4);
+        await expect(
+            page.locator('[data-toolbar-item="subscript"]'),
+        ).toBeVisible();
+        const menu = page.locator(
+            '[data-toolbar-item="moreFormatting"] .soeditor-ui__menu-items',
+        );
+        await expect
+            .poll(async () => {
+                const box = await menu.boundingBox();
+                return box !== null && box.x >= 0 && box.x + box.width <= width;
+            })
+            .toBe(true);
+        await page.screenshot({
+            path: `/tmp/soeditor-ux-stage4-toolbar-${width}.png`,
+        });
+        await page.keyboard.press('Escape');
+    }
+});
+
+test('keeps toolbar menu navigation and placement consistent at viewport edges', async ({
+    page,
+}) => {
+    await setFixtureData(page, '<p id="menu-target">Menu target</p>');
+    await selectElementText(
+        page.locator('.soeditor-classic__visual #menu-target'),
+    );
+    await page.setViewportSize({ width: 375, height: 600 });
+    await page.locator('.soeditor-ui__toolbar').evaluate((toolbar) => {
+        Object.assign((toolbar as HTMLElement).style, {
+            position: 'fixed',
+            bottom: '8px',
+            top: 'auto',
+            left: '8px',
+            right: '8px',
+        });
+    });
+    for (const item of [
+        'heading',
+        'fontSize',
+        'fontFamily',
+        'moreFormatting',
+        'image-actions',
+        'alignment',
+        'orderedList',
+        'unorderedList',
+        'fontColor',
+        'fontBackgroundColor',
+        'highlight',
+    ]) {
+        const control = page.locator(`[data-toolbar-item="${item}"]`);
+        const summary = control.locator('summary');
+        const menu = control.locator(
+            ['fontColor', 'fontBackgroundColor', 'highlight'].includes(item)
+                ? '.soeditor-ui__color-panel'
+                : '.soeditor-ui__menu-items',
+        );
+        await summary.focus();
+        await page.keyboard.press('ArrowDown');
+        await expect(summary).toHaveAttribute('aria-expanded', 'true');
+        await expect
+            .poll(() =>
+                menu.evaluate((element) =>
+                    element.contains(document.activeElement),
+                ),
+            )
+            .toBe(true);
+        await expect
+            .poll(async () => {
+                const box = await menu.boundingBox();
+                return (
+                    box !== null &&
+                    box.x >= 7 &&
+                    box.y >= 7 &&
+                    box.x + box.width <= 368 &&
+                    box.y + box.height <= 593
+                );
+            })
+            .toBe(true);
+        await page.keyboard.press('End');
+        await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+        await expect(
+            menu.locator('button:not(:disabled)').last(),
+        ).toBeInViewport();
+
+        await expect
+            .poll(() =>
+                menu.evaluate((element) =>
+                    element.contains(document.activeElement),
+                ),
+            )
+            .toBe(true);
+        await page.keyboard.press('Home');
+        await page.keyboard.press('ArrowDown');
+        await expect
+            .poll(() =>
+                menu.evaluate((element) =>
+                    element.contains(document.activeElement),
+                ),
+            )
+            .toBe(true);
+        await page.keyboard.press('Escape');
+        await expect(summary).toBeFocused();
+        await expect(summary).toHaveAttribute('aria-expanded', 'false');
+    }
+    const more = page.locator('[data-toolbar-item="moreFormatting"]');
+    await more.locator('summary').click();
+    const expandingMenu = more.locator('.soeditor-ui__menu-items');
+    await expandingMenu.evaluate((panel) => {
+        const additional = document.createElement('div');
+        additional.textContent = 'Additional options';
+        additional.style.blockSize = '160px';
+        panel.append(additional);
+    });
+    await expect
+        .poll(async () => {
+            const box = await expandingMenu.boundingBox();
+            return box !== null && box.y >= 7 && box.y + box.height <= 593;
+        })
+        .toBe(true);
+    await page.keyboard.press('Escape');
+    const heading = page.locator('[data-toolbar-item="heading"]');
+    await heading.locator('summary').click();
+    await expect(heading.locator('.soeditor-ui__menu-items')).toHaveAttribute(
+        'data-placement',
+        'above',
+    );
+    await page.screenshot({ path: '/tmp/soeditor-ux-stage5-above.png' });
+
+    await page.setViewportSize({ width: 1280, height: 600 });
+    await expect
+        .poll(async () => {
+            const box = await heading
+                .locator('.soeditor-ui__menu-items')
+                .boundingBox();
+            return (
+                box !== null &&
+                box.x >= 7 &&
+                box.y >= 7 &&
+                box.x + box.width <= 1273 &&
+                box.y + box.height <= 593
+            );
+        })
+        .toBe(true);
+    await page.keyboard.press('Escape');
+    const color = page.locator('[data-toolbar-item="fontColor"]');
+    await color.locator('summary').click();
+    const colorInput = color.locator('input[type="text"]');
+    await colorInput.fill('#123456');
+    await page.keyboard.press('ArrowLeft');
+    await expect(colorInput).toBeFocused();
+    expect(
+        await colorInput.evaluate(
+            (input: HTMLInputElement) => input.selectionStart,
+        ),
+    ).toBe(6);
+    await page.keyboard.press('Escape');
+    await expect(color.locator('summary')).toBeFocused();
+    await page.setViewportSize({ width: 375, height: 360 });
+    const tableButton = page.locator('[data-toolbar-item="table"]');
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+        await tableButton.click();
+        const picker = page.locator('.soeditor-ui__table-picker');
+        await expect(picker).toBeVisible();
+        await expect
+            .poll(async () => {
+                const box = await picker.boundingBox();
+                return box !== null && box.y >= 7 && box.y + box.height <= 353;
+            })
+            .toBe(true);
+        await picker.getByRole('spinbutton', { name: 'Table rows' }).focus();
+        await page.keyboard.press('Escape');
+        await expect(picker).toHaveCount(0);
+        await expect(tableButton).toBeFocused();
+        await expect(tableButton).toHaveAttribute('aria-expanded', 'false');
+    }
+    await tableButton.click();
+    await page.mouse.click(2, 2);
+    await expect(page.locator('.soeditor-ui__table-picker')).toHaveCount(0);
+    await tableButton.click();
+    await expect(page.locator('.soeditor-ui__table-picker')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await page.setViewportSize({ width: 1280, height: 600 });
+    await heading.locator('summary').click();
+    await page.evaluate(() => {
+        const fixture = Reflect.get(globalThis, '__wysiwygFixture');
+        Reflect.apply(Reflect.get(fixture, 'setReadonly'), fixture, [true]);
+    });
+    await expect(heading).not.toHaveAttribute('open');
+    await heading.locator('summary').click({ force: true });
+    await expect(heading).not.toHaveAttribute('open');
+});
+
+test('offers image context actions without covering resize handles or losing history', async ({
+    page,
+}) => {
+    const source =
+        '<p><img id="context-image" class="cms-photo" src="/demo-editor-cover.svg" width="240" height="90" alt="Cover"></p>';
+    await setFixtureData(page, source);
+    const image = page.locator('.soeditor-classic__visual #context-image');
+    const tools = page.locator('[data-image-tools]');
+    await image.click();
+    await expect(tools).toBeVisible();
+    await expect(tools.getByRole('button')).toHaveCount(4);
+    const toolBox = await tools.boundingBox();
+    if (!toolBox) throw new Error('Missing image tools');
+    for (const handle of await page
+        .locator('.soeditor-image-resize-handle')
+        .all()) {
+        const box = await handle.boundingBox();
+        if (!box) throw new Error('Missing image handle');
+        expect(
+            box.x + box.width <= toolBox.x ||
+                box.x >= toolBox.x + toolBox.width ||
+                box.y + box.height <= toolBox.y ||
+                box.y >= toolBox.y + toolBox.height,
+        ).toBe(true);
+    }
+    await tools
+        .getByRole('button', { name: 'Align center', exact: true })
+        .click();
+    await expect(
+        page.locator('.soeditor-classic__visual figure'),
+    ).toHaveAttribute('data-align', 'center');
+    await expect(image).toHaveClass('cms-photo');
+    await page.keyboard.press('Control+z');
+    await expect(page.locator('.soeditor-classic__visual figure')).toHaveCount(
+        0,
+    );
+    await image.click();
+    await tools
+        .getByRole('button', { name: 'Image properties', exact: true })
+        .click();
+    const dialog = page.getByRole('dialog', {
+        name: 'Image properties',
+        exact: true,
+    });
+    await expect(dialog).toBeVisible();
+    await expect(tools).toHaveCount(0);
+    await expect(
+        dialog.locator('.soeditor-classic__image-advanced'),
+    ).not.toHaveAttribute('open');
+    await dialog
+        .getByLabel('Alternative text', { exact: true })
+        .fill('Updated cover');
+    await dialog
+        .getByRole('button', { name: 'Update image', exact: true })
+        .click();
+    await expect(image).toHaveAttribute('alt', 'Updated cover');
+    await expect(image).toHaveClass('cms-photo');
+
+    await setFixtureData(
+        page,
+        '<p id="image-paragraph" class="cms-intro">Before <strong id="image-emphasis">bold <img id="context-image" src="/demo-editor-cover.svg" width="240" height="90"> after</strong> end</p>',
+    );
+    await image.click();
+    await tools
+        .getByRole('button', { name: 'Align center', exact: true })
+        .click();
+    const visual = page.locator('.soeditor-classic__visual');
+    await expect(visual.locator('p figure, strong figure')).toHaveCount(0);
+    await expect(visual.locator('figure > img#context-image')).toHaveCount(1);
+    await expect(visual.locator('p.cms-intro')).toHaveText([
+        'Before bold ',
+        ' after end',
+    ]);
+    await expect(visual.locator('#image-paragraph')).toHaveCount(1);
+    await expect(visual.locator('#image-emphasis')).toHaveCount(1);
+    await page.keyboard.press('Control+z');
+    await expect(
+        visual.locator('p.cms-intro strong img#context-image'),
+    ).toHaveCount(1);
+    await expect(visual.locator('figure')).toHaveCount(0);
+});
+
+test('keeps table context tools away from the edited cell when the table top is clipped', async ({
+    page,
+}) => {
+    const rows = Array.from(
+        { length: 30 },
+        (_, row) => `<tr><td>Row ${row + 1}</td><td>Value</td></tr>`,
+    ).join('');
+    await setFixtureData(page, `<table><tbody>${rows}</tbody></table>`);
+    await page.setViewportSize({ width: 375, height: 360 });
+    const cell = page.locator('.soeditor-classic__visual td').first();
+    await cell.click();
+    await cell.evaluate((element) =>
+        window.scrollBy(0, element.getBoundingClientRect().top - 20),
+    );
+    const tools = page.locator('.soeditor-table-context');
+    await expect(tools).toBeVisible();
+    const cellBox = await cell.boundingBox();
+    if (!cellBox) throw new Error('Missing edited cell');
+    expect(cellBox.y).toBeLessThan(60);
+    await expect
+        .poll(async () => {
+            const a = await tools.boundingBox();
+            const b = await cell.boundingBox();
+            return (
+                a !== null &&
+                b !== null &&
+                (a.x + a.width <= b.x ||
+                    a.x >= b.x + b.width ||
+                    a.y + a.height <= b.y ||
+                    a.y >= b.y + b.height)
+            );
+        })
+        .toBe(true);
+    await expect(tools.locator('[data-table-menu]')).toHaveCount(4);
+    await page.screenshot({ path: '/tmp/soeditor-ux-stage6-table-avoid.png' });
+    await page.keyboard.press('End');
+    await page.keyboard.type(' edited');
+    await expect(cell).toContainText('edited');
 });

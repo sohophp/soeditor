@@ -1,0 +1,79 @@
+$ pnpm test:unit && pnpm test:performance && pnpm test:api && pnpm test:docs && pnpm test:consumer && pnpm test:distribution && pnpm test:release && pnpm test:browser && pnpm test:browser:cms
+$ pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk --filter @soeditor/comments --filter @soeditor/revisions --filter @soeditor/workspace --filter @soeditor/react --filter @soeditor/vue --filter @soeditor/plugin-tools test
+packages/html test:  Test Files  4 passed (4)
+packages/html test:       Tests  23 passed (23)
+packages/core test:  Test Files  8 passed (8)
+packages/core test:       Tests  96 passed (96)
+packages/plugin-tools test:  Test Files  1 passed (1)
+packages/plugin-tools test:       Tests  5 passed (5)
+packages/projections test:  Test Files  1 passed (1)
+packages/projections test:       Tests  11 passed (11)
+packages/workspace test:  Test Files  2 passed (2)
+packages/workspace test:       Tests  20 passed (20)
+packages/html-tools test:  Test Files  4 passed (4)
+packages/html-tools test:       Tests  44 passed (44)
+packages/ui test:  Test Files  1 passed (1)
+packages/ui test:       Tests  8 passed (8)
+packages/preview test:  Test Files  1 passed (1)
+packages/preview test:       Tests  5 passed (5)
+packages/layout test:  Test Files  1 passed (1)
+packages/layout test:       Tests  4 passed (4)
+packages/engine test:  Test Files  7 passed (7)
+packages/engine test:       Tests  59 passed (59)
+packages/revisions test:  Test Files  2 passed (2)
+packages/revisions test:       Tests  12 passed (12)
+packages/react test:  Test Files  1 passed (1)
+packages/react test:       Tests  1 passed (1)
+packages/vue test:  Test Files  1 passed (1)
+packages/vue test:       Tests  1 passed (1)
+packages/source test:  Test Files  1 passed (1)
+packages/source test:       Tests  5 passed (5)
+packages/comments test:  Test Files  2 passed (2)
+packages/comments test:       Tests  9 passed (9)
+packages/markdown test:  Test Files  2 passed (2)
+packages/markdown test:       Tests  8 passed (8)
+packages/rich-text test:  Test Files  7 passed (7)
+packages/rich-text test:       Tests  51 passed (51)
+packages/wysiwyg test:  Test Files  1 passed (1)
+packages/wysiwyg test:       Tests  1 passed (1)
+packages/file-manager test:  Test Files  3 passed (3)
+packages/file-manager test:       Tests  25 passed (25)
+packages/dev-tools test:  Test Files  2 passed (2)
+packages/dev-tools test:       Tests  5 passed (5)
+packages/adapter-sofinder test:  Test Files  1 passed (1)
+packages/adapter-sofinder test:       Tests  6 passed (6)
+packages/presets test:  Test Files  1 passed (1)
+packages/presets test:       Tests  4 passed (4)
+$ pnpm --filter @soeditor/comments --filter @soeditor/core --filter @soeditor/engine --filter @soeditor/html --filter @soeditor/projections --filter @soeditor/rich-text --filter @soeditor/workspace build && node --expose-gc scripts/verify-integration-performance.mjs
+Integration performance budgets passed: annotationMapping=65.35ms, canonicalInput=1.20ms, projectionUpdates=5.53ms, recovery=2.83ms, startupTeardown=1.21ms, tableOperations=53.71ms, memoryRetention=0.22MiB.
+$ pnpm build && node scripts/generate-api-report.mjs --check
+$ pnpm -r --if-present run build
+$ node scripts/verify-documentation.mjs
+Documentation audit passed for 80 current files and 253 Chromium scenarios.
+$ pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk --filter @soeditor/plugin-tools --filter @soeditor/react --filter @soeditor/vue build && node scripts/test-nodenext-consumer.mjs && node scripts/test-plugin-tools-consumer.mjs
+Packed publication metadata audit passed.
+NodeNext packed-package consumer passed.
+Node ESM packed-package runtime smoke test passed.
+$ vite build
+CMS Vite packed-package build passed (435605 raw / 141696 gzip).
+Packed Source, formatting, isolated CMS CSS and recovery passed under script-src self.
+$ tsc --noEmit && vite build
+Packed third-party widget TypeScript, Vite, Chromium, accessibility, security, and teardown consumer passed.
+$ vite build
+Narrow Vite tree-shaking audit passed (65627 bytes).
+$ vite build && tsc -p tsconfig.json --emitDeclarationOnly --declaration --outDir dist
+$ vite build && tsc -p tsconfig.json --emitDeclarationOnly --declaration --outDir dist
+$ vite build && tsc -p tsconfig.json --emitDeclarationOnly --declaration --outDir dist
+$ vite build && tsc -p tsconfig.json --emitDeclarationOnly --declaration --outDir dist
+$ vite build && tsc -p tsconfig.json --emitDeclarationOnly --declaration --outDir dist
+Generated basic and CMS-family plugin scaffolds, packed checks, NodeNext consumer, and runtime passed.
+$ node scripts/verify-distribution.mjs
+Distribution artifact audit passed for 24 package directories.
+$ pnpm --filter @soeditor/editor --filter @soeditor/playground build && node scripts/verify-release.mjs
+Release audit passed for 24 packages at 1.1.0.
+CMS global: 479.71 kB raw / 147.13 kB gzip.
+Standalone CSS: 26.91 kB; ESM facade: 1.00 kB.
+$ playwright test --config playwright.product.config.ts
+  135 passed (37.2s)
+$ playwright test --config playwright.cms.config.ts --project chromium --project chromium-mobile
+  8 passed (10.6s)

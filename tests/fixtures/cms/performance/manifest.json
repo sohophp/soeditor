@@ -1,0 +1,19 @@
+{
+    "samples": [
+        {
+            "path": "long-article.html",
+            "kind": "synthetic",
+            "provenance": "Repository-generated CMS performance fixture, not customer or Office data."
+        },
+        {
+            "path": "image-list.html",
+            "kind": "synthetic",
+            "provenance": "Repository-generated CMS performance fixture, not customer or Office data."
+        },
+        {
+            "path": "complex-table.html",
+            "kind": "synthetic",
+            "provenance": "Repository-generated CMS performance fixture, not customer or Office data."
+        }
+    ]
+}

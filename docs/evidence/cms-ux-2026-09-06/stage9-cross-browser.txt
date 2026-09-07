@@ -1,0 +1,13 @@
+
+Running 8 tests using 2 workers
+
+  ✓  2 [firefox] › tests/browser/cms-multibrowser.spec.ts:9:1 › preserves one article through paste, formatting, media, Source and submission (3.8s)
+  ✓  3 [firefox] › tests/browser/cms-multibrowser.spec.ts:96:1 › keeps separate Chinese composition sessions atomic in shared history (1.5s)
+  ✓  4 [firefox] › tests/browser/cms-multibrowser.spec.ts:141:1 › keeps touch-sized classic controls, logical RTL chrome, and content direction isolated (3.6s)
+  ✓  5 [firefox] › tests/browser/cms-multibrowser.spec.ts:270:1 › completes the canonical CMS authoring, submit, security, and teardown journey (2.2s)
+  ✓  1 [webkit] › tests/browser/cms-multibrowser.spec.ts:9:1 › preserves one article through paste, formatting, media, Source and submission (12.5s)
+  ✓  6 [webkit] › tests/browser/cms-multibrowser.spec.ts:96:1 › keeps separate Chinese composition sessions atomic in shared history (1.8s)
+  ✓  7 [webkit] › tests/browser/cms-multibrowser.spec.ts:141:1 › keeps touch-sized classic controls, logical RTL chrome, and content direction isolated (4.3s)
+  ✓  8 [webkit] › tests/browser/cms-multibrowser.spec.ts:270:1 › completes the canonical CMS authoring, submit, security, and teardown journey (3.8s)
+
+  8 passed (25.9s)

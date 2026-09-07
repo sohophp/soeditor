@@ -24,6 +24,33 @@ export default defineConfig({
     },
     resolve: {
         alias: {
+            '@soeditor/editor/cms/styles.css': fileURLToPath(
+                new URL(
+                    '../../packages/soeditor/src/cms-styles.css',
+                    import.meta.url,
+                ),
+            ),
+            '@soeditor/ui/cms.css': fileURLToPath(
+                new URL('../../packages/ui/src/cms.css', import.meta.url),
+            ),
+            '@soeditor/source/recovery': fileURLToPath(
+                new URL(
+                    '../../packages/source/src/recovery-loader.ts',
+                    import.meta.url,
+                ),
+            ),
+            '@soeditor/workspace/save': fileURLToPath(
+                new URL(
+                    '../../packages/workspace/src/save-workflow.ts',
+                    import.meta.url,
+                ),
+            ),
+            '@soeditor/editor/cms/optional': fileURLToPath(
+                new URL(
+                    '../../packages/soeditor/src/cms-optional.ts',
+                    import.meta.url,
+                ),
+            ),
             '@soeditor/editor/styles.css': fileURLToPath(
                 new URL(
                     '../../packages/soeditor/src/styles.css',
@@ -117,6 +144,15 @@ export default defineConfig({
             '@soeditor/ui/compatibility': fileURLToPath(
                 new URL(
                     '../../packages/ui/src/compatibility.ts',
+                    import.meta.url,
+                ),
+            ),
+            '@soeditor/ui/cms': fileURLToPath(
+                new URL('../../packages/ui/src/cms.ts', import.meta.url),
+            ),
+            '@soeditor/ui/translations': fileURLToPath(
+                new URL(
+                    '../../packages/ui/src/translations.ts',
                     import.meta.url,
                 ),
             ),

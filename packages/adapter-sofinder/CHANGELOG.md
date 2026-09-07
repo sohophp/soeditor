@@ -8,6 +8,8 @@
   including classic form integration, production rich-text and table workflows,
   paste/upload/content-object services, localization and accessibility, explicit
   saving, and the offline CMS plugin/theme ecosystem.
+- Add an injected, dependency-free SoFinder upload-task adapter alongside the
+  picker adapter.
 
 ### Patch Changes
 

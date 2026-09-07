@@ -1,0 +1,35 @@
+$ playwright test --config playwright.cms.config.ts --project chromium --project chromium-mobile
+[WebServer] (node:1782386) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+[WebServer] $ vite --host 127.0.0.1 --port 4173
+[WebServer] (node:1782473) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+[WebServer] (Use `node --trace-warnings ...` to show where the warning was created)
+
+Running 16 tests using 2 workers
+
+(node:1782614) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1782613) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1782614) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:1782613) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓   2 [chromium] › tests/browser/cms-multibrowser.spec.ts:10:1 › keeps block serialization current through native edits, history and external repair (1.5s)
+  ✓   1 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:10:1 › keeps block serialization current through native edits, history and external repair (1.6s)
+  ✓   3 [chromium] › tests/browser/cms-multibrowser.spec.ts:82:1 › round-trips the synthetic legacy CMS corpus through editing, saving and reopening (1.2s)
+  ✓   4 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:82:1 › round-trips the synthetic legacy CMS corpus through editing, saving and reopening (1.2s)
+  ✓   5 [chromium] › tests/browser/cms-multibrowser.spec.ts:159:1 › retains instance isolation and host cleanup across repeated CMS sessions (4.3s)
+  ✓   6 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:159:1 › retains instance isolation and host cleanup across repeated CMS sessions (4.8s)
+  ✓   7 [chromium] › tests/browser/cms-multibrowser.spec.ts:275:1 › preserves one article through paste, formatting, media, Source and submission (1.6s)
+  ✓   8 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:275:1 › preserves one article through paste, formatting, media, Source and submission (1.6s)
+  ✓   9 [chromium] › tests/browser/cms-multibrowser.spec.ts:362:1 › keeps separate Chinese composition sessions atomic in shared history (699ms)
+  ✓  10 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:362:1 › keeps separate Chinese composition sessions atomic in shared history (683ms)
+  ✓  11 [chromium] › tests/browser/cms-multibrowser.spec.ts:407:1 › keeps touch-sized classic controls, logical RTL chrome, and content direction isolated (2.3s)
+  ✓  12 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:407:1 › keeps touch-sized classic controls, logical RTL chrome, and content direction isolated (2.5s)
+  ✓  13 [chromium] › tests/browser/cms-multibrowser.spec.ts:536:1 › completes the canonical CMS authoring, submit, security, and teardown journey (1.4s)
+  ✓  14 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:536:1 › completes the canonical CMS authoring, submit, security, and teardown journey (1.4s)
+  ✓  15 [chromium] › tests/browser/cms-multibrowser.spec.ts:667:1 › preserves nested cached siblings and repairs detached descendants in one CMS container (985ms)
+  ✓  16 [chromium-mobile] › tests/browser/cms-multibrowser.spec.ts:667:1 › preserves nested cached siblings and repairs detached descendants in one CMS container (1.0s)
+
+  16 passed (18.4s)

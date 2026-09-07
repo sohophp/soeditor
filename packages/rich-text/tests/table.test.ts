@@ -20,6 +20,56 @@ import {
 } from '../src/index.js';
 
 describe('structured table feature', () => {
+    it('checks directional split limits without changing table content or history', async () => {
+        const line =
+            '<tr>' +
+            Array.from({ length: 100 }, () => '<td>A</td>').join('') +
+            '</tr>';
+        const columns = await createTableHarness(
+            '<table><tbody>' + line + '</tbody></table>',
+        );
+        const original = columns.html();
+        expect(
+            columns.editor.execute(
+                'table.cell.canSplit',
+                range(0, 0),
+                'columns',
+            ),
+        ).toBe(false);
+        expect(
+            columns.editor.execute('table.cell.canSplit', range(0, 0), 'rows'),
+        ).toBe(true);
+        expect(
+            columns.editor.execute('table.cell.canSplit', range(0, 0), 'all'),
+        ).toBe(false);
+        expect(columns.html()).toBe(original);
+        expect(columns.replace).not.toHaveBeenCalled();
+        await columns.editor.destroy();
+        const cells = await createTableHarness(
+            '<table><tbody>' + line.repeat(10) + '</tbody></table>',
+        );
+        expect(
+            cells.editor.execute('table.cell.canSplit', range(0, 0), 'rows'),
+        ).toBe(false);
+        expect(cells.replace).not.toHaveBeenCalled();
+        await cells.editor.destroy();
+        const merged = await createTableHarness(
+            '<table><tbody><tr><td colspan="2">A</td></tr></tbody></table>',
+        );
+        expect(
+            merged.editor.execute('table.cell.canSplit', range(0, 0), 'all'),
+        ).toBe(true);
+        expect(
+            merged.editor.execute(
+                'table.cell.canSplit',
+                range(0, 0),
+                'columns',
+            ),
+        ).toBe(true);
+        expect(merged.replace).not.toHaveBeenCalled();
+        await merged.editor.destroy();
+    });
+
     it('registers bounded table structure commands and preserves source metadata', async () => {
         const harness = await createTableHarness(
             '<table data-cms="table"><tbody class="body"><tr data-row="a"><td data-cell="a">A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
@@ -175,6 +225,60 @@ describe('structured table feature', () => {
         await rows.editor.destroy();
     });
 
+    it('bisects ordinary cells while preserving neighboring content and unique IDs', async () => {
+        const columns = await createTableHarness(
+            '<table><tbody><tr><td id="kept">A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
+        );
+        columns.editor.execute('table.cell.splitColumns', range(0, 0));
+        expect(columns.html()).toBe(
+            '<table><tbody><tr><td id="kept">A</td><td></td><td>B</td></tr><tr><td colspan="2">C</td><td>D</td></tr></tbody></table>',
+        );
+        await columns.editor.destroy();
+        const rows = await createTableHarness(
+            '<table><tbody><tr><td>A</td><td id="kept">B</td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
+        );
+        rows.editor.execute('table.cell.splitRows', range(0, 1));
+        expect(rows.html()).toBe(
+            '<table><tbody><tr><td rowspan="2">A</td><td id="kept">B</td></tr><tr><td></td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
+        );
+        await rows.editor.destroy();
+    });
+
+    it('merges complete spanned rectangles and rejects partial overlaps', async () => {
+        const harness = await createTableHarness(
+            '<table><tbody><tr><td colspan="2">A</td><td>B</td></tr><tr><td>C</td><td>D</td><td>E</td></tr></tbody></table>',
+        );
+        expect(
+            harness.editor.execute('table.cells.canMerge', range(0, 1, 0, 2)),
+        ).toBe(false);
+        expect(
+            harness.editor.execute('table.cells.canMerge', range(0, 0, 0, 2)),
+        ).toBe(true);
+        harness.editor.execute('table.cells.merge', range(0, 0, 0, 2));
+        expect(harness.html()).toContain('<td colspan="3">A<br />B</td>');
+        await harness.editor.destroy();
+    });
+
+    it('preserves column metadata and section boundaries when bisecting cells', async () => {
+        const harness = await createTableHarness(
+            '<table><colgroup><col id="width" width="100" /><col width="200" /></colgroup><thead><tr><th id="head">H</th><!--cms--><th>I</th></tr></thead><tbody><tr><td>A</td><td>B</td></tr></tbody></table>',
+        );
+        harness.editor.execute('table.cell.splitColumns', range(0, 0));
+        expect(harness.html()).toContain(
+            '<col id="width" width="100" span="2">',
+        );
+        expect(harness.html()).toContain(
+            '<tbody><tr><td colspan="2">A</td><td>B</td></tr></tbody>',
+        );
+        harness.editor.execute('table.cell.splitRows', range(0, 0));
+        expect(harness.html()).toContain(
+            '</tr><tr><th></th></tr></thead><tbody>',
+        );
+        expect(harness.html().match(/id="head"/gu)).toHaveLength(1);
+        expect(harness.html()).toContain('<!--cms-->');
+        await harness.editor.destroy();
+    });
+
     it('does not merge cells across explicit table sections', async () => {
         const harness = await createTableHarness(
             '<table><thead><tr><th>Head</th></tr></thead><tbody><tr><td>Body</td></tr></tbody></table>',
@@ -186,6 +290,96 @@ describe('structured table feature', () => {
         expect(() =>
             harness.editor.execute('table.cells.merge', selection),
         ).toThrow('cannot merge cells across table sections');
+        await harness.editor.destroy();
+    });
+
+    it('inserts through row spans and moves surviving contents when the origin row is deleted', async () => {
+        const original =
+            '<table><tbody><tr><td id="keep" class="cms" rowspan="2">A</td><!--marker--><td>B</td></tr><tr><td>C</td></tr></tbody></table>';
+        const harness = await createTableHarness(original);
+        harness.editor.execute('table.row.insertBefore', range(1, 1));
+        expect(harness.html()).toContain('id="keep" class="cms" rowspan="3"');
+        expect(harness.html()).toContain(
+            '</tr><tr><td></td></tr><tr><td>C</td></tr>',
+        );
+        expect(harness.html()).toContain('<!--marker-->');
+        harness.editor.execute('table.row.remove', range(1, 1));
+        expect(harness.html()).toBe(original);
+        harness.editor.execute('table.row.insertAfter', range(0, 0));
+        expect(harness.html()).toContain('id="keep" class="cms" rowspan="2"');
+        harness.editor.execute('table.row.remove', range(2, 0));
+        expect(harness.html()).toBe(original);
+        harness.editor.execute('table.row.remove', range(0, 1));
+        expect(harness.html()).toBe(
+            '<table><tbody><tr><td id="keep" class="cms">A</td><td>C</td></tr></tbody></table>',
+        );
+        await harness.editor.destroy();
+    });
+
+    it('inserts and deletes logical columns across spans without losing surviving identities', async () => {
+        const original =
+            '<table><tbody><tr><td id="wide" colspan="2">A</td><td>B</td></tr><tr><td>C</td><!--marker--><td>D</td><td>E</td></tr></tbody></table>';
+        const harness = await createTableHarness(original);
+        harness.editor.execute('table.column.insertBefore', range(1, 1));
+        expect(harness.html()).toContain('<td id="wide" colspan="3">A</td>');
+        expect(harness.html()).toContain(
+            '<td>C</td><!--marker--><td></td><td>D</td><td>E</td>',
+        );
+        harness.editor.execute('table.column.remove', range(1, 1));
+        expect(harness.html()).toBe(original);
+        harness.editor.execute('table.column.insertAfter', range(0, 0));
+        expect(harness.html()).toContain(
+            '<td id="wide" colspan="2">A</td><td></td><td>B</td>',
+        );
+        harness.editor.execute('table.column.remove', range(0, 2));
+        expect(harness.html()).toBe(original);
+        harness.editor.execute('table.column.remove', range(0, 0));
+        expect(harness.html()).toContain('<td id="wide">A</td><td>B</td>');
+        expect(harness.html()).toContain('<!--marker--><td>D</td><td>E</td>');
+        await harness.editor.destroy();
+    });
+
+    it('keeps header intersections when either axis is switched off', async () => {
+        for (const first of ['firstRow', 'firstColumn']) {
+            const other = first === 'firstRow' ? 'firstColumn' : 'firstRow';
+            const harness = await createTableHarness(
+                '<table><tbody><tr><td id="corner">A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
+            );
+            harness.editor.execute(`table.header.${first}`, range(0, 0), true);
+            harness.editor.execute(`table.header.${other}`, range(0, 0), true);
+            harness.editor.execute(`table.header.${first}`, range(0, 0), false);
+            expect(harness.html()).toContain(
+                `<th id="corner" scope="${other === 'firstRow' ? 'col' : 'row'}">A</th>`,
+            );
+            expect(countElements(harness.block.children, 'th')).toBe(2);
+            harness.editor.execute(`table.header.${other}`, range(0, 0), false);
+            expect(harness.html()).toBe(
+                '<table><tbody><tr><td id="corner">A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
+            );
+            await harness.editor.destroy();
+        }
+    });
+
+    it('preserves column groups and keeps row insertions in the requested section', async () => {
+        const harness = await createTableHarness(
+            '<table><colgroup class="cms"><col id="track" style="width:30%" span="2"></colgroup><colgroup span="1" data-grid="kept"></colgroup><thead><tr><th colspan="2">H</th><th>I</th></tr></thead><tbody><tr><td>A</td><td>B</td><td>C</td></tr></tbody></table>',
+        );
+        harness.editor.execute('table.column.insertBefore', range(1, 1));
+        expect(harness.html()).toContain(
+            '<col id="track" style="width:30%" span="3">',
+        );
+        harness.editor.execute('table.column.remove', range(1, 1));
+        expect(harness.html()).toContain(
+            '<col id="track" style="width:30%" span="2">',
+        );
+        harness.editor.execute('table.row.insertAfter', range(0, 2));
+        expect(harness.html()).toContain(
+            '</tr><tr><th></th><th></th><th></th></tr></thead>',
+        );
+        harness.editor.execute('table.row.insertBefore', range(2, 0));
+        expect(harness.html()).toContain(
+            '<tbody><tr><td></td><td></td><td></td></tr><tr><td>A</td>',
+        );
         await harness.editor.destroy();
     });
 
@@ -246,12 +440,12 @@ describe('structured table feature', () => {
         await unsupported.editor.destroy();
 
         const columns = await createTableHarness(
-            '<table><colgroup><col span="2"></colgroup><tbody><tr><td>A</td><td>B</td></tr></tbody></table>',
+            '<table><colgroup><col span="3"></colgroup><tbody><tr><td>A</td><td>B</td></tr></tbody></table>',
         );
         expect(() =>
             columns.editor.execute('table.column.insertAfter', range(0, 0)),
         ).toThrow('requires column metadata to match the table grid');
-        expect(columns.html()).toContain('<colgroup><col span="2"></colgroup>');
+        expect(columns.html()).toContain('<colgroup><col span="3"></colgroup>');
         expect(columns.replace).not.toHaveBeenCalled();
         await columns.editor.destroy();
     });
@@ -480,6 +674,18 @@ describe('structured table feature', () => {
         expect(multipleGroups.html()).toContain(
             '<colgroup data-group="one"><col width="180px"></colgroup><!--cms-columns--><colgroup data-group="two"><col></colgroup>',
         );
+        const spanned = await createTableHarness(
+            '<table><colgroup data-group="kept"><!--tracks--><col id="track" span="2" width="120"></colgroup><tbody><tr><th scope="col">A</th><th scope="col">B</th></tr></tbody></table>',
+        );
+        spanned.editor.execute('table.column.resize', range(0, 1), {
+            width: 210,
+        });
+        expect(spanned.html()).toContain(
+            '<colgroup data-group="kept"><!--tracks--><col id="track" width="120"><col width="210px"></colgroup>',
+        );
+        spanned.editor.execute('table.header.toggle', range(0, 1));
+        expect(spanned.html()).toContain('<th scope="col">A</th><td>B</td>');
+        await spanned.editor.destroy();
         await multipleGroups.editor.destroy();
 
         const repair = await createTableHarness(

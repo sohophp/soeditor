@@ -239,8 +239,8 @@ type TableInspection = (
     range: TableCellRange,
 ) => Readonly<Record<string, unknown>>;
 
-/** Structured, atomic table feature built on the public node-view runtime. */
-export class TablePlugin extends Plugin {
+/** Native CMS table commands; structured-engine views remain in TablePlugin. */
+export class CmsTablePlugin extends Plugin {
     static readonly id = 'table';
     static readonly requires = [StructuredEditingPlugin, PastePipelinePlugin];
     #dispose: (() => void)[] = [];
@@ -344,25 +344,6 @@ export class TablePlugin extends Plugin {
                 type: tableType,
             }),
         );
-        this.#dispose.push(
-            registry.registerNodeView(tableType, (context) =>
-                createTableNodeView(
-                    context,
-                    (range) => {
-                        this.#selections.set(context.node, range);
-                    },
-                    this.editor.services.get(pastePipelineServiceToken),
-                    (service) => {
-                        this.#activeCellEditing = service;
-                    },
-                    (service) => {
-                        if (this.#activeCellEditing === service) {
-                            this.#activeCellEditing = undefined;
-                        }
-                    },
-                ),
-            ),
-        );
         this.#registerInsert();
         for (const [id, kind] of [
             ['table.selection.row', 'row'],
@@ -431,7 +412,7 @@ export class TablePlugin extends Plugin {
                 return insertRows(
                     table,
                     parsed,
-                    normalizedRange(range).bottom + 1,
+                    insertionAfter(parsed, range, 'row'),
                     insertCount('table.row.insertAfter', args),
                     'table.row.insertAfter',
                 );
@@ -465,7 +446,7 @@ export class TablePlugin extends Plugin {
                 return insertColumns(
                     table,
                     parsed,
-                    normalizedRange(range).right + 1,
+                    insertionAfter(parsed, range, 'column'),
                     insertCount('table.column.insertAfter', args),
                     'table.column.insertAfter',
                 );
@@ -491,16 +472,19 @@ export class TablePlugin extends Plugin {
             'table.header.firstRow',
             'Set first row as column headers',
             (table, parsed, _range, args) => {
-                assertNoArguments('table.header.firstRow', args);
-                return setHeaderAxis(table, parsed, 'row');
+                return setHeaderAxis(table, parsed, 'row', headerEnabled(args));
             },
         );
         this.#registerTableCommand(
             'table.header.firstColumn',
             'Set first column as row headers',
             (table, parsed, _range, args) => {
-                assertNoArguments('table.header.firstColumn', args);
-                return setHeaderAxis(table, parsed, 'column');
+                return setHeaderAxis(
+                    table,
+                    parsed,
+                    'column',
+                    headerEnabled(args),
+                );
             },
         );
         this.#registerTableCommand(
@@ -536,6 +520,53 @@ export class TablePlugin extends Plugin {
                     const parsed = parseTable(table);
                     assertRange(parsed, range, 'table.cells.canMerge');
                     mergeCells(table, parsed, normalizedRange(range));
+                    return true;
+                } catch {
+                    return false;
+                }
+            },
+        });
+        this.editor.commands.register({
+            id: 'table.cell.canSplit',
+            label: 'Check whether a table cell can split',
+            canExecute: ({ editor }) =>
+                editor.services
+                    .tryGet(visualEditingServiceToken)
+                    ?.isStructuredBlockSelected(tableType) === true,
+            execute: ({ editor }, candidate, direction = 'all') => {
+                if (
+                    direction !== 'all' &&
+                    direction !== 'rows' &&
+                    direction !== 'columns'
+                )
+                    return false;
+                const service = requireTableService(
+                    editor.services.tryGet(visualEditingServiceToken),
+                    'table.cell.canSplit',
+                );
+                const block = service.getSelectedStructuredBlock(tableType);
+                const range =
+                    readOptionalRange(candidate) ??
+                    readServiceTableRange(service) ??
+                    (block === undefined
+                        ? undefined
+                        : this.#selections.get(block));
+                if (block === undefined || range === undefined) return false;
+                try {
+                    const table = tableElement(block);
+                    const parsed = parseTable(table);
+                    assertRange(parsed, range, 'table.cell.canSplit');
+                    const normalized = normalizedRange(range);
+                    if (direction === 'all') {
+                        const cell =
+                            parsed.grid[normalized.top]?.[normalized.left];
+                        if (
+                            cell === undefined ||
+                            (cell.rowspan === 1 && cell.colspan === 1)
+                        )
+                            return false;
+                    }
+                    splitCell(table, parsed, normalized, direction);
                     return true;
                 } catch {
                     return false;
@@ -934,6 +965,33 @@ export class TablePlugin extends Plugin {
         });
     }
 
+    protected installStructuredNodeView(
+        factory: typeof createTableNodeView,
+    ): void {
+        const registry = this.editor.services.get(
+            structuredEditingRegistryToken,
+        );
+        this.#dispose.push(
+            registry.registerNodeView(tableType, (context) =>
+                factory(
+                    context,
+                    (range) => {
+                        this.#selections.set(context.node, range);
+                    },
+                    this.editor.services.get(pastePipelineServiceToken),
+                    (service) => {
+                        this.#activeCellEditing = service;
+                    },
+                    (service) => {
+                        if (this.#activeCellEditing === service) {
+                            this.#activeCellEditing = undefined;
+                        }
+                    },
+                ),
+            ),
+        );
+    }
+
     override destroy(): void {
         for (const dispose of this.#dispose.reverse()) {
             dispose();
@@ -1102,7 +1160,26 @@ export class TablePlugin extends Plugin {
                 });
                 const nextBlock = service.getSelectedStructuredBlock(tableType);
                 if (nextBlock !== undefined) {
-                    this.#selections.set(nextBlock, range);
+                    let nextRange = range;
+                    if (
+                        id === 'table.row.remove' ||
+                        id === 'table.column.remove'
+                    ) {
+                        const grid = parseTable(next);
+                        const clamp = (
+                            position: TableCellPosition,
+                        ): TableCellPosition => ({
+                            row: Math.min(position.row, grid.rows.length - 1),
+                            column: Math.min(position.column, grid.columns - 1),
+                        });
+                        nextRange = {
+                            ...range,
+                            anchor: clamp(range.anchor),
+                            focus: clamp(range.focus),
+                        };
+                        service.setStructuredSelection?.(tableType, nextRange);
+                    }
+                    this.#selections.set(nextBlock, nextRange);
                 }
             },
         });
@@ -1144,6 +1221,14 @@ export class TablePlugin extends Plugin {
                 return inspect(table, parseTable(table), range);
             },
         });
+    }
+}
+
+/** Compatibility plugin including the structured-engine table node view. */
+export class TablePlugin extends CmsTablePlugin {
+    override init(): void {
+        super.init();
+        this.installStructuredNodeView(createTableNodeView);
     }
 }
 
@@ -1806,7 +1891,8 @@ function createTableNodeView(
             const positionHandle = (): void => {
                 const rootRect = root.getBoundingClientRect();
                 const cellRect = nativeCell.getBoundingClientRect();
-                handle.style.insetInlineStart = `${String(cellRect.right - rootRect.left - 8)}px`;
+                // Match the centered guide in the 8px column hit target.
+                handle.style.insetInlineStart = `${String(cellRect.right - rootRect.left - 4)}px`;
                 handle.style.insetBlockStart = `${String(table.offsetTop)}px`;
                 handle.style.height = `${String(table.offsetHeight)}px`;
             };
@@ -2416,49 +2502,148 @@ function transformRows(
     });
 }
 
+function insertionAfter(
+    parsed: ParsedTable,
+    range: TableCellRange,
+    axis: 'row' | 'column',
+): number {
+    const bounds = normalizedRange(range);
+    const cell = parsed.grid[bounds.top]?.[bounds.left];
+    if (
+        cell !== undefined &&
+        bounds.top === bounds.bottom &&
+        bounds.left === bounds.right &&
+        range.kind !== 'rows' &&
+        range.kind !== 'columns'
+    ) {
+        return axis === 'row'
+            ? cell.row + cell.rowspan
+            : cell.column + cell.colspan;
+    }
+    return axis === 'row' ? bounds.bottom + 1 : bounds.right + 1;
+}
+
+function rewriteTableRows(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    transform: (cell: ParsedCell) => HtmlElement | undefined,
+    additions: ReadonlyMap<
+        number,
+        readonly { column: number; cell: HtmlElement }[]
+    > = new Map(),
+): HtmlElement {
+    return {
+        ...table,
+        children: transformRows(table.children, (row, index) => {
+            const cells = parsed.rows[index]?.cells ?? [];
+            const pending = [...(additions.get(index) ?? [])].sort(
+                (a, b) => a.column - b.column,
+            );
+            const children: HtmlChildNode[] = [];
+            for (const child of row.children) {
+                const cell = cells.find(
+                    (candidate) => candidate.element === child,
+                );
+                if (cell === undefined) {
+                    children.push(child);
+                    continue;
+                }
+                while (
+                    pending[0] !== undefined &&
+                    pending[0].column <= cell.column
+                )
+                    children.push(pending.shift()!.cell);
+                const next = transform(cell);
+                if (next !== undefined) children.push(next);
+            }
+            children.push(...pending.map((item) => item.cell));
+            return [{ ...row, children }];
+        }),
+    };
+}
+
 function insertRow(
     table: HtmlElement,
     parsed: ParsedTable,
     insertion: number,
     command: string,
 ): HtmlElement {
-    requireUnmerged(parsed, 'table row insertion');
     if (
         parsed.rows.length >= maximumRows ||
         (parsed.rows.length + 1) * parsed.columns > maximumCells
     ) {
         throw new RichTextArgumentError(command, 'would exceed table limits.');
     }
-    const reference = parsed.rows[Math.min(insertion, parsed.rows.length - 1)];
-    const header =
-        reference?.cells.every((cell) => cell.element.tagName === 'th') ??
-        false;
-    const row = htmlElement(
-        'tr',
-        [],
-        Array.from({ length: parsed.columns }, () =>
-            htmlElement(header ? 'th' : 'td', [], []),
+    const referenceIndex = Math.max(
+        0,
+        Math.min(
+            parsed.rows.length - 1,
+            command.endsWith('After') ? insertion - 1 : insertion,
         ),
     );
-    let inserted = false;
-    const children = transformRows(table.children, (candidate, rowIndex) => {
-        if (rowIndex === insertion) {
-            inserted = true;
-            return [row, candidate];
-        }
+    const section = (index: number): HtmlElement | undefined => {
+        const row = parsed.rows[index]?.element;
+        return row === undefined
+            ? undefined
+            : table.children.find(
+                  (child): child is HtmlElement =>
+                      child.type === 'element' && child.children.includes(row),
+              );
+    };
+    const following = Math.min(insertion, parsed.rows.length - 1);
+    const typeReference =
+        section(following) === section(referenceIndex)
+            ? following
+            : referenceIndex;
+    const crossing = new Set<ParsedCell>();
+    const cells: HtmlElement[] = [];
+    for (let column = 0; column < parsed.columns; column++) {
+        const above = parsed.grid[insertion - 1]?.[column];
         if (
-            rowIndex === parsed.rows.length - 1 &&
-            insertion >= parsed.rows.length
+            above !== undefined &&
+            above.row < insertion &&
+            above.row + above.rowspan > insertion
         ) {
-            inserted = true;
-            return [candidate, row];
+            crossing.add(above);
+        } else {
+            const reference = parsed.grid[typeReference]?.[column];
+            const header = reference?.element.tagName === 'th';
+            cells.push(
+                htmlElement(
+                    header ? 'th' : 'td',
+                    header
+                        ? reference.element.attributes.filter(
+                              (attr) => attr.name === 'scope',
+                          )
+                        : [],
+                    [],
+                ),
+            );
         }
-        return [candidate];
-    });
-    if (!inserted) {
-        throw new Error('Table row insertion target was not found.');
     }
-    return { ...table, children };
+    const next = rewriteTableRows(table, parsed, (cell) =>
+        crossing.has(cell)
+            ? {
+                  ...cell.element,
+                  attributes: setSpanAttributes(
+                      cell.element.attributes,
+                      cell.rowspan + 1,
+                      cell.colspan,
+                  ),
+              }
+            : cell.element,
+    );
+    const row = htmlElement('tr', [], cells);
+    return {
+        ...next,
+        children: transformRows(next.children, (candidate, index) =>
+            index === referenceIndex
+                ? insertion <= referenceIndex
+                    ? [row, candidate]
+                    : [candidate, row]
+                : [candidate],
+        ),
+    };
 }
 
 function insertRows(
@@ -2482,17 +2667,49 @@ function removeRows(
     parsed: ParsedTable,
     range: NormalizedRange,
 ): HtmlElement {
-    requireUnmerged(parsed, 'table row removal');
-    if (range.bottom - range.top + 1 >= parsed.rows.length) {
+    if (range.bottom - range.top + 1 >= parsed.rows.length)
         throw new RichTextArgumentError(
             'table.row.remove',
             'cannot remove every row.',
         );
-    }
+    const replacements = new Map<ParsedCell, HtmlElement | undefined>();
+    const moved: { column: number; cell: HtmlElement }[] = [];
+    for (const row of parsed.rows)
+        for (const cell of row.cells) {
+            const removed = Math.max(
+                0,
+                Math.min(cell.row + cell.rowspan - 1, range.bottom) -
+                    Math.max(cell.row, range.top) +
+                    1,
+            );
+            if (removed === 0) continue;
+            const remaining = cell.rowspan - removed;
+            const replacement =
+                remaining === 0
+                    ? undefined
+                    : {
+                          ...cell.element,
+                          attributes: setSpanAttributes(
+                              cell.element.attributes,
+                              remaining,
+                              cell.colspan,
+                          ),
+                      };
+            replacements.set(cell, replacement);
+            if (replacement !== undefined && cell.row >= range.top)
+                moved.push({ column: cell.column, cell: replacement });
+        }
+    const next = rewriteTableRows(
+        table,
+        parsed,
+        (cell) =>
+            replacements.has(cell) ? replacements.get(cell) : cell.element,
+        new Map([[range.bottom + 1, moved]]),
+    );
     return {
-        ...table,
-        children: transformRows(table.children, (row, rowIndex) =>
-            rowIndex >= range.top && rowIndex <= range.bottom ? [] : [row],
+        ...next,
+        children: transformRows(next.children, (row, index) =>
+            index >= range.top && index <= range.bottom ? [] : [row],
         ),
     };
 }
@@ -2503,28 +2720,57 @@ function insertColumn(
     insertion: number,
     command: string,
 ): HtmlElement {
-    requireUnmerged(parsed, 'table column insertion');
-    const widths = readColumnWidths(table, parsed.columns, command);
     if (
         parsed.columns >= maximumColumns ||
         parsed.rows.length * (parsed.columns + 1) > maximumCells
-    ) {
+    )
         throw new RichTextArgumentError(command, 'would exceed table limits.');
+    const additions = new Map<
+        number,
+        { column: number; cell: HtmlElement }[]
+    >();
+    for (const row of parsed.rows) {
+        const reference =
+            parsed.grid[row.row]?.[Math.min(insertion, parsed.columns - 1)];
+        if (
+            reference !== undefined &&
+            reference.column < insertion &&
+            reference.column + reference.colspan > insertion
+        )
+            continue;
+        const header = reference?.element.tagName === 'th';
+        additions.set(row.row, [
+            {
+                column: insertion,
+                cell: htmlElement(
+                    header ? 'th' : 'td',
+                    header
+                        ? reference.element.attributes.filter(
+                              (attr) => attr.name === 'scope',
+                          )
+                        : [],
+                    [],
+                ),
+            },
+        ]);
     }
-    const next = mapRowCells(table, (cells) => {
-        const reference = cells[Math.min(insertion, cells.length - 1)];
-        const cell = htmlElement(
-            reference?.tagName === 'th' ? 'th' : 'td',
-            [],
-            [],
-        );
-        const next = [...cells];
-        next.splice(insertion, 0, cell);
-        return next;
-    });
-    const nextWidths = [...widths];
-    nextWidths.splice(insertion, 0, undefined);
-    return setColumnWidths(next, nextWidths);
+    const next = rewriteTableRows(
+        table,
+        parsed,
+        (cell) =>
+            cell.column < insertion && cell.column + cell.colspan > insertion
+                ? {
+                      ...cell.element,
+                      attributes: setSpanAttributes(
+                          cell.element.attributes,
+                          cell.rowspan,
+                          cell.colspan + 1,
+                      ),
+                  }
+                : cell.element,
+        additions,
+    );
+    return editColumnTracks(next, parsed.columns, insertion, 0);
 }
 
 function insertColumns(
@@ -2548,25 +2794,126 @@ function removeColumns(
     parsed: ParsedTable,
     range: NormalizedRange,
 ): HtmlElement {
-    requireUnmerged(parsed, 'table column removal');
-    const widths = readColumnWidths(
-        table,
-        parsed.columns,
-        'table.column.remove',
-    );
-    if (range.right - range.left + 1 >= parsed.columns) {
+    const count = range.right - range.left + 1;
+    if (count >= parsed.columns)
         throw new RichTextArgumentError(
             'table.column.remove',
             'cannot remove every column.',
         );
-    }
-    const next = mapRowCells(table, (cells) =>
-        cells.filter((_, index) => index < range.left || index > range.right),
+    const next = rewriteTableRows(table, parsed, (cell) => {
+        const overlap = Math.max(
+            0,
+            Math.min(cell.column + cell.colspan - 1, range.right) -
+                Math.max(cell.column, range.left) +
+                1,
+        );
+        const span = cell.colspan - overlap;
+        return span === 0
+            ? undefined
+            : overlap === 0
+              ? cell.element
+              : {
+                    ...cell.element,
+                    attributes: setSpanAttributes(
+                        cell.element.attributes,
+                        cell.rowspan,
+                        span,
+                    ),
+                };
+    });
+    return editColumnTracks(next, parsed.columns, range.left, count);
+}
+
+// Adjust logical col/colgroup tracks without flattening their attributes or widths.
+function editColumnTracks(
+    table: HtmlElement,
+    columns: number,
+    start: number,
+    remove: number,
+): HtmlElement {
+    let cursor = 0;
+    let found = false;
+    const edit = (element: HtmlElement): HtmlElement | undefined => {
+        const span = Number(attributeValue(element.attributes, 'span') ?? 1);
+        if (!Number.isInteger(span) || span < 1 || span > maximumColumns)
+            throw new RichTextArgumentError(
+                'table.column',
+                'invalid column metadata span.',
+            );
+        const left = cursor;
+        cursor += span;
+        const next =
+            remove === 0
+                ? span +
+                  (start >= left &&
+                  (start < cursor || (start === columns && cursor === columns))
+                      ? 1
+                      : 0)
+                : span -
+                  Math.max(
+                      0,
+                      Math.min(cursor, start + remove) - Math.max(left, start),
+                  );
+        if (next === span) return element;
+        return next === 0
+            ? undefined
+            : {
+                  ...element,
+                  attributes: updateAttribute(
+                      element.attributes,
+                      'span',
+                      next === 1 ? null : String(next),
+                  ),
+              };
+    };
+    const children = table.children.flatMap(
+        (child): readonly HtmlChildNode[] => {
+            if (!isElement(child, 'colgroup')) return [child];
+            found = true;
+            if (!child.children.some((node) => isElement(node, 'col'))) {
+                const next = edit(child);
+                return next === undefined ? child.children : [next];
+            }
+            const contents = child.children.flatMap(
+                (node): readonly HtmlChildNode[] => {
+                    if (!isElement(node, 'col')) return [node];
+                    const span = Number(
+                        attributeValue(node.attributes, 'span') ?? 1,
+                    );
+                    if (
+                        !Number.isInteger(span) ||
+                        span < 1 ||
+                        span > maximumColumns
+                    )
+                        throw new RichTextArgumentError(
+                            'table.column',
+                            'invalid column metadata span.',
+                        );
+                    if (
+                        remove === 0 &&
+                        (start === cursor ||
+                            (start === columns && cursor + span === columns))
+                    ) {
+                        const before = start === cursor;
+                        cursor += span;
+                        const empty = htmlElement('col', [], []);
+                        return before ? [empty, node] : [node, empty];
+                    }
+                    const next = edit(node);
+                    return next === undefined ? [] : [next];
+                },
+            );
+            return contents.some((node) => isElement(node, 'col'))
+                ? [{ ...child, children: contents }]
+                : contents;
+        },
     );
-    const nextWidths = widths.filter(
-        (_, index) => index < range.left || index > range.right,
-    );
-    return setColumnWidths(next, nextWidths);
+    if (found && cursor !== columns)
+        throw new RichTextArgumentError(
+            'table.column',
+            'requires column metadata to match the table grid.',
+        );
+    return { ...table, children };
 }
 
 function readColumnWidths(
@@ -2633,66 +2980,98 @@ function projectedColumnWidths(
     }
 }
 
+function expandedColumnGroups(table: HtmlElement): HtmlElement {
+    return {
+        ...table,
+        children: table.children.map((group) => {
+            if (!isElement(group, 'colgroup')) return group;
+            const explicit = group.children.some((child) =>
+                isElement(child, 'col'),
+            );
+            const columns = explicit
+                ? group.children
+                : [
+                      ...group.children,
+                      htmlElement(
+                          'col',
+                          [
+                              {
+                                  name: 'span',
+                                  value:
+                                      attributeValue(
+                                          group.attributes,
+                                          'span',
+                                      ) ?? '1',
+                              },
+                          ],
+                          [],
+                      ),
+                  ];
+            return {
+                ...group,
+                attributes: updateAttribute(group.attributes, 'span', null),
+                children: columns.flatMap((column) => {
+                    if (!isElement(column, 'col')) return [column];
+                    const spanText = attributeValue(column.attributes, 'span');
+                    const span =
+                        spanText === undefined ? 1 : readPositiveSpan(spanText);
+                    if (span === undefined || span > 100)
+                        throw new RichTextArgumentError(
+                            'table.column.resize',
+                            'requires a bounded column span.',
+                        );
+                    if (span === 1) return [column];
+                    const attributes = updateAttribute(
+                        column.attributes,
+                        'span',
+                        null,
+                    );
+                    return Array.from({ length: span }, (_, index) => ({
+                        ...column,
+                        attributes:
+                            index === 0
+                                ? attributes
+                                : updateAttribute(attributes, 'id', null),
+                    }));
+                }),
+            };
+        }),
+    };
+}
+
 function readResizableColumnWidths(
     table: HtmlElement,
     columns: number,
 ): readonly (number | undefined)[] {
-    const groups = tableColumnGroups(table);
+    const groups = tableColumnGroups(expandedColumnGroups(table));
     if (groups.length === 0) return readColumnWidths(table, columns);
-    const widths: (number | undefined)[] = [];
-    for (const group of groups) {
-        if (
-            attributeValue(group.attributes, 'span') !== undefined ||
-            group.children.some(
-                (child) => !isElement(child, 'col') && !isWhitespaceText(child),
-            )
-        ) {
-            throw new RichTextArgumentError(
-                'table.column.resize',
-                'requires column groups with explicit col elements.',
-            );
-        }
-        for (const column of group.children.filter((child) =>
-            isElement(child, 'col'),
-        )) {
-            const spanText = attributeValue(column.attributes, 'span');
-            const span = readPositiveSpan(spanText);
-            if (
-                (spanText !== undefined && span === undefined) ||
-                (span !== undefined && span !== 1)
-            ) {
-                throw new RichTextArgumentError(
-                    'table.column.resize',
-                    'cannot map a spanned col to one logical column.',
-                );
-            }
-            const value = attributeValue(column.attributes, 'width');
-            if (value === undefined || /^\d{1,4}%$/u.test(value)) {
-                widths.push(undefined);
-                continue;
-            }
-            const match = /^(\d{1,4})(?:px)?$/u.exec(value);
-            const width = Number(match?.[1]);
-            if (
-                match === null ||
-                !Number.isInteger(width) ||
-                width < 40 ||
-                width > 1200
-            ) {
-                throw new RichTextArgumentError(
-                    'table.column.resize',
-                    'found a column width that cannot be mapped safely.',
-                );
-            }
-            widths.push(width);
-        }
-    }
-    if (widths.length !== columns) {
+    const widths = groups.flatMap((group) =>
+        group.children
+            .filter((child) => isElement(child, 'col'))
+            .map((column) => {
+                const value = attributeValue(column.attributes, 'width');
+                if (value === undefined || /^\d{1,4}%$/u.test(value))
+                    return undefined;
+                const match = /^(\d{1,4})(?:px)?$/u.exec(value);
+                const width = Number(match?.[1]);
+                if (
+                    match === null ||
+                    !Number.isInteger(width) ||
+                    width < 40 ||
+                    width > 1200
+                )
+                    throw new RichTextArgumentError(
+                        'table.column.resize',
+                        'found a column width that cannot be mapped safely.',
+                    );
+                return width;
+            }),
+    );
+    if (widths.length !== columns)
         throw new RichTextArgumentError(
             'table.column.resize',
             'requires column groups to match the logical table grid.',
         );
-    }
     return widths;
 }
 
@@ -2702,9 +3081,10 @@ function resizeMappedColumnGroups(
     width: number | null,
 ): HtmlElement {
     let logicalColumn = 0;
+    const expanded = expandedColumnGroups(table);
     return {
-        ...table,
-        children: table.children.map((child) => {
+        ...expanded,
+        children: expanded.children.map((child) => {
             if (!isElement(child, 'colgroup')) return child;
             return {
                 ...child,
@@ -2780,9 +3160,25 @@ function toggleHeaders(
                 {
                     ...cell.element,
                     tagName: makeHeader ? 'th' : 'td',
+                    attributes: makeHeader
+                        ? cell.element.attributes
+                        : updateAttribute(
+                              cell.element.attributes,
+                              'scope',
+                              null,
+                          ),
                 },
             ]),
         ),
+    );
+}
+
+function headerEnabled(args: readonly unknown[]): boolean {
+    if (args.length === 0) return true;
+    if (args.length === 1 && typeof args[0] === 'boolean') return args[0];
+    throw new RichTextArgumentError(
+        'table.header',
+        'requires an optional boolean.',
     );
 }
 
@@ -2790,33 +3186,47 @@ function setHeaderAxis(
     table: HtmlElement,
     parsed: ParsedTable,
     axis: 'column' | 'row',
+    enabled = true,
 ): HtmlElement {
-    const selected = new Set<ParsedCell>();
-    if (axis === 'row') {
-        for (const cell of parsed.rows[0]?.cells ?? []) selected.add(cell);
-    } else {
-        for (const row of parsed.rows) {
-            const cell = parsed.grid[row.row]?.[0];
-            if (cell !== undefined) selected.add(cell);
-        }
-    }
-    return replaceCells(
-        table,
-        new Map(
-            [...selected].map((cell) => [
-                cell,
-                {
-                    ...cell.element,
-                    attributes: updateAttribute(
-                        cell.element.attributes,
-                        'scope',
-                        axis === 'row' ? 'col' : 'row',
-                    ),
-                    tagName: 'th',
-                } as HtmlElement,
-            ]),
-        ),
+    const rowCells = new Set(parsed.grid[0] ?? []);
+    const columnCells = new Set(
+        parsed.grid
+            .map((row) => row[0])
+            .filter((cell): cell is ParsedCell => cell !== undefined),
     );
+    const selected = axis === 'row' ? rowCells : columnCells;
+    const opposite = axis === 'row' ? columnCells : rowCells;
+    const otherScope = axis === 'row' ? 'row' : 'col';
+    const exclusive = [...opposite].filter((cell) => !selected.has(cell));
+    const otherEnabled =
+        exclusive.length > 0
+            ? exclusive.every((cell) => cell.element.tagName === 'th')
+            : [...opposite].every(
+                  (cell) =>
+                      cell.element.tagName === 'th' &&
+                      attributeValue(cell.element.attributes, 'scope') ===
+                          otherScope,
+              );
+    return rewriteTableRows(table, parsed, (cell) => {
+        if (!selected.has(cell)) return cell.element;
+        const keepOther = otherEnabled && opposite.has(cell);
+        const header = enabled || keepOther;
+        return {
+            ...cell.element,
+            tagName: header ? 'th' : 'td',
+            attributes: updateAttribute(
+                cell.element.attributes,
+                'scope',
+                enabled
+                    ? axis === 'row'
+                        ? 'col'
+                        : 'row'
+                    : keepOther
+                      ? otherScope
+                      : null,
+            ),
+        };
+    });
 }
 
 function mergeCells(
@@ -2837,10 +3247,19 @@ function mergeCells(
         );
     }
     const selected = selectedCells(parsed, range);
-    if (selected.some((cell) => cell.rowspan !== 1 || cell.colspan !== 1)) {
+    if (
+        selected.length < 2 ||
+        selected.some(
+            (cell) =>
+                cell.row < range.top ||
+                cell.column < range.left ||
+                cell.row + cell.rowspan - 1 > range.bottom ||
+                cell.column + cell.colspan - 1 > range.right,
+        )
+    ) {
         throw new RichTextArgumentError(
             'table cell merge',
-            'requires split cells in the selected range.',
+            'requires complete cells in a rectangular range.',
         );
     }
     const anchor = parsed.grid[range.top]?.[range.left];
@@ -2882,6 +3301,13 @@ function splitCell(
         );
     }
     const anchor = parsed.grid[range.top]?.[range.left];
+    if (
+        anchor !== undefined &&
+        ((direction === 'rows' && anchor.rowspan === 1) ||
+            (direction === 'columns' && anchor.colspan === 1))
+    ) {
+        return bisectCell(table, parsed, anchor, direction);
+    }
     if (
         anchor === undefined ||
         (direction === 'rows'
@@ -2948,6 +3374,137 @@ function splitCell(
         positioned.sort((left, right) => left.column - right.column);
         return positioned.map(({ cell }) => cell);
     });
+}
+
+// Add one grid track while spanning neighboring cells across it. The new
+// empty half inherits formatting, but never duplicates the original cell ID.
+function bisectCell(
+    table: HtmlElement,
+    parsed: ParsedTable,
+    anchor: ParsedCell,
+    direction: 'columns' | 'rows',
+): HtmlElement {
+    const rows = parsed.rows.length + (direction === 'rows' ? 1 : 0);
+    const columns = parsed.columns + (direction === 'columns' ? 1 : 0);
+    if (
+        rows > maximumRows ||
+        columns > maximumColumns ||
+        rows * columns > maximumCells
+    ) {
+        throw new RichTextArgumentError(
+            'table.cell.split',
+            'would exceed table limits.',
+        );
+    }
+    const empty = htmlElement(
+        anchor.element.tagName,
+        anchor.element.attributes.filter(
+            (attribute) => attribute.name !== 'id',
+        ),
+        [],
+    );
+    if (direction === 'columns') {
+        const next = {
+            ...table,
+            children: transformRows(table.children, (row, index) => {
+                const cells = parsed.rows[index]?.cells ?? [];
+                return [
+                    {
+                        ...row,
+                        children: row.children.flatMap((child) => {
+                            const cell = cells.find(
+                                (candidate) => candidate.element === child,
+                            );
+                            if (cell === undefined) return [child];
+                            if (cell === anchor) return [cell.element, empty];
+                            if (
+                                cell.column <= anchor.column &&
+                                cell.column + cell.colspan > anchor.column
+                            ) {
+                                return [
+                                    {
+                                        ...cell.element,
+                                        attributes: setSpanAttributes(
+                                            cell.element.attributes,
+                                            cell.rowspan,
+                                            cell.colspan + 1,
+                                        ),
+                                    },
+                                ];
+                            }
+                            return [child];
+                        }),
+                    },
+                ];
+            }),
+        };
+        let columnIndex = 0;
+        const widen = (element: HtmlElement): HtmlElement => {
+            const span = Number(
+                attributeValue(element.attributes, 'span') ?? 1,
+            );
+            const contains =
+                columnIndex <= anchor.column &&
+                anchor.column < columnIndex + span;
+            columnIndex += span;
+            return contains
+                ? {
+                      ...element,
+                      attributes: updateAttribute(
+                          element.attributes,
+                          'span',
+                          String(span + 1),
+                      ),
+                  }
+                : element;
+        };
+        return {
+            ...next,
+            children: next.children.map((child) => {
+                if (!isElement(child, 'colgroup')) return child;
+                if (child.children.some((node) => isElement(node, 'col'))) {
+                    return {
+                        ...child,
+                        children: child.children.map((node) =>
+                            isElement(node, 'col') ? widen(node) : node,
+                        ),
+                    };
+                }
+                return widen(child);
+            }),
+        };
+    }
+    const replacements = new Map<ParsedCell, HtmlElement>();
+    for (const cell of new Set(parsed.grid[anchor.row] ?? [])) {
+        if (cell !== anchor)
+            replacements.set(cell, {
+                ...cell.element,
+                attributes: setSpanAttributes(
+                    cell.element.attributes,
+                    cell.rowspan + 1,
+                    cell.colspan,
+                ),
+            });
+    }
+    const byElement = new Map(
+        [...replacements].map(([cell, element]) => [cell.element, element]),
+    );
+    return {
+        ...table,
+        children: transformRows(table.children, (row, index) => {
+            const nextRow = {
+                ...row,
+                children: row.children.map((child) =>
+                    child.type === 'element'
+                        ? (byElement.get(child) ?? child)
+                        : child,
+                ),
+            };
+            return index === anchor.row
+                ? [nextRow, htmlElement('tr', [], [empty])]
+                : [nextRow];
+        }),
+    };
 }
 
 function replaceCellContents(
@@ -5413,12 +5970,12 @@ function tableCapabilities(
         mergeReason = '请选择至少两个相邻单元格。';
     } else if (!rangeUsesOneSection(table, parsed, selected)) {
         mergeReason = '不能跨越表头、表体或表尾分区合并。';
-    } else if (
-        parsed.rows.some((row) =>
-            row.cells.some((cell) => cell.rowspan !== 1 || cell.colspan !== 1),
-        )
-    ) {
-        mergeReason = '所选区域包含跨度冲突，请先拆分相关单元格。';
+    } else {
+        try {
+            mergeCells(table, parsed, selected);
+        } catch {
+            mergeReason = '所选区域包含跨度冲突，请选择完整矩形单元格。';
+        }
     }
     let splitReason: string | undefined;
     if (multiple) {
@@ -5530,16 +6087,6 @@ function selectedCells(
         }
     }
     return [...cells];
-}
-
-function requireUnmerged(parsed: ParsedTable, operation: string): void {
-    if (
-        parsed.rows.some((row) =>
-            row.cells.some((cell) => cell.rowspan !== 1 || cell.colspan !== 1),
-        )
-    ) {
-        throw new RichTextArgumentError(operation, 'requires split cells.');
-    }
 }
 
 function paintTableSelection(

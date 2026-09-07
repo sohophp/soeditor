@@ -52,6 +52,7 @@ export function attachClassicTableContext(
     editor: Editor,
     ui: EditorUi,
     visual: HTMLElement,
+    initialEvent?: Pick<Event, 'target' | 'type'>,
 ): () => void {
     const document = visual.ownerDocument;
     let balloon: DismissibleUiHandle | undefined;
@@ -68,11 +69,72 @@ export function attachClassicTableContext(
     let captionButton: HTMLButtonElement | undefined;
     let cellPropertiesButton: HTMLButtonElement | undefined;
     let propertiesButton: HTMLButtonElement | undefined;
+    let disposed = false;
     let resyncFrame: number | undefined;
     let resyncAttempts = 0;
     let resizeDragging = false;
+    let tableBookmark:
+        { index: number; count: number; id: string; text: string } | undefined;
+    let resizeSession:
+        | { handle: HTMLElement; pointerId: number; cancel: () => void }
+        | undefined;
+    const rememberTable = (table: HTMLElement): void => {
+        const tables = Array.from(
+            visual.querySelectorAll<HTMLElement>('.soeditor-table-widget'),
+        );
+        tableBookmark = {
+            index: tables.indexOf(table),
+            count: tables.length,
+            id: table.id,
+            text: table.textContent ?? '',
+        };
+    };
+    const resolveTable = (): HTMLElement | null => {
+        if (tableBookmark === undefined) return null;
+        const tables = Array.from(
+            visual.querySelectorAll<HTMLElement>('.soeditor-table-widget'),
+        );
+        if (tableBookmark.id !== '') {
+            const matches = tables.filter(
+                (table) => table.id === tableBookmark?.id,
+            );
+            if (matches.length === 1) return matches[0] ?? null;
+            const indexed = tables[tableBookmark.index];
+            return tables.length === tableBookmark.count &&
+                indexed?.id === tableBookmark.id
+                ? indexed
+                : null;
+        }
+        if (tables.length === tableBookmark.count)
+            return tables[tableBookmark.index] ?? null;
+        const matches = tables.filter(
+            (table) => table.textContent === tableBookmark?.text,
+        );
+        return matches.length === 1 ? (matches[0] ?? null) : null;
+    };
+    const finishResize = (): void => {
+        const session = resizeSession;
+        resizeSession = undefined;
+        if (session === undefined) return;
+        session.handle.removeAttribute('data-width');
+        session.handle.removeAttribute('data-height');
+        session.handle.style.removeProperty('transform');
+        if (session.handle.hasPointerCapture(session.pointerId))
+            session.handle.releasePointerCapture(session.pointerId);
+        resizeOverlay?.querySelector('[data-resize-feedback]')?.remove();
+    };
+    const cancelResize = (): void => {
+        const session = resizeSession;
+        finishResize();
+        session?.cancel();
+        resizeDragging = false;
+    };
+
     let projectionObserver: MutationObserver | undefined;
+    let refreshMenus: (() => void) | undefined;
+    let dismissMenus: (() => void) | undefined;
     const refreshCommandButtons = (): void => {
+        refreshMenus?.();
         const selectionKind = classicTableSelectionKind(
             activeTable,
             activeRange,
@@ -90,13 +152,20 @@ export function attachClassicTableContext(
                 selectionKind === 'rows'
                     ? 'Row properties'
                     : 'Table properties';
+            if (
+                propertiesButton.closest('.soeditor-table-context__menu') !==
+                null
+            ) {
+                propertiesButton.textContent = ui.translate(label);
+            }
             propertiesButton.title = ui.translate(label);
             propertiesButton.setAttribute('aria-label', ui.translate(label));
         }
         for (const [command, button] of commandButtons) {
             button.disabled =
                 command === 'table.cells.merge'
-                    ? !canMerge(
+                    ? selectionKind === 'caret' ||
+                      !canMerge(
                           activeTable === undefined
                               ? activeRange
                               : (selectedTableRange(activeTable, activeRange) ??
@@ -105,18 +174,22 @@ export function attachClassicTableContext(
                     : command.startsWith('table.cell.split')
                       ? !canSplit(command)
                       : !editor.commands.canExecute(command);
-            button.hidden = !tableCommandApplies(command, selectionKind);
+            button.hidden =
+                command === 'table.cells.merge' && selectionKind === 'caret';
+            button.disabled ||= !tableCommandApplies(command, selectionKind);
             if (button.disabled && !button.hidden) {
                 if (command === 'table.cells.merge') {
-                    button.title =
-                        '请选择同一表格分区内、不含现有跨度的完整矩形。';
+                    button.title = ui.translate(
+                        'Select complete cells in one rectangular table section.',
+                    );
                 } else if (command.startsWith('table.cell.split')) {
-                    button.title =
-                        command === 'table.cell.splitRows'
-                            ? '当前单元格没有可按行拆分的 rowspan。'
-                            : command === 'table.cell.splitColumns'
-                              ? '当前单元格没有可按列拆分的 colspan。'
-                              : '当前单元格没有可拆分的跨度。';
+                    button.title = ui.translate(
+                        selectionKind !== 'caret'
+                            ? 'Select one cell to split.'
+                            : command === 'table.cell.split'
+                              ? 'Select a merged cell to split completely.'
+                              : 'Splitting would exceed table limits.',
+                    );
                 }
             } else {
                 button.title = button.getAttribute('aria-label') ?? '';
@@ -140,68 +213,39 @@ export function attachClassicTableContext(
         range: unknown,
         table: HTMLElement | undefined = activeTable,
     ): boolean => {
-        if (typeof range !== 'object' || range === null) return false;
-        const anchor = Reflect.get(range, 'anchor');
-        const focus = Reflect.get(range, 'focus');
-        if (
-            typeof anchor !== 'object' ||
-            anchor === null ||
-            typeof focus !== 'object' ||
-            focus === null
-        )
+        if (table === undefined || range === undefined) return false;
+        try {
+            return editor.execute('table.cells.canMerge', range) === true;
+        } catch {
             return false;
-        const rows = [Reflect.get(anchor, 'row'), Reflect.get(focus, 'row')];
-        const columns = [
-            Reflect.get(anchor, 'column'),
-            Reflect.get(focus, 'column'),
-        ];
-        if (![...rows, ...columns].every(Number.isInteger)) return false;
-        const selectedCount =
-            (Math.abs(Number(rows[0]) - Number(rows[1])) + 1) *
-            (Math.abs(Number(columns[0]) - Number(columns[1])) + 1);
-        if (selectedCount < 2 || table === undefined) return false;
-        const selectedCells = Array.from(
-            table.querySelectorAll<HTMLElement>(
-                '.soeditor-table-cell.is-structurally-selected',
-            ),
-        );
-        if (selectedCells.length !== selectedCount) return false;
-        const sections = new Set(
-            selectedCells.map((cell) => {
-                const nativeCell = cell.matches('td,th')
-                    ? cell
-                    : cell.closest<HTMLElement>('td,th');
-                return nativeCell?.parentElement?.parentElement;
-            }),
-        );
-        if (sections.size !== 1) return false;
-        return selectedCells.every((cell) => {
-            const nativeCell = cell.matches('td,th')
-                ? cell
-                : cell.closest<HTMLElement>('td,th');
-            return (
-                (nativeCell?.getAttribute('rowspan') ?? '1') === '1' &&
-                (nativeCell?.getAttribute('colspan') ?? '1') === '1'
-            );
-        });
+        }
     };
     const canSplit = (command: string): boolean => {
         if (classicTableSelectionKind(activeTable, activeRange) !== 'caret')
             return false;
-        const nativeCell = activeTarget?.matches('td,th')
-            ? activeTarget
-            : activeTarget?.closest<HTMLElement>('td,th');
-        const rows = Number(nativeCell?.getAttribute('rowspan') ?? '1');
-        const columns = Number(nativeCell?.getAttribute('colspan') ?? '1');
-        return command === 'table.cell.splitRows'
-            ? rows > 1
-            : command === 'table.cell.splitColumns'
-              ? columns > 1
-              : rows > 1 || columns > 1;
+        if (!editor.commands.canExecute(command)) return false;
+        try {
+            return (
+                editor.execute(
+                    'table.cell.canSplit',
+                    activeRange,
+                    command === 'table.cell.splitRows'
+                        ? 'rows'
+                        : command === 'table.cell.splitColumns'
+                          ? 'columns'
+                          : 'all',
+                ) === true
+            );
+        } catch {
+            return false;
+        }
     };
     const close = (): void => {
+        cancelResize();
         balloon?.close();
         balloon = undefined;
+        refreshMenus = undefined;
+        dismissMenus = undefined;
         ui.setStatus();
         commandButtons.clear();
         scopeButtons.length = 0;
@@ -213,6 +257,7 @@ export function attachClassicTableContext(
         resizeOverlay = undefined;
     };
     const attachResizeHandles = (table: HTMLElement): void => {
+        rememberTable(table);
         // The rich-text table node view already owns resize handles in the
         // native WYSIWYG projection. Do not add a second overlay on top of
         // those controls: the duplicate hit target can turn a boundary drag
@@ -240,6 +285,38 @@ export function attachClassicTableContext(
         if (!(shadow instanceof ShadowRoot)) return;
         const overlay = document.createElement('div');
         overlay.className = 'soeditor-table-resize-overlay';
+        const beginResize = (
+            handle: HTMLElement,
+            event: PointerEvent,
+            cancel: () => void,
+        ): void => {
+            finishResize();
+            resizeSession = { handle, pointerId: event.pointerId, cancel };
+        };
+        const feedback = (
+            event: PointerEvent,
+            value: number,
+            label: string,
+            min: number,
+            max: number,
+        ): void => {
+            let output = overlay.querySelector<HTMLElement>(
+                '[data-resize-feedback]',
+            );
+            if (output === null) {
+                output = document.createElement('output');
+                output.dataset.resizeFeedback = 'true';
+                output.className = 'soeditor-table-resize-feedback';
+                output.setAttribute('role', 'status');
+                overlay.append(output);
+            }
+            const bounds = table.getBoundingClientRect();
+            const viewport = shadow.host.getBoundingClientRect();
+            output.textContent = `${ui.translate(label)}: ${Math.round(value)} px${value === min || value === max ? ` · ${ui.translate('Limit reached')}` : ''}`;
+            output.style.left = `${Math.max(viewport.left + 4, Math.min(event.clientX + 12, viewport.right - 170)) - bounds.left}px`;
+            output.style.top = `${Math.max(viewport.top + 4, event.clientY - 32) - bounds.top}px`;
+        };
+
         const activateCellForResize = (cell: HTMLTableCellElement): void => {
             const PointerEventConstructor = document.defaultView?.PointerEvent;
             if (PointerEventConstructor === undefined) {
@@ -259,9 +336,11 @@ export function attachClassicTableContext(
                 }),
             );
         };
+        const scrollHost = shadow.host;
         const position = (): void => {
             if (!table.isConnected) return;
             const tableRect = table.getBoundingClientRect();
+            const tableRows = Array.from(table.querySelectorAll('tr'));
             // The overlay is an absolutely positioned shadow child. In split
             // mode `contain: paint` makes the visual pane its containing
             // block; otherwise the positioned classic root is the containing
@@ -280,26 +359,35 @@ export function attachClassicTableContext(
                 tableRect.left -
                     containingRect.left -
                     containingBlock.clientLeft +
-                    visual.scrollLeft,
+                    containingBlock.scrollLeft,
             )}px`;
             overlay.style.insetBlockStart = `${String(
                 tableRect.top -
                     containingRect.top -
                     containingBlock.clientTop +
-                    visual.scrollTop,
+                    containingBlock.scrollTop,
             )}px`;
             overlay.style.width = `${String(tableRect.width)}px`;
             overlay.style.height = `${String(tableRect.height)}px`;
-            const firstRow = table.querySelector('tr');
-            for (const [column, cell] of Array.from(
-                firstRow?.children ?? [],
-            ).entries()) {
+            for (const [column, cell] of resizeColumns.entries()) {
                 const handle = overlay.querySelector<HTMLElement>(
                     `[data-resize-column="${String(column)}"]`,
                 );
                 if (handle === null) continue;
                 const rectangle = cell.getBoundingClientRect();
-                handle.style.insetInlineStart = `${String(rectangle.right - tableRect.left - 8)}px`;
+                // Only expose segments where this logical boundary is an
+                // actual cell border, leaving spanning cell interiors editable.
+                const segments = resizeGrid.flatMap((line, row) => {
+                    if (line[column] === line[column + 1]) return [];
+                    const rowBox = tableRows[row]?.getBoundingClientRect();
+                    if (rowBox === undefined) return [];
+                    const top = rowBox.top - tableRect.top;
+                    const bottom = rowBox.bottom - tableRect.top;
+                    return [`M0 ${top}H8V${bottom}H0Z`];
+                });
+                handle.style.clipPath = `path("${segments.join(' ') || 'M0 0Z'}")`;
+                // Center the 8px hit target and its 2px guide on the border.
+                handle.style.insetInlineStart = `${String(rectangle.left + (rectangle.width * (column - (resizeGrid.find((line) => line.includes(cell))?.indexOf(cell) ?? column) + 1)) / cell.colSpan - tableRect.left - 4)}px`;
             }
             for (const [row, tableRow] of Array.from(
                 table.querySelectorAll('tr'),
@@ -310,16 +398,94 @@ export function attachClassicTableContext(
                 if (handle === null) continue;
                 const rectangle = tableRow.getBoundingClientRect();
                 handle.style.insetBlockStart = `${String(rectangle.bottom - tableRect.top - 4)}px`;
+                const segments = [...new Set(resizeGrid[row] ?? [])].flatMap(
+                    (cell) => {
+                        const column = resizeGrid[row]?.indexOf(cell) ?? -1;
+                        if (resizeGrid[row + 1]?.[column] === cell) return [];
+                        const box = cell.getBoundingClientRect();
+                        return [
+                            `M${box.left - tableRect.left} 0H${box.right - tableRect.left}V8H${box.left - tableRect.left}Z`,
+                        ];
+                    },
+                );
+                handle.style.clipPath = `path("${segments.join(' ') || 'M0 0Z'}")`;
             }
         };
+        // Border handles may overlap flush-left text in unpadded CMS tables.
+        // Let the browser place its native caret when hovering actual content.
+        const avoidText = (event: PointerEvent): void => {
+            if (resizeDragging) return;
+            for (const handle of Array.from(
+                overlay.querySelectorAll<HTMLElement>('button'),
+            )) {
+                const box = handle.getBoundingClientRect();
+                if (
+                    event.clientX < box.left ||
+                    event.clientX > box.right ||
+                    event.clientY < box.top ||
+                    event.clientY > box.bottom
+                ) {
+                    handle.style.removeProperty('pointer-events');
+                    continue;
+                }
+                const overText = Array.from(
+                    table.querySelectorAll<HTMLTableCellElement>('td,th'),
+                ).some((cell) => {
+                    const bounds = cell.getBoundingClientRect();
+                    if (
+                        event.clientX < bounds.left ||
+                        event.clientX > bounds.right ||
+                        event.clientY < bounds.top ||
+                        event.clientY > bounds.bottom
+                    )
+                        return false;
+                    // A logical boundary hidden by a spanning cell is not a
+                    // visible drag line at this pointer position.
+                    if (
+                        handle.dataset.resizeColumn !== undefined &&
+                        cell.colSpan > 1 &&
+                        event.clientX > bounds.left + 4 &&
+                        event.clientX < bounds.right - 4
+                    )
+                        return true;
+                    if (
+                        handle.dataset.resizeRow !== undefined &&
+                        cell.rowSpan > 1 &&
+                        event.clientY > bounds.top + 4 &&
+                        event.clientY < bounds.bottom - 4
+                    )
+                        return true;
+                    const walker = document.createTreeWalker(cell, 4);
+                    for (
+                        let node = walker.nextNode();
+                        node !== null;
+                        node = walker.nextNode()
+                    ) {
+                        const range = document.createRange();
+                        range.selectNodeContents(node);
+                        if (
+                            Array.from(range.getClientRects()).some(
+                                (rect) =>
+                                    event.clientX >= rect.left &&
+                                    event.clientX <= rect.right &&
+                                    event.clientY >= rect.top &&
+                                    event.clientY <= rect.bottom,
+                            )
+                        )
+                            return true;
+                    }
+                    return false;
+                });
+                handle.style.pointerEvents = overText ? 'none' : 'auto';
+            }
+        };
+        document.addEventListener('pointermove', avoidText, true);
         const redirectStalePointer = (
             event: PointerEvent,
             selector: string,
         ): boolean => {
             if (table.isConnected) return false;
-            const nextTable = visual.querySelector<HTMLElement>(
-                '.soeditor-table-widget',
-            );
+            const nextTable = resolveTable();
             const PointerEventConstructor = document.defaultView?.PointerEvent;
             if (nextTable === null || PointerEventConstructor === undefined) {
                 return false;
@@ -349,10 +515,17 @@ export function attachClassicTableContext(
             );
             return true;
         };
-        const firstRow = table.querySelector('tr');
-        for (const [column, cell] of Array.from(
-            firstRow?.children ?? [],
-        ).entries()) {
+        const resizeGrid = tableCellGrid(table);
+        const resizeColumns = (resizeGrid[0] ?? []).map((fallback, column) =>
+            resizeGrid.reduce((best, line) => {
+                const candidate = line[column];
+                return candidate !== undefined &&
+                    candidate.colSpan < best.colSpan
+                    ? candidate
+                    : best;
+            }, fallback),
+        );
+        for (const [column, cell] of resizeColumns.entries()) {
             if (!(cell instanceof HTMLTableCellElement)) continue;
             const handle = document.createElement('button');
             handle.type = 'button';
@@ -362,24 +535,36 @@ export function attachClassicTableContext(
                 'aria-label',
                 `Resize column ${String(column + 1)}`,
             );
-            let start = 0;
             let origin = 0;
             let width = 0;
+            let initialWidth = 0;
+            const firstColumn =
+                resizeGrid.find((line) => line.includes(cell))?.indexOf(cell) ??
+                column;
+            const affectedColumns = column - firstColumn + 1;
             const commit = (): void => {
                 if (!resizeDragging) return;
+                if (resizeSession !== undefined && width === initialWidth) {
+                    cancelResize();
+                    return;
+                }
+                finishResize();
                 resizeDragging = false;
                 handle.style.removeProperty('transform');
-                const targetTable = table.isConnected
-                    ? table
-                    : visual.querySelector<HTMLElement>(
-                          '.soeditor-table-widget',
-                      );
-                const targetCell =
-                    targetTable?.querySelectorAll('tr')[0]?.children[column];
+                const targetTable = table.isConnected ? table : resolveTable();
+                const targetCell = tableCellGrid(targetTable ?? undefined)[0]?.[
+                    column
+                ];
                 if (!(targetCell instanceof HTMLTableCellElement)) return;
                 activateCellForResize(targetCell);
-                editor.execute('table.selection.column');
-                editor.execute('table.column.resize', { width });
+                editor.execute(
+                    'table.column.resize',
+                    {
+                        anchor: { row: 0, column: firstColumn },
+                        focus: { row: 0, column },
+                    },
+                    { width },
+                );
                 resyncTableContext();
             };
             const cancel = (): void => {
@@ -400,22 +585,40 @@ export function attachClassicTableContext(
                     return;
                 }
                 resizeDragging = true;
-                start = event.clientX;
                 origin = event.clientX;
-                width = cell.getBoundingClientRect().width;
+                width = cell.getBoundingClientRect().width / cell.colSpan;
+                initialWidth = width;
+                beginResize(handle, event, cancel);
                 handle.setPointerCapture(event.pointerId);
+                feedback(event, width, 'Column width', 40, 1200);
             });
             handle.addEventListener('pointermove', (event) => {
                 if (!handle.hasPointerCapture(event.pointerId)) return;
                 const delta = event.clientX - origin;
-                const step = event.clientX - start;
-                width = Math.max(40, Math.min(1200, Math.round(width + step)));
-                start = event.clientX;
-                handle.style.transform = `translateX(${String(delta)}px)`;
+
+                width =
+                    delta === 0
+                        ? initialWidth
+                        : Math.max(
+                              40,
+                              Math.min(
+                                  1200,
+                                  Math.round(
+                                      initialWidth + delta / affectedColumns,
+                                  ),
+                              ),
+                          );
+                handle.style.transform = `translateX(${String((width - initialWidth) * affectedColumns)}px)`;
+                feedback(event, width, 'Column width', 40, 1200);
                 handle.dataset.width = `${String(width)} px`;
             });
             handle.addEventListener('pointerup', commit);
-            handle.addEventListener('pointercancel', cancel);
+            handle.addEventListener('pointercancel', () => {
+                if (resizeSession?.handle === handle) cancelResize();
+            });
+            handle.addEventListener('lostpointercapture', () => {
+                if (resizeSession?.handle === handle) cancelResize();
+            });
             handle.addEventListener('keydown', (event) => {
                 if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
                     return;
@@ -424,8 +627,9 @@ export function attachClassicTableContext(
                     40,
                     Math.min(
                         1200,
-                        Math.round(cell.getBoundingClientRect().width) +
-                            (event.key === 'ArrowLeft' ? -10 : 10),
+                        Math.round(
+                            cell.getBoundingClientRect().width / cell.colSpan,
+                        ) + (event.key === 'ArrowLeft' ? -10 : 10),
                     ),
                 );
                 resizeDragging = true;
@@ -444,25 +648,34 @@ export function attachClassicTableContext(
             handle.dataset.resizeRow = String(row);
             handle.setAttribute('role', 'slider');
             handle.setAttribute('aria-label', `Resize row ${String(row + 1)}`);
-            let start = 0;
             let origin = 0;
             let height = 0;
+            let initialHeight = 0;
+            let startX = 0;
+            let crossColumn: HTMLElement | undefined;
             const commit = (): void => {
                 if (!resizeDragging) return;
+                if (resizeSession !== undefined && height === initialHeight) {
+                    cancelResize();
+                    return;
+                }
+                finishResize();
                 resizeDragging = false;
+                if (crossColumn !== undefined) {
+                    crossColumn = undefined;
+                    return;
+                }
                 handle.style.removeProperty('transform');
-                activateCellForResize(cell);
-                const targetTable = table.isConnected
-                    ? table
-                    : visual.querySelector<HTMLElement>(
-                          '.soeditor-table-widget',
-                      );
+                const targetTable = table.isConnected ? table : resolveTable();
                 const targetRow = targetTable?.querySelectorAll('tr')[row];
                 const targetCell = targetRow?.querySelector('td,th');
                 if (!(targetCell instanceof HTMLTableCellElement)) return;
                 activateCellForResize(targetCell);
-                editor.execute('table.selection.row');
-                editor.execute('table.row.properties', { height });
+                editor.execute(
+                    'table.row.properties',
+                    { anchor: { row, column: 0 }, focus: { row, column: 0 } },
+                    { height },
+                );
                 resyncTableContext();
             };
             const cancel = (): void => {
@@ -482,30 +695,103 @@ export function attachClassicTableContext(
                 ) {
                     return;
                 }
+                startX = event.clientX;
+                crossColumn = Array.from(
+                    overlay.querySelectorAll<HTMLElement>(
+                        '[data-resize-column]',
+                    ),
+                ).find((candidate) => {
+                    const bounds = candidate.getBoundingClientRect();
+                    const column = Number(candidate.dataset.resizeColumn);
+                    return (
+                        candidate.style.pointerEvents !== 'none' &&
+                        event.clientX >= bounds.left &&
+                        event.clientX <= bounds.right &&
+                        resizeGrid.some((line, index) => {
+                            if (line[column] === line[column + 1]) return false;
+                            const rowBounds = table
+                                .querySelectorAll('tr')
+                                .item(index)
+                                ?.getBoundingClientRect();
+                            return (
+                                rowBounds !== undefined &&
+                                event.clientY >= rowBounds.top - 4 &&
+                                event.clientY <= rowBounds.bottom + 4
+                            );
+                        })
+                    );
+                });
                 resizeDragging = true;
-                start = event.clientY;
                 origin = event.clientY;
                 height = tableRow.getBoundingClientRect().height;
+                initialHeight = height;
+                beginResize(handle, event, cancel);
                 handle.setPointerCapture(event.pointerId);
+                feedback(event, height, 'Row height', 24, 1000);
             });
             handle.addEventListener('pointermove', (event) => {
                 if (!handle.hasPointerCapture(event.pointerId)) return;
                 const delta = event.clientY - origin;
-                const step = event.clientY - start;
-                height = Math.max(
-                    24,
-                    Math.min(1000, Math.round(height + step)),
-                );
-                start = event.clientY;
-                handle.style.transform = `translateY(${String(delta)}px)`;
+                if (crossColumn !== undefined) {
+                    const horizontal = event.clientX - startX;
+                    if (Math.max(Math.abs(horizontal), Math.abs(delta)) < 3)
+                        return;
+                    const target = crossColumn;
+                    crossColumn = undefined;
+                    if (Math.abs(horizontal) > Math.abs(delta)) {
+                        // Row and column hit targets overlap at crossings.
+                        // Transfer the gesture once its direction is clear.
+                        finishResize();
+                        const Pointer =
+                            document.defaultView?.PointerEvent ?? PointerEvent;
+                        target.dispatchEvent(
+                            new Pointer('pointerdown', {
+                                bubbles: true,
+                                pointerId: event.pointerId,
+                                pointerType: event.pointerType,
+                                button: 0,
+                                buttons: 1,
+                                clientX: startX,
+                                clientY: origin,
+                            }),
+                        );
+                        target.dispatchEvent(
+                            new Pointer('pointermove', {
+                                bubbles: true,
+                                pointerId: event.pointerId,
+                                pointerType: event.pointerType,
+                                buttons: 1,
+                                clientX: event.clientX,
+                                clientY: event.clientY,
+                            }),
+                        );
+                        return;
+                    }
+                }
+
+                height =
+                    delta === 0
+                        ? initialHeight
+                        : Math.max(
+                              24,
+                              Math.min(1000, Math.round(initialHeight + delta)),
+                          );
+                handle.style.transform = `translateY(${String(height - initialHeight)}px)`;
+                feedback(event, height, 'Row height', 24, 1000);
                 handle.dataset.height = `${String(height)} px`;
             });
             handle.addEventListener('pointerup', commit);
-            handle.addEventListener('pointercancel', cancel);
+            handle.addEventListener('pointercancel', () => {
+                if (resizeSession?.handle === handle) cancelResize();
+            });
+            handle.addEventListener('lostpointercapture', () => {
+                if (resizeSession?.handle === handle) cancelResize();
+            });
             handle.addEventListener('keydown', (event) => {
                 if (event.key !== 'ArrowUp' && event.key !== 'ArrowDown')
                     return;
                 event.preventDefault();
+                crossColumn = undefined;
                 height = Math.max(
                     24,
                     Math.min(
@@ -533,25 +819,40 @@ export function attachClassicTableContext(
             }
         }
         visual.addEventListener('scroll', position);
+        scrollHost.addEventListener('scroll', position);
         document.defaultView?.addEventListener('resize', position);
         disposeResizePosition = () => {
+            document.removeEventListener('pointermove', avoidText, true);
             visual.removeEventListener('scroll', position);
+            scrollHost.removeEventListener('scroll', position);
             document.defaultView?.removeEventListener('resize', position);
         };
         position();
     };
     const resyncTableContext = (): void => {
-        if (resyncFrame !== undefined) return;
+        if (disposed || resyncFrame !== undefined) return;
         const view = document.defaultView;
         if (view === null) return;
         resyncFrame = view.requestAnimationFrame(() => {
             resyncFrame = undefined;
             if (activeTable === undefined) return;
-            if (resizeDragging) return;
+            if (resizeDragging) {
+                if (
+                    resizeSession?.handle.isConnected === true &&
+                    activeTable.isConnected
+                )
+                    return;
+                cancelResize();
+            }
             const coordinator = editor.services.get(
                 projectionCoordinatorServiceToken,
             );
-            if (coordinator.snapshot.primary !== 'wysiwyg') return;
+            if (
+                !coordinator.snapshot.activities.some(
+                    (activity) => activity.id === 'wysiwyg' && activity.visible,
+                )
+            )
+                return;
             const ownsResizeHandles =
                 resizeOverlay?.isConnected === true ||
                 activeTable.querySelector(
@@ -561,13 +862,19 @@ export function attachClassicTableContext(
                 resyncAttempts = 0;
                 return;
             }
-            const nextTable = visual.querySelector<HTMLElement>(
-                '.soeditor-table-widget',
-            );
+            const nextTable = resolveTable();
             if (nextTable === null) {
+                if (visual.querySelector('.soeditor-table-widget') !== null) {
+                    close();
+                    activeTable = undefined;
+                    return;
+                }
                 if (resyncAttempts < 10) {
                     resyncAttempts += 1;
                     resyncTableContext();
+                } else {
+                    close();
+                    activeTable = undefined;
                 }
                 return;
             }
@@ -585,7 +892,6 @@ export function attachClassicTableContext(
     const coordinator = editor.services.get(projectionCoordinatorServiceToken);
     const disposeProjection = coordinator.subscribe((snapshot) => {
         if (
-            snapshot.primary === 'wysiwyg' &&
             snapshot.activities.some(
                 (activity) => activity.id === 'wysiwyg' && activity.visible,
             )
@@ -1407,7 +1713,7 @@ export function attachClassicTableContext(
         dialog.element.classList.add('soeditor-table-structure-dialog');
         body.querySelector<HTMLElement>('input,button')?.focus();
     };
-    const selection = (event: Event): void => {
+    const selection = (event: Pick<Event, 'target' | 'type'>): void => {
         const origin = event.target;
         if (!(origin instanceof Element)) return;
         const target = origin.closest<HTMLElement>('.soeditor-table-cell');
@@ -1430,7 +1736,7 @@ export function attachClassicTableContext(
         }
         activeTarget = target;
         activeSelection = activate;
-        activeRange = selectedRange ?? selectedTableRange(table);
+        activeRange = selectedTableRange(table, selectedRange) ?? selectedRange;
         ui.refresh();
         if (activeTable !== table) {
             selectionObserver?.disconnect();
@@ -1460,6 +1766,12 @@ export function attachClassicTableContext(
         balloon = ui.balloons.show({
             anchor: table,
             placement: 'above',
+            avoid: () => {
+                const cell = table.querySelector(
+                    '.soeditor-table-cell.is-editing',
+                );
+                return cell ? [cell.getBoundingClientRect()] : [];
+            },
             content: (container) => {
                 container.classList.add('soeditor-table-context');
                 container.setAttribute('aria-label', 'Table tools');
@@ -1585,13 +1897,15 @@ export function attachClassicTableContext(
                 const actions = [
                     ['table.cells.merge', 'Merge cells'],
                     ['table.cells.clear', 'Clear cells'],
-                    ['table.row.insertAfter', 'Add row'],
+                    ['table.row.insertBefore', 'Insert row above'],
+                    ['table.row.insertAfter', 'Insert row below'],
                     ['table.row.remove', 'Delete row'],
-                    ['table.column.insertAfter', 'Add column'],
+                    ['table.column.insertBefore', 'Insert column left'],
+                    ['table.column.insertAfter', 'Insert column right'],
                     ['table.column.remove', 'Delete column'],
-                    ['table.header.toggle', 'Toggle header'],
-                    ['table.cell.splitRows', 'Split into rows'],
-                    ['table.cell.splitColumns', 'Split into columns'],
+                    ['table.header.toggle', 'Toggle header cell'],
+                    ['table.cell.splitColumns', 'Split cell vertically'],
+                    ['table.cell.splitRows', 'Split cell horizontally'],
                     ['table.cell.split', 'Split completely'],
                     ['table.remove', 'Delete table'],
                 ] as const;
@@ -1612,8 +1926,8 @@ export function attachClassicTableContext(
                             : command,
                         label,
                     );
-                    button.title = label;
-                    button.setAttribute('aria-label', label);
+                    button.title = ui.translate(label);
+                    button.setAttribute('aria-label', ui.translate(label));
                     button.disabled =
                         command === 'table.cells.merge'
                             ? !canMerge(activeRange, table)
@@ -1666,6 +1980,425 @@ export function attachClassicTableContext(
                     });
                     container.append(button);
                 }
+                const extras = Array.from(
+                    container.children,
+                ) as HTMLButtonElement[];
+                container.replaceChildren();
+                container.setAttribute('role', 'toolbar');
+                const menus: {
+                    button: HTMLButtonElement;
+                    panel: HTMLElement;
+                }[] = [];
+                const hideMenus = (): void => {
+                    for (const { button, panel } of menus) {
+                        panel.hidden = true;
+                        button.setAttribute('aria-expanded', 'false');
+                    }
+                };
+                dismissMenus = hideMenus;
+                const menu = (label: string, axis: string): HTMLElement => {
+                    const group = document.createElement('div');
+                    group.className = 'soeditor-table-context__dropdown';
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'soeditor-table-context__button';
+                    button.dataset.tableMenu = axis;
+                    button.title = ui.translate(label);
+                    button.setAttribute('aria-label', ui.translate(label));
+                    button.setAttribute('aria-haspopup', 'true');
+                    button.setAttribute('aria-expanded', 'false');
+                    const icon = document.createElement('span');
+                    icon.className = `soeditor-table-context__grid soeditor-table-context__grid--${axis}`;
+                    icon.setAttribute('aria-hidden', 'true');
+                    for (let index = 0; index < 9; index++)
+                        icon.append(document.createElement('i'));
+                    if (axis === 'properties') icon.replaceChildren();
+                    const arrow = document.createElement('span');
+                    arrow.className = 'soeditor-table-context__chevron';
+                    arrow.setAttribute('aria-hidden', 'true');
+                    button.append(icon, arrow);
+                    const panel = document.createElement('div');
+                    panel.className = 'soeditor-table-context__menu';
+                    panel.setAttribute('role', 'group');
+                    panel.setAttribute('aria-label', ui.translate(label));
+                    panel.hidden = true;
+                    menus.push({ button, panel });
+                    const open = (): void => {
+                        hideMenus();
+                        panel.hidden = false;
+                        refreshCommandButtons();
+                        panel.style.transform = '';
+                        panel.style.top = 'calc(100% + 4px)';
+                        panel.style.bottom = 'auto';
+                        panel.hidden = false;
+                        button.setAttribute('aria-expanded', 'true');
+                        const trigger = button.getBoundingClientRect();
+                        const below =
+                            (document.defaultView?.innerHeight ?? 768) -
+                            trigger.bottom -
+                            12;
+                        const above = trigger.top - 12;
+                        const upward =
+                            panel.scrollHeight > below && above > below;
+                        panel.style.maxHeight = `${Math.max(48, upward ? above : below)}px`;
+                        if (upward) {
+                            panel.style.top = 'auto';
+                            panel.style.bottom = 'calc(100% + 4px)';
+                        }
+                        const bounds = panel.getBoundingClientRect();
+                        panel.style.transform = `translateX(${Math.min(0, document.documentElement.clientWidth - bounds.right - 8)}px)`;
+                    };
+                    button.addEventListener('click', () =>
+                        panel.hidden ? open() : hideMenus(),
+                    );
+                    let returnFocus = button;
+                    const openFromKeyboard = (event: KeyboardEvent): void => {
+                        if (event.key !== 'ArrowDown') return;
+                        returnFocus = event.currentTarget as HTMLButtonElement;
+                        event.preventDefault();
+                        open();
+                        panel
+                            .querySelector<HTMLButtonElement>(
+                                'button:not(:disabled):not([hidden])',
+                            )
+                            ?.focus();
+                    };
+                    button.addEventListener('keydown', openFromKeyboard);
+                    button.addEventListener('click', () => {
+                        returnFocus = button;
+                    });
+                    group.addEventListener('keydown', (event) => {
+                        if (event.key === 'Escape') {
+                            event.preventDefault();
+                            event.stopPropagation();
+                            hideMenus();
+                            returnFocus.focus();
+                            return;
+                        }
+                        if (event.key === 'Tab') {
+                            hideMenus();
+                            return;
+                        }
+                        if (!panel.contains(event.target as Node)) return;
+                        const buttons = Array.from(
+                            panel.querySelectorAll<HTMLButtonElement>(
+                                'button:not(:disabled):not([hidden])',
+                            ),
+                        );
+                        const current = buttons.indexOf(
+                            event.target as HTMLButtonElement,
+                        );
+                        const index =
+                            event.key === 'Home'
+                                ? 0
+                                : event.key === 'End'
+                                  ? buttons.length - 1
+                                  : event.key === 'ArrowDown'
+                                    ? (current + 1) % buttons.length
+                                    : event.key === 'ArrowUp'
+                                      ? (current + buttons.length - 1) %
+                                        buttons.length
+                                      : -1;
+                        if (index < 0) return;
+                        event.preventDefault();
+                        buttons[index]?.focus();
+                    });
+                    if (axis === 'merge') {
+                        const primary = document.createElement('button');
+                        primary.type = 'button';
+                        primary.className = 'soeditor-table-context__button';
+                        primary.dataset.tableMerge = 'true';
+                        primary.title = ui.translate('Merge selected cells');
+                        primary.setAttribute(
+                            'aria-label',
+                            ui.translate('Merge selected cells'),
+                        );
+                        primary.append(icon);
+                        primary.addEventListener('keydown', openFromKeyboard);
+                        primary.addEventListener('click', () => {
+                            returnFocus = primary;
+                            const range =
+                                activeTable === undefined
+                                    ? activeRange
+                                    : (selectedTableRange(
+                                          activeTable,
+                                          activeRange,
+                                      ) ?? activeRange);
+                            if (
+                                classicTableSelectionKind(
+                                    activeTable,
+                                    range,
+                                ) !== 'caret'
+                            ) {
+                                if (canMerge(range))
+                                    execute('table.cells.merge', range);
+                                else open();
+                            } else open();
+                        });
+                        group.classList.add(
+                            'soeditor-table-context__dropdown--split',
+                        );
+                        group.append(primary);
+                    }
+                    group.append(button, panel);
+                    container.append(group);
+                    return panel;
+                };
+                const columnMenu = menu('Column', 'column');
+                const rowMenu = menu('Row', 'row');
+                const mergeMenu = menu('Merge and split cells', 'merge');
+                const moreMenu = menu('More table tools', 'properties');
+                container.addEventListener('keydown', (event) => {
+                    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight')
+                        return;
+                    const target = event.target;
+                    if (!(target instanceof Element)) return;
+                    const group = target.closest(
+                        '.soeditor-table-context__dropdown',
+                    );
+                    const index = menus.findIndex(
+                        ({ button }) => button.parentElement === group,
+                    );
+                    if (index < 0) return;
+                    event.preventDefault();
+                    event.stopPropagation();
+                    const direction =
+                        (event.key === 'ArrowRight' ? 1 : -1) *
+                        (getComputedStyle(container).direction === 'rtl'
+                            ? -1
+                            : 1);
+                    const next =
+                        menus[
+                            (index + direction + menus.length) % menus.length
+                        ];
+                    if (next === undefined) return;
+                    const wasOpen = menus.some(({ panel }) => !panel.hidden);
+                    next.button.focus();
+                    if (wasOpen) {
+                        const Keyboard =
+                            document.defaultView?.KeyboardEvent ??
+                            KeyboardEvent;
+                        next.button.dispatchEvent(
+                            new Keyboard('keydown', {
+                                key: 'ArrowDown',
+                                bubbles: true,
+                            }),
+                        );
+                    }
+                });
+                const item = (
+                    panel: HTMLElement,
+                    label: string,
+                    run: () => void,
+                ): HTMLButtonElement => {
+                    const button = document.createElement('button');
+                    button.type = 'button';
+                    button.className = 'soeditor-table-context__button';
+                    button.textContent = ui.translate(label);
+                    button.setAttribute('aria-label', ui.translate(label));
+                    button.addEventListener('click', run);
+                    panel.append(button);
+                    return button;
+                };
+                const headerButtons: {
+                    button: HTMLButtonElement;
+                    axis: 'row' | 'column';
+                }[] = [];
+                for (const axis of ['column', 'row'] as const) {
+                    const button = item(
+                        axis === 'column' ? columnMenu : rowMenu,
+                        axis === 'column' ? 'Header column' : 'Header row',
+                        () => {
+                            execute(
+                                axis === 'row'
+                                    ? 'table.header.firstRow'
+                                    : 'table.header.firstColumn',
+                                activeRange,
+                                button.getAttribute('aria-checked') !== 'true',
+                            );
+                        },
+                    );
+                    button.setAttribute('role', 'switch');
+                    button.classList.add('soeditor-table-context__switch');
+                    headerButtons.push({ button, axis });
+                }
+                const directions: {
+                    button: HTMLButtonElement;
+                    row: number;
+                    column: number;
+                }[] = [];
+                for (const [label, row, column] of [
+                    ['Merge cell up', -1, 0],
+                    ['Merge cell right', 0, 1],
+                    ['Merge cell down', 1, 0],
+                    ['Merge cell left', 0, -1],
+                ] as const) {
+                    const button = item(mergeMenu, label, () => {
+                        const range = neighborRange(row, column);
+                        if (range !== undefined)
+                            execute('table.cells.merge', range);
+                    });
+                    directions.push({ button, row, column });
+                }
+                const neighborRange = (
+                    row: number,
+                    column: number,
+                ): unknown => {
+                    const bounds = tableRangeBounds(activeRange);
+                    if (
+                        bounds === undefined ||
+                        bounds.top !== bounds.bottom ||
+                        bounds.left !== bounds.right
+                    )
+                        return undefined;
+                    const cell = activeTarget?.matches('td,th')
+                        ? activeTarget
+                        : activeTarget?.closest('td,th');
+                    const rowspan = Number(cell?.getAttribute('rowspan') ?? 1);
+                    const colspan = Number(cell?.getAttribute('colspan') ?? 1);
+                    const candidate = {
+                        anchor: {
+                            row: bounds.top + Math.min(row, 0),
+                            column: bounds.left + Math.min(column, 0),
+                        },
+                        focus: {
+                            row: bounds.top + rowspan - 1 + Math.max(row, 0),
+                            column:
+                                bounds.left + colspan - 1 + Math.max(column, 0),
+                        },
+                    };
+                    const grid = tableCellGrid(activeTable);
+                    const limits = tableRangeBounds(candidate);
+                    if (
+                        limits === undefined ||
+                        limits.top < 0 ||
+                        limits.left < 0 ||
+                        limits.bottom >= grid.length ||
+                        limits.right >= (grid[0]?.length ?? 0)
+                    )
+                        return undefined;
+                    const cells = new Set(
+                        grid
+                            .slice(limits.top, limits.bottom + 1)
+                            .flatMap((line) =>
+                                line.slice(limits.left, limits.right + 1),
+                            ),
+                    );
+                    for (const [r, line] of grid.entries())
+                        for (const [c, cell] of line.entries()) {
+                            if (!cells.has(cell)) continue;
+                            candidate.anchor.row = Math.min(
+                                candidate.anchor.row,
+                                r,
+                            );
+                            candidate.anchor.column = Math.min(
+                                candidate.anchor.column,
+                                c,
+                            );
+                            candidate.focus.row = Math.max(
+                                candidate.focus.row,
+                                r,
+                            );
+                            candidate.focus.column = Math.max(
+                                candidate.focus.column,
+                                c,
+                            );
+                        }
+                    return candidate;
+                };
+                refreshMenus = () => {
+                    for (const { button, row, column } of directions) {
+                        if (mergeMenu.hidden) continue;
+                        const range = neighborRange(row, column);
+                        try {
+                            button.disabled =
+                                range === undefined ||
+                                editor.execute(
+                                    'table.cells.canMerge',
+                                    range,
+                                ) !== true;
+                        } catch {
+                            button.disabled = true;
+                        }
+                        button.title = button.disabled
+                            ? ui.translate(
+                                  classicTableSelectionKind(
+                                      activeTable,
+                                      activeRange,
+                                  ) === 'caret'
+                                      ? 'Cannot merge with the cell in this direction.'
+                                      : 'Select one cell to merge with its neighbor.',
+                              )
+                            : (button.getAttribute('aria-label') ?? '');
+                    }
+                    const grid = tableCellGrid(activeTable);
+                    for (const { button, axis } of headerButtons) {
+                        const cells = [
+                            ...new Set(
+                                axis === 'column'
+                                    ? grid.map((row) => row[0])
+                                    : (grid[0] ?? []),
+                            ),
+                        ].filter(
+                            (cell): cell is HTMLTableCellElement =>
+                                cell !== undefined,
+                        );
+                        const exclusive = cells.filter((cell) =>
+                            axis === 'row'
+                                ? !grid.map((row) => row[0]).includes(cell)
+                                : !(grid[0] ?? []).includes(cell),
+                        );
+                        const checked =
+                            exclusive.length > 0
+                                ? exclusive.every(
+                                      (cell) => cell.tagName === 'TH',
+                                  )
+                                : cells.length > 0 &&
+                                  cells.every(
+                                      (cell) =>
+                                          cell.tagName === 'TH' &&
+                                          (!cell.hasAttribute('scope') ||
+                                              cell.getAttribute('scope') ===
+                                                  (axis === 'row'
+                                                      ? 'col'
+                                                      : 'row')),
+                                  );
+                        button.setAttribute('aria-checked', String(checked));
+                        button.disabled = !editor.commands.canExecute(
+                            axis === 'row'
+                                ? 'table.header.firstRow'
+                                : 'table.header.firstColumn',
+                        );
+                    }
+                };
+                for (const button of extras) {
+                    const command = button.dataset.command ?? '';
+                    const scope = button.dataset.selectionScope;
+                    const panel =
+                        command.startsWith('table.column.') ||
+                        scope === 'column'
+                            ? columnMenu
+                            : command.startsWith('table.row.') ||
+                                scope === 'row'
+                              ? rowMenu
+                              : command === 'table.cells.merge' ||
+                                  command === 'table.cell.splitRows' ||
+                                  command === 'table.cell.splitColumns'
+                                ? mergeMenu
+                                : moreMenu;
+                    button.textContent = ui.translate(
+                        button.getAttribute('aria-label') ?? '',
+                    );
+                    panel.append(button);
+                }
+                // Keep selection last, matching the row/column operation order.
+                for (const button of scopeButtons) {
+                    (button.dataset.selectionScope === 'column'
+                        ? columnMenu
+                        : rowMenu
+                    ).append(button);
+                }
+                refreshMenus();
             },
         });
         balloon.element.classList.add('soeditor-ui__table-balloon');
@@ -1740,6 +2473,7 @@ export function attachClassicTableContext(
                     candidate.closest('.soeditor-table-cell') !== null,
             )
         ) {
+            dismissMenus?.();
             return;
         }
         close();
@@ -1751,6 +2485,17 @@ export function attachClassicTableContext(
         selectionObserver = undefined;
     };
     const keydown = (event: KeyboardEvent): void => {
+        if (event.key === 'Escape' && resizeSession !== undefined) {
+            event.preventDefault();
+            event.stopPropagation();
+            cancelResize();
+            return;
+        }
+        if (
+            event.target instanceof Node &&
+            balloon?.element.contains(event.target)
+        )
+            return;
         if (event.key === 'Escape' && balloon !== undefined) {
             event.preventDefault();
             close();
@@ -1763,8 +2508,12 @@ export function attachClassicTableContext(
     visual.addEventListener('soeditor:table-editing-end', editingEnd);
     visual.addEventListener('click', refreshSelectionState);
     document.addEventListener('pointerdown', pointerDown, true);
-    document.addEventListener('keydown', keydown);
+    document.addEventListener('keydown', keydown, true);
+    document.defaultView?.addEventListener('blur', cancelResize);
+    if (initialEvent !== undefined) selection(initialEvent);
     return () => {
+        disposed = true;
+        document.defaultView?.removeEventListener('blur', cancelResize);
         disposeDocumentChange();
         disposeProjection();
         projectionObserver?.disconnect();
@@ -1784,11 +2533,11 @@ export function attachClassicTableContext(
         visual.removeEventListener('soeditor:table-editing-end', editingEnd);
         visual.removeEventListener('click', refreshSelectionState);
         document.removeEventListener('pointerdown', pointerDown, true);
-        document.removeEventListener('keydown', keydown);
+        document.removeEventListener('keydown', keydown, true);
     };
 }
 
-function tableSelectionActivation(event: Event): (() => void) | undefined {
+function tableSelectionActivation(event: object): (() => void) | undefined {
     const detail: unknown = Reflect.get(event, 'detail');
     if (typeof detail !== 'object' || detail === null) return undefined;
     const activate: unknown = Reflect.get(detail, 'activate');
@@ -1799,7 +2548,7 @@ function tableSelectionActivation(event: Event): (() => void) | undefined {
         : undefined;
 }
 
-function tableSelectionRange(event: Event): unknown {
+function tableSelectionRange(event: object): unknown {
     const detail: unknown = Reflect.get(event, 'detail');
     return typeof detail === 'object' && detail !== null
         ? Reflect.get(detail, 'range')
@@ -1813,51 +2562,49 @@ function selectedTableRange(table: HTMLElement, previous?: unknown): unknown {
         ),
     );
     if (cells.length === 0) return undefined;
-    const previousBounds = tableRangeBounds(previous);
-    if (
-        previousBounds !== undefined &&
-        cells.length ===
-            (previousBounds.bottom - previousBounds.top + 1) *
-                (previousBounds.right - previousBounds.left + 1)
-    ) {
-        return previous;
-    }
-    const tableRows = Array.from(table.querySelectorAll('tr'));
-    const positions = cells.map((cell) => {
-        const nativeCell = cell.matches('td,th')
-            ? cell
-            : cell.closest<HTMLElement>('td,th');
-        const nativeRow = nativeCell?.closest('tr');
-        const row =
-            nativeRow === null || nativeRow === undefined
-                ? Number(cell.dataset.row)
-                : tableRows.indexOf(nativeRow);
-        const rowCells =
-            nativeRow === null || nativeRow === undefined
-                ? []
-                : Array.from(nativeRow.children).filter(
-                      (child) =>
-                          child.localName === 'td' || child.localName === 'th',
-                  );
-        const column =
-            nativeCell === null || nativeCell === undefined
-                ? Number(cell.dataset.column)
-                : rowCells.indexOf(nativeCell);
-        return { column, row };
-    });
-    if (
-        positions.some(
-            ({ column, row }) =>
-                !Number.isInteger(column) || !Number.isInteger(row),
-        )
-    )
-        return undefined;
-    const rows = positions.map(({ row }) => row);
-    const columns = positions.map(({ column }) => column);
+    const grid = tableCellGrid(table);
+    const selected = new Set(
+        cells.map((cell) =>
+            cell.matches('td,th') ? cell : cell.closest('td,th'),
+        ),
+    );
+    // Row/column selections intentionally cut across spans for insertion
+    // and deletion. Only a cell rectangle expands to full cell extents.
     const previousKind =
         typeof previous === 'object' && previous !== null
             ? Reflect.get(previous, 'kind')
             : undefined;
+    const previousBounds = tableRangeBounds(previous);
+    if (
+        previousBounds !== undefined &&
+        ['rows', 'columns', 'table'].includes(String(previousKind))
+    ) {
+        const previousCells = new Set(
+            grid
+                .slice(previousBounds.top, previousBounds.bottom + 1)
+                .flatMap((line) =>
+                    line.slice(previousBounds.left, previousBounds.right + 1),
+                ),
+        );
+        if (
+            previousCells.size === selected.size &&
+            [...previousCells].every((cell) => selected.has(cell))
+        )
+            return previous;
+    }
+    const positions: { row: number; column: number }[] = [];
+    for (const [row, line] of grid.entries())
+        for (const [column, cell] of line.entries()) {
+            if (selected.has(cell)) positions.push({ row, column });
+        }
+    if (positions.length === 0) return undefined;
+    const rows = positions.map((position) => position.row);
+    const columns = positions.map((position) => position.column);
+    if (selected.size === 1)
+        return {
+            anchor: { row: Math.min(...rows), column: Math.min(...columns) },
+            focus: { row: Math.min(...rows), column: Math.min(...columns) },
+        };
     return {
         anchor: { column: Math.min(...columns), row: Math.min(...rows) },
         focus: { column: Math.max(...columns), row: Math.max(...rows) },
@@ -1984,7 +2731,11 @@ function tableCommandApplies(
         );
     }
     if (kind === 'cells') {
-        return ['table.cells.merge', 'table.cells.clear'].includes(command);
+        return [
+            'table.cells.merge',
+            'table.cells.clear',
+            'table.header.toggle',
+        ].includes(command);
     }
     if (kind === 'caret') return command !== 'table.cells.merge';
     return command !== 'table.cells.merge' && command !== 'table.remove';
@@ -2019,4 +2770,40 @@ function tableContextValue(value: unknown, key: string): unknown {
     return typeof value === 'object' && value !== null
         ? Reflect.get(value, key)
         : undefined;
+}
+
+function tableCellGrid(
+    table: HTMLElement | undefined,
+): HTMLTableCellElement[][] {
+    const native = table?.matches('table')
+        ? table
+        : table?.querySelector('table');
+    if (!(native instanceof HTMLTableElement)) return [];
+    if (native.rows.length > 100) return [];
+    let positions = 0;
+    const grid: HTMLTableCellElement[][] = [];
+    for (const [rowIndex, row] of Array.from(native.rows).entries()) {
+        const line = (grid[rowIndex] ??= []);
+        let column = 0;
+        for (const cell of Array.from(row.cells)) {
+            while (line[column] !== undefined) column++;
+            for (
+                let y = rowIndex;
+                y <
+                Math.min(
+                    native.rows.length,
+                    rowIndex + Math.max(1, cell.rowSpan),
+                );
+                y++
+            ) {
+                const target = (grid[y] ??= []);
+                for (let x = column; x < column + cell.colSpan; x++) {
+                    if (x >= 100 || ++positions > 1000) return [];
+                    target[x] = cell;
+                }
+            }
+            column += cell.colSpan;
+        }
+    }
+    return grid;
 }

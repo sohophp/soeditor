@@ -25,17 +25,20 @@ describe('structured media feature', () => {
         editor.execute('media.insert', {
             alignment: 'center',
             alt: 'Hero',
+            assetId: 'asset-7',
             aspectLocked: true,
             link: '/article',
             linkTarget: '_blank',
             responsiveClass: 'img-fluid cms-image',
+            sizes: '(max-width: 800px) 100vw, 800px',
             src: '/hero.jpg',
+            srcset: '/hero-400.jpg 400w, /hero.jpg 800w',
             title: 'Article hero',
             width: 800,
         });
 
         expect(inserted).toEqual([
-            '<figure data-soeditor-media="image" data-align="center" data-aspect-lock="true"><a href="/article" target="_blank"><img src="/hero.jpg" alt="Hero" title="Article hero" class="img-fluid cms-image" width="800"></a></figure>',
+            '<figure data-soeditor-media="image" data-align="center" data-aspect-lock="true"><a href="/article" target="_blank"><img src="/hero.jpg" alt="Hero" title="Article hero" class="img-fluid cms-image" data-asset-id="asset-7" srcset="/hero-400.jpg 400w, /hero.jpg 800w" sizes="(max-width: 800px) 100vw, 800px" width="800"></a></figure>',
         ]);
         expect(() =>
             editor.execute('media.insert', {
@@ -43,6 +46,12 @@ describe('structured media feature', () => {
                 src: '/hero.jpg',
             }),
         ).toThrow('safe link URL');
+        expect(() =>
+            editor.execute('media.insert', {
+                src: '/hero.jpg',
+                srcset: 'javascript:alert(1) 2x',
+            }),
+        ).toThrow('safe srcset');
         await editor.destroy();
     });
     it('inserts a semantic figure through the visual editing service', async () => {

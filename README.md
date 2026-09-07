@@ -1,6 +1,6 @@
 # SoEditor
 
-Lightweight, stable HTML WYSIWYG editing for website CMS administration.
+Lightweight, stable HTML WYSIWYG + Source editing for website CMS administration.
 
 SoEditor is designed for article, page, product and other CMS content fields. It
 combines a conventional authoring experience with semantic HTML preservation,
@@ -25,8 +25,10 @@ candidate. Its supported entry is `@soeditor/editor/cms`; compatibility exports
 remain available from the package root for SemVer safety but are excluded from
 the CMS global and default preset.
 
-The measured CMS browser global is 485.82 kB raw / 149.35 kB gzip with 26.19 kB
-raw CSS. The packed default CMS startup is 461.10 kB raw / 149.85 kB gzip.
+The current CMS browser global is 477.20 kB raw / 147.22 kB gzip with 26.78 kB
+raw CSS. The packed default CMS startup is 436.65 kB raw / 141.52 kB gzip.
+See [the WYSIWYG + Source evidence](docs/wysiwyg-source-evidence.zh-CN.md) for
+first-use costs, validation and manual qualification limits.
 HTML Source, Preview and save adapters use the explicit
 `@soeditor/editor/cms/optional` entry and are not included in the default CMS
 entry or standalone browser global.
@@ -35,6 +37,7 @@ entry or standalone browser global.
 
 ```ts
 import { createClassicEditor } from '@soeditor/editor/cms/optional';
+import '@soeditor/editor/cms/styles.css';
 
 const textarea = document.querySelector<HTMLTextAreaElement>('#content');
 if (textarea === null) throw new Error('Missing #content textarea.');
@@ -48,8 +51,11 @@ const editor = await createClassicEditor(textarea, {
 // Later: await editor.destroy();
 ```
 
-The target default is WYSIWYG-only. Import `/cms/optional` only when Source,
-Preview or a save adapter is configured.
+Default startup is WYSIWYG-only. Source is a primary editing capability with
+first-activation loading; configuring its button does not load CodeMirror.
+Import `/cms/optional` when Source, Preview or a save adapter is configured.
+Await `editor.setWorkspaceView('source')` before using the Source surface.
+Formatting and Preview load separately on first use.
 
 ## CMS product capabilities
 
@@ -79,6 +85,7 @@ See [product definition](docs/PRODUCT.md), [active roadmap](docs/ROADMAP.md),
 
 ## Documentation
 
+- [WYSIWYG + Source implementation plan](docs/wysiwyg-source-plan.zh-CN.md)
 - [Getting started](docs/getting-started.md)
 - [CMS integration](docs/cms-integration.md)
 - [Classic UI](docs/classic-ui.md)

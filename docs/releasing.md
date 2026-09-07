@@ -42,8 +42,8 @@ exchange warning does not replace the granular token requirement.
 
 ## Release-line policy
 
-The published 1.0.0 release remains the stable registry baseline. The local
-1.1.0 candidate adds the qualified CMS Classic Editor capability set. The
+The 1.1.0 release adds the CMS Classic Editor capability set to the published
+1.0.0 baseline. Registry state must be verified from the publication workflow. The
 1.1.x line accepts correctness, security, accessibility, compatibility,
 documentation, and measured performance fixes within that scope. New product
 capabilities belong in a separately approved roadmap. Patch releases must

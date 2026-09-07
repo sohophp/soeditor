@@ -472,14 +472,23 @@ describe('rich-text feature plugins', () => {
         const { editor, harness } = await createHarness();
 
         editor.execute('image.insert', {
+            assetId: 'asset-7',
             alt: 'A & "B"',
             height: 45,
             src: 'x" onerror="alert(1)',
+            sizes: '(max-width: 80px) 100vw, 80px',
+            srcset: '/x-small.png 40w, /x.png 80w',
             width: 80,
         });
         expect(() =>
             editor.execute('image.insert', { src: 'x', width: -1 }),
         ).toThrow(RichTextArgumentError);
+        expect(() =>
+            editor.execute('image.insert', {
+                src: 'x',
+                srcset: 'javascript:alert(1) 2x',
+            }),
+        ).toThrow('safe srcset');
 
         const html = String(harness.insertHtml.mock.calls[0]?.[0]);
         const image = parseHtmlFragment(html).document.children[0];
@@ -491,9 +500,12 @@ describe('rich-text feature plugins', () => {
             image.attributes.map(({ name, value }) => ({ name, value })),
         ).toEqual([
             { name: 'src', value: 'x" onerror="alert(1)' },
+            { name: 'data-asset-id', value: 'asset-7' },
             { name: 'alt', value: 'A & "B"' },
             { name: 'width', value: '80' },
             { name: 'height', value: '45' },
+            { name: 'srcset', value: '/x-small.png 40w, /x.png 80w' },
+            { name: 'sizes', value: '(max-width: 80px) 100vw, 80px' },
         ]);
     });
 

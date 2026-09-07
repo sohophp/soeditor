@@ -1,0 +1,488 @@
+{
+    "measuredAt": "2026-09-07T12:23:29.981Z",
+    "chromium": "151.0.7922.34",
+    "methodology": "Separate CDP CPU diagnostic, 500 KiB, 5 native inputs and 3 Source round trips including first load; sampled self time mapped through preserved source maps. Not combined with latency samples.",
+    "results": [
+        {
+            "name": "before",
+            "action": "input",
+            "selfMilliseconds": [
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1469 #serializeNode",
+                    540.5999999999998
+                ],
+                ["(program)", 510.70600000000024],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-BvtOKTdK.js:2108 countDocumentStatus",
+                    162.76700000000002
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:279 normalizeVoidElementSyntax",
+                    83.796
+                ],
+                ["(garbage collector)", 41.08499999999999],
+                [
+                    "../../../../../packages/html/dist/index.js:227 appendElement",
+                    24.67
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js:115 serializeElement",
+                    18.684
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js:99 serializeNode",
+                    16.16
+                ],
+                [
+                    "../../../../../packages/soeditor/src/classic-editor.ts:458 source",
+                    13.920999999999998
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js:83 serializeChildNodes",
+                    11.548000000000002
+                ],
+                ["hasAttribute", 5.934],
+                [
+                    "../../../../../packages/html/dist/index.js:273 serializeFragment",
+                    5.874
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js:119 serializeAttributes",
+                    5.764
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1459 #serialize",
+                    5.703
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:231 attribute",
+                    5.619
+                ],
+                ["(idle)", 4.146],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js:152 serializeTextNode",
+                    3.55
+                ],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-BvtOKTdK.js:2132 countWords",
+                    3.458
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:203 appendChild",
+                    2.435
+                ],
+                [
+                    "../../../../../packages/ui/dist/ui-plugin-D93lVNZ0.js:113 update",
+                    2.424
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1483 (anonymous)",
+                    2.348
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:15 readFormatStates",
+                    1.252
+                ],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-BvtOKTdK.js:2150 localizeUiNode",
+                    1.234
+                ],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-BvtOKTdK.js:1597 Yt",
+                    1.213
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:2919 selectionRangeFor",
+                    1.189
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1460 node",
+                    1.17
+                ],
+                [
+                    "../../../../../packages/engine/dist/index.js:4676 #record",
+                    1.159
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1484 (anonymous)",
+                    1.144
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:20 node",
+                    1.143
+                ],
+                ["getRangeAt", 1.117]
+            ]
+        },
+        {
+            "name": "before",
+            "action": "source",
+            "selfMilliseconds": [
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:2956 safeSelectionRange",
+                    751.6659999999998
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1469 #serializeNode",
+                    589.1280000000002
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1552 #updateEditableState",
+                    530.0899999999998
+                ],
+                ["(garbage collector)", 304.6339999999999],
+                ["(program)", 285.33800000000014],
+                [
+                    "../../../../../packages/html/dist/index.js:279 normalizeVoidElementSyntax",
+                    217.7240000000001
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:74 convertElement",
+                    105.717
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:2 createPosition",
+                    84.59299999999999
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:367 emitCurrentTagToken",
+                    72.44299999999997
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/preprocessor.js:132 advance",
+                    68.816
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:492 _callState",
+                    63.32499999999999
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:227 appendElement",
+                    50.31000000000002
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:5 convertSourceRange",
+                    49.435
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js:115 serializeElement",
+                    38.78399999999999
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:205 _runParsingLoop",
+                    34.026
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:19 convertElementSourceRange",
+                    32.955
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js:99 serializeNode",
+                    31.396000000000004
+                ],
+                ["setAttribute", 26.734000000000005],
+                [
+                    "../../../../.pnpm/@codemirror+language@6.12.4/node_modules/@codemirror/language/dist/index.js:571 Ys",
+                    25.835000000000004
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js:83 serializeChildNodes",
+                    25.705
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1506 child",
+                    23.496
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/open-element-stack.js:108 shortenToLength",
+                    23.377
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/index.js:302 _insertElement",
+                    22.254999999999995
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:273 serializeFragment",
+                    19.800999999999995
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/index.js:340 _insertCharacters",
+                    18.695
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:104 convertText",
+                    16.543
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:976 _stateTagName",
+                    15.206
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js:152 serializeTextNode",
+                    15.029000000000002
+                ],
+                ["(idle)", 14.552],
+                [
+                    "../../../../../packages/html/dist/index.js:60 convertChild",
+                    14.294
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/index.js:967 _endTagOutsideForeignContent",
+                    14.037999999999998
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:1480 _stateAttributeName",
+                    11.484
+                ],
+                [
+                    "../../../../.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js:988 readToken",
+                    10.602
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:203 appendChild",
+                    10.516999999999998
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1459 #serialize",
+                    10.511
+                ],
+                ["/assets/index-DNBfAUHp.js (anonymous)", 10.466000000000001],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tree-adapters/default.js:160 isElementNode",
+                    9.728
+                ],
+                [
+                    "../../../../.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js:1239 addActions",
+                    9.499
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:90 convertAttribute",
+                    9.44
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tree-adapters/default.js:170 updateNodeSourceCodeLocation",
+                    9.234
+                ]
+            ]
+        },
+        {
+            "name": "after",
+            "action": "input",
+            "selfMilliseconds": [
+                ["(program)", 517.7529999999997],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-yAxgonQF.js:2108 countDocumentStatus",
+                    181.36899999999997
+                ],
+                [
+                    "../../../../../packages/soeditor/src/classic-editor.ts:458 source",
+                    14.21
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1468 #serialize",
+                    9.364999999999998
+                ],
+                ["(idle)", 2.7],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-yAxgonQF.js:2132 countWords",
+                    2.428
+                ],
+                ["getRangeAt", 2.274],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-yAxgonQF.js:2136 selectedElementPath",
+                    2.255
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:15 readFormatStates",
+                    2.168
+                ],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-yAxgonQF.js:1853 shadowIncludingContains",
+                    1.272
+                ],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-yAxgonQF.js:1660 records",
+                    1.239
+                ],
+                [
+                    "../../../../../packages/rich-text/dist/index.js:3374 commandId",
+                    1.227
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:2982 closestElement",
+                    1.208
+                ],
+                ["closest", 1.18],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:768 event",
+                    1.15
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1474 node",
+                    1.138
+                ],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-yAxgonQF.js:1121 ht",
+                    1.129
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js:99 serializeNode",
+                    1.125
+                ],
+                [
+                    "../../../../../packages/ui/dist/editor-ui-yAxgonQF.js:1597 Yt",
+                    1.119
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1497 #serializeNode",
+                    1.116
+                ]
+            ]
+        },
+        {
+            "name": "after",
+            "action": "source",
+            "selfMilliseconds": [
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:3035 safeSelectionRange",
+                    813.7790000000001
+                ],
+                [
+                    "../../../../../packages/wysiwyg/dist/index.js:1582 #updateEditableState",
+                    463.64300000000014
+                ],
+                ["(program)", 289.5170000000001],
+                ["(garbage collector)", 102.05000000000001],
+                [
+                    "../../../../../packages/html/dist/index.js:19 convertElementSourceRange",
+                    48.745999999999995
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:74 convertElement",
+                    35.340999999999994
+                ],
+                [
+                    "../../../../.pnpm/@codemirror+language@6.12.4/node_modules/@codemirror/language/dist/index.js:571 Ys",
+                    30.678
+                ],
+                ["setAttribute", 23.044999999999998],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:367 emitCurrentTagToken",
+                    21.581
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:492 _callState",
+                    20.134000000000004
+                ],
+                ["(idle)", 16.018],
+                [
+                    "../../../../../packages/html/dist/index.js:2 createPosition",
+                    15.049000000000003
+                ],
+                [
+                    "../../../../.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js:1406 advanceStack",
+                    13.329
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/preprocessor.js:132 advance",
+                    12.847
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:205 _runParsingLoop",
+                    12.486
+                ],
+                ["/assets/index-DGLgxb_o.js (anonymous)", 9.318],
+                [
+                    "../../../../.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js:1239 addActions",
+                    8.081000000000001
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/index.js:340 _insertCharacters",
+                    8.014
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:90 convertAttribute",
+                    7.952000000000001
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:976 _stateTagName",
+                    7.035
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/open-element-stack.js:108 shortenToLength",
+                    6.93
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:1480 _stateAttributeName",
+                    6.899
+                ],
+                [
+                    "../../../../.pnpm/@lezer+common@1.5.2/node_modules/@lezer/common/dist/index.js:1824 advance",
+                    5.87
+                ],
+                [
+                    "../../../../.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js:1672 getGoto",
+                    5.852
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tree-adapters/default.js:170 updateNodeSourceCodeLocation",
+                    5.719999999999999
+                ],
+                [
+                    "../../../../.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js:988 readToken",
+                    5.640999999999999
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tree-adapters/default.js:160 isElementNode",
+                    5.6240000000000006
+                ],
+                [
+                    "../../../../.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js:123 reduce",
+                    5.1979999999999995
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:104 convertText",
+                    4.657
+                ],
+                [
+                    "../../../../.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js:1153 getActions",
+                    4.651000000000001
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:5 convertSourceRange",
+                    4.58
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/index.js:379 _setEndLocation",
+                    4.566
+                ],
+                [
+                    "../../../../.pnpm/@codemirror+language@6.12.4/node_modules/@codemirror/language/dist/index.js:616 (anonymous)",
+                    4.554
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:908 _stateTagOpen",
+                    4.492
+                ],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/index.js:967 _endTagOutsideForeignContent",
+                    3.808
+                ],
+                ["../../../../../packages/html/dist/index.js:83 child", 3.562],
+                ["getBoundingClientRect", 3.528],
+                [
+                    "../../../../.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js:192 getCurrentLocation",
+                    3.514
+                ],
+                [
+                    "../../../../../packages/html/dist/index.js:80 attribute",
+                    3.51
+                ],
+                [
+                    "../../../../.pnpm/@codemirror+view@6.43.9/node_modules/@codemirror/view/dist/index.js:6109 visiblePixelRange",
+                    3.51
+                ]
+            ]
+        }
+    ]
+}

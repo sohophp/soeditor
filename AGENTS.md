@@ -7,8 +7,9 @@ These instructions apply to the whole repository unless a more specific
 
 ## 1. Product boundary
 
-SoEditor is a lightweight, stable HTML WYSIWYG editor for website CMS
-administration. Its primary use is replacing a textarea or mounting on an
+SoEditor is a lightweight, stable HTML WYSIWYG + Source editor for website CMS
+administration. WYSIWYG and HTML Source are the two active editing priorities;
+Source is optional to expose, not secondary in editing correctness. Its primary use is replacing a textarea or mounting on an
 element so authors can edit the HTML body of articles, pages, products, and
 similar CMS records.
 
@@ -57,7 +58,8 @@ editing:
 - semantic external paste cleanup, including common office content;
 - undo/redo, keyboard operation, localization, IME, responsive UI, readonly,
   form submit/reset, dirty state, and safe teardown;
-- optional HTML Source mode, loaded only when requested;
+- optional HTML Source mode, loaded on first Source activation, including first
+  entry into a bounded WYSIWYG/Source side-by-side or stacked view;
 - preservation of unknown CMS HTML without executing it.
 
 Features such as video, arbitrary embeds, templates, diagnostics, preview, or
@@ -122,7 +124,17 @@ Semantic preservation is required; byte-for-byte serialization is not.
 The supported default entry must contain only the CMS WYSIWYG path.
 
 - Source editing and other optional capabilities must use explicit entry points
-  and lazy loading.
+  and lazy loading. Enabling the Source button must not load its runtime during
+  WYSIWYG startup. An initial Source view may load Source immediately.
+- Source formatting and advanced diagnostics need separate demand boundaries;
+  opening Source alone must not load Prettier or the full developer toolset.
+- Keep bounded WYSIWYG/Source horizontal and vertical split views in the active
+  product. They do not authorize a generic multi-pane workspace.
+- Optional JavaScript, CSS, translations, workers and initialization side effects
+  must stay outside the initial CMS request graph, including preload paths.
+- Retain other existing features behind explicit independent imports. This
+  program does not authorize deleting compatibility packages or changing their
+  released APIs. Hiding toolbar buttons alone is not loading isolation.
 - The default entry must not import Markdown, comments, revisions, Preview,
   developer tools, React, Vue, or plugin scaffolding.
 - CDN builds must provide a CMS-focused artifact; a historical all-features
@@ -175,7 +187,8 @@ Current product authority, in order, is:
 2. `docs/PRODUCT.md`;
 3. `docs/ROADMAP.md`;
 4. `docs/wysiwyg-editor.md`;
-5. accepted ADRs not superseded by a later ADR.
+5. `docs/wysiwyg-source-plan.zh-CN.md` (current implementation plan);
+6. accepted ADRs not superseded by a later ADR.
 
 Old prompts, migration guides, release histories, and feature-specific documents
 describe historical behavior. They do not authorize new scope when they conflict

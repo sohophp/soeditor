@@ -612,9 +612,9 @@ try {
         0,
     );
     const viteJavaScriptGzip = gzipSync(startupSources.join('\n')).length;
-    if (viteJavaScriptSize > 510_000 || viteJavaScriptGzip > 150_000) {
+    if (viteJavaScriptSize > 500_000 || viteJavaScriptGzip > 150_000) {
         throw new Error(
-            `CMS Vite startup exceeds its 510/150 kB guard (${String(viteJavaScriptSize)} raw / ${String(viteJavaScriptGzip)} gzip).`,
+            `CMS Vite startup exceeds its 500/150 kB guard (${String(viteJavaScriptSize)} raw / ${String(viteJavaScriptGzip)} gzip).`,
         );
     }
     for (const excludedMarker of [
@@ -635,6 +635,8 @@ try {
         `CMS Vite packed-package build passed (${String(viteJavaScriptSize)} raw / ${String(viteJavaScriptGzip)} gzip).\n`,
     );
 
+    await verifyPackedConsumer(viteFixtureDirectory, 'source');
+
     await cp(widgetFixtureSource, widgetFixtureDirectory, { recursive: true });
     const widgetPackagePath = join(widgetFixtureDirectory, 'package.json');
     const widgetPackageData = JSON.parse(
@@ -651,7 +653,7 @@ try {
     );
     run('pnpm', ['install'], widgetFixtureDirectory);
     run('pnpm', ['build'], widgetFixtureDirectory);
-    await verifyPackedWidget(widgetFixtureDirectory);
+    await verifyPackedConsumer(widgetFixtureDirectory);
     stdout.write(
         'Packed third-party widget TypeScript, Vite, Chromium, accessibility, security, and teardown consumer passed.\n',
     );
@@ -773,7 +775,7 @@ function collectStaticManifestEntries(manifest, roots) {
     return collected;
 }
 
-async function verifyPackedWidget(directory) {
+async function verifyPackedConsumer(directory, mode = 'widget') {
     const distributionRoot = resolve(directory, 'dist');
     const server = createServer(async (request, response) => {
         try {
@@ -793,6 +795,12 @@ async function verifyPackedWidget(directory) {
             const content = await readFile(filePath);
             response.writeHead(200, {
                 'content-type': contentType(extname(filePath)),
+                ...(mode === 'source'
+                    ? {
+                          'Content-Security-Policy':
+                              "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; worker-src 'self' blob:",
+                      }
+                    : {}),
             });
             response.end(content);
         } catch (error) {
@@ -813,8 +821,76 @@ async function verifyPackedWidget(directory) {
     try {
         const context = await browser.newContext();
         const page = await context.newPage();
-        await page.goto(`http://127.0.0.1:${String(address.port)}/`);
+        const requested = [];
+        page.on('request', (request) => requested.push(request.url()));
+        const url = `http://127.0.0.1:${String(address.port)}/${mode === 'source' ? 'source.html' : ''}`;
+        await page.goto(url);
         await page.locator('body[data-ready="true"]').waitFor();
+        if (mode === 'source') {
+            if ((await page.locator('.cm-editor').count()) !== 0)
+                throw new Error('Packed Source initialized eagerly.');
+            const initial = new Set(requested);
+            await page.locator('[data-workspace-view="source"]').click();
+            await page.locator('.cm-content').waitFor({ state: 'visible' });
+            const sourceRequests = requested.filter(
+                (request) =>
+                    !initial.has(request) &&
+                    new URL(request).pathname.endsWith('.js'),
+            );
+            if (sourceRequests.length === 0)
+                throw new Error(
+                    'Packed Source did not cross its lazy boundary.',
+                );
+            await page.evaluate(async () => {
+                const editor = Reflect.get(globalThis, '__packedSource');
+                await editor.editor.execute('document.format');
+            });
+            const css = await page.evaluate(() =>
+                Array.from(globalThis.document.styleSheets)
+                    .flatMap((sheet) =>
+                        Array.from(sheet.cssRules, (rule) => rule.cssText),
+                    )
+                    .join('\n'),
+            );
+            if (/soeditor-comments|soeditor-revisions/u.test(css))
+                throw new Error(
+                    'Packed CMS stylesheet includes compatibility review UI.',
+                );
+            await page.evaluate(() =>
+                Reflect.get(globalThis, '__packedSource').destroy(),
+            );
+            const retry = await context.newPage();
+            await retry.route('**/*', (route) =>
+                sourceRequests.includes(route.request().url())
+                    ? route.abort('failed')
+                    : route.continue(),
+            );
+            await retry.goto(url);
+            await retry.locator('body[data-ready="true"]').waitFor();
+            await retry.locator('[data-workspace-view="source"]').click();
+            await retry.waitForFunction(
+                () =>
+                    globalThis.document
+                        .querySelector('.soeditor-classic')
+                        ?.getAttribute('data-soeditor-source-state') ===
+                    'failed',
+            );
+            await retry.locator('[data-workspace-view="source"]').click();
+            await retry.locator('.cm-content').waitFor({ state: 'visible' });
+            if (
+                !(await retry.locator('.cm-content').textContent())?.includes(
+                    'Packed Source consumer',
+                )
+            )
+                throw new Error('Packed Source recovery lost its content.');
+            await retry.evaluate(() =>
+                Reflect.get(globalThis, '__packedSource').destroy(),
+            );
+            stdout.write(
+                'Packed Source, formatting, isolated CMS CSS and recovery passed under script-src self.\n',
+            );
+            return;
+        }
         const boundary = page.locator(
             '[data-soeditor-structured-block="consumer.product-card"]',
         );

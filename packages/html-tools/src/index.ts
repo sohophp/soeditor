@@ -10,6 +10,7 @@ export type {
     DiagnosticsWorkflowConfig,
 } from './diagnostics.js';
 export {
+    createHtmlFormattingService,
     HtmlFormattingPlugin,
     HtmlFormattingSourceTooLargeError,
     HtmlFormattingTimeoutError,

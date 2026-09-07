@@ -43,7 +43,12 @@ API report.
 | `@soeditor/html-tools`       | Diagnostics workflow, accessibility/SEO source rules, explicit formatting   |
 | `@soeditor/dev-tools`        | Problems, Inspector, Outline, command palette, Find/Replace                 |
 | `@soeditor/file-manager`     | Replaceable asset selection contract and validation                         |
-| `@soeditor/adapter-sofinder` | Injected SoFinder picker translation                                        |
+| `@soeditor/adapter-sofinder` | Injected SoFinder picker and upload-task translation                        |
+
+`@soeditor/ui/cms` is the locale-data-free composition entry used by the CMS
+bundle. `@soeditor/ui/translations` is loaded on demand for built-in Chinese
+chrome; the normal `@soeditor/ui` root remains the complete direct-composition
+API.
 
 ## Review and application integration
 

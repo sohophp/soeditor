@@ -1,0 +1,13 @@
+
+Running 8 tests using 2 workers
+
+  ✓  1 [firefox] › tests/browser/cms-multibrowser.spec.ts:82:1 › round-trips the synthetic legacy CMS corpus through editing, saving and reopening (3.6s)
+  ✓  2 [firefox] › tests/browser/wysiwyg-editor.spec.ts:741:1 › uses native Enter, Shift+Enter, Backspace, and Delete paragraph behavior (3.6s)
+  ✓  3 [firefox] › tests/browser/wysiwyg-editor.spec.ts:2391:1 › keeps list keyboard operations scoped and ordered across nested block items (2.3s)
+  ✓  5 [firefox] › tests/browser/wysiwyg-editor.spec.ts:2478:1 › keeps list boundary deletion and empty-item exit reversible (1.6s)
+  ✓  6 [webkit] › tests/browser/wysiwyg-editor.spec.ts:741:1 › uses native Enter, Shift+Enter, Backspace, and Delete paragraph behavior (2.7s)
+  ✓  4 [webkit] › tests/browser/cms-multibrowser.spec.ts:82:1 › round-trips the synthetic legacy CMS corpus through editing, saving and reopening (7.8s)
+  ✓  7 [webkit] › tests/browser/wysiwyg-editor.spec.ts:2391:1 › keeps list keyboard operations scoped and ordered across nested block items (2.1s)
+  ✓  8 [webkit] › tests/browser/wysiwyg-editor.spec.ts:2478:1 › keeps list boundary deletion and empty-item exit reversible (1.5s)
+
+  8 passed (20.8s)

@@ -2,6 +2,7 @@ import { Editor } from '@soeditor/core';
 import { describe, expect, it } from 'vitest';
 
 import {
+    createHtmlFormattingService,
     HtmlFormattingPlugin,
     HtmlFormattingSourceTooLargeError,
     htmlFormattingServiceToken,
@@ -231,4 +232,17 @@ describe('HTML formatting', () => {
         ).rejects.toBeInstanceOf(HtmlFormattingSourceTooLargeError);
         await editor.destroy();
     });
+});
+
+it('formats and validates through the standalone service without installing editor plugins', async () => {
+    const service = createHtmlFormattingService();
+    expect(await service.format('<main><h1>Title</h1><p>CMS</p></main>')).toBe(
+        '<main>\n  <h1>Title</h1>\n  <p>CMS</p>\n</main>\n',
+    );
+    expect(await service.minify('<div>\n  <p>CMS</p>\n</div>')).toContain(
+        '<p>CMS</p>',
+    );
+    await expect(
+        service.minify('<p id="a" id="b">Draft</p>'),
+    ).rejects.toBeInstanceOf(InvalidHtmlFormattingSourceError);
 });

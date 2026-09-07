@@ -7,11 +7,14 @@ import { normalizeFileManagerResult } from '@soeditor/file-manager';
 
 /** Selection value supplied by the host's concrete SoFinder integration. */
 export interface SoFinderSelection {
+    readonly assetId?: string;
     readonly alt?: string;
     readonly height?: number;
     readonly metadata?: Readonly<Record<string, unknown>>;
     readonly mimeType?: string;
     readonly name?: string;
+    readonly sizes?: string;
+    readonly srcset?: string;
     readonly url: string;
     readonly width?: number;
 }
@@ -48,26 +51,36 @@ export class SoFinderAdapter implements FileManager {
         if (selected === null) {
             return null;
         }
-        if (typeof selected !== 'object') {
-            return normalizeFileManagerResult(selected);
-        }
-        const url = read(selected, 'url');
-        const name = read(selected, 'name');
-        const alt = read(selected, 'alt');
-        const mimeType = read(selected, 'mimeType');
-        const width = read(selected, 'width');
-        const height = read(selected, 'height');
-        const metadata = read(selected, 'metadata');
-        return normalizeFileManagerResult({
-            url,
-            ...(name === undefined ? {} : { name }),
-            ...(alt === undefined ? {} : { alt }),
-            ...(mimeType === undefined ? {} : { mime: mimeType }),
-            ...(width === undefined ? {} : { width }),
-            ...(height === undefined ? {} : { height }),
-            ...(metadata === undefined ? {} : { metadata }),
-        });
+        return normalizeFileManagerResult(normalizeSoFinderSelection(selected));
     }
+}
+
+export function normalizeSoFinderSelection(
+    selected: SoFinderSelection,
+): unknown {
+    if (typeof selected !== 'object' || selected === null) return selected;
+    const url = read(selected, 'url');
+    const name = read(selected, 'name');
+    const alt = read(selected, 'alt');
+    const mimeType = read(selected, 'mimeType');
+    const width = read(selected, 'width');
+    const height = read(selected, 'height');
+    const metadata = read(selected, 'metadata');
+    const assetId = read(selected, 'assetId');
+    const sizes = read(selected, 'sizes');
+    const srcset = read(selected, 'srcset');
+    return {
+        url,
+        ...(assetId === undefined ? {} : { assetId }),
+        ...(name === undefined ? {} : { name }),
+        ...(alt === undefined ? {} : { alt }),
+        ...(mimeType === undefined ? {} : { mime: mimeType }),
+        ...(width === undefined ? {} : { width }),
+        ...(height === undefined ? {} : { height }),
+        ...(metadata === undefined ? {} : { metadata }),
+        ...(sizes === undefined ? {} : { sizes }),
+        ...(srcset === undefined ? {} : { srcset }),
+    };
 }
 
 function isSoFinderPicker(value: unknown): value is SoFinderPicker {

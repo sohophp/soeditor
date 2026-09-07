@@ -1,4 +1,9 @@
+import type * as ElementPathModule from '../../packages/ui/src/element-path.js';
 import AxeBuilder from '@axe-core/playwright';
+import type {
+    ClassicEditor,
+    CreateClassicEditorOptions,
+} from '../../packages/soeditor/src/classic-editor.js';
 import { expect, test } from '@playwright/test';
 
 test.beforeEach(async ({ page }) => {
@@ -116,6 +121,25 @@ test('shows the active table scope, block boundaries, and direct row and column 
     const cells = visual.locator('.soeditor-table-cell');
     const initialCellCount = await cells.count();
 
+    const showBlocks = editor.locator('[data-classic-action="show-blocks"]');
+    await expect(showBlocks).toBeVisible();
+    await expect(showBlocks).toHaveAccessibleName('显示区块边界');
+    await showBlocks.click();
+    await expect(showBlocks).toHaveAttribute('aria-pressed', 'true');
+    const labelledParagraph = visual.locator('p').first();
+    await expect
+        .poll(() =>
+            labelledParagraph.evaluate(
+                (block) => getComputedStyle(block, '::before').content,
+            ),
+        )
+        .toBe('"p"');
+    await expect
+        .poll(() =>
+            page.evaluate(() => globalThis.__classicDemo.editor.getData()),
+        )
+        .not.toContain('data-soeditor-show-blocks');
+
     await cells.nth(3).click();
     await expect
         .poll(() =>
@@ -129,6 +153,7 @@ test('shows the active table scope, block boundaries, and direct row and column 
         3,
     );
     await expect(visual.locator('.soeditor-table-row-resize')).toHaveCount(4);
+    await tableTools.locator('[data-table-menu=properties]').click();
     await expect(
         tableTools.getByRole('button', { name: /表格属性|Table properties/u }),
     ).toBeVisible();
@@ -231,6 +256,8 @@ test('shows the active table scope, block boundaries, and direct row and column 
 test('auto-formats Source after debounced WYSIWYG changes in split view', async ({
     page,
 }) => {
+    const requested: string[] = [];
+    page.on('request', (request) => requested.push(request.url()));
     await page.goto('/classic.html');
     await page.locator('body[data-ready="true"]').waitFor();
     const editor = page.locator('.soeditor-classic');
@@ -238,10 +265,45 @@ test('auto-formats Source after debounced WYSIWYG changes in split view', async 
         .locator('[data-workspace-view="wysiwyg-source-vertical"]')
         .click();
 
+    const unchanged = await page.evaluate(() =>
+        globalThis.__classicDemo.editor.getData(),
+    );
+    await expect(editor.locator('.cm-content')).toBeVisible();
+    // Exceed the configured debounce: a view change alone must not format/save.
+    await page.waitForTimeout(500);
+    expect(
+        await page.evaluate(() => globalThis.__classicDemo.editor.getData()),
+    ).toBe(unchanged);
+
+    expect(
+        requested.filter((url) =>
+            /\/packages\/html-tools\/src\/index\.ts/u.test(url),
+        ),
+    ).toHaveLength(0);
+
+    let release: (() => void) | undefined;
+    const held = new Promise<void>((resolve) => {
+        release = resolve;
+    });
+    await page.route('**/packages/source/src/index.ts*', async (route) => {
+        await held;
+        await route.continue();
+    });
+    await page.goto('/classic.html');
+    await page.locator('body[data-ready="true"]').waitFor();
+    await editor
+        .locator('[data-workspace-view="wysiwyg-source-vertical"]')
+        .click();
+    await expect(editor).toHaveAttribute(
+        'data-soeditor-source-state',
+        'loading',
+    );
+
     const heading = editor.locator('.soeditor-classic__visual h1');
     await heading.click();
     await page.keyboard.press('End');
     await page.keyboard.type('！');
+    release?.();
 
     await expect(editor.locator('.cm-content')).toContainText(
         '用 SoEditor 构建现代内容体验！',
@@ -273,13 +335,19 @@ test('clears stale list state before and during table cell selection', async ({
         .locator('.soeditor-classic__visual')
         .getByText(/这是一段由 CMS/u);
     await paragraph.dblclick();
-    await page.locator('[data-toolbar-item="unorderedList"]').click();
+    await page.locator('[data-toolbar-item="unorderedList"] > button').click();
     await expect(
-        page.locator('[data-toolbar-item="unorderedList"]'),
+        page.locator('[data-toolbar-item="unorderedList"] > button'),
     ).toHaveAttribute('aria-pressed', 'true');
 
     for (const item of ['orderedList', 'unorderedList']) {
-        const button = page.locator(`[data-toolbar-item="${item}"]`);
+        const button = page
+            .locator(`[data-toolbar-item="${item}"]`)
+            .locator(
+                item === 'orderedList' || item === 'unorderedList'
+                    ? ':scope > button'
+                    : ':scope',
+            );
         if (item === 'unorderedList') continue;
         await expect(button).toHaveAttribute('aria-pressed', 'false');
     }
@@ -287,13 +355,19 @@ test('clears stale list state before and during table cell selection', async ({
     const cells = page.locator('.soeditor-table-cell');
     await cells.nth(3).dispatchEvent('pointerdown', { button: 0 });
     await expect(
-        page.locator('[data-toolbar-item="unorderedList"]'),
+        page.locator('[data-toolbar-item="unorderedList"] > button'),
     ).toHaveAttribute('aria-pressed', 'false');
     await cells.nth(3).dispatchEvent('pointerup', { button: 0 });
     await cells.nth(3).click();
 
     for (const item of ['orderedList', 'unorderedList']) {
-        const button = page.locator(`[data-toolbar-item="${item}"]`);
+        const button = page
+            .locator(`[data-toolbar-item="${item}"]`)
+            .locator(
+                item === 'orderedList' || item === 'unorderedList'
+                    ? ':scope > button'
+                    : ':scope',
+            );
         await expect(button).toHaveAttribute('aria-pressed', 'false');
         await expect(button).not.toHaveClass(/is-active/u);
     }
@@ -304,7 +378,13 @@ test('clears stale list state before and during table cell selection', async ({
     ).toHaveCount(2);
 
     for (const item of ['orderedList', 'unorderedList']) {
-        const button = page.locator(`[data-toolbar-item="${item}"]`);
+        const button = page
+            .locator(`[data-toolbar-item="${item}"]`)
+            .locator(
+                item === 'orderedList' || item === 'unorderedList'
+                    ? ':scope > button'
+                    : ':scope',
+            );
         await expect(button).toBeDisabled();
         await expect(button).toHaveAttribute('aria-pressed', 'false');
         await expect(button).not.toHaveClass(/is-active/u);
@@ -312,7 +392,13 @@ test('clears stale list state before and during table cell selection', async ({
 
     await cells.nth(3).dblclick();
     for (const item of ['orderedList', 'unorderedList']) {
-        const button = page.locator(`[data-toolbar-item="${item}"]`);
+        const button = page
+            .locator(`[data-toolbar-item="${item}"]`)
+            .locator(
+                item === 'orderedList' || item === 'unorderedList'
+                    ? ':scope > button'
+                    : ':scope',
+            );
         await expect(button).toHaveAttribute('aria-pressed', 'false');
         await expect(button).not.toHaveClass(/is-active/u);
     }
@@ -328,6 +414,7 @@ test('reopens table tools after merge, cell editing, and external dismissal', as
     await cells.nth(3).click();
     await cells.nth(4).click({ modifiers: ['Shift'] });
     const tableTools = page.locator('.soeditor-ui__table-balloon');
+    await tableTools.locator('[data-table-menu=merge]').click();
     await tableTools
         .getByRole('button', { name: /Merge cells|合并单元格/u })
         .click();
@@ -359,6 +446,16 @@ test('presents the complete CMS showcase from the root URL', async ({
         }),
     ).toBeVisible();
     await expect(page.locator('.soeditor-classic')).toBeVisible();
+    await page.locator('.soeditor-classic__visual p').first().click();
+    await page.locator('[data-toolbar-item="moreFormatting"] summary').click();
+    await expect(
+        page.getByRole('button', { name: '删除线', exact: true }),
+    ).toBeVisible();
+    await expect(
+        page.getByRole('button', { name: '下标', exact: true }),
+    ).toBeVisible();
+    await page.keyboard.press('Escape');
+
     for (const item of [
         'pageBreak',
         'placeholder',
@@ -401,7 +498,13 @@ test('presents the complete CMS showcase from the root URL', async ({
         .locator('.soeditor-classic [role="toolbar"] .soeditor-ui__button')
         .evaluateAll((buttons) =>
             buttons
-                .filter((button) => !(button as HTMLElement).hidden)
+                .filter(
+                    (button) =>
+                        !(button as HTMLElement).hidden &&
+                        !button.matches(
+                            '.soeditor-ui__format-control summary, .soeditor-ui__format-choice, .soeditor-ui__value-control',
+                        ),
+                )
                 .map((button) => {
                     const rectangle = button.getBoundingClientRect();
                     const style = getComputedStyle(button);
@@ -432,7 +535,7 @@ test('presents the complete CMS showcase from the root URL', async ({
                 buttons.every(
                     (button) =>
                         button.querySelector(
-                            ':scope > svg.soeditor-ui__icon',
+                            ':scope > svg.soeditor-ui__icon, :scope > .soeditor-ui__list-preview, :scope > .soeditor-ui__format-arrow, :scope > .soeditor-ui__current-value',
                         ) !== null,
                 ),
             ),
@@ -509,12 +612,7 @@ test('presents the complete CMS showcase from the root URL', async ({
         }),
     ).toHaveCount(0);
     await wysiwyg.locator('.soeditor-table-cell').nth(1).click();
-    await expect(
-        page
-            .locator('.soeditor-ui__balloon')
-            .getByRole('button', { name: 'Add row' })
-            .locator('svg'),
-    ).toHaveCount(1);
+    await expect(page.locator('[data-table-menu=row]')).toBeVisible();
     const initialTableBalloon = page.locator('.soeditor-ui__table-balloon');
     await initialTableBalloon.evaluate((element) => {
         element.setAttribute('data-test-instance', 'stable');
@@ -565,6 +663,7 @@ test('presents the complete CMS showcase from the root URL', async ({
     ).toHaveCount(0);
     await wysiwyg.locator('.soeditor-table-cell').first().click();
     const tableTools = page.locator('.soeditor-ui__table-balloon');
+    await tableTools.locator('[data-table-menu=properties]').click();
     await tableTools
         .getByRole('button', { name: /表格标题|Table caption/u })
         .click();
@@ -576,6 +675,7 @@ test('presents the complete CMS showcase from the root URL', async ({
     await captionDialog.getByRole('button', { name: '保存标题' }).click();
     await captionDialog.getByRole('button', { name: '完成' }).click();
     await wysiwyg.locator('.soeditor-table-cell').first().click();
+    await tableTools.locator('[data-table-menu=properties]').click();
     await tableTools
         .getByRole('button', { name: /表格属性|Table properties/u })
         .click();
@@ -647,9 +747,7 @@ test('presents the complete CMS showcase from the root URL', async ({
     const secondRowSecondCell = wysiwyg.locator('.soeditor-table-cell').nth(4);
     await secondRowSecondCell.click();
     const tableBalloon = page.locator('.soeditor-ui__balloon');
-    await expect(
-        tableBalloon.getByRole('button', { name: 'Add row' }),
-    ).toBeVisible();
+    await expect(tableBalloon.locator('[data-table-menu=row]')).toBeVisible();
     await expect(
         tableBalloon.getByRole('button', { name: 'Bold cell content' }),
     ).toHaveCount(0);
@@ -818,6 +916,82 @@ test('keeps native caret placement while switching between table cells', async (
     );
 });
 
+test('keeps image properties usable while moving and resizing within the viewport', async ({
+    page,
+}) => {
+    await page.setViewportSize({ width: 600, height: 480 });
+    const visual = page.locator('.soeditor-classic__visual');
+    await page.evaluate(() => {
+        globalThis.__classicDemo.editor.setData(
+            '<p><img src="/demo-editor-cover.svg" alt="Cover" width="640" height="240"></p>',
+        );
+    });
+    await visual.locator('img').dblclick();
+
+    const dialog = page.getByRole('dialog', { name: 'Image properties' });
+    const title = dialog.locator('.soeditor-ui__dialog-title');
+    const body = dialog.locator('.soeditor-ui__dialog-body');
+    const footer = dialog.locator('.soeditor-ui__dialog-actions');
+    const resize = dialog.getByRole('button', { name: 'Resize dialog' });
+    await expect(dialog).toBeVisible();
+    await expect(title).toBeVisible();
+    await expect(footer).toBeVisible();
+    await expect(dialog).toHaveCSS('overflow', 'hidden');
+    await expect
+        .poll(() =>
+            body.evaluate(
+                (element) => element.scrollHeight > element.clientHeight,
+            ),
+        )
+        .toBe(true);
+
+    const titleBox = await title.boundingBox();
+    if (titleBox === null) throw new Error('Missing image dialog title.');
+    await page.mouse.move(
+        titleBox.x + titleBox.width / 2,
+        titleBox.y + titleBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(-500, -500);
+    await page.mouse.up();
+    const movedBox = await dialog.boundingBox();
+    if (movedBox === null) throw new Error('Missing moved image dialog.');
+    expect(movedBox.x).toBeGreaterThanOrEqual(7);
+    expect(movedBox.y).toBeGreaterThanOrEqual(7);
+
+    await resize.focus();
+    const beforeKeyboardResize = await dialog.boundingBox();
+    await page.keyboard.press('ArrowLeft');
+    await page.keyboard.press('ArrowUp');
+    const afterKeyboardResize = await dialog.boundingBox();
+    if (beforeKeyboardResize === null || afterKeyboardResize === null) {
+        throw new Error('Missing keyboard-resized image dialog.');
+    }
+    expect(afterKeyboardResize.width).toBeLessThan(beforeKeyboardResize.width);
+    expect(afterKeyboardResize.height).toBeLessThan(
+        beforeKeyboardResize.height,
+    );
+
+    const resizeBox = await resize.boundingBox();
+    if (resizeBox === null) throw new Error('Missing dialog resize handle.');
+    await page.mouse.move(
+        resizeBox.x + resizeBox.width / 2,
+        resizeBox.y + resizeBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(2_000, 2_000);
+    await page.mouse.up();
+    const boundedBox = await dialog.boundingBox();
+    if (boundedBox === null) throw new Error('Missing resized image dialog.');
+    expect(boundedBox.x).toBeGreaterThanOrEqual(7);
+    expect(boundedBox.y).toBeGreaterThanOrEqual(7);
+    expect(boundedBox.x + boundedBox.width).toBeLessThanOrEqual(593);
+    expect(boundedBox.y + boundedBox.height).toBeLessThanOrEqual(473);
+    await expect(title).toBeVisible();
+    await expect(footer).toBeVisible();
+    await dialog.getByRole('button', { name: 'Cancel' }).click();
+});
+
 test('replaces a native WYSIWYG selection and edits images on double click', async ({
     page,
 }) => {
@@ -862,6 +1036,9 @@ test('replaces a native WYSIWYG selection and edits images on double click', asy
     await dialog.getByLabel('Image title').fill('Campaign cover');
     await dialog.getByLabel('Link URL').fill('/campaign');
     await dialog.getByLabel('Link target').selectOption('_blank');
+    await dialog
+        .getByLabel('Alignment', { exact: true })
+        .selectOption('center');
     await dialog.getByLabel('Lock aspect ratio').check();
     await dialog.getByLabel('Width').fill('480');
     await expect(dialog.getByLabel('Height')).toHaveValue('180');
@@ -912,6 +1089,61 @@ test('replaces a native WYSIWYG selection and edits images on double click', asy
     await expect(aside).toHaveAttribute('data-campaign', 'summer');
     await expect(wysiwyg.getByText('Promotion')).toHaveCount(0);
     await expect(wysiwyg.getByText('campaign')).toHaveCount(0);
+});
+
+test('image alignment renders stored figures and survives Source round trips', async ({
+    page,
+}) => {
+    const wysiwyg = page.locator('.soeditor-classic__visual');
+    // Check rendered geometry, not only the persisted data-align attribute.
+    // The same contract applies to linked and CSS block-level CMS images.
+    for (const display of ['', ' style="display:block"']) {
+        for (const alignment of ['left', 'center', 'right']) {
+            const html = `<figure data-soeditor-media="image" data-align="${alignment}"><a href="/photo"><img src="/demo-editor-cover.svg" width="200" height="80"${display}></a><figcaption>Caption</figcaption></figure>`;
+            await page.evaluate(
+                (html) => globalThis.__classicDemo.editor.setData(html),
+                html,
+            );
+            const assertAlignment = async () => {
+                await expect
+                    .poll(() =>
+                        wysiwyg
+                            .locator('figure')
+                            .evaluate((figure, alignment) => {
+                                const image = figure.querySelector('img');
+                                if (image === null)
+                                    throw new Error('Missing image.');
+                                const frame = figure.getBoundingClientRect();
+                                const picture = image.getBoundingClientRect();
+                                return Math.abs(
+                                    alignment === 'left'
+                                        ? picture.left - frame.left
+                                        : alignment === 'right'
+                                          ? picture.right - frame.right
+                                          : picture.left +
+                                            picture.width / 2 -
+                                            frame.left -
+                                            frame.width / 2,
+                                );
+                            }, alignment),
+                    )
+                    .toBeLessThan(1);
+            };
+            await assertAlignment();
+            await page.evaluate(async () => {
+                await globalThis.__classicDemo.editor.setWorkspaceView(
+                    'source',
+                );
+                await globalThis.__classicDemo.editor.setWorkspaceView(
+                    'wysiwyg',
+                );
+            });
+            await assertAlignment();
+            expect(
+                await page.evaluate(() => globalThis.__classicDemo.getData()),
+            ).toBe(html);
+        }
+    }
 });
 
 test('applies font family, colors, highlight, and size through native selections', async ({
@@ -1055,6 +1287,9 @@ test('accepts typed and picked colors and persists a shared recent-color history
         0,
     );
     await textColor.locator('summary').click();
+    // A reopened menu reflects the applied selection color, not a discarded draft.
+    await expect(textValue).toHaveValue('rgb(0, 0, 0)');
+    await textValue.fill('#123456');
     await textValue.evaluate((input) => {
         const visual = document.querySelector('.soeditor-classic__visual');
         const root = visual?.shadowRoot;
@@ -1175,6 +1410,7 @@ test('accepts typed and picked colors and persists a shared recent-color history
     });
     await page.reload();
     await page.locator('body[data-ready="true"]').waitFor();
+    await page.locator('.soeditor-classic__visual p').first().click();
     const reloadedColor = page.locator('[data-toolbar-item="fontColor"]');
     await reloadedColor.locator('summary').click();
     await expect(
@@ -1601,10 +1837,10 @@ test('preserves the editing selection across toolbar menus and structural comman
     await expect(visual.locator('strong')).toHaveText('Selected');
 
     await selectText('<p>Selected text</p>', 8);
-    await page.locator('[data-toolbar-item="unorderedList"]').click();
+    await page.locator('[data-toolbar-item="unorderedList"] > button').click();
     await expect(visual.locator('ul > li')).toHaveText('Selected text');
     await expect.poll(selectedText).toBe('Selected');
-    await page.locator('[data-toolbar-item="unorderedList"]').click();
+    await page.locator('[data-toolbar-item="unorderedList"] > button').click();
     await expect(visual.locator('p')).toHaveText('Selected text');
     await expect.poll(selectedText).toBe('Selected');
 });
@@ -1732,14 +1968,139 @@ test('applies bold to paragraph, list-item, and table-cell ranges without changi
         );
 });
 
+test('element path follows WYSIWYG selection without exposing Source chrome', async ({
+    page,
+}) => {
+    const path = page.locator('.soeditor-ui__element-path');
+    const visual = page.locator('.soeditor-classic__visual');
+    const html =
+        '<section><ul><li><strong>Nested text</strong></li></ul><p>Other text</p></section>';
+    await page.evaluate(
+        (html) => globalThis.__classicDemo.editor.setData(html),
+        html,
+    );
+    await visual.locator('strong').click();
+    await expect(path).toHaveText('section › ul › li › strong');
+    await visual.locator('p').click();
+    await expect(path).toHaveText('section › p');
+    await page.evaluate(async () =>
+        globalThis.__classicDemo.editor.setWorkspaceView(
+            'wysiwyg-source-horizontal',
+        ),
+    );
+    await visual.locator('strong').click();
+    await expect(path).toHaveText('section › ul › li › strong');
+    await page.locator('.soeditor-classic__source .cm-content').click();
+    await expect(path).toBeHidden();
+    await visual.locator('strong').click();
+    await expect(path).toBeVisible();
+    await expect(path).toHaveText('section › ul › li › strong');
+    expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
+        html,
+    );
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData('<p>Replacement</p>'),
+    );
+    await expect(path).not.toHaveText('section › ul › li › strong');
+    await visual.locator('p').click();
+    await expect(path).toHaveText('p');
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<figure><img src="/demo-editor-cover.svg" width="200"></figure>',
+        ),
+    );
+    await visual.locator('img').click();
+    await expect(path).toHaveText('figure › img');
+
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        host.id = 'path-second-host';
+        document.body.append(host);
+        const second = await globalThis.__classicDemo.create(host, {
+            data: '<blockquote><p>Second instance</p></blockquote>',
+        });
+        second.element.id = 'path-second-editor';
+    });
+    const second = page.locator('#path-second-editor');
+    await second.locator('.soeditor-classic__visual p').click();
+    await expect(second.locator('.soeditor-ui__element-path')).toHaveText(
+        'blockquote › p',
+    );
+    await expect(
+        page
+            .locator('.soeditor-classic')
+            .first()
+            .locator('.soeditor-ui__element-path'),
+    ).toBeHidden();
+
+    const scheduling = await page.evaluate(async () => {
+        const modulePath =
+            '/@fs/var/www/node/SoEditor/packages/ui/src/element-path.ts';
+        const module: typeof ElementPathModule = await import(modulePath);
+        let reads = 0;
+        let mutations = 0;
+        const component = module.createElementPath(document, () => {
+            reads += 1;
+            return ['section', 'p'];
+        });
+        document.body.append(component.element);
+        const observer = new MutationObserver((records) => {
+            mutations += records.length;
+        });
+        observer.observe(component.element, { childList: true });
+        for (let index = 0; index < 1000; index += 1) component.update();
+        await new Promise(requestAnimationFrame);
+        const firstReads = reads;
+        for (let index = 0; index < 1000; index += 1) component.update();
+        await new Promise(requestAnimationFrame);
+        const secondReads = reads;
+        component.update();
+        component.destroy();
+        await new Promise(requestAnimationFrame);
+        observer.disconnect();
+        return {
+            firstReads,
+            secondReads,
+            finalReads: reads,
+            mutations,
+            connected: component.element.isConnected,
+        };
+    });
+    expect(scheduling).toEqual({
+        firstReads: 1,
+        secondReads: 2,
+        finalReads: 2,
+        mutations: 1,
+        connected: false,
+    });
+});
+
 test('keeps Unicode word and character counts visible in WYSIWYG and Source', async ({
     page,
 }) => {
     const status = page.locator('.soeditor-ui__document-status');
+    for (const html of [
+        '<h1><br></h1>\n<aside data-soeditor-object="promo" data-campaign="summer" data-theme="violet"></aside>\n<!--CMS:block--><product-card data-id="42"></product-card>\n',
+        '<p>&nbsp; </p>\n<p><br></p>',
+    ]) {
+        await page.evaluate(
+            (html) => globalThis.__classicDemo.editor.setData(html),
+            html,
+        );
+        await expect(status).toHaveAttribute('data-words', '0');
+        await expect(status).toHaveAttribute('data-characters', '0');
+        await expect(status).toHaveAttribute(
+            'data-source-characters',
+            String(html.length),
+        );
+        expect(
+            await page.evaluate(() => globalThis.__classicDemo.getData()),
+        ).toBe(html);
+    }
     await page.evaluate(() => {
         globalThis.__classicDemo.editor.setData('<p>Hello 世界</p>');
     });
-    await expect(status).toHaveAttribute('data-words', '2');
+    await expect(status).toHaveAttribute('data-words', '3');
     await expect(status).toHaveAttribute('data-characters', '8');
     await expect(status).toHaveAttribute('data-source-characters', '15');
     await expect(status).toHaveAttribute('data-editor-mode', 'wysiwyg');
@@ -1752,9 +2113,60 @@ test('keeps Unicode word and character counts visible in WYSIWYG and Source', as
     await expect(status).toHaveAttribute('data-editor-mode', 'source');
     await expect(sourceView).toHaveAttribute('aria-pressed', 'true');
     await expect(wysiwygView).toHaveAttribute('aria-pressed', 'false');
+    await expect(status).toHaveAttribute('data-words', '3');
+    await expect(status).toHaveAttribute('data-characters', '8');
+    await expect(status).toHaveAttribute('data-source-characters', '15');
+
+    // Same-length Source edits must invalidate counts; undo restores them.
+    const source = page.locator('.soeditor-classic__source .cm-content');
+    await source.click();
+    await page.keyboard.press('ControlOrMeta+A');
+    await page.keyboard.insertText('<p>Hi World</p>');
     await expect(status).toHaveAttribute('data-words', '2');
     await expect(status).toHaveAttribute('data-characters', '8');
     await expect(status).toHaveAttribute('data-source-characters', '15');
+    await page.evaluate(async () => {
+        await globalThis.__classicDemo.editor.editor.execute('editor.undo');
+    });
+    await expect(status).toHaveAttribute('data-words', '3');
+    await page.evaluate(() => {
+        const classic = globalThis.__classicDemo.editor;
+        classic.setReadonly(true);
+        classic.setReadonly(false);
+        classic.setData('<p>😀 e\u0301 &amp;</p>');
+    });
+    await expect(status).toHaveAttribute('data-characters', '6');
+    await expect(status).toHaveAttribute('data-words', '1');
+    await expect(status).toHaveAttribute('data-source-characters', '17');
+
+    const immediate = await page.evaluate(() => {
+        const classic = globalThis.__classicDemo.editor;
+        classic.setData('<p>First burst</p>');
+        classic.setData('<p>Second burst</p>');
+        classic.setData('<p>Final 😀</p>');
+        return { html: classic.getData(), dirty: classic.editor.state.dirty };
+    });
+    expect(immediate).toEqual({ html: '<p>Final 😀</p>', dirty: true });
+    await expect(status).toHaveAttribute('data-characters', '7');
+    await expect(status).toHaveAttribute('data-source-characters', '14');
+    // A scheduled count must not touch a detached UI after teardown.
+    const detached = await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        document.body.append(host);
+        const classic = await globalThis.__classicDemo.create(host, {
+            data: '<p>Old</p>',
+        });
+        const status = classic.element.querySelector(
+            '.soeditor-ui__document-status',
+        );
+        const before = status?.textContent;
+        classic.setData('<p>Pending statistics</p>');
+        await classic.destroy();
+        await new Promise((resolve) => setTimeout(resolve, 180));
+        host.remove();
+        return { before, after: status?.textContent };
+    });
+    expect(detached.after).toBe(detached.before);
 });
 
 test('presents whole-document HTML formatting only in Source mode', async ({
@@ -1808,6 +2220,7 @@ test('keeps table cells interactive after source formatting and minification', a
         await visual
             .locator('#before-source-b')
             .click({ modifiers: ['Shift'] });
+        await page.locator('[data-table-menu=merge]').click();
         await page
             .locator('.soeditor-ui__table-balloon')
             .getByRole('button', { name: 'Merge cells' })
@@ -1849,6 +2262,7 @@ test('keeps table cells interactive after source formatting and minification', a
         await expect(
             visual.locator('.soeditor-table-cell.is-structurally-selected'),
         ).toHaveCount(2);
+        await page.locator('[data-table-menu=merge]').click();
         await expect(
             page
                 .locator('.soeditor-ui__table-balloon')
@@ -1872,6 +2286,7 @@ test('formats large source in a worker without freezing the editor', async ({
     page,
 }) => {
     await page.locator('[data-workspace-view="source"]').first().click();
+    await expect(page.locator('.cm-content')).toBeVisible();
     const responsiveness = await page.evaluate(async () => {
         const demo = globalThis.__classicDemo;
         demo.editor.setData(
@@ -1904,6 +2319,7 @@ test('validates large formatting input in the worker without freezing the editor
     page,
 }) => {
     await page.locator('[data-workspace-view="source"]').first().click();
+    await expect(page.locator('.cm-content')).toBeVisible();
     const responsiveness = await page.evaluate(async () => {
         const demo = globalThis.__classicDemo;
         const source = `<main>${'<p id="one" id="two">invalid</p>'.repeat(20_000)}</main>`;
@@ -1981,6 +2397,9 @@ test('keeps table resize handles after fullscreen split source formatting', asyn
         .click();
     await classic.locator('.soeditor-classic__source .cm-content').click();
     await classic.locator('[data-toolbar-item="format"]').click();
+    await expect(
+        classic.locator('[data-toolbar-item="format"]'),
+    ).not.toHaveAttribute('aria-busy', 'true');
 
     // In split mode the visual pane is paint-contained. The resize overlay
     // must still sit on the same viewport boundary as the projected table.
@@ -2007,10 +2426,39 @@ test('keeps table resize handles after fullscreen split source formatting', asyn
     if (splitCellBox === null)
         throw new Error('Missing split table cell boundary.');
     expect(splitBox.x + splitBox.width / 2).toBeCloseTo(
-        splitCellBox.x + splitCellBox.width - 4,
+        splitCellBox.x + splitCellBox.width,
         0,
     );
 
+    await splitCell.scrollIntoViewIfNeeded();
+    await splitVisual.evaluate((host) => {
+        host.scrollTop += 40;
+    });
+    await expect
+        .poll(() => splitVisual.evaluate((host) => host.scrollTop))
+        .toBeGreaterThan(0);
+    await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+    await expect
+        .poll(async () => {
+            const handle = await splitHandle.boundingBox();
+            const table = await splitVisual
+                .locator('table')
+                .first()
+                .boundingBox();
+            return Math.abs((handle?.y ?? -1000) - (table?.y ?? 0));
+        })
+        .toBeLessThan(2);
+    const visibleCell = await splitCell.boundingBox();
+    if (visibleCell === null) throw new Error('Missing visible split cell');
+    const dragX = visibleCell.x + visibleCell.width;
+    const dragY = visibleCell.y + visibleCell.height / 2;
+    await page.mouse.move(dragX, dragY);
+    await page.mouse.down();
+    await page.mouse.move(dragX + 30, dragY, { steps: 4 });
+    await page.mouse.up();
+    await expect
+        .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+        .toMatch(/<col width="\d+">/u);
     await classic
         .getByLabel(/编辑视图|Editing view/u)
         .locator('[data-workspace-view="wysiwyg"]')
@@ -2030,7 +2478,7 @@ test('keeps table resize handles after fullscreen split source formatting', asyn
     await expect.poll(() => cell.boundingBox()).not.toBeNull();
     const cellBox = await cell.boundingBox();
     if (cellBox === null) throw new Error('Missing table cell boundary.');
-    expect(box.x + box.width / 2).toBeCloseTo(cellBox.x + cellBox.width - 4, 0);
+    expect(box.x + box.width / 2).toBeCloseTo(cellBox.x + cellBox.width, 0);
     await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
     await page.mouse.down();
     await page.mouse.move(box.x + box.width / 2 + 20, box.y + box.height / 2);
@@ -2045,7 +2493,7 @@ test('keeps table resize handles after fullscreen split source formatting', asyn
         .poll(() =>
             page.evaluate(() => globalThis.__classicDemo.editor.getData()),
         )
-        .toMatch(/<col width="\d+">/u);
+        .toMatch(/<col width="\d+(?:px)?">/u);
 });
 
 test('keeps row resize handles after fullscreen source formatting', async ({
@@ -2068,6 +2516,9 @@ test('keeps row resize handles after fullscreen source formatting', async ({
         .click();
     await classic.locator('.soeditor-classic__source .cm-content').click();
     await classic.locator('[data-toolbar-item="format"]').click();
+    await expect(
+        classic.locator('[data-toolbar-item="format"]'),
+    ).not.toHaveAttribute('aria-busy', 'true');
 
     const splitVisual = classic.locator('.soeditor-classic__visual');
     const splitHandle = splitVisual
@@ -2092,6 +2543,29 @@ test('keeps row resize handles after fullscreen source formatting', async ({
         0,
     );
 
+    await splitRow.scrollIntoViewIfNeeded();
+    await splitVisual.evaluate((host) => {
+        host.scrollTop += 40;
+    });
+    await page.evaluate(() => window.dispatchEvent(new Event('resize')));
+    const visibleRow = await splitRow.boundingBox();
+    if (visibleRow === null) throw new Error('Missing visible split row');
+    await expect
+        .poll(async () => {
+            const bounds = await splitHandle.boundingBox();
+            return Math.abs(
+                (bounds === null ? -1000 : bounds.y + bounds.height / 2) -
+                    (visibleRow.y + visibleRow.height),
+            );
+        })
+        .toBeLessThan(2);
+    const rowX = visibleRow.x + visibleRow.width - 12;
+    const rowY = visibleRow.y + visibleRow.height;
+    await page.mouse.move(rowX, rowY);
+    await page.mouse.down();
+    await page.mouse.move(rowX, rowY + 25, { steps: 4 });
+    await page.mouse.up();
+    await expect(splitRow).toHaveAttribute('height', /\d+/u);
     await classic
         .getByLabel(/编辑视图|Editing view/u)
         .locator('[data-workspace-view="wysiwyg"]')
@@ -2158,6 +2632,64 @@ test('switches editing layouts with distinct icon buttons', async ({
     await expect(
         view.locator('[data-workspace-view="wysiwyg-source-horizontal"]'),
     ).toHaveAttribute('aria-pressed', 'true');
+});
+
+test('optionally synchronizes proportional scrolling in split Source view', async ({
+    page,
+}) => {
+    const paragraphs = Array.from(
+        { length: 80 },
+        (_value, index) =>
+            `<p${index === 0 ? ' id="scroll-sync-marker"' : ''}>Paragraph ${String(index)} ${'content '.repeat(8)}</p>`,
+    ).join('\n');
+    await page.evaluate(async (data) => {
+        const host = document.createElement('textarea');
+        host.id = 'scroll-sync-host';
+        document.body.append(host);
+        const fixture: unknown = Reflect.get(globalThis, '__classicDemo');
+        const create = Reflect.get(fixture as object, 'create');
+        const editor = (await Reflect.apply(create, fixture, [
+            host,
+            {
+                data,
+                editingModes: ['wysiwyg', 'source'],
+                initialHeight: 220,
+                maxHeight: 220,
+                minHeight: 220,
+                source: { scrollSync: true },
+            },
+        ])) as {
+            destroy(): Promise<void>;
+            setWorkspaceView(view: string): void | Promise<void>;
+        };
+        await editor.setWorkspaceView('wysiwyg-source-horizontal');
+        Reflect.set(globalThis, '__scrollSyncEditor', editor);
+    }, paragraphs);
+
+    const classic = page.locator('.soeditor-classic:has(#scroll-sync-marker)');
+    const visual = classic.locator('.soeditor-classic__visual');
+    const source = classic.locator('.soeditor-classic__source .cm-scroller');
+    await visual.evaluate((element) => {
+        element.scrollTop = element.scrollHeight - element.clientHeight;
+        element.dispatchEvent(new Event('scroll'));
+    });
+    await expect
+        .poll(() => source.evaluate((element) => element.scrollTop))
+        .toBeGreaterThan(0);
+
+    await source.evaluate((element) => {
+        element.scrollTop = 0;
+        element.dispatchEvent(new Event('scroll'));
+    });
+    await expect
+        .poll(() => visual.evaluate((element) => element.scrollTop))
+        .toBeLessThan(1);
+    await page.evaluate(async () => {
+        const editor = Reflect.get(globalThis, '__scrollSyncEditor') as {
+            destroy(): Promise<void>;
+        };
+        await editor.destroy();
+    });
 });
 
 test('keeps preserved HTML out of the WYSIWYG authoring surface', async ({
@@ -2594,7 +3126,7 @@ test('keeps narrow, zoomed, forced-color chrome operable and restores global lay
     await page.setViewportSize({ height: 720, width: 360 });
     await page.emulateMedia({ forcedColors: 'active' });
     await page.locator('body').evaluate((body) => {
-        body.style.zoom = '150%';
+        body.style.zoom = '200%';
         body.style.overflow = 'auto';
     });
     const classic = page.locator('.soeditor-classic');
@@ -2603,6 +3135,32 @@ test('keeps narrow, zoomed, forced-color chrome operable and restores global lay
     await expect(
         classic.locator('.soeditor-ui__document-status'),
     ).toBeVisible();
+    await classic.locator('.soeditor-wysiwyg-content p').first().click();
+    const alignment = toolbar.locator(
+        '[data-toolbar-item="alignment"] summary',
+    );
+    await alignment.focus();
+    await page.keyboard.press('ArrowDown');
+    const choices = toolbar.locator(
+        '[data-toolbar-item="alignment"] .soeditor-ui__menu-items',
+    );
+    await expect(choices).toBeVisible();
+    await expect
+        .poll(async () => {
+            const box = await choices.boundingBox();
+            return (
+                box !== null &&
+                box.x >= 0 &&
+                box.y >= 0 &&
+                box.x + box.width <= 360 &&
+                box.y + box.height <= 720
+            );
+        })
+        .toBe(true);
+    await page.keyboard.press('End');
+    await expect(choices.locator('button').last()).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(alignment).toBeFocused();
 
     await page.evaluate(() => {
         globalThis.__classicDemo.editor.maximize(true);
@@ -2966,7 +3524,7 @@ test('applies multi-block CMS formatting and nested-list keyboard commands trans
     await page.keyboard.press('Tab');
     await expect
         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
-        .toContain('<li>One<ol><li>Two</li></ol></li>');
+        .toContain('<li>One<ol type="A"><li>Two</li></ol></li>');
     await page.keyboard.press('Shift+Tab');
     await expect
         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
@@ -2975,7 +3533,7 @@ test('applies multi-block CMS formatting and nested-list keyboard commands trans
     await page.evaluate(() => globalThis.__classicDemo.execute('editor.undo'));
     await expect
         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
-        .toContain('<li>One<ol><li>Two</li></ol></li>');
+        .toContain('<li>One<ol type="A"><li>Two</li></ol></li>');
 });
 
 test('classifies and cleans external paste/drop while retaining internal clipboard fidelity', async ({
@@ -3136,6 +3694,28 @@ test('uploads images with temporary previews, retry, cancellation, and unsafe-re
             preview: true,
             status: 'pending',
         });
+    const pendingRow = page
+        .locator('[data-upload-id]')
+        .filter({ hasText: 'hero.png' });
+    const cancel = pendingRow.getByRole('button', {
+        name: 'Cancel: hero.png',
+        exact: true,
+    });
+    await cancel.focus();
+    await page.evaluate(() =>
+        globalThis.__classicDemo.reportUploadProgress(0.5),
+    );
+    await expect(cancel).toBeFocused();
+    expect(
+        await pendingRow
+            .getByRole('progressbar')
+            .evaluate(
+                (element: HTMLProgressElement) => element.value / element.max,
+            ),
+    ).toBeGreaterThanOrEqual(0.5);
+    expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
+        '<p>Upload target</p>',
+    );
     await page.evaluate(() => globalThis.__classicDemo.resolveUploads());
     await expect
         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
@@ -3205,51 +3785,55 @@ test('uploads images with temporary previews, retry, cancellation, and unsafe-re
         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
         .toContain('/uploads/dropped.png');
 
-    const failureAndRetry = await page.evaluate(async () => {
+    await page.evaluate(async () => {
         const harness = globalThis.__classicDemo;
         harness.setUploadMode('fail');
-        let failed = false;
         try {
             await harness.upload('retry.png');
         } catch {
-            failed = true;
+            /* Expected adapter failure. */
         }
-        const failedRecord = harness.uploadRecords().at(-1);
         harness.setUploadMode('success');
-        if (failedRecord !== undefined) {
-            await harness.uploadRetry(failedRecord.id);
-        }
-        return {
-            attempt: harness.uploadRecords().at(-1)?.attempt,
-            failed,
-            status: harness.uploadRecords().at(-1)?.status,
-        };
     });
-    expect(failureAndRetry).toEqual({
-        attempt: 2,
-        failed: true,
-        status: 'succeeded',
-    });
-
-    const cancellation = await page.evaluate(() => {
-        const harness = globalThis.__classicDemo;
-        harness.setUploadMode('manual');
-        void harness.upload('cancel.png');
-        const record = harness.uploadRecords().at(-1);
-        return {
-            cancelled:
-                record === undefined ? false : harness.uploadCancel(record.id),
-            id: record?.id,
-        };
-    });
-    expect(cancellation.cancelled).toBe(true);
+    const failedRow = page
+        .locator('[data-upload-id]')
+        .filter({ hasText: 'retry.png' });
+    await expect(failedRow).toContainText('Upload failed');
+    await expect(failedRow).toContainText('Demo upload failed.');
+    await failedRow
+        .getByRole('button', { name: 'Retry: retry.png', exact: true })
+        .click();
+    await expect(failedRow).toHaveAttribute('data-upload-state', 'succeeded');
+    await expect(failedRow).toContainText('Upload complete');
     await expect
         .poll(() =>
             page.evaluate(
-                () => globalThis.__classicDemo.uploadRecords().at(-1)?.status,
+                () => globalThis.__classicDemo.uploadRecords().at(-1)?.attempt,
             ),
         )
-        .toBe('cancelled');
+        .toBe(2);
+    await failedRow
+        .getByRole('button', { name: 'Close: retry.png', exact: true })
+        .click();
+    await expect(failedRow).toHaveCount(0);
+
+    const beforeCancel = await page.evaluate(() => {
+        const harness = globalThis.__classicDemo;
+        harness.setUploadMode('manual');
+        void harness.upload('cancel.png');
+        return harness.getData();
+    });
+    const cancelRow = page
+        .locator('[data-upload-id]')
+        .filter({ hasText: 'cancel.png' });
+    await expect(cancelRow.getByRole('progressbar')).toBeVisible();
+    await cancelRow
+        .getByRole('button', { name: 'Cancel: cancel.png', exact: true })
+        .click();
+    await expect(cancelRow).toContainText('Upload cancelled');
+    await expect
+        .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+        .toBe(beforeCancel);
 
     const beforeUnsafe = await page.evaluate(() =>
         globalThis.__classicDemo.getData(),
@@ -3268,6 +3852,90 @@ test('uploads images with temporary previews, retry, cancellation, and unsafe-re
     expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
         beforeUnsafe,
     );
+    const beforeRejectedPaste = await page.evaluate(() => {
+        const harness = globalThis.__classicDemo;
+        harness.editor.setData('<p>Keep this article</p>');
+        harness.select({
+            anchor: { block: 0, offset: 17 },
+            focus: { block: 0, offset: 17 },
+        });
+        harness.setUploadMode('manual');
+        const transfer = new DataTransfer();
+        for (let index = 0; index < 5; index += 1) {
+            transfer.items.add(
+                new File(['image'], `batch-${index}.png`, {
+                    type: 'image/png',
+                }),
+            );
+        }
+        const before = harness.uploadRecords().length;
+        document
+            .querySelector('.soeditor-classic__visual')
+            ?.shadowRoot?.querySelector('.soeditor-wysiwyg-content')
+            ?.dispatchEvent(
+                new ClipboardEvent('paste', {
+                    bubbles: true,
+                    cancelable: true,
+                    clipboardData: transfer,
+                }),
+            );
+        return before;
+    });
+    await expect(
+        page
+            .locator('.soeditor-ui__notification')
+            .filter({ hasText: 'At most 4 uploads' }),
+    ).toBeVisible();
+    expect(
+        await page.evaluate(
+            () => globalThis.__classicDemo.uploadRecords().length,
+        ),
+    ).toBe(beforeRejectedPaste);
+    expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
+        '<p>Keep this article</p>',
+    );
+
+    await page.setViewportSize({ width: 375, height: 720 });
+    await page.goto('/classic.html');
+    await page.locator('body[data-ready="true"]').waitFor();
+    await page.evaluate(async () => {
+        const harness = globalThis.__classicDemo;
+        harness.editor.setData('<p>上传位置</p>');
+        harness.select({
+            anchor: { block: 0, offset: 4 },
+            focus: { block: 0, offset: 4 },
+        });
+        harness.setUploadMode('fail');
+        try {
+            await harness.upload('中文图片.png');
+        } catch {
+            /* Expected failure. */
+        }
+    });
+    const localizedRow = page
+        .locator('[data-upload-id]')
+        .filter({ hasText: '中文图片.png' });
+    await expect(localizedRow).toContainText('上传失败');
+    const retry = localizedRow.getByRole('button', {
+        name: '重试: 中文图片.png',
+        exact: true,
+    });
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setReadonly(true),
+    );
+    await expect(retry).toBeDisabled();
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setReadonly(false),
+    );
+    await expect(retry).toBeEnabled();
+    await retry.focus();
+    await expect(retry).toBeFocused();
+    await localizedRow.scrollIntoViewIfNeeded();
+    const box = await localizedRow.boundingBox();
+    if (!box) throw new Error('Missing upload feedback');
+    expect(box.x).toBeGreaterThanOrEqual(0);
+    expect(box.x + box.width).toBeLessThanOrEqual(375);
+    await page.screenshot({ path: '/tmp/soeditor-ux-stage7-upload-375.png' });
 });
 
 test('edits safe links and inserts bounded CMS content objects', async ({
@@ -3472,38 +4140,11 @@ test('supports callbacks, readonly, element hosts, duplicate rejection, and star
 });
 
 interface ClassicHarness {
-    readonly editor: {
-        readonly destroyed: boolean;
-        destroy(): Promise<void>;
-        setData(source: string): void;
-        setReadonly(readonly: boolean): void;
-    };
+    readonly editor: ClassicEditor;
     create(
         host: HTMLElement,
-        options?: {
-            readonly data?: string;
-            readonly preview?:
-                | boolean
-                | {
-                      readonly styles?: readonly string[];
-                      readonly template?: string;
-                      readonly initialTemplateId?: string;
-                      readonly templates?: readonly {
-                          readonly id: string;
-                          readonly label: string;
-                          readonly styles?: readonly string[];
-                          readonly template?: string;
-                          readonly title?: string;
-                      }[];
-                      readonly title?: string;
-                  };
-            readonly toolbar?: readonly string[];
-        },
-    ): Promise<{
-        destroy(): Promise<void>;
-        getData(): string;
-        setData(source: string): void;
-    }>;
+        options?: CreateClassicEditorOptions,
+    ): Promise<ClassicEditor>;
     events(): {
         readonly blurCount: number;
         readonly changeCount: number;
@@ -3515,6 +4156,7 @@ interface ClassicHarness {
     getData(): string;
     pasteDiagnostics(): readonly string[];
     resolveUploads(): void;
+    reportUploadProgress(fraction: number): void;
     select(selection: {
         readonly anchor: { readonly block: number; readonly offset: number };
         readonly focus: { readonly block: number; readonly offset: number };
@@ -3534,3 +4176,1438 @@ interface ClassicHarness {
 declare global {
     var __classicDemo: ClassicHarness;
 }
+
+test('loads Source, formatting and Preview only when each is first used', async ({
+    page,
+}) => {
+    const requested: string[] = [];
+    page.on('request', (request) => requested.push(request.url()));
+    await page.goto('/classic.html?test=1');
+    await page.locator('body[data-ready="true"]').waitFor();
+    const sourceRequests = () =>
+        requested.filter((url) =>
+            /\/packages\/source\/src\/index\.ts/u.test(url),
+        );
+    const formattingRequests = () =>
+        requested.filter((url) =>
+            /\/packages\/html-tools\/src\/index\.ts/u.test(url),
+        );
+    const previewRequests = () =>
+        requested.filter((url) =>
+            /\/packages\/preview\/src\/index\.ts/u.test(url),
+        );
+    expect(requested.some((url) => url.includes('soeditor-retry='))).toBe(
+        false,
+    );
+    expect(sourceRequests()).toHaveLength(0);
+    expect(formattingRequests()).toHaveLength(0);
+    expect(previewRequests()).toHaveLength(0);
+    await expect(page.locator('.cm-editor')).toHaveCount(0);
+    await page.locator('[data-workspace-view="source"]').click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    expect(sourceRequests()).toHaveLength(1);
+    expect(formattingRequests()).toHaveLength(0);
+    expect(previewRequests()).toHaveLength(0);
+    await page.locator('[data-workspace-view="wysiwyg"]').click();
+    await page
+        .locator('[data-workspace-view="wysiwyg-source-horizontal"]')
+        .click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    expect(sourceRequests()).toHaveLength(1);
+    await page.locator('[data-workspace-view="source"]').click();
+    await page.evaluate(async () => {
+        await globalThis.__classicDemo.editor.editor.execute('document.format');
+    });
+    expect(formattingRequests()).toHaveLength(1);
+    expect(previewRequests()).toHaveLength(0);
+    await page.locator('[data-workspace-view="wysiwyg"]').click();
+    const popupEvent = page.context().waitForEvent('page');
+    await page.locator('[data-toolbar-item="popupPreview"]').click();
+    const popup = await popupEvent;
+    await expect(
+        popup.locator('iframe').contentFrame().getByText('Hello'),
+    ).toBeVisible();
+    expect(previewRequests()).toHaveLength(1);
+});
+
+test('keeps the latest view and data while Source loads and never attaches after destroy', async ({
+    page,
+}) => {
+    let release: (() => void) | undefined;
+    const held = new Promise<void>((resolve) => {
+        release = resolve;
+    });
+    let started = false;
+    await page.route('**/packages/source/src/index.ts*', async (route) => {
+        started = true;
+        await held;
+        await route.continue();
+    });
+    await page.goto('/classic.html?test=1');
+    await page.locator('body[data-ready="true"]').waitFor();
+    await page.locator('[data-workspace-view="source"]').click();
+    await expect.poll(() => started).toBe(true);
+    await expect(page.locator('.soeditor-classic')).toHaveAttribute(
+        'aria-busy',
+        'true',
+    );
+    await page.evaluate(() => {
+        const editor = globalThis.__classicDemo.editor;
+        editor.setData('<p>Changed during loading</p>');
+        editor.setReadonly(true);
+        editor.setWorkspaceView('wysiwyg');
+    });
+    release?.();
+    await expect(page.locator('.soeditor-classic')).toHaveAttribute(
+        'data-soeditor-source-state',
+        'ready',
+    );
+    await expect(
+        page.locator('[data-workspace-view="wysiwyg"]'),
+    ).toHaveAttribute('aria-pressed', 'true');
+    await page.locator('[data-workspace-view="source"]').click();
+    await expect(page.locator('.cm-content')).toHaveText(
+        '<p>Changed during loading</p>',
+    );
+    await expect(page.locator('.cm-content')).toHaveAttribute(
+        'contenteditable',
+        'false',
+    );
+
+    let releaseSecond: (() => void) | undefined;
+    const secondHeld = new Promise<void>((resolve) => {
+        releaseSecond = resolve;
+    });
+    await page.unroute('**/packages/source/src/index.ts*');
+    await page.route('**/packages/source/src/index.ts*', async (route) => {
+        await secondHeld;
+        await route.continue();
+    });
+    await page.goto('/classic.html?test=1');
+    await page.locator('body[data-ready="true"]').waitFor();
+    await page.locator('[data-workspace-view="source"]').click();
+    await expect(page.locator('.soeditor-classic')).toHaveAttribute(
+        'aria-busy',
+        'true',
+    );
+    await page.evaluate(() => globalThis.__classicDemo.editor.destroy());
+    releaseSecond?.();
+    await expect(page.locator('.soeditor-classic')).toHaveCount(0);
+    await expect(page.locator('.cm-editor')).toHaveCount(0);
+    await expect(page.locator('textarea#content')).toBeVisible();
+});
+
+test('retries a failed Source request without losing the WYSIWYG document', async ({
+    page,
+}) => {
+    let attempts = 0;
+    const recoveryRequests: string[] = [];
+    await page.route('**/*soeditor-retry=*', async (route) => {
+        recoveryRequests.push(route.request().url());
+        if (recoveryRequests.length === 1) await route.abort('failed');
+        else await route.continue();
+    });
+    await page.route('**/packages/source/src/index.ts*', async (route) => {
+        ++attempts;
+        if (attempts === 1) await route.abort('failed');
+        else await route.continue();
+    });
+    await page.goto('/classic.html?test=1');
+    await page.locator('body[data-ready="true"]').waitFor();
+    await page.locator('[data-workspace-view="source"]').click();
+    await expect(page.locator('.soeditor-classic')).toHaveAttribute(
+        'data-soeditor-source-state',
+        'failed',
+    );
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData('<p>Retry preserves this</p>'),
+    );
+    await page.locator('[data-workspace-view="source"]').click();
+    await expect(page.locator('.soeditor-classic')).toHaveAttribute(
+        'data-soeditor-source-state',
+        'failed',
+    );
+    await page.locator('[data-workspace-view="source"]').click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    await expect(page.locator('.cm-content')).toHaveText(
+        '<p>Retry preserves this</p>',
+    );
+    expect(attempts).toBe(1);
+    expect(recoveryRequests).toHaveLength(2);
+    expect(recoveryRequests[0]).not.toBe(recoveryRequests[1]);
+    await page.evaluate(() => globalThis.__classicDemo.editor.editor.destroy());
+    await expect(page.locator('.soeditor-classic')).toHaveCount(0);
+});
+
+test('retains invalid Source drafts and prevents both form and adapter submission', async ({
+    page,
+}) => {
+    const result = await page.evaluate(async () => {
+        const form = document.createElement('form');
+        const host = document.createElement('textarea');
+        form.append(host);
+        document.body.append(form);
+        let writes = 0;
+        const errors: string[] = [];
+        const editor = await globalThis.__classicDemo.create(host, {
+            data: '<p>Valid content</p>',
+            editingModes: ['wysiwyg', 'source'],
+            initialEditingMode: 'source',
+            onError: (error) => {
+                errors.push(
+                    error instanceof Error ? error.name : String(error),
+                );
+            },
+            save: {
+                adapter: {
+                    save: async () => {
+                        ++writes;
+                        return { status: 'saved' };
+                    },
+                },
+            },
+        });
+        const draft = '<p id="a" id="b">Unfinished source</p>';
+        editor.setData(draft);
+        const submitted = form.dispatchEvent(
+            new Event('submit', { bubbles: true, cancelable: true }),
+        );
+        let saveError = '';
+        try {
+            await editor.save();
+        } catch (error) {
+            saveError = error instanceof Error ? error.name : String(error);
+        }
+        await editor.setWorkspaceView('wysiwyg');
+        const visual = editor.element.querySelector(
+            '.soeditor-classic__visual',
+        );
+        const visualText =
+            visual?.shadowRoot?.textContent ?? visual?.textContent;
+        const data = editor.getData();
+        const textarea = host.value;
+        editor.setData('<p>Repaired</p>');
+        await editor.save();
+        await editor.destroy();
+        form.remove();
+        return {
+            submitted,
+            writes,
+            errors,
+            saveError,
+            data,
+            textarea,
+            draft,
+            visualText,
+        };
+    });
+    expect(result.submitted).toBe(false);
+    expect(result.saveError).toBe('ClassicInvalidSourceError');
+    expect(result.errors).toContain('ClassicInvalidSourceError');
+    expect(result.data).toBe(result.draft);
+    expect(result.textarea).toBe(result.draft);
+    expect(result.writes).toBe(1);
+});
+
+test('uses compact table dropdowns for headers, insertion, directional merge and ordinary splits', async ({
+    page,
+}) => {
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<p>Table tools</p><table><tbody><tr><td id="a">A</td><td id="b">B</td></tr><tr><td id="c">C</td><td id="d">D</td></tr></tbody></table>',
+        ),
+    );
+    const visual = page.locator('.soeditor-classic__visual');
+    const tools = page.locator('.soeditor-ui__table-balloon');
+    await visual.locator('#a').click();
+    await visual.locator('#b').click({ modifiers: ['Shift'] });
+    await tools.locator('[data-table-menu=merge]').click();
+    await expect(visual.locator('.is-structurally-selected')).toHaveCount(2);
+    await expect(
+        tools.getByRole('button', {
+            name: 'Split cell horizontally',
+            exact: true,
+        }),
+    ).toHaveAttribute('title', 'Select one cell to split.');
+    await expect(
+        tools.getByRole('button', { name: 'Merge cell up', exact: true }),
+    ).toHaveAttribute('title', 'Select one cell to merge with its neighbor.');
+
+    await tools
+        .getByRole('button', { name: 'Merge cells', exact: true })
+        .focus();
+    await page.keyboard.press('ArrowLeft');
+    await expect(tools.locator('[data-table-menu=row]')).toHaveAttribute(
+        'aria-expanded',
+        'true',
+    );
+    await expect(tools.locator('[data-table-menu=merge]')).toHaveAttribute(
+        'aria-expanded',
+        'false',
+    );
+    await expect(visual.locator('.is-structurally-selected')).toHaveCount(2);
+    await page.keyboard.press('ArrowRight');
+    await expect(tools.locator('[data-table-menu=merge]')).toHaveAttribute(
+        'aria-expanded',
+        'true',
+    );
+    await tools.locator('[data-table-menu=merge]').press('Escape');
+    await expect(visual.locator('.is-structurally-selected')).toHaveCount(2);
+    await visual.getByText('Table tools', { exact: true }).click();
+    await expect(visual.locator('.is-structurally-selected')).toHaveCount(0);
+    await expect(visual.locator('.soeditor-table-cell.is-editing')).toHaveCount(
+        0,
+    );
+    await visual.locator('#a').click();
+    await tools.locator('[data-table-menu=column]').click();
+    await expect(
+        tools.getByRole('switch', { name: 'Header column' }),
+    ).toHaveAttribute('aria-checked', 'false');
+    await tools.getByRole('switch', { name: 'Header column' }).click();
+    await expect(visual.locator('th')).toHaveCount(2);
+    await visual.locator('#a').click();
+    await tools.locator('[data-table-menu=column]').click();
+    await expect(
+        tools.getByRole('switch', { name: 'Header column' }),
+    ).toHaveAttribute('aria-checked', 'true');
+    await tools.getByRole('switch', { name: 'Header column' }).click();
+    await expect(visual.locator('th')).toHaveCount(0);
+    await visual.locator('#a').click();
+    await tools.locator('[data-table-menu=merge]').focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(
+        tools.getByRole('button', { name: 'Merge cell up', exact: true }),
+    ).toBeDisabled();
+    await expect(
+        tools.getByRole('button', { name: 'Merge cell left', exact: true }),
+    ).toBeDisabled();
+    await expect(
+        tools.getByRole('button', { name: 'Merge cell right', exact: true }),
+    ).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(tools.locator('[data-table-menu=merge]')).toBeFocused();
+    await page.keyboard.press('ArrowRight');
+    await expect(tools.locator('[data-table-menu=properties]')).toBeFocused();
+    await expect(
+        tools.locator('.soeditor-table-context__menu:not([hidden])'),
+    ).toHaveCount(0);
+    await page.keyboard.press('ArrowLeft');
+    await expect(tools.locator('[data-table-menu=merge]')).toBeFocused();
+
+    await tools.evaluate((element) => {
+        element.dir = 'rtl';
+    });
+    await page.keyboard.press('ArrowRight');
+    await expect(tools.locator('[data-table-menu=row]')).toBeFocused();
+    await page.keyboard.press('ArrowLeft');
+    await expect(tools.locator('[data-table-menu=merge]')).toBeFocused();
+    await tools.evaluate((element) => element.removeAttribute('dir'));
+    await tools.locator('[data-table-merge]').focus();
+    await page.keyboard.press('ArrowDown');
+    await expect(
+        tools.getByRole('button', { name: 'Merge cell right', exact: true }),
+    ).toBeFocused();
+    await page.keyboard.press('Escape');
+    await expect(tools.locator('[data-table-merge]')).toBeFocused();
+    await tools.locator('[data-table-menu=merge]').click();
+    await tools
+        .getByRole('button', { name: 'Merge cell right', exact: true })
+        .click();
+    await expect(visual.locator('#a')).toHaveAttribute('colspan', '2');
+    await expect(visual.locator('#a')).toContainText('AB');
+    await visual.locator('#c').click();
+    await tools.locator('[data-table-menu=merge]').click();
+    await tools
+        .getByRole('button', { name: 'Split cell horizontally' })
+        .click();
+    await expect(visual.locator('tr')).toHaveCount(3);
+    await expect(visual.locator('#d')).toHaveAttribute('rowspan', '2');
+    const html = await page.evaluate(() => globalThis.__classicDemo.getData());
+    expect(html).not.toContain('soeditor-');
+    expect(html.match(/id="c"/gu)).toHaveLength(1);
+    await page.evaluate(() => globalThis.__classicDemo.execute('editor.undo'));
+    await expect(visual.locator('tr')).toHaveCount(2);
+    await visual.locator('#c').click();
+    await tools.locator('[data-table-menu=merge]').click();
+    await page.screenshot({ path: '/tmp/soeditor-table-dropdowns.png' });
+    await page.setViewportSize({ width: 390, height: 700 });
+    await visual.locator('#c').click();
+    await tools.locator('[data-table-menu=column]').click();
+    const bounds = await tools
+        .locator('.soeditor-table-context__menu:not([hidden])')
+        .boundingBox();
+    expect(bounds).not.toBeNull();
+    expect(bounds!.x).toBeGreaterThanOrEqual(0);
+    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(390);
+    expect(bounds!.y + bounds!.height).toBeLessThanOrEqual(700);
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<table><tbody><tr><td id="insert">A</td><td>B</td></tr></tbody></table>',
+        ),
+    );
+    await visual.locator('#insert').click();
+    await tools.locator('[data-table-menu=column]').click();
+    await tools.getByRole('button', { name: 'Insert column left' }).click();
+    await expect(visual.locator('td')).toHaveCount(3);
+    await visual.locator('#insert').click();
+    await tools.locator('[data-table-menu=row]').click();
+    await tools.getByRole('button', { name: 'Insert row below' }).click();
+    await expect(visual.locator('tr')).toHaveCount(2);
+});
+
+test('keeps logical table selections and header intersections through span edits and source round trips', async ({
+    page,
+}) => {
+    const visual = page.locator('.soeditor-classic__visual');
+    const toolbar = page.locator('.soeditor-ui__table-balloon');
+    const menu = async (kind: string) => {
+        const trigger = toolbar.locator(`[data-table-menu="${kind}"]`);
+        if ((await trigger.getAttribute('aria-expanded')) !== 'true')
+            await trigger.click();
+    };
+    // Headers outside the first column remain editable; complete spanned
+    // rectangles merge through the primary tool without opening its menu.
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<table style="width:600px"><colgroup><col><col span="2" data-track="kept"></colgroup><tbody><tr><td>A</td><th id="late-header" colspan="2" scope="col"><p>Header</p></th></tr><tr><td>B</td><th id="lower-header" colspan="2"><p>Lower</p></th></tr></tbody></table>',
+        ),
+    );
+    await visual.locator('#late-header').click();
+    await menu('properties');
+    await toolbar
+        .getByRole('button', { name: 'Toggle header cell', exact: true })
+        .click();
+    await expect(visual.locator('td#late-header')).toBeVisible();
+    await expect(visual.locator('#late-header')).not.toHaveAttribute('scope');
+    await visual.locator('#late-header').click();
+    await visual.locator('#lower-header').click({ modifiers: ['Shift'] });
+    await toolbar.locator('[data-table-merge]').click();
+    await expect(visual.locator('#late-header')).toHaveAttribute(
+        'rowspan',
+        '2',
+    );
+    await expect(visual.locator('#late-header')).toHaveAttribute(
+        'colspan',
+        '2',
+    );
+    await expect(visual.locator('#late-header')).toContainText('Lower');
+    await page.evaluate(() => globalThis.__classicDemo.execute('editor.undo'));
+    await visual.locator('#lower-header').click();
+    await menu('merge');
+    await expect(
+        toolbar.getByRole('button', { name: 'Merge cell up', exact: true }),
+    ).toBeEnabled();
+    await toolbar
+        .getByRole('button', { name: 'Merge cell up', exact: true })
+        .click();
+    await expect(visual.locator('#late-header')).toHaveAttribute(
+        'rowspan',
+        '2',
+    );
+    await visual.locator('#late-header').click();
+    await expect(visual.locator('.soeditor-table-column-resize')).toHaveCount(
+        3,
+    );
+    const drag = async (selector: string, dx: number, dy: number) => {
+        const handle = visual.locator(selector);
+        const box = await handle.boundingBox();
+        if (box === null) throw new Error('Missing resize handle');
+        const x = box.x + box.width / 2;
+        const y = box.y + box.height / 2;
+        await page.mouse.move(x, y);
+        await page.mouse.down();
+        await page.mouse.move(x + dx, y + dy, { steps: 4 });
+        await page.mouse.up();
+    };
+    const originalWidth = await visual
+        .locator('#late-header')
+        .evaluate((cell) => cell.getBoundingClientRect().width);
+    await drag('[data-resize-column="2"]', 30, 0);
+    await expect
+        .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+        .toMatch(/<col data-track="kept" width="\d+px">/u);
+    await expect
+        .poll(() =>
+            visual
+                .locator('#late-header')
+                .evaluate((cell) => cell.getBoundingClientRect().width),
+        )
+        .toBeGreaterThan(originalWidth);
+    await visual.locator('#late-header').click();
+    const originalHeight = await visual
+        .locator('tr')
+        .nth(1)
+        .evaluate((row) => row.getBoundingClientRect().height);
+    await drag('[data-resize-row="1"]', 0, 30);
+    await expect
+        .poll(() =>
+            visual
+                .locator('tr')
+                .nth(1)
+                .evaluate((row) => row.getBoundingClientRect().height),
+        )
+        .toBeGreaterThan(originalHeight);
+    await expect(visual.locator('tr').nth(1)).toHaveAttribute('height', /\d+/u);
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<table><tbody><tr><td id="height-clear" height="120">A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
+        ),
+    );
+    await page
+        .locator('[data-workspace-view="wysiwyg-source-horizontal"]')
+        .first()
+        .click();
+    await visual.locator('#height-clear').click();
+    await menu('properties');
+    await toolbar
+        .getByRole('button', { name: 'Cell properties', exact: true })
+        .click();
+    const heightDialog = page.getByRole('dialog', { name: 'Cell properties' });
+    await heightDialog.getByLabel('Cell height', { exact: true }).fill('');
+    await heightDialog
+        .getByRole('button', { name: 'Apply', exact: true })
+        .click();
+    await expect(visual.locator('#height-clear')).not.toHaveAttribute('height');
+    const beforeHeightClearDrag = await page.evaluate(() =>
+        globalThis.__classicDemo.getData(),
+    );
+    const widthBefore = await visual
+        .locator('#height-clear')
+        .evaluate((cell) => cell.getBoundingClientRect().width);
+    await drag('[data-resize-column="0"]', 35, 0);
+    await expect
+        .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+        .not.toBe(beforeHeightClearDrag);
+    await expect
+        .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+        .toMatch(/<col width="\d+">/u);
+    await expect(visual.locator('tr[height]')).toHaveCount(0);
+    await expect
+        .poll(() =>
+            visual
+                .locator('#height-clear')
+                .evaluate((cell) => cell.getBoundingClientRect().width),
+        )
+        .toBeGreaterThan(widthBefore);
+    await page.evaluate(() => globalThis.__classicDemo.execute('editor.undo'));
+    await expect
+        .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+        .toBe(beforeHeightClearDrag);
+    await visual.locator('#height-clear').click();
+    const crossColumn = await visual
+        .locator('[data-resize-column="0"]')
+        .boundingBox();
+    const crossRow = await visual
+        .locator('[data-resize-row="0"]')
+        .boundingBox();
+    if (crossColumn === null || crossRow === null)
+        throw new Error('Missing crossing handles');
+    const crossX = crossColumn.x + crossColumn.width / 2;
+    const crossY = crossRow.y + crossRow.height / 2;
+    await page.mouse.click(crossX, crossY);
+    expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
+        beforeHeightClearDrag,
+    );
+    await page.mouse.move(crossX, crossY);
+    await page.mouse.down();
+    await page.mouse.move(crossX, crossY + 30, { steps: 4 });
+    await page.mouse.up();
+    await expect(visual.locator('tr').first()).toHaveAttribute(
+        'height',
+        /\d+/u,
+    );
+    await expect(visual.locator('col')).toHaveCount(0);
+    await page.locator('[data-workspace-view="wysiwyg"]').first().click();
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<table><tbody><tr><td id="span-a" rowspan="2">A</td><td id="span-b" colspan="2">B</td></tr><tr><td id="span-d">D</td><td id="span-e">E</td></tr><tr><td>F</td><td>G</td><td>H</td></tr></tbody></table>',
+        ),
+    );
+    await visual.locator('#span-d').click();
+    await menu('row');
+    await toolbar.getByRole('button', { name: 'Insert row above' }).click();
+    await expect(visual.locator('#span-a')).toHaveAttribute('rowspan', '3');
+    await visual.locator('tr').nth(1).locator('td').first().click();
+    await menu('row');
+    await toolbar
+        .getByRole('button', { name: 'Delete row', exact: true })
+        .click();
+    await expect(visual.locator('#span-a')).toHaveAttribute('rowspan', '2');
+    await visual.locator('#span-b').click();
+    await menu('column');
+    await toolbar.getByRole('button', { name: 'Insert column left' }).click();
+    await visual.locator('#span-d').click();
+    await visual.locator('#span-e').click({ modifiers: ['Shift'] });
+    await menu('merge');
+    await toolbar
+        .getByRole('button', { name: 'Merge cells', exact: true })
+        .click();
+    await expect(visual.locator('#span-d')).toHaveAttribute('colspan', '2');
+    await expect(visual.locator('#span-b')).toHaveText('B');
+    await visual.locator('#span-b').click();
+    await menu('row');
+    await toolbar
+        .getByRole('button', { name: 'Delete row', exact: true })
+        .click();
+    await expect(visual.locator('#span-a')).not.toHaveAttribute('rowspan');
+    await expect(visual.locator('#span-a')).toHaveText('A');
+    await page.evaluate(() => globalThis.__classicDemo.execute('editor.undo'));
+    await expect(visual.locator('#span-a')).toHaveAttribute('rowspan', '2');
+    await page.locator('[data-workspace-view=source]').first().click();
+    await page.locator('[data-toolbar-item=format]').click();
+    await expect(
+        page.locator('[data-toolbar-item=format]'),
+    ).not.toHaveAttribute('aria-busy', 'true');
+    await page.locator('[data-workspace-view=wysiwyg]').first().click();
+    await visual.locator('#span-d').click();
+    await menu('column');
+    await toolbar
+        .getByRole('button', { name: 'Delete column', exact: true })
+        .click();
+    await expect(visual.locator('#span-d')).not.toHaveAttribute('colspan');
+    await expect(visual.locator('#span-d')).toContainText('DE');
+    await expect
+        .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+        .not.toContain('soeditor-');
+
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<table><tbody><tr><td id="corner">A</td><td>B</td></tr><tr><td>C</td><td>D</td></tr></tbody></table>',
+        ),
+    );
+    const toggle = async (axis: 'row' | 'column') => {
+        await visual.locator('#corner').click();
+        await menu(axis);
+        await toolbar
+            .getByRole('switch', {
+                name: axis === 'row' ? 'Header row' : 'Header column',
+            })
+            .click();
+    };
+    await toggle('row');
+    await toggle('column');
+    await toggle('row');
+    await expect(visual.locator('th')).toHaveCount(2);
+    await expect(visual.locator('#corner')).toHaveAttribute('scope', 'row');
+    await visual.locator('#corner').click();
+    await menu('column');
+    await expect(
+        toolbar.getByRole('switch', { name: 'Header column' }),
+    ).toHaveAttribute('aria-checked', 'true');
+    await toggle('column');
+    await expect(visual.locator('th')).toHaveCount(0);
+    await expect(visual.locator('td[scope]')).toHaveCount(0);
+});
+
+test('keeps resize transactions on the selected table through cancellation, split view and history', async ({
+    page,
+}) => {
+    const visual = page.locator('.soeditor-classic__visual');
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<table data-name="first"><tbody><tr><td>First A</td><td>First B</td></tr></tbody></table><p>Between tables</p><table data-name="second"><tbody><tr><td height="80">Second A</td><td>Second B</td></tr><tr><td>Second C</td><td>Second D</td></tr></tbody></table>',
+        ),
+    );
+    const html = () => page.evaluate(() => globalThis.__classicDemo.getData());
+    const firstHtml = () =>
+        page.evaluate(() =>
+            new DOMParser()
+                .parseFromString(
+                    globalThis.__classicDemo.getData(),
+                    'text/html',
+                )
+                .querySelector('table')
+                ?.outerHTML.replace(/>\s+</gu, '><'),
+        );
+    const firstOriginal = await firstHtml();
+    await page
+        .locator('[data-workspace-view="wysiwyg-source-horizontal"]')
+        .first()
+        .click();
+    const second = visual.locator('table[data-name="second"]');
+    await second.locator('td').first().click();
+    const tools = page.locator('.soeditor-ui__table-balloon');
+    await tools.locator('[data-table-menu=properties]').click();
+    await tools
+        .getByRole('button', { name: 'Cell properties', exact: true })
+        .click();
+    const dialog = page.getByRole('dialog', { name: 'Cell properties' });
+    await dialog.getByLabel('Cell height', { exact: true }).fill('90');
+    await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
+    let baseline = await html();
+    const column = visual.locator('[data-resize-column="0"]');
+    const point = async () => {
+        await second.scrollIntoViewIfNeeded();
+        const box = await column.boundingBox();
+        const cell = await second.locator('td').first().boundingBox();
+        if (box === null || cell === null)
+            throw new Error('Missing second table handle');
+        expect(box.x + box.width / 2).toBeCloseTo(cell.x + cell.width, 0);
+        expect(Math.abs(box.y - cell.y)).toBeLessThan(1);
+        return { x: box.x + box.width / 2, y: cell.y + cell.height / 2 };
+    };
+    let at = await point();
+    await page.mouse.click(at.x, at.y);
+    expect(await html()).toBe(baseline);
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 30, at.y);
+    await expect(visual.locator('[data-resize-feedback]')).toContainText(
+        'Column width',
+    );
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+    expect(await html()).toBe(baseline);
+    await expect(visual.locator('[data-resize-feedback]')).toHaveCount(0);
+    at = await point();
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 20, at.y);
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.up();
+    expect(await html()).toBe(baseline);
+    await column.evaluate((element) =>
+        element.addEventListener(
+            'gotpointercapture',
+            (event) => {
+                Reflect.set(element, 'testPointer', event.pointerId);
+            },
+            { once: true },
+        ),
+    );
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 20, at.y);
+    await column.evaluate((element) => {
+        const id: unknown = Reflect.get(element, 'testPointer');
+        if (typeof id !== 'number') throw new Error('Missing captured pointer');
+        element.releasePointerCapture(id);
+    });
+    await page.mouse.move(at.x + 25, at.y);
+    await page.mouse.up();
+    expect(await html()).toBe(baseline);
+    await expect(visual.locator('[data-resize-feedback]')).toHaveCount(0);
+    at = await point();
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 25, at.y);
+    baseline = baseline.replace('Second A', 'Second revised');
+    await page.evaluate(
+        (source) => globalThis.__classicDemo.editor.setData(source),
+        baseline,
+    );
+    await expect(visual.locator('[data-resize-feedback]')).toHaveCount(0);
+    await page.mouse.up();
+    expect(await html()).toBe(baseline);
+    at = await point();
+    await page.mouse.move(at.x, at.y);
+    await page.mouse.down();
+    await page.mouse.move(at.x + 45, at.y, { steps: 4 });
+    await page.mouse.up();
+    await expect.poll(html).not.toBe(baseline);
+    expect(await firstHtml()).toBe(firstOriginal);
+    await expect(second.locator('col')).toHaveCount(2);
+    const resized = await html();
+    await page.evaluate(() => globalThis.__classicDemo.execute('editor.undo'));
+    await expect.poll(html).toBe(baseline);
+    await page.evaluate(() => globalThis.__classicDemo.execute('editor.redo'));
+    await expect.poll(html).toBe(resized);
+    await page.locator('.soeditor-classic__source .cm-content').click();
+    await page.locator('[data-toolbar-item=format]').click();
+    await expect(
+        page.locator('[data-toolbar-item=format]'),
+    ).not.toHaveAttribute('aria-busy', 'true');
+    await second.locator('td').first().click();
+    const row = visual.locator('[data-resize-row="0"]');
+    const rowBox = await row.boundingBox();
+    if (rowBox === null) throw new Error('Missing second table row handle');
+    await page.mouse.move(
+        rowBox.x + rowBox.width - 12,
+        rowBox.y + rowBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(
+        rowBox.x + rowBox.width - 12,
+        rowBox.y + rowBox.height / 2 + 30,
+    );
+    await expect(visual.locator('[data-resize-feedback]')).toContainText(
+        'Row height',
+    );
+    await page.mouse.up();
+    await expect(second.locator('tr').first()).toHaveAttribute(
+        'height',
+        /\d+/u,
+    );
+    expect(await firstHtml()).toBe(firstOriginal);
+    expect(await html()).not.toContain('soeditor-');
+    await page.evaluate(
+        (first) => globalThis.__classicDemo.editor.setData(first ?? ''),
+        firstOriginal,
+    );
+    await expect(visual.locator('.soeditor-table-resize-overlay')).toHaveCount(
+        0,
+    );
+});
+
+test('disables table splits at logical limits and clamps resize previews', async ({
+    page,
+}) => {
+    const visual = page.locator('.soeditor-classic__visual');
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<table><tbody><tr>' +
+                Array.from({ length: 100 }, (_, i) => `<td>${i}</td>`).join(
+                    '',
+                ) +
+                '</tr></tbody></table>',
+        ),
+    );
+    await visual.locator('td').first().click();
+    const tools = page.locator('.soeditor-ui__table-balloon');
+    await tools.locator('[data-table-menu=merge]').click();
+    await expect(
+        tools.getByRole('button', {
+            name: 'Split cell vertically',
+            exact: true,
+        }),
+    ).toBeDisabled();
+    await expect(
+        tools.getByRole('button', {
+            name: 'Split cell vertically',
+            exact: true,
+        }),
+    ).toHaveAttribute('title', 'Splitting would exceed table limits.');
+    await expect(
+        tools.getByRole('button', {
+            name: 'Split cell horizontally',
+            exact: true,
+        }),
+    ).toBeEnabled();
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<table><tbody><tr><td>Limit</td></tr></tbody></table>',
+        ),
+    );
+    await visual.locator('td').click();
+    const handle = visual.locator('[data-resize-column="0"]');
+    const box = await handle.boundingBox();
+    if (box === null) throw new Error('Missing limit handle');
+    const startWidth = await visual
+        .locator('td')
+        .evaluate((cell) => cell.getBoundingClientRect().width);
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 2000, box.y + box.height / 2);
+    await expect(visual.locator('[data-resize-feedback]')).toContainText(
+        '1200 px · Limit reached',
+    );
+    await expect
+        .poll(() => handle.boundingBox().then((rect) => rect?.x))
+        .toBeCloseTo(box.x + 1200 - startWidth, 0);
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+    await expect(visual.locator('col')).toHaveCount(0);
+});
+
+test('honors table cellpadding and cellspacing in source split view', async ({
+    page,
+}) => {
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<table cellpadding="12" cellspacing="8"><tbody><tr><td>A</td><td style="padding: 3px">B</td></tr></tbody></table>',
+        ),
+    );
+    await page
+        .locator('[data-workspace-view="wysiwyg-source-horizontal"]')
+        .first()
+        .click();
+    const table = page.locator('.soeditor-classic__visual table');
+    await expect(table).toHaveCSS('border-collapse', 'separate');
+    await expect(table).toHaveCSS('border-spacing', '8px');
+    await expect(table.locator('td').first()).toHaveCSS('padding', '12px');
+    await expect(table.locator('td').nth(1)).toHaveCSS('padding', '3px');
+    const html = await page.evaluate(() => globalThis.__classicDemo.getData());
+    expect(html).toContain('cellpadding="12"');
+    expect(html).toContain('cellspacing="8"');
+    expect(html).not.toContain('soeditor-');
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<table cellpadding="0" cellspacing="0" style="border-collapse: collapse"><tbody><tr><td>A</td></tr></tbody></table>',
+        ),
+    );
+    await expect(table).toHaveCSS('border-collapse', 'collapse');
+    await expect(table).toHaveCSS('border-spacing', '0px');
+    await expect(table.locator('td')).toHaveCSS('padding', '0px');
+});
+
+test('image drag preserves ratio by default, keeps the opposite corner steady and commits once', async ({
+    page,
+}, testInfo) => {
+    const visual = page.locator('.soeditor-wysiwyg-content');
+    const surface = page.locator('.soeditor-classic__visual');
+    const source =
+        '<p>Before</p><figure class="cms-photo"><a href="/photo"><img src="/demo-editor-cover.svg" width="400" height="150" alt="Cover"></a><figcaption>Caption</figcaption></figure><p>After</p>';
+    await page.evaluate(
+        (html) => globalThis.__classicDemo.editor.setData(html),
+        source,
+    );
+    const image = visual.locator('img');
+    await image.click();
+    const overlay = surface.locator('.soeditor-image-resize-overlay');
+    const handle = surface.locator('[data-resize-direction="nw"]');
+    await testInfo.attach('selected-image-controls', {
+        body: await surface.screenshot(),
+        contentType: 'image/png',
+    });
+    const start = await overlay.boundingBox();
+    const grip = await handle.boundingBox();
+    if (start === null || grip === null)
+        throw new Error('Missing resize controls.');
+    await page.evaluate(() => {
+        const intervals: number[] = [];
+        let previous = performance.now();
+        let running = true;
+        const sample = (now: number): void => {
+            intervals.push(now - previous);
+            previous = now;
+            if (running) requestAnimationFrame(sample);
+        };
+        requestAnimationFrame(sample);
+        let changes = 0;
+        const dispose = globalThis.__classicDemo.editor.editor.events.on(
+            'document:change',
+            () => {
+                changes += 1;
+            },
+        );
+        Reflect.set(globalThis, '__imageDragMetrics', () => {
+            running = false;
+            dispose();
+            return { changes, intervals };
+        });
+    });
+    const x = grip.x + grip.width / 2;
+    const y = grip.y + grip.height / 2;
+    await page.mouse.move(x, y);
+    await page.mouse.down();
+    await page.mouse.move(x + 80, y + 30, { steps: 60 });
+    await expect(overlay).toHaveAttribute('data-dimensions', '320 × 120');
+    await testInfo.attach('image-drag-preview', {
+        body: await surface.screenshot(),
+        contentType: 'image/png',
+    });
+    const preview = await overlay.boundingBox();
+    if (preview === null) throw new Error('Missing drag preview.');
+    expect(preview.x + preview.width).toBeCloseTo(start.x + start.width, 0);
+    expect(preview.y + preview.height).toBeCloseTo(start.y + start.height, 0);
+    expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
+        source,
+    );
+    await page.mouse.up();
+    const metrics = await page.evaluate(() => {
+        const read: unknown = Reflect.get(globalThis, '__imageDragMetrics');
+        if (typeof read !== 'function')
+            throw new Error('Missing drag metrics.');
+        return Reflect.apply(read, undefined, []) as {
+            changes: number;
+            intervals: number[];
+        };
+    });
+    expect(metrics.changes).toBe(1);
+    const sorted = metrics.intervals.slice(2).sort((a, b) => a - b);
+    await testInfo.attach('image-drag-frame-timing', {
+        body: JSON.stringify({
+            changes: metrics.changes,
+            frames: sorted.length,
+            p95: sorted[Math.floor(sorted.length * 0.95)],
+            max: sorted.at(-1),
+        }),
+        contentType: 'application/json',
+    });
+    await expect(image).toHaveAttribute('width', '320');
+    await expect(image).toHaveAttribute('height', '120');
+    await expect(visual.locator('figcaption')).toHaveText('Caption');
+    expect(
+        await page.evaluate(() => globalThis.__classicDemo.getData()),
+    ).not.toContain('soeditor-');
+    await page.keyboard.press('Control+z');
+    await expect
+        .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+        .toBe(source);
+    await page.keyboard.press('Control+Shift+z');
+    await expect(image).toHaveAttribute('width', '320');
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setWorkspaceView(
+            'wysiwyg-source-horizontal',
+        ),
+    );
+    await image.click();
+    const splitImage = await image.boundingBox();
+    const splitOverlay = await overlay.boundingBox();
+    if (splitImage === null || splitOverlay === null)
+        throw new Error('Missing split-view image.');
+    expect(splitOverlay.x).toBeCloseTo(splitImage.x, 0);
+    expect(splitOverlay.y).toBeCloseTo(splitImage.y, 0);
+    await page
+        .getByRole('button', { name: 'Insert paragraph after this block' })
+        .click();
+    await page.keyboard.type('Split paragraph');
+    await expect(visual.locator('figure + p')).toHaveText('Split paragraph');
+});
+
+test('image resize cancels cleanly and handles keyboard, readonly and source replacement', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    const visual = page.locator('.soeditor-wysiwyg-content');
+    const source =
+        '<p><img src="/demo-editor-cover.svg" width="400" height="150" alt="Cover"></p>';
+    await page.evaluate(
+        (html) => globalThis.__classicDemo.editor.setData(html),
+        source,
+    );
+    await visual.locator('img').click();
+    const handle = surface.locator('[data-resize-direction="se"]');
+    const box = await handle.boundingBox();
+    if (box === null) throw new Error('Missing resize handle.');
+    await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2);
+    await page.mouse.down();
+    await page.mouse.move(box.x + 60, box.y + 20, { steps: 8 });
+    await page.keyboard.press('Escape');
+    await page.mouse.up();
+    expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
+        source,
+    );
+    await expect(surface.locator('.is-resizing')).toHaveCount(0);
+    await visual.locator('img').click();
+    await handle.focus();
+    await page.keyboard.press('Shift+ArrowRight');
+    await expect(visual.locator('img')).toHaveAttribute('width', '410');
+    await expect(visual.locator('img')).toHaveAttribute('height', '154');
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setReadonly(true),
+    );
+    await expect(surface.locator('.soeditor-image-resize-overlay')).toHaveCount(
+        0,
+    );
+    await expect(surface.locator('.soeditor-block-paragraph')).toHaveCount(0);
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setReadonly(false),
+    );
+    await visual.locator('img').click();
+    await expect(handle).toBeVisible();
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData('<p>Replacement</p>'),
+    );
+    await expect(surface.locator('.soeditor-image-resize-overlay')).toHaveCount(
+        0,
+    );
+    await expect(surface.locator('.soeditor-block-paragraph')).toHaveCount(0);
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<p><img src="/demo-editor-cover.svg" alt="Styled" style="width:400px;height:150px;border-radius:8px"></p>',
+        ),
+    );
+    await visual.locator('img').click();
+    await handle.focus();
+    await page.keyboard.press('Shift+ArrowLeft');
+    await expect(visual.locator('img')).toHaveCSS('width', '390px');
+    await expect(visual.locator('img')).toHaveCSS('height', '146px');
+    await expect(visual.locator('img')).toHaveCSS('border-radius', '8px');
+});
+
+test('image type-around inserts outside the caption and linked inline paragraph with one undo step', async ({
+    page,
+    browser,
+    browserName,
+}) => {
+    const visual = page.locator('.soeditor-wysiwyg-content');
+    const before = page.getByRole('button', {
+        name: 'Insert paragraph before this block',
+    });
+    const after = page.getByRole('button', {
+        name: 'Insert paragraph after this block',
+    });
+    const source =
+        '<figure class="cms-photo" data-id="photo"><a href="/photo"><img src="/demo-editor-cover.svg" width="400" height="150" alt="Cover"></a><figcaption>Rich <strong>caption</strong></figcaption></figure>';
+    await page.evaluate(
+        (html) => globalThis.__classicDemo.editor.setData(html),
+        source,
+    );
+    let resumeTools: (() => void) | undefined;
+    const gate = new Promise<void>((resolve) => {
+        resumeTools = resolve;
+    });
+    await page.route(/classic-block-paragraph/u, async (route) => {
+        await gate;
+        await route.continue();
+    });
+    const loadedTools = page.waitForResponse(/classic-block-paragraph/u);
+    await visual.locator('img').hover();
+    const pendingFigure = await visual.locator('figure').boundingBox();
+    if (pendingFigure === null) throw new Error('Missing pending figure.');
+    await visual
+        .locator('figure')
+        .hover({ position: { x: pendingFigure.width - 2, y: 20 } });
+    resumeTools?.();
+    await (await loadedTools).finished();
+    await page.evaluate(
+        () =>
+            new Promise<void>((resolve) =>
+                requestAnimationFrame(() => resolve()),
+            ),
+    );
+    await expect(page.locator('.soeditor-block-paragraph')).toHaveCount(0);
+    await visual.locator('img').hover();
+    await expect(page.locator('.soeditor-image-resize-overlay')).toHaveCount(0);
+    const controls = page.locator('.soeditor-block-paragraph');
+    await expect(controls).toHaveCSS('opacity', '1');
+    expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
+        source,
+    );
+    await page.mouse.move(1, 1);
+    expect(
+        await controls.evaluate((node) => getComputedStyle(node).opacity),
+    ).toBe('0');
+    await expect(before).toHaveCSS('pointer-events', 'none');
+    await before.focus();
+    await expect(controls).toHaveCSS('opacity', '1');
+    await visual.locator('img').click();
+    const figure = visual.locator('figure');
+    const figureBox = await figure.boundingBox();
+    if (figureBox === null) throw new Error('Missing figure.');
+    await figure.hover({ position: { x: figureBox.width - 2, y: 20 } });
+    expect(
+        await controls.evaluate((node) => getComputedStyle(node).opacity),
+    ).toBe('0');
+    await visual.locator('img').hover();
+    await before.focus();
+    await page.mouse.move(1, 1);
+    expect(
+        await controls.evaluate((node) => getComputedStyle(node).opacity),
+    ).toBe('0');
+    await page.keyboard.press('Tab');
+    await expect(after).toBeFocused();
+    await expect(controls).toHaveCSS('opacity', '1');
+    await visual.locator('img').click();
+    await before.hover();
+    await expect(controls).toHaveCSS('opacity', '1');
+    await before.click();
+    await expect(visual.locator(':scope > p + figure')).toHaveCount(1);
+    await page.keyboard.type('Before image');
+    await expect(visual.locator(':scope > p')).toHaveText('Before image');
+    await visual.locator('img').click();
+    await after.focus();
+    await page.keyboard.press('Enter');
+    await expect(visual.locator(':scope > figure + p')).toHaveCount(1);
+    await page.keyboard.type('After image');
+    await expect(visual.locator(':scope > figure + p')).toHaveText(
+        'After image',
+    );
+    await expect(visual.locator('figcaption')).toHaveText('Rich caption');
+    await page.keyboard.press('Control+z');
+    await page.keyboard.press('Control+z');
+    await expect(visual.locator(':scope > figure + p')).toHaveCount(0);
+    await page.keyboard.press('Control+Shift+z');
+    await expect(visual.locator(':scope > figure + p')).toHaveCount(1);
+    const html = await page.evaluate(() => globalThis.__classicDemo.getData());
+    expect(html).toContain('data-id="photo" class="cms-photo"');
+    expect(html).toContain(
+        '<figcaption>Rich <strong>caption</strong></figcaption>',
+    );
+    expect(html).not.toContain('soeditor-');
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<p>Lead <a href="/photo"><img src="/demo-editor-cover.svg" width="200" height="75" alt="Inline"></a> tail</p>',
+        ),
+    );
+    await visual.locator('img').click();
+    await after.click();
+    await page.keyboard.type('New block');
+    await expect(visual.locator(':scope > p')).toHaveText([
+        'Lead  tail',
+        'New block',
+    ]);
+    if (browserName === 'chromium') {
+        const touchContext = await browser.newContext({
+            hasTouch: true,
+            isMobile: true,
+        });
+        try {
+            const touchPage = await touchContext.newPage();
+            await touchPage.goto(page.url());
+            await touchPage.locator('body[data-ready="true"]').waitFor();
+            await touchPage.evaluate(
+                (html) => globalThis.__classicDemo.editor.setData(html),
+                source,
+            );
+            const touchImage = touchPage.locator(
+                '.soeditor-wysiwyg-content img',
+            );
+            await touchImage.tap();
+            const touchControls = touchPage.locator(
+                '.soeditor-block-paragraph',
+            );
+            await expect(touchControls).toHaveCSS('opacity', '1');
+            await touchImage.hover();
+            await touchPage.mouse.move(1, 1);
+            expect(
+                await touchControls.evaluate(
+                    (node) => getComputedStyle(node).opacity,
+                ),
+            ).toBe('0');
+        } finally {
+            await touchContext.close();
+        }
+    }
+});
+
+test('table type-around inserts outside the table, preserves cells and supports undo and readonly', async ({
+    page,
+}) => {
+    const visual = page.locator('.soeditor-wysiwyg-content');
+    const source =
+        '<table class="cms-table"><caption>Data</caption><tbody><tr><td>A</td><td>B</td></tr></tbody></table>';
+    await page.evaluate(
+        (html) => globalThis.__classicDemo.editor.setData(html),
+        source,
+    );
+    await visual.locator('td').first().hover();
+    const controls = page.locator('.soeditor-block-paragraph');
+    await expect(controls).toHaveCSS('opacity', '1');
+    expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
+        source,
+    );
+    await page.mouse.move(1, 1);
+    expect(
+        await controls.evaluate((node) => getComputedStyle(node).opacity),
+    ).toBe('0');
+    await visual.locator('td').last().hover();
+    await expect(controls).toHaveCSS('opacity', '1');
+    await visual.locator('td').first().hover();
+    await expect(controls).toHaveCSS('opacity', '1');
+    await page
+        .getByRole('button', { name: 'Insert paragraph before this block' })
+        .click();
+    await page.keyboard.type('Before table');
+    await expect(visual.locator(':scope > p + table')).toHaveCount(1);
+    await expect(visual.locator(':scope > p')).toHaveText('Before table');
+    await visual.locator('td').last().click();
+    await page
+        .getByRole('button', { name: 'Insert paragraph after this block' })
+        .click();
+    await page.keyboard.type('After table');
+    await expect(visual.locator(':scope > table + p')).toHaveText(
+        'After table',
+    );
+    await expect(visual.locator('td')).toHaveText(['A', 'B']);
+    expect(
+        await page.evaluate(() => globalThis.__classicDemo.getData()),
+    ).toContain(source);
+    await page.keyboard.press('Control+z');
+    await page.keyboard.press('Control+z');
+    await expect(visual.locator(':scope > table + p')).toHaveCount(0);
+    await page.keyboard.press('Control+Shift+z');
+    await expect(visual.locator(':scope > table + p')).toHaveCount(1);
+    await visual.locator('td').first().click();
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setReadonly(true),
+    );
+    await expect(page.locator('.soeditor-block-paragraph')).toHaveCount(0);
+    await page.evaluate(() => {
+        globalThis.__classicDemo.editor.setReadonly(false);
+        globalThis.__classicDemo.editor.setData(
+            '<table><tbody><tr><td><p><img src="/demo-editor-cover.svg" width="200" height="75" alt="Cell image"></p></td></tr></tbody></table>',
+        );
+    });
+    await visual.locator('img').click();
+    await expect(page.locator('.soeditor-block-paragraph')).toHaveCount(1);
+    await expect(page.locator('.soeditor-block-paragraph')).toHaveAttribute(
+        'data-block-kind',
+        'image',
+    );
+    await page
+        .getByRole('button', { name: 'Insert paragraph after this block' })
+        .click();
+    await page.keyboard.type('Inside cell');
+    await expect(visual.locator('td > p').last()).toHaveText('Inside cell');
+    await expect(visual.locator(':scope > p')).toHaveCount(0);
+});
+
+test('keeps Source selection and find state through repeated external history updates', async ({
+    page,
+}) => {
+    for (const padding of ['', `<!--${'x'.repeat(70_000)}-->`]) {
+        await page.evaluate(async (padding) => {
+            const classic = globalThis.__classicDemo.editor;
+            classic.setData('<p>Alpha Beta</p>' + padding);
+            await classic.setWorkspaceView('source');
+        }, padding);
+        const content = page.locator('.soeditor-classic__source .cm-content');
+        await content.click();
+        await page.keyboard.press('ControlOrMeta+f');
+        const find = page.locator('.cm-search input[name="search"]');
+        await find.fill('Alpha');
+        await content.click();
+        await page.keyboard.press('ControlOrMeta+Home');
+        for (let index = 0; index < 9; index += 1)
+            await page.keyboard.press('ArrowRight');
+        for (let index = 0; index < 4; index += 1)
+            await page.keyboard.press('Shift+ArrowRight');
+        await expect
+            .poll(() =>
+                page.evaluate(() => globalThis.getSelection()?.toString()),
+            )
+            .toBe('Beta');
+        for (let index = 1; index <= 12; index += 1) {
+            const html = `<p>${'P'.repeat(index)}Alpha Beta</p>${padding}`;
+            await page.evaluate(
+                (html) => globalThis.__classicDemo.editor.setData(html),
+                html,
+            );
+            await expect
+                .poll(() =>
+                    page.evaluate(() => globalThis.getSelection()?.toString()),
+                )
+                .toBe('Beta');
+            await page.evaluate(async () => {
+                const editor = globalThis.__classicDemo.editor.editor;
+                await editor.execute('editor.undo');
+                await editor.execute('editor.redo');
+            });
+            await expect(content).toContainText(
+                `${'P'.repeat(index)}Alpha Beta`,
+            );
+            expect(
+                await page.evaluate(() => globalThis.__classicDemo.getData()),
+            ).toBe(html);
+            await expect
+                .poll(() =>
+                    page.evaluate(() => globalThis.getSelection()?.toString()),
+                )
+                .toBe('Beta');
+            await expect(find).toHaveValue('Alpha');
+        }
+    }
+});
+
+test('counts semantic body text without source indentation or hidden content', async ({
+    page,
+}) => {
+    const status = page.locator('.soeditor-ui__document-status');
+    const cases = [
+        { html: '<p>Hello</p>\n  <p>world</p>', words: 2, characters: 10 },
+        {
+            html: '<p>Hello <strong>world</strong></p>',
+            words: 2,
+            characters: 11,
+        },
+        { html: '<p>Hello<br>world</p>', words: 2, characters: 10 },
+        {
+            html: '<table><tr><td>A</td><td>B</td></tr></table>',
+            words: 2,
+            characters: 2,
+        },
+        { html: '<p>A&nbsp;&nbsp;B</p>', words: 2, characters: 4 },
+        { html: '<pre> A\n  B </pre>', words: 2, characters: 7 },
+        { html: '<p>Hello世界</p>', words: 3, characters: 7 },
+        {
+            html: '<p>Visible<span hidden>secret</span></p><script>secret()</script><style>secret{}</style><template>secret</template><p style="display:none">secret</p><p style="visibility:hidden">secret</p><!--secret-->',
+            words: 1,
+            characters: 7,
+        },
+    ];
+    for (const { html, words, characters } of cases) {
+        await page.evaluate(
+            (html) => globalThis.__classicDemo.editor.setData(html),
+            html,
+        );
+        await expect(status).toHaveAttribute('data-words', String(words));
+        await expect(status).toHaveAttribute(
+            'data-characters',
+            String(characters),
+        );
+        await expect(status).toHaveAttribute(
+            'data-source-characters',
+            String(html.length),
+        );
+        expect(
+            await page.evaluate(() => globalThis.__classicDemo.getData()),
+        ).toBe(html);
+    }
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData('<p>Delete all text</p>'),
+    );
+    await page.locator('.soeditor-classic__visual p').click();
+    await page.keyboard.press('ControlOrMeta+A');
+    await page.keyboard.press('Backspace');
+    await expect(status).toHaveAttribute('data-words', '0');
+    await expect(status).toHaveAttribute('data-characters', '0');
+    await page.evaluate(async () =>
+        globalThis.__classicDemo.editor.setWorkspaceView(
+            'wysiwyg-source-vertical',
+        ),
+    );
+    await expect(status).toHaveAttribute('data-characters', '0');
+});
+
+test('keeps the declared Classic toolbar controls present and localized', async ({
+    page,
+}) => {
+    const toolbar = page.locator('.soeditor-ui__toolbar');
+    const expected = [
+        'heading',
+        'fontFamily',
+        'fontSize',
+        'bold',
+        'italic',
+        'underline',
+        'fontColor',
+        'fontBackgroundColor',
+        'highlight',
+        'moreFormatting',
+        'alignment',
+        'orderedList',
+        'unorderedList',
+        'outdent',
+        'indent',
+        'blockquote',
+        'link',
+        'unlink',
+        'link-internal',
+        'file-link',
+        'image-actions',
+        'table',
+        'horizontalRule',
+        'anchor',
+        'showBlocks',
+        'format',
+        'minify',
+        'popupPreview',
+    ];
+    for (const item of expected) {
+        const control = toolbar.locator(`[data-toolbar-item="${item}"]`);
+        await expect(control).toHaveCount(1);
+        if (item !== 'format' && item !== 'minify') {
+            await expect(control).toBeVisible();
+        }
+        const button = control.locator('button, summary').first();
+        const target = (await control.evaluate((el) =>
+            el.matches('button, summary'),
+        ))
+            ? control
+            : button;
+        await expect(target).toHaveAttribute('aria-label', /\S/u);
+    }
+    const blocks = toolbar.locator('[data-classic-action="show-blocks"]');
+    await blocks.focus();
+    await page.keyboard.press('Enter');
+    await expect(blocks).toHaveAttribute('aria-pressed', 'true');
+    await page.keyboard.press('Enter');
+    await expect(blocks).toHaveAttribute('aria-pressed', 'false');
+    await page.goto('/classic.html');
+    await page.locator('body[data-ready="true"]').waitFor();
+    await expect(
+        page.locator('[data-classic-action="show-blocks"]'),
+    ).toHaveAccessibleName('显示区块边界');
+});

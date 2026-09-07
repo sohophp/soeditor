@@ -1,0 +1,13 @@
+{
+    "measuredAt": "2026-09-07T14:22:04.711Z",
+    "chromium": "151.0.7922.34",
+    "results": [
+        {
+            "file": "/var/www/node/SoEditor/tests/fixtures/cms/legacy-product.html",
+            "sha256": "4355b82b495fa477869bacbf30a662e6a563a38d45425fef4fe5844e63aed43b",
+            "savedSha256": "c5f4866ac336830b92b072938d826b5c4f737c9d7f68a60267c797401c35c5ff",
+            "passed": true
+        }
+    ],
+    "note": "File-based automated round trip only. Paths and hashes identify samples; origin, anonymization, actual Office clipboard and manual qualification must be recorded separately. External network requests are blocked; no input file is modified."
+}

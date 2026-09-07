@@ -79,6 +79,9 @@ export type {
     VisualInlineStyle,
     VisualInlineStyleProperty,
     VisualListProperties,
+    VisualListStyle,
+    VisualFormatProperty,
+    VisualFormatState,
     VisualLinkAttributes,
     VisualTextMark,
 } from './visual-editing-service.js';

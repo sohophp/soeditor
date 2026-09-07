@@ -71,6 +71,23 @@ export class HtmlFormattingTimeoutError extends Error {
     }
 }
 
+/** Creates formatting operations without installing diagnostics or editor plugins. */
+export function createHtmlFormattingService(): HtmlFormattingService {
+    return Object.freeze({
+        format: (source: string, options?: HtmlFormattingOptions) =>
+            formatHtml(
+                source,
+                readOptions(options === undefined ? [] : [options]),
+            ),
+        minify: async (source: string) => {
+            assertFormattingSourceSize(source);
+            if (hasHtmlParserErrors(source))
+                throw new InvalidHtmlFormattingSourceError();
+            return minifyHtml(source);
+        },
+    });
+}
+
 /** Registers the Prettier-backed whole-source `document.format` command. */
 export class HtmlFormattingPlugin extends Plugin {
     static readonly id = 'html-formatting';
@@ -185,8 +202,21 @@ async function formatHtml(
 ): Promise<string> {
     assertFormattingSourceSize(source);
     if (typeof Worker !== 'undefined') {
-        return formatHtmlInWorker(source, options);
+        try {
+            return await formatHtmlInWorker(source, options);
+        } catch (error) {
+            if (!(error instanceof HtmlFormattingWorkerUnavailableError)) {
+                throw error;
+            }
+        }
     }
+    return formatHtmlOnMainThread(source, options);
+}
+
+async function formatHtmlOnMainThread(
+    source: string,
+    options: HtmlFormattingOptions | undefined,
+): Promise<string> {
     if (hasHtmlParserErrors(source)) {
         throw new InvalidHtmlFormattingSourceError();
     }
@@ -205,6 +235,13 @@ async function formatHtml(
 
 const maximumFormattingSourceLength = 2 * 1024 * 1024;
 const formattingTimeoutMilliseconds = 15_000;
+
+class HtmlFormattingWorkerUnavailableError extends Error {
+    constructor(message = 'HTML formatting worker is unavailable.') {
+        super(message);
+        this.name = 'HtmlFormattingWorkerUnavailableError';
+    }
+}
 
 function assertFormattingSourceSize(source: string): void {
     if (source.length > maximumFormattingSourceLength) {
@@ -233,10 +270,20 @@ function formatHtmlInWorker(
     options: HtmlFormattingOptions | undefined,
 ): Promise<string> {
     return new Promise((resolve, reject) => {
-        const worker = new HtmlFormattingWorker({
-            name: 'soeditor-html-formatter',
-            type: 'module',
-        });
+        let worker: Worker;
+        try {
+            worker = new HtmlFormattingWorker({
+                name: 'soeditor-html-formatter',
+                type: 'module',
+            });
+        } catch (error) {
+            reject(
+                new HtmlFormattingWorkerUnavailableError(
+                    error instanceof Error ? error.message : undefined,
+                ),
+            );
+            return;
+        }
         let settled = false;
         const finish = (action: () => void): void => {
             if (settled) return;
@@ -269,13 +316,23 @@ function formatHtmlInWorker(
         worker.addEventListener('error', (event) => {
             finish(() =>
                 reject(
-                    new Error(
+                    new HtmlFormattingWorkerUnavailableError(
                         event.message || 'HTML formatting worker failed.',
                     ),
                 ),
             );
         });
-        worker.postMessage({ id: 1, options, source });
+        try {
+            worker.postMessage({ id: 1, options, source });
+        } catch (error) {
+            finish(() =>
+                reject(
+                    new HtmlFormattingWorkerUnavailableError(
+                        error instanceof Error ? error.message : undefined,
+                    ),
+                ),
+            );
+        }
     });
 }
 

@@ -173,6 +173,10 @@ export function createOverlayServices(
             if (!options.anchor.isConnected) {
                 throw new TypeError('A balloon anchor must be connected.');
             }
+            // Keep one active context branch, retaining parents of nested popups.
+            for (const [handle] of [...balloonAnchors]) {
+                if (!handle.element.contains(options.anchor)) handle.close();
+            }
             const element = document.createElement('div');
             element.className = 'soeditor-ui__balloon';
             element.setAttribute('role', 'dialog');
@@ -182,12 +186,23 @@ export function createOverlayServices(
                 const view = document.defaultView;
                 const gap = 8;
                 const margin = 8;
-                const width = element.offsetWidth;
-                const height = element.offsetHeight;
+
                 const viewportWidth =
                     view?.innerWidth ?? document.documentElement.clientWidth;
                 const viewportHeight =
                     view?.innerHeight ?? document.documentElement.clientHeight;
+                element.style.boxSizing = 'border-box';
+                element.style.maxHeight = `${Math.max(0, viewportHeight - margin * 2)}px`;
+                // Compact context toolbars contain dropdowns that must escape
+                // their border box. Scroll only genuinely height-limited panels.
+                element.style.overflowY = 'visible';
+                if (
+                    element.scrollHeight > element.clientHeight &&
+                    element.offsetHeight >= viewportHeight - margin * 2
+                )
+                    element.style.overflowY = 'auto';
+                const width = element.offsetWidth;
+                const height = element.offsetHeight;
                 const above = rectangle.top - height - gap;
                 const below = rectangle.bottom + gap;
                 const preferAbove = options.placement === 'above';
@@ -199,33 +214,106 @@ export function createOverlayServices(
                 const top = useAbove ? above : below;
                 const centered =
                     rectangle.left + rectangle.width / 2 - width / 2;
-                const left = Math.max(
+                let left = Math.max(
                     margin,
                     Math.min(centered, viewportWidth - width - margin),
                 );
+                let targetTop = Math.max(
+                    margin,
+                    Math.min(top, viewportHeight - height - margin),
+                );
+                const avoid = options.avoid?.() ?? [];
+                if (avoid.length > 0) {
+                    const clamp = (
+                        x: number,
+                        y: number,
+                    ): readonly [number, number] => [
+                        Math.max(
+                            margin,
+                            Math.min(x, viewportWidth - width - margin),
+                        ),
+                        Math.max(
+                            margin,
+                            Math.min(y, viewportHeight - height - margin),
+                        ),
+                    ];
+                    const candidates: (readonly [number, number])[] = [
+                        [left, targetTop],
+                        clamp(centered, useAbove ? below : above),
+                    ];
+                    for (const bounds of avoid)
+                        candidates.push(
+                            clamp(left, bounds.top - height - gap),
+                            clamp(left, bounds.bottom + gap),
+                            clamp(bounds.left - width - gap, targetTop),
+                            clamp(bounds.right + gap, targetTop),
+                        );
+                    let best = Number.POSITIVE_INFINITY;
+                    for (const [x, y] of candidates) {
+                        const overlap = avoid.reduce(
+                            (area, bounds) =>
+                                area +
+                                Math.max(
+                                    0,
+                                    Math.min(x + width, bounds.right) -
+                                        Math.max(x, bounds.left),
+                                ) *
+                                    Math.max(
+                                        0,
+                                        Math.min(y + height, bounds.bottom) -
+                                            Math.max(y, bounds.top),
+                                    ),
+                            0,
+                        );
+                        if (overlap < best) {
+                            best = overlap;
+                            left = x;
+                            targetTop = y;
+                        }
+                        if (best === 0) break;
+                    }
+                }
                 element.dataset.placement = useAbove ? 'above' : 'below';
                 element.style.left = `${String(left)}px`;
-                element.style.top = `${String(
-                    Math.max(
-                        margin,
-                        Math.min(top, viewportHeight - height - margin),
-                    ),
-                )}px`;
+                element.style.top = `${targetTop}px`;
             };
             const view = document.defaultView;
+            const observer = view?.ResizeObserver
+                ? new view.ResizeObserver(reposition)
+                : undefined;
             const close = once(() => {
+                observer?.disconnect();
                 view?.removeEventListener('resize', reposition);
+                view?.removeEventListener('pointerup', reposition, true);
+                view?.removeEventListener('keyup', reposition, true);
                 view?.removeEventListener('scroll', reposition, true);
                 element.remove();
                 handles.delete(handle);
                 balloonAnchors.delete(handle);
+                if (options.anchor.hasAttribute('aria-expanded'))
+                    options.anchor.setAttribute('aria-expanded', 'false');
             });
             const handle: DismissibleUiHandle = Object.freeze({
                 element,
                 close,
             });
+            element.addEventListener('keydown', (event) => {
+                if (event.key !== 'Escape') return;
+                event.preventDefault();
+                event.stopPropagation();
+                close();
+                if (
+                    options.anchor instanceof HTMLElement &&
+                    options.anchor.isConnected
+                )
+                    options.anchor.focus({ preventScroll: true });
+            });
             layer.append(element);
+            observer?.observe(element);
+            observer?.observe(options.anchor);
             view?.addEventListener('resize', reposition);
+            view?.addEventListener('pointerup', reposition, true);
+            view?.addEventListener('keyup', reposition, true);
             view?.addEventListener('scroll', reposition, true);
             reposition();
             handles.add(handle);

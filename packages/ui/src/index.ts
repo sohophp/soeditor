@@ -1,8 +1,8 @@
 export {
-    createEditorUi,
     EditorUiAlreadyAttachedError,
     ToolbarItemNotRegisteredError,
 } from './editor-ui.js';
+export { createEditorUi } from './create-editor-ui.js';
 export { EditorUiDestroyedError } from './errors.js';
 export { defaultToolbarConfiguration } from './defaults.js';
 export {
@@ -28,6 +28,8 @@ export type {
     DismissibleUiHandle,
     EditorUi,
     EditorUiDirection,
+    EditorUiFormatState,
+    EditorUiFormatProperty,
     EditorUiIconResource,
     EditorUiTheme,
     EditorUiThemeVariable,

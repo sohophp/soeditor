@@ -21,7 +21,8 @@ Vue must satisfy `^3.5.0`. Framework packages are separate from
 
 ### Styles are missing
 
-Import `@soeditor/editor/styles.css` for the umbrella UI, or the owning package
+Import `@soeditor/editor/cms/styles.css` for Classic CMS. Use
+`@soeditor/editor/styles.css` for historical full UI, or the owning package
 styles such as `@soeditor/ui/styles.css` and
 `@soeditor/layout/styles.css` for modular integrations.
 

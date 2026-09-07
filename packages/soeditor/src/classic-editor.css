@@ -68,6 +68,11 @@
     padding: 0.125rem;
 }
 
+.soeditor-classic .soeditor-ui__toolbar .soeditor-ui__icon {
+    block-size: 1rem;
+    inline-size: 1rem;
+}
+
 @media (max-width: 40rem) {
     .soeditor-classic .soeditor-ui__toolbar {
         --soeditor-control-size: 2.75rem;
@@ -135,7 +140,8 @@
     position: absolute;
 }
 
-.soeditor-classic > .soeditor-ui__chrome > .soeditor-ui__status-bar {
+.soeditor-classic > .soeditor-ui__status-bar {
+    background: var(--soeditor-panel-bg, #f6f8fa);
     border-block-start: 1px solid var(--soeditor-border);
 }
 
@@ -163,6 +169,7 @@
     display: none;
 }
 
+/* soeditor-global-legacy-projection:start */
 .soeditor-classic .soeditor-table-widget {
     background: var(--soeditor-bg, #fff);
     border: 1px solid var(--soeditor-border, #d0d7de);
@@ -172,6 +179,7 @@
     position: relative;
 }
 
+/* soeditor-global-optional-table-context:start */
 .soeditor-classic .soeditor-table-column-resize {
     background: transparent;
     border: 0;
@@ -223,6 +231,8 @@
 .soeditor-classic .is-resizing-row .soeditor-table-row-resize::before {
     opacity: 1;
 }
+
+/* soeditor-global-optional-table-context:end */
 
 .soeditor-classic .soeditor-table-widget > table {
     border-collapse: collapse;
@@ -294,6 +304,7 @@
     color: LinkText;
     text-decoration: underline;
 }
+/* soeditor-global-legacy-projection:end */
 
 .soeditor-classic__image-properties {
     display: grid;
@@ -399,6 +410,7 @@
     }
 }
 
+/* soeditor-global-legacy-projection:start */
 .soeditor-classic .soeditor-wysiwyg-preserved-block[hidden],
 .soeditor-classic .soeditor-wysiwyg-preserved-inline[hidden] {
     display: none;
@@ -502,26 +514,28 @@
     display: none;
 }
 
+/* soeditor-global-legacy-projection:end */
+
 .soeditor-classic .soeditor-table-cell:focus-visible {
     outline: 2px solid var(--soeditor-focus-ring, #0969da);
     outline-offset: -2px;
 }
 
 .soeditor-classic .soeditor-table-cell.is-editing {
-    background: #fff;
     cursor: text;
-    outline: 2px solid var(--soeditor-ui-accent, #5951df);
-    outline-offset: -2px;
+    outline: none;
+    box-shadow: inset 0 0 0 9999px rgb(173 216 250 / 28%);
     user-select: text;
 }
 
 .soeditor-classic .soeditor-table-cell.is-structurally-selected {
-    background: color-mix(
-        in srgb,
-        var(--soeditor-accent, #5951df) 12%,
-        transparent
-    );
-    box-shadow: inset 0 0 0 2px var(--soeditor-accent, #5951df);
+    outline: none;
+    box-shadow: inset 0 0 0 9999px rgb(173 216 250 / 38%);
+}
+
+.soeditor-classic .soeditor-table-cell.is-structurally-selected::selection,
+.soeditor-classic .soeditor-table-cell.is-structurally-selected ::selection {
+    background: transparent;
 }
 
 .soeditor-classic .soeditor-table-cell[aria-pressed='true'] {
@@ -541,9 +555,9 @@
     align-items: center;
     display: flex;
     flex-wrap: nowrap;
-    gap: 0.3rem;
+    gap: 2px;
     max-width: min(48rem, calc(100vw - 2rem));
-    overflow-x: auto;
+    overflow: visible;
 }
 
 .soeditor-classic .soeditor-table-context__button[hidden] {
@@ -552,6 +566,9 @@
 
 .soeditor-classic .soeditor-ui__table-balloon {
     max-width: min(48rem, calc(100vw - 1rem));
+    padding: 4px;
+    border-radius: 2px;
+    box-shadow: 0 2px 5px #0003;
 }
 
 .soeditor-classic .soeditor-table-context__button {
@@ -596,6 +613,198 @@
 .soeditor-classic .soeditor-table-context__button:disabled {
     cursor: not-allowed;
     opacity: 0.5;
+}
+
+.soeditor-classic .soeditor-table-context__dropdown {
+    position: relative;
+    display: inline-grid;
+    grid-template-columns: 32px 16px;
+    align-items: center;
+    width: 48px;
+    height: 32px;
+    flex: 0 0 48px;
+}
+.soeditor-classic .soeditor-table-context__dropdown > button {
+    box-sizing: border-box;
+    background: transparent;
+    border: 0;
+    border-radius: 3px;
+    display: grid;
+    grid-template-columns: 32px 16px;
+    grid-column: 1 / -1;
+    align-items: center;
+    justify-items: center;
+    gap: 0;
+    min-width: 0;
+    min-height: 32px;
+    height: 32px;
+    width: 100%;
+    padding: 0;
+}
+.soeditor-classic
+    .soeditor-table-context__dropdown
+    > button[aria-expanded='true'] {
+    background: #e5efff;
+    color: var(--soeditor-accent, #0969da);
+}
+.soeditor-classic
+    .soeditor-table-context__dropdown--split:has(> [aria-expanded='true'])
+    > [data-table-merge] {
+    color: var(--soeditor-accent, #0969da);
+}
+/* One visual control with separate merge and dropdown hit targets. */
+.soeditor-classic .soeditor-table-context__dropdown--split {
+    border-radius: 3px;
+}
+.soeditor-classic .soeditor-table-context__dropdown--split > button {
+    grid-column: auto;
+    grid-template-columns: 1fr;
+    border-radius: 0;
+}
+.soeditor-classic
+    .soeditor-table-context__dropdown--split
+    > [data-table-merge] {
+    padding: 0;
+    border-start-start-radius: 3px;
+    border-end-start-radius: 3px;
+}
+.soeditor-classic .soeditor-table-context__dropdown--split > [data-table-menu] {
+    padding: 0;
+    border-start-end-radius: 3px;
+    border-end-end-radius: 3px;
+}
+.soeditor-classic
+    .soeditor-table-context__dropdown--split:has(> :focus-visible),
+.soeditor-classic .soeditor-table-context__dropdown--split:hover,
+.soeditor-classic
+    .soeditor-table-context__dropdown--split:has(> [aria-expanded='true']) {
+    background: #e5efff;
+}
+.soeditor-classic
+    .soeditor-table-context__dropdown--split
+    > button:focus-visible {
+    outline-offset: -2px;
+}
+.soeditor-classic .soeditor-table-context__menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    z-index: 2;
+    width: 220px;
+    max-width: calc(100vw - 24px);
+    max-height: min(360px, 60vh);
+    overflow-y: auto;
+    padding: 5px 0;
+    background: var(--soeditor-bg, #fff);
+    border: 1px solid var(--soeditor-border, #c4c7cc);
+    border-radius: 2px;
+    box-shadow: 0 2px 5px #0003;
+}
+.soeditor-classic .soeditor-table-context__menu[hidden] {
+    display: none;
+}
+.soeditor-classic
+    .soeditor-table-context__menu
+    .soeditor-table-context__button {
+    box-sizing: border-box;
+    display: flex;
+    width: 100%;
+    min-height: 32px;
+    text-align: start;
+    justify-content: flex-start;
+    padding: 7px 16px;
+    border: 0;
+    border-radius: 0;
+    background: transparent;
+    color: var(--soeditor-text, #1f2328);
+    font-weight: 400;
+    font-size: 13px;
+    line-height: 1.4;
+}
+.soeditor-classic
+    .soeditor-table-context__menu
+    .soeditor-table-context__button[hidden] {
+    display: none;
+}
+.soeditor-classic
+    .soeditor-table-context__menu
+    .soeditor-table-context__button:hover:not(:disabled),
+.soeditor-classic
+    .soeditor-table-context__menu
+    .soeditor-table-context__button:focus-visible {
+    background: #e5efff;
+    outline-offset: -2px;
+}
+.soeditor-classic .soeditor-table-context__switch {
+    margin-bottom: 5px;
+    border-bottom: 1px solid var(--soeditor-border, #c4c7cc) !important;
+    padding-bottom: 12px !important;
+}
+.soeditor-classic .soeditor-table-context__switch::after {
+    content: '';
+    margin-left: auto;
+    width: 30px;
+    height: 16px;
+    border: 1px solid #999;
+    border-radius: 3px;
+    background: linear-gradient(to right, #fff 45%, #999 45%);
+}
+.soeditor-classic .soeditor-table-context__switch[aria-checked='true']::after {
+    background: linear-gradient(to right, #53a318 55%, #fff 55%);
+    border-color: #53a318;
+}
+.soeditor-classic .soeditor-table-context__grid {
+    display: grid;
+    grid-template-columns: repeat(3, 5px);
+    grid-template-rows: repeat(3, 5px);
+    border: 1px solid currentColor;
+}
+.soeditor-classic .soeditor-table-context__grid i {
+    border: 0.5px solid currentColor;
+}
+.soeditor-classic .soeditor-table-context__grid--column i:nth-child(3n + 2),
+.soeditor-classic
+    .soeditor-table-context__grid--row
+    i:nth-child(n + 4):nth-child(-n + 6),
+.soeditor-classic .soeditor-table-context__grid--merge i:nth-child(n + 5) {
+    background: currentColor;
+    opacity: 0.55;
+}
+.soeditor-classic .soeditor-table-context__grid--properties {
+    display: grid;
+    place-items: center;
+    grid-template-columns: 1fr;
+    grid-template-rows: 1fr;
+    width: 17px;
+    height: 17px;
+    border: 0;
+    font-size: 0;
+}
+.soeditor-classic .soeditor-table-context__grid--properties::before {
+    content: '';
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    background: currentColor;
+    box-shadow:
+        -6px 0 currentColor,
+        6px 0 currentColor;
+}
+.soeditor-classic .soeditor-table-context__chevron {
+    box-sizing: border-box;
+    width: 5px;
+    height: 5px;
+    border-right: 1px solid currentColor;
+    border-bottom: 1px solid currentColor;
+    transform: translateY(-1px) rotate(45deg);
+}
+
+.soeditor-classic
+    .soeditor-table-context__menu
+    [data-command='table.cell.splitColumns'] {
+    border-top: 1px solid var(--soeditor-border, #c4c7cc);
+    margin-top: 5px;
+    padding-top: 12px;
 }
 
 .soeditor-classic .soeditor-table-context__editor {
@@ -986,4 +1195,50 @@
     .soeditor-classic__resize-handle {
         height: 0.75rem;
     }
+}
+
+.soeditor-classic .soeditor-ui__toolbar .soeditor-ui__format-choice {
+    block-size: 3.25rem;
+    inline-size: 3.25rem;
+    max-inline-size: none;
+    padding: 0.3rem;
+}
+
+.soeditor-classic
+    .soeditor-ui__toolbar
+    .soeditor-ui__alignment-choices
+    .soeditor-ui__format-choice {
+    block-size: var(--soeditor-control-size);
+    inline-size: var(--soeditor-control-size);
+}
+
+.soeditor-classic .soeditor-ui__alignment-choices {
+    grid-template-columns: var(--soeditor-control-size);
+}
+
+.soeditor-classic .soeditor-ui__format-control > .soeditor-ui__menu > summary {
+    inline-size: auto;
+    min-inline-size: 1.1rem;
+    max-inline-size: none;
+    gap: 0.25rem;
+}
+
+.soeditor-classic .soeditor-ui__toolbar .soeditor-ui__list-preview {
+    inline-size: 2.5rem;
+    flex-shrink: 0;
+}
+
+.soeditor-classic
+    .soeditor-ui__toolbar
+    .soeditor-ui__format-choice[aria-checked='true'] {
+    background: #e6efff;
+    color: #286dff;
+}
+
+.soeditor-classic .soeditor-ui__toolbar .soeditor-ui__value-control {
+    inline-size: auto;
+    max-inline-size: 7.5rem;
+    flex-basis: auto;
+    gap: 0.35rem;
+    padding-inline: 0.45rem;
 }

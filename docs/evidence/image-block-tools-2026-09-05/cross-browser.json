@@ -1,0 +1,87 @@
+{
+    "environment": "mcr.microsoft.com/playwright:v1.62.1-noble via Podman; Firefox and WebKit",
+    "focused": {
+        "command": "playwright test --config playwright.cross-browser.config.ts --project firefox-image-tools --project webkit-image-tools --workers=2",
+        "stats": {
+            "startTime": "2026-09-05T13:25:33.507Z",
+            "duration": 30833.601000000002,
+            "expected": 8,
+            "skipped": 0,
+            "unexpected": 0,
+            "flaky": 0
+        }
+    },
+    "expanded": {
+        "command": "classic-editor.spec.ts --grep 'image|table' --workers=2",
+        "stats": {
+            "startTime": "2026-09-05T13:13:18.772Z",
+            "duration": 180084.723,
+            "expected": 30,
+            "skipped": 0,
+            "unexpected": 12,
+            "flaky": 0
+        },
+        "failures": [
+            {
+                "project": "firefox",
+                "title": "shows the active table scope, block boundaries, and direct row and column resize handles",
+                "error": "Error: expect(received).toBeCloseTo(expected, precision)\n\nExpected: 365.9333190917969\nReceived: 347.9333190917969\n\nExpected precision:    0\nExpected difference: < 0.5\nReceived difference:   18\n\n  235 |     const movingRowBox = await rowHandle.boundingBox();\n  236 |     if (movingRowBox === null) throw new Error('Missing moving row handle.');\n> 237 |     expect(movingRowBox.y + movingRowBox.height / 2).toBeCloseTo(\n      |                                                      ^\n  238 |         rowBox.y + rowBox.height / 2 + 18,\n  239 |         0,\n  240 |     );\n    at /var/www/node/SoEditor/tests/browser/classic-editor.spec.ts:237:54"
+            },
+            {
+                "project": "firefox",
+                "title": "keeps native caret placement while switching between table cells",
+                "error": "Error: locator.evaluate: root.getSelection is not a function\n@debugger eval code line 311 > eval:3:59\nevaluate@debugger eval code:313:16\n@debugger eval code:1:44\n@debugger eval code:1:62\n\n    at @debugger eval code line 311 > eval:3:59\n    at evaluate@debugger eval code:313:16\n    at @debugger eval code:1:44\n    at @debugger eval code:1:62\n    at /var/www/node/SoEditor/tests/browser/classic-editor.spec.ts:818:22\n    at clickAtOffset (/var/www/node/SoEditor/tests/browser/classic-editor.spec.ts:816:9)\n    at /var/www/node/SoEditor/tests/browser/classic-editor.spec.ts:834:5"
+            },
+            {
+                "project": "firefox",
+                "title": "replaces a native WYSIWYG selection and edits images on double click",
+                "error": "Error: locator.evaluate: root.getSelection is not a function\n@debugger eval code line 311 > eval:5:57\nevaluate@debugger eval code:313:16\n@debugger eval code:1:44\n@debugger eval code:1:62\n\n    at @debugger eval code line 311 > eval:5:57\n    at evaluate@debugger eval code:313:16\n    at @debugger eval code:1:44\n    at @debugger eval code:1:62\n    at /var/www/node/SoEditor/tests/browser/classic-editor.spec.ts:960:10"
+            },
+            {
+                "project": "firefox",
+                "title": "applies bold to paragraph, list-item, and table-cell ranges without changing structure",
+                "error": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: \"<p>a<strong>X</strong>bc</p>\"\nReceived: \"<p>aXbc</p>\"\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n\n  1829 |     await expect\n  1830 |         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))\n> 1831 |         .toBe('<p>a<strong>X</strong>bc</p>');\n       |          ^\n  1832 |\n  1833 |     await page.evaluate(() => {\n  1834 |         globalThis.__classicDemo.editor.setData(\n    at /var/www/node/SoEditor/tests/browser/classic-editor.spec.ts:1831:10"
+            },
+            {
+                "project": "firefox",
+                "title": "uploads images with temporary previews, retry, cancellation, and unsafe-result rejection",
+                "error": "Error: expect(received).toContain(expected) // indexOf\n\nExpected substring: \"/uploads/clipboard.png\"\nReceived string:    \"<p>Clipboard target</p>\"\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n\n  3445 |     await expect\n  3446 |         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))\n> 3447 |         .toContain('/uploads/clipboard.png');\n       |          ^\n  3448 |\n  3449 |     await page.evaluate(() => {\n  3450 |         const harness = globalThis.__classicDemo;\n    at /var/www/node/SoEditor/tests/browser/classic-editor.spec.ts:3447:10"
+            },
+            {
+                "project": "firefox",
+                "title": "uses compact table dropdowns for headers, insertion, directional merge and ordinary splits",
+                "error": "Test timeout of 30000ms exceeded."
+            },
+            {
+                "project": "firefox",
+                "title": "disables table splits at logical limits and clamps resize previews",
+                "error": "Error: expect(locator).toContainText(expected) failed\n\nLocator: locator('.soeditor-classic__visual').locator('[data-resize-feedback]')\nExpected substring: \"1200 px · Limit reached\"\nReceived string:    \"Column width: 40 px · Limit reached\"\nTimeout: 5000ms\n\nCall log:\n  - Expect \"toContainText\" with timeout 5000ms\n  - waiting for locator('.soeditor-classic__visual').locator('[data-resize-feedback]')\n    - locator resolved to <output role=\"status\" data-resize-feedback=\"true\" class=\"soeditor-table-resize-feedback\">Column width: 874 px</output>\n    - unexpected value \"Column width: 874 px\"\n    13 × locator resolved to <output role=\"status\" data-resize-feedback=\"true\" class=\"soeditor-table-resize-feedback\">Column width: 40 px · Limit reached</output>\n       - unexpected value \"Column width: 40 px · Limit reached\"\n\n\n  4626 |     await page.mouse.down();\n  4627 |     await page.mouse.move(box.x + 2000, box.y + box.height / 2);\n> 4628 |     await expect(visual.locator('[data-resize-feedback]')).toContainText(\n       |                                                            ^\n  4629 |         '1200 px · Limit reached',\n  4630 |     );\n  4631 |     await expect\n    at /var/www/node/SoEditor"
+            },
+            {
+                "project": "webkit",
+                "title": "keeps native caret placement while switching between table cells",
+                "error": "Error: expect(locator).toHaveValue(expected) failed\n\nLocator: locator('#content')\nExpected pattern: /<th>abc<\\/th>/u\nReceived string:  \"<h1>用 SoEditor 构建现代内容体验</h1><p><span class=\\\"cms-lead\\\">这是一段由 CMS 语义样式控制的导语。</span> 编辑者可以使用熟悉的工具栏，同时保留开发者需要的 HTML 自由。</p><blockquote><p>未知标签与 CMS 标记会被保留；危险脚本不会在可视化编辑区执行。</p></blockquote><h2>本次发布重点</h2><ul><li>可靠的 Office 粘贴与图片上传</li><li>嵌套列表与完整表格操作<ul><li>支持键盘与历史撤销</li></ul></li><li>中文、移动端与无障碍交互</li></ul><table><caption>CMS 功能交付状态</caption><thead><tr><th>能力</th><th>状态</th><th>验证</th></tr></thead><tbody><tr><td>Classic 表单</td><td>完成</td><td>Browser</td></tr><tr><td>Office 粘贴</td><td>完成</td><td>Fixtures</td></tr><tr><td>上传与表格</td><td>完成</td><td>Unit + Browser</td></tr></tbody></table><p><img src=\\\"/demo-editor-cover.svg\\\" alt=\\\"SoEditor CMS 示例封面\\\" width=\\\"640\\\" height=\\\"240\\\"></p><aside data-soeditor-object=\\\"promo\\\" data-campaign=\\\"summer\\\" data-theme=\\\"violet\\\"></aside><!--CMS:block--><product-card data-id=\\\"42\\\"></product-card>\"\nTimeout: 5000ms\n\nCall log:\n  - Expect \"toHaveValue\" with timeout 5000ms\n  - waiting for locator('#content')\n    13 × locator resolved to <textarea hidden=\"\" id=\"content\" name=\"content\"><p>Hello <strong>CMS</strong></p><!--C"
+            },
+            {
+                "project": "webkit",
+                "title": "replaces a native WYSIWYG selection and edits images on double click",
+                "error": "Error: locator.evaluate: TypeError: root.getSelection is not a function. (In 'root.getSelection()', 'root.getSelection' is undefined)\n\n  958 |         .locator('p')\n  959 |         .first()\n> 960 |         .evaluate((paragraph) => {\n      |          ^\n  961 |             const text = paragraph.firstChild;\n  962 |             if (!(text instanceof Text)) throw new Error('Missing text node.');\n  963 |             const root = paragraph.getRootNode();\n    at /var/www/node/SoEditor/tests/browser/classic-editor.spec.ts:960:10"
+            },
+            {
+                "project": "webkit",
+                "title": "applies bold to paragraph, list-item, and table-cell ranges without changing structure",
+                "error": "Error: expect(received).toBe(expected) // Object.is equality\n\nExpected: \"<p>a<strong>X</strong>bc</p>\"\nReceived: \"<p>abc</p>\"\n\nCall Log:\n- Timeout 5000ms exceeded while waiting on the predicate\n\n  1829 |     await expect\n  1830 |         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))\n> 1831 |         .toBe('<p>a<strong>X</strong>bc</p>');\n       |          ^\n  1832 |\n  1833 |     await page.evaluate(() => {\n  1834 |         globalThis.__classicDemo.editor.setData(\n    at /var/www/node/SoEditor/tests/browser/classic-editor.spec.ts:1831:10"
+            },
+            {
+                "project": "webkit",
+                "title": "uses compact table dropdowns for headers, insertion, directional merge and ordinary splits",
+                "error": "Test timeout of 30000ms exceeded."
+            },
+            {
+                "project": "webkit",
+                "title": "keeps logical table selections and header intersections through span edits and source round trips",
+                "error": "Test timeout of 30000ms exceeded."
+            }
+        ]
+    }
+}

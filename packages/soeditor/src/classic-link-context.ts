@@ -38,6 +38,10 @@ export function attachClassicLinkContext(
     const click = (event: MouseEvent): void => {
         if (event.button !== 0 || event.metaKey || event.ctrlKey) return;
         const origin = event.target;
+        if (origin instanceof Element && origin.closest('img') !== null) {
+            close();
+            return;
+        }
         const link =
             origin instanceof Element
                 ? origin.closest<HTMLAnchorElement>(

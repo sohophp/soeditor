@@ -6,7 +6,7 @@ build exposes the WYSIWYG-only CMS API through `globalThis.SoEditor`.
 
 ```ts
 import { createClassicEditor } from '@soeditor/editor/cms/optional';
-import '@soeditor/editor/styles.css';
+import '@soeditor/editor/cms/styles.css';
 
 const editor = await createClassicEditor(
     document.querySelector<HTMLTextAreaElement>('#content')!,
@@ -30,8 +30,17 @@ default value through the editor transaction path. `destroy()` removes owned
 surfaces and restores the original host visibility.
 The classic chrome includes bounded manual height resizing, optional maximize,
 responsive toolbar behavior, element path, text counts, dirty status, and
-command-backed contextual actions. Call `editor.maximize(false)` or destroy the
-editor to restore document overflow exactly.
+command-backed contextual actions. The status bar is placed below the editing
+surface. Optional Classic integrations may add `showBlocks` to the toolbar for
+projection-only block boundaries and HTML tag labels. Call
+`editor.maximize(false)` or destroy the editor to restore document overflow
+exactly.
+
+For saved content on the frontend, import `@soeditor/editor/content.css`
+and wrap the HTML in `.soeditor-content`. This stylesheet shares the editor's
+image alignment rules without loading editor JavaScript or chrome styles.
+See [statistics, frontend styles and corpus measurements](../../docs/cms-followup-2026-09-08.zh-CN.md)
+for the text-counting contract and integration checks.
 
 An optional `save` configuration adds a command-backed Save/Retry control,
 opaque revision tokens, progress/conflict state, opt-in bounded autosave, and
@@ -46,7 +55,7 @@ Historical lower-level assembly remains available from the compatibility root:
 
 ```ts
 import { SoEditor, minimalPreset } from '@soeditor/editor';
-import '@soeditor/editor/styles.css';
+import '@soeditor/editor/cms/styles.css';
 
 const editor = await SoEditor.create({
     data: '<p>Hello</p>',

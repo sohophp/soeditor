@@ -11,6 +11,7 @@ import {
     type VisualInlineStyle,
     type VisualLinkAttributes,
     type VisualListProperties,
+    type VisualListStyle,
     type VisualTextMark,
 } from '@soeditor/engine';
 import {
@@ -21,6 +22,17 @@ import {
 } from '@soeditor/html';
 
 import { nestedEditingBridgeToken } from './nested-editing.js';
+import {
+    isBoundedResponsiveImageString,
+    isSafeResponsiveImageSourceSet,
+} from './responsive-image.js';
+
+const RESPONSIVE_ASSET_METADATA =
+    (
+        import.meta as ImportMeta & {
+            readonly env: Readonly<Record<string, string | undefined>>;
+        }
+    ).env.SOEDITOR_RESPONSIVE_ASSET_METADATA !== 'false';
 
 /** Reports an invalid rich-text command argument without mutating the editor. */
 export class RichTextArgumentError extends TypeError {
@@ -220,6 +232,25 @@ export type TextAlignment = 'center' | 'justify' | 'left' | 'right';
 export class AlignmentPlugin extends FeaturePlugin {
     static readonly id = 'alignment';
     override init(): void {
+        for (const alignment of [
+            'left',
+            'center',
+            'right',
+            'justify',
+        ] as const) {
+            const id = `format.alignment.${alignment}`;
+            this.register(
+                id,
+                (service, args) => {
+                    assertNoArguments(id, args);
+                    requireExtendedCapability(
+                        service.setAlignment,
+                        id,
+                    )(alignment);
+                },
+                (service) => service.isAlignmentActive?.(alignment) ?? false,
+            );
+        }
         this.register('format.alignment', (service, args) => {
             const value = oneArgument('format.alignment', args);
             if (
@@ -377,6 +408,35 @@ export class CodeBlockPlugin extends ToggleBlockPlugin {
 
 abstract class ListPlugin extends FeaturePlugin {
     protected registerList(id: string, list: 'ol' | 'ul'): void {
+        const styles: readonly VisualListStyle[] =
+            list === 'ol'
+                ? [
+                      'decimal',
+                      'decimal-leading-zero',
+                      'lower-roman',
+                      'upper-roman',
+                      'lower-alpha',
+                      'upper-alpha',
+                  ]
+                : ['disc', 'circle', 'square'];
+        for (const style of styles) {
+            const styleId = `${id}.${style}`;
+            this.register(
+                styleId,
+                (service, args) => {
+                    assertNoArguments(styleId, args);
+                    requireExtendedCapability(service.setListStyle, styleId)(
+                        list,
+                        style,
+                    );
+                },
+                (service) => service.isListStyleActive?.(list, style) ?? false,
+                `Set list style ${style}`,
+                (service) =>
+                    service.setListStyle !== undefined &&
+                    !hasMultiCellTableSelection(service),
+            );
+        }
         this.register(
             id,
             (service, args) => {
@@ -890,10 +950,13 @@ function requireExtendedCapability<T>(
 
 /** Options accepted by `image.insert`. */
 export interface ImageInsertOptions {
+    readonly assetId?: string;
     readonly src: string;
     readonly alt?: string;
     readonly width?: number;
     readonly height?: number;
+    readonly sizes?: string;
+    readonly srcset?: string;
 }
 
 /** Registers inert semantic image insertion. */
@@ -904,6 +967,9 @@ export class ImagePlugin extends FeaturePlugin {
         this.register('image.insert', (service, args) => {
             const options = readImageOptions(args);
             const attributes: HtmlAttribute[] = [attribute('src', options.src)];
+            if (RESPONSIVE_ASSET_METADATA && options.assetId !== undefined) {
+                attributes.push(attribute('data-asset-id', options.assetId));
+            }
             if (options.alt !== undefined) {
                 attributes.push(attribute('alt', options.alt));
             }
@@ -912,6 +978,12 @@ export class ImagePlugin extends FeaturePlugin {
             }
             if (options.height !== undefined) {
                 attributes.push(attribute('height', String(options.height)));
+            }
+            if (RESPONSIVE_ASSET_METADATA && options.srcset !== undefined) {
+                attributes.push(attribute('srcset', options.srcset));
+            }
+            if (RESPONSIVE_ASSET_METADATA && options.sizes !== undefined) {
+                attributes.push(attribute('sizes', options.sizes));
             }
             service.insertHtml(serializeNodes([element('img', attributes)]));
         });
@@ -1418,9 +1490,21 @@ function oneStringArgument(command: string, args: readonly unknown[]): string {
 
 function readImageOptions(args: readonly unknown[]): ImageInsertOptions {
     const value = readRecord('image.insert', args);
-    rejectUnknownKeys('image.insert', value, ['src', 'alt', 'width', 'height']);
+    rejectUnknownKeys('image.insert', value, [
+        'src',
+        'alt',
+        'width',
+        'height',
+        ...(RESPONSIVE_ASSET_METADATA ? ['assetId', 'sizes', 'srcset'] : []),
+    ]);
     const src = requiredString('image.insert', value, 'src');
-    const strings = optionalStringProperties('image.insert', value, ['alt']);
+    const strings = optionalStringProperties('image.insert', value, [
+        'alt',
+        ...(RESPONSIVE_ASSET_METADATA ? ['assetId', 'sizes', 'srcset'] : []),
+    ]);
+    if (RESPONSIVE_ASSET_METADATA) {
+        validateResponsiveImageStrings('image.insert', strings);
+    }
     const width = optionalPositiveInteger('image.insert', value, 'width');
     const height = optionalPositiveInteger('image.insert', value, 'height');
     return {
@@ -1429,6 +1513,31 @@ function readImageOptions(args: readonly unknown[]): ImageInsertOptions {
         ...(width === undefined ? {} : { width }),
         ...(height === undefined ? {} : { height }),
     };
+}
+
+function validateResponsiveImageStrings(
+    command: string,
+    values: Readonly<Record<string, string>>,
+): void {
+    if (
+        values.assetId !== undefined &&
+        !isBoundedResponsiveImageString(values.assetId, 512)
+    ) {
+        throw new RichTextArgumentError(command, 'requires a bounded assetId.');
+    }
+    if (
+        values.sizes !== undefined &&
+        !isBoundedResponsiveImageString(values.sizes, 2_048)
+    ) {
+        throw new RichTextArgumentError(command, 'requires bounded sizes.');
+    }
+    if (
+        values.srcset !== undefined &&
+        (!isBoundedResponsiveImageString(values.srcset, 8_192) ||
+            !isSafeResponsiveImageSourceSet(values.srcset))
+    ) {
+        throw new RichTextArgumentError(command, 'requires a safe srcset.');
+    }
 }
 
 function readListProperties(args: readonly unknown[]): VisualListProperties {

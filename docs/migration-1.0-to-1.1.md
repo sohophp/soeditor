@@ -1,12 +1,12 @@
 # Migrating from SoEditor 1.0 to 1.1
 
-SoEditor `1.1.0` is an additive CMS Classic Editor release candidate. The
-published registry reference remains `1.0.0` until an owner-authorized release.
+SoEditor `1.1.0` is an additive CMS Classic Editor release. Verify the publication
+workflow and registry before installing a newly announced version.
 Keep all directly installed `@soeditor/*` packages on one aligned version.
 
 ## Compatibility outcome
 
-Stable 1.0 package-root APIs remain supported. The 1.1 candidate adds a lazy
+Stable 1.0 package-root APIs remain supported. The 1.1 release adds a lazy
 `createClassicEditor()` entry and CMS-oriented plugin, UI, paste, upload, link,
 object, table/list, localization, and save contracts. It does not replace the
 framework-neutral Core, command/transaction path, Workspace, or existing

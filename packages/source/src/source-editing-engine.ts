@@ -28,6 +28,7 @@ import {
     setSearchQuery,
 } from '@codemirror/search';
 import {
+    ChangeSet,
     Compartment,
     EditorState,
     Transaction as CodeMirrorTransaction,
@@ -107,6 +108,7 @@ export class SourceEditingEngine implements SourceEngine {
     readonly #selectionListeners = new Set<() => void>();
     readonly #view: EditorView;
     #destroyed = false;
+    #editorDestroying = false;
     #diagnostics: readonly HtmlParseDiagnostic[];
     #disposeProjection: (() => void) | undefined;
     #programmaticFocus = false;
@@ -203,9 +205,9 @@ export class SourceEditingEngine implements SourceEngine {
             'document:change',
             ({ current }) => this.#synchronizeSource(current.source),
         );
-        this.#disposeModeChange = this.editor.events.on('mode:change', () =>
-            this.#updateMode(),
-        );
+        this.#disposeModeChange = this.editor.events.on('mode:change', () => {
+            if (this.#projectionActivity === undefined) this.#updateMode();
+        });
         this.#disposeStateChange = this.editor.events.on(
             'state:change',
             ({ current, previous }) => {
@@ -219,7 +221,10 @@ export class SourceEditingEngine implements SourceEngine {
         );
         this.#disposeEditorDestroy = this.editor.events.on(
             'editor:destroy',
-            () => this.destroy(),
+            () => {
+                this.#editorDestroying = true;
+                this.destroy();
+            },
         );
         const coordinator = this.editor.services.tryGet(
             projectionCoordinatorServiceToken,
@@ -329,7 +334,14 @@ export class SourceEditingEngine implements SourceEngine {
                 this.editor.services.unregister(sourceEditingServiceToken);
             }
         } catch (error: unknown) {
-            if (!(error instanceof EditorDestroyedError)) {
+            if (
+                !(error instanceof EditorDestroyedError) &&
+                !(
+                    this.#editorDestroying &&
+                    error instanceof Error &&
+                    error.name === 'EditorDestroyedError'
+                )
+            ) {
                 errors.push(error);
             }
         }
@@ -416,12 +428,25 @@ export class SourceEditingEngine implements SourceEngine {
         }
 
         const change = minimalSourceChange(current, source);
+        // Large external deletions/replacements can accumulate expensive reused
+        // syntax trees. Keep ordinary insertions and small documents incremental;
+        // reset large parser input while mapping selection through the real edit.
+        const resetParsing =
+            current.length >= 65_536 && change.to > change.from;
+        const selection = resetParsing
+            ? this.#view.state.selection.map(
+                  ChangeSet.of(change, current.length),
+              )
+            : undefined;
 
         this.#synchronizing = true;
         try {
             this.#view.dispatch({
                 annotations: CodeMirrorTransaction.addToHistory.of(false),
-                changes: change,
+                changes: resetParsing
+                    ? { from: 0, to: current.length, insert: source }
+                    : change,
+                ...(selection === undefined ? {} : { selection }),
             });
         } finally {
             this.#synchronizing = false;
@@ -434,6 +459,7 @@ export class SourceEditingEngine implements SourceEngine {
             this.#projectionActivity?.visible ??
             this.editor.state.mode === 'source'
         );
+        if (this.#view.state.facet(EditorState.readOnly) === readonly) return;
         this.#view.dispatch({
             effects: this.#editable.reconfigure([
                 EditorState.readOnly.of(readonly),

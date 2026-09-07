@@ -7,6 +7,17 @@ import {
 import { withoutSource } from './helpers.js';
 
 describe('HTML serialization', () => {
+    it('preserves long text runs beside entities, raw text and line breaks', () => {
+        const text = '中文 👩🏽‍💻 &amp; &lt; text '.repeat(1000);
+        const source = `<p>${text}<br>${text}</p><textarea>&lt;br&gt; &amp;</textarea><!--<br>--><style>a::after{content:"<br>"}</style>`;
+        const parsed = parseHtmlFragment(source);
+        const serialized = serializeHtmlFragment(parsed.document);
+        expect(serialized).toContain('<br />');
+        expect(serialized).toContain('content:"<br>"');
+        expect(withoutSource(parseHtmlFragment(serialized).document)).toEqual(
+            withoutSource(parsed.document),
+        );
+    });
     it('semantically round-trips a complete document with doctype and comments', () => {
         const source =
             '<!doctype html><!--page--><html lang="en"><head><title>Title</title></head><body><main data-layout="wide">Body</main></body></html>';

@@ -1,13 +1,24 @@
 # WYSIWYG completion and release decision
 
+> 2026-09-07：当前工作区的优化状态、测量与验证统一见 [CMS 性能与稳定性优化](cms-optimization-2026-09-07.zh-CN.md)。以下日期更早的数字为历史记录；人工设备验收单独列出。
+
+> 2026-09-05: WYSIWYG + Source local implementation and automated acceptance
+> are complete; see [current evidence](wysiwyg-source-evidence.zh-CN.md).
+> No publication or deployment was performed. Manual Safari and assistive-
+> technology sign-off remain separate. Results below retain historical
+> candidate context and must not replace the current evidence.
+
 ## Decision
 
-The Phase 49–56 implementation program is complete. The local `1.1.0`
-candidate is **GO for continued integration and Chromium-based CMS evaluation**
-and **NO-GO for production publication** until real Safari/manual
-assistive-technology qualification is signed off.
+On 2026-09-08 the repository owner explicitly authorized publishing the current
+1.1.0 release. This supersedes the historical candidate publication hold below;
+it does not convert missing manual qualification into passed evidence.
 
-No package was published, tagged, or deployed by this program.
+Current automated acceptance is recorded in
+[the 2026-09-08 report](cms-followup-2026-09-08.zh-CN.md). Real Safari, OS IME,
+Office clipboard, assistive technology and customer-material checks remain
+unverified and must be stated as release limitations. Publication proceeds
+through the protected npm workflow from the reviewed clean commit.
 
 ## Product result
 
@@ -30,7 +41,7 @@ and High product defects in the executed Chromium qualification are zero.
 ## Passed gates
 
 - lint, strict TypeScript, all unit suites, and documentation audit;
-- 226/226 Chromium compatibility scenarios;
+- 229/229 Chromium compatibility scenarios;
 - 6/6 focused Chromium desktop/mobile CMS scenarios;
 - 96/96 applicable Firefox/WebKit focused CMS and direct WYSIWYG scenarios in
   the matching official Playwright Linux image;
@@ -43,8 +54,8 @@ and High product defects in the executed Chromium qualification are zero.
 - dependency audit with no known vulnerabilities.
 
 The largest Playground-only chunk is the lazily loaded Source/CodeMirror path
-at 576.69 kB raw. The CMS global is 485.98 kB raw / 149.45 kB gzip, while the
-packed CMS Vite consumer is 461,271 bytes raw / 149,986 bytes gzip. These are
+at 576.69 kB raw. The CMS global is 486.67 kB raw / 149.97 kB gzip, while the
+packed CMS Vite consumer is 445,611 bytes raw / 144,421 bytes gzip. These are
 recorded measurements, not regressions hidden as failures.
 
 ## Cross-browser qualification

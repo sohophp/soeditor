@@ -12,11 +12,17 @@ export interface FileManagerOpenOptions {
 
 /** Singular selected asset returned by a file manager. */
 export interface FileManagerResult {
+    /** Stable host-owned asset identity serialized as `data-asset-id` on images. */
+    readonly assetId?: string;
     readonly alt?: string;
     readonly height?: number;
     readonly metadata?: Readonly<Record<string, unknown>>;
     readonly mime?: string;
     readonly name?: string;
+    /** Responsive layout hint paired with `srcset`. */
+    readonly sizes?: string;
+    /** Validated responsive image candidate list. */
+    readonly srcset?: string;
     readonly url: string;
     readonly width?: number;
 }

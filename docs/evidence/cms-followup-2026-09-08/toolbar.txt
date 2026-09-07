@@ -1,0 +1,7 @@
+
+Running 2 tests using 2 workers
+
+  ✓  2 [webkit-image-tools] › tests/browser/classic-editor.spec.ts:5554:1 › keeps the declared Classic toolbar controls present and localized (3.2s)
+  ✓  1 [firefox-image-tools] › tests/browser/classic-editor.spec.ts:5554:1 › keeps the declared Classic toolbar controls present and localized (4.6s)
+
+  2 passed (11.1s)

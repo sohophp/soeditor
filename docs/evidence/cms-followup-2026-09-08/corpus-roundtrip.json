@@ -1,0 +1,31 @@
+{
+    "measuredAt": "2026-09-07T16:38:00.801Z",
+    "chromium": "151.0.7922.34",
+    "results": [
+        {
+            "file": "/var/www/node/SoEditor/tests/fixtures/cms/legacy-product.html",
+            "sha256": "4355b82b495fa477869bacbf30a662e6a563a38d45425fef4fe5844e63aed43b",
+            "savedSha256": "c5f4866ac336830b92b072938d826b5c4f737c9d7f68a60267c797401c35c5ff",
+            "passed": true
+        },
+        {
+            "file": "/var/www/node/SoEditor/tests/fixtures/cms/performance/long-article.html",
+            "sha256": "a59352b9d86b44d74c85c5485f0f7556dc1b059cab0b4cc435431892f84b085d",
+            "savedSha256": "e7862ac49da99af6eb2c97c50494f959d973c9978d7f922ef1843ae508272525",
+            "passed": true
+        },
+        {
+            "file": "/var/www/node/SoEditor/tests/fixtures/cms/performance/image-list.html",
+            "sha256": "f61ad24bb6fe163d0039b884227b69d17369b863a6dee728f2cf88cae5dbb688",
+            "savedSha256": "8d4231bf18b76da316c8ed49f46dbe3b09227e234074937551981a6d88f9198b",
+            "passed": true
+        },
+        {
+            "file": "/var/www/node/SoEditor/tests/fixtures/cms/performance/complex-table.html",
+            "sha256": "e84aca106f8aaa9c52efffd435594bfb0bdb51e3f6ce90ce03bceb1fdf64494b",
+            "savedSha256": "e17b7d4090e0b7c51d7db3cb2c6848055ae647b42b9dc014de80bcea953b8197",
+            "passed": true
+        }
+    ],
+    "note": "File-based automated round trip only. Paths and hashes identify samples; origin, anonymization, actual Office clipboard and manual qualification must be recorded separately. External network requests are blocked; no input file is modified."
+}

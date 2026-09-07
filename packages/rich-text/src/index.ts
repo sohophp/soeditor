@@ -37,6 +37,10 @@ export type {
 export { FontPlugin } from './font.js';
 export type { FontStyleCommand } from './font.js';
 export { isSafeMediaPreviewUrl, MediaPlugin } from './media.js';
+export {
+    isBoundedResponsiveImageString,
+    isSafeResponsiveImageSourceSet,
+} from './responsive-image.js';
 export type {
     MediaAlignment,
     MediaInsertOptions,
@@ -70,7 +74,7 @@ export type {
     CmsEmbedProvider,
     CmsObjectDefinition,
 } from './cms-objects.js';
-export { TablePlugin } from './table.js';
+export { CmsTablePlugin, TablePlugin } from './table.js';
 export type {
     TableAlignment,
     TableCellPosition,

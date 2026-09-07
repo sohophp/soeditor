@@ -1,0 +1,37 @@
+{
+    "measuredAt": "2026-09-07T14:21:34.236Z",
+    "chromium": "151.0.7922.34",
+    "fixture": "/tmp/soeditor-followup-20260907/after-dist",
+    "elapsed": [188.59999999403954, 131.7000000178814, 133.7999999821186],
+    "summary": {
+        "Layout": {
+            "count": 54,
+            "milliseconds": 481.2
+        },
+        "UpdateLayoutTree": {
+            "count": 60,
+            "milliseconds": 790.1
+        },
+        "PrePaint": {
+            "count": 4,
+            "milliseconds": 75.935
+        },
+        "Paint": {
+            "count": 4,
+            "milliseconds": 5.49
+        },
+        "FunctionCall": {
+            "count": 22,
+            "milliseconds": 104.357
+        },
+        "MinorGC": {
+            "count": 0,
+            "milliseconds": 0
+        },
+        "MajorGC": {
+            "count": 2,
+            "milliseconds": 22.007
+        }
+    },
+    "note": "Three warmed 500 KiB Source/WYSIWYG round trips. Timeline durations overlap: do not sum categories or compare traced latency with untraced samples. Full trace is retained alongside this file."
+}

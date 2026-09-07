@@ -200,9 +200,9 @@ const globalGzip = gzipSync(globalSource).length;
 const cssRaw = (await stat(cssPath)).size;
 const esmRaw = (await stat(esmPath)).size;
 
-assertBudget('CMS global raw', globalRaw, 510_000);
+assertBudget('CMS global raw', globalRaw, 500_000);
 assertBudget('CMS global gzip', globalGzip, 150_000);
-assertBudget('standalone CSS', cssRaw, 27_250);
+assertBudget('standalone CSS', cssRaw, 27_000);
 assertBudget('umbrella ESM facade', esmRaw, 2_000);
 for (const excludedMarker of [
     'Developer Visual',
@@ -220,12 +220,21 @@ for (const excludedMarker of [
         );
     }
 }
-for (const requiredSelector of ['.soeditor-ui', '.soeditor-table-widget']) {
+for (const requiredSelector of [
+    '.soeditor-ui',
+    '.soeditor-classic__image-dialog',
+]) {
     if (!cssSource.includes(requiredSelector)) {
         throw new Error(
             `Standalone CSS is missing required selector ${requiredSelector}.`,
         );
     }
+}
+if (
+    !globalText.includes('.soeditor-wysiwyg-content') ||
+    !globalText.includes('.soeditor-table-widget')
+) {
+    throw new Error('CMS global is missing its isolated WYSIWYG table styles.');
 }
 
 const playgroundAssets = join(repositoryRoot, 'apps/playground/dist/assets');

@@ -1,6 +1,14 @@
 # @soeditor/html-tools
 
+## Unreleased
+
 ## 1.1.0
+
+### Patch Changes
+
+- Fall back to the same bounded main-thread HTML formatter when browser policy
+  prevents the formatting worker from starting, while retaining worker-based
+  formatting whenever it is available.
 
 ### Minor Changes
 

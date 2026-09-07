@@ -1,3 +1,5 @@
+import { SOURCE_TOOLBAR } from './source-toolbar.js';
+
 const svgNamespace = 'http://www.w3.org/2000/svg';
 
 /*!
@@ -13,68 +15,24 @@ interface IconDrawing {
     readonly viewBox?: string;
 }
 
-const fallbackDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
+const joditViewBox = '0 0 1792 1792';
+
+function jodit(path: string, viewBox = joditViewBox): IconDrawing {
+    return { paths: [path], variant: 'solid', viewBox };
+}
+
+const drawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
+    'format.more': {
+        paths: [
+            'M5 10a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Zm7 0a2 2 0 1 0 0 4 2 2 0 0 0 0-4Z',
+        ],
+        variant: 'solid',
+    },
     'block.div': { text: 'DIV', variant: 'solid' },
     'view.blocks': {
         paths: [
             'M3 3h18v5H3Zm2 2v1h14V5ZM3 10h8v11H3Zm2 2v7h4v-7Zm8-2h8v11h-8Zm2 2v7h4v-7Z',
         ],
-        variant: 'solid',
-    },
-    'format.remove': {
-        paths: [
-            'm3 15 8.5-11a2 2 0 0 1 2.8-.35l5.9 4.55a2 2 0 0 1 .35 2.8L13 21H6.5a2 2 0 0 1-1.22-.42L3.35 19A2 2 0 0 1 3 15Zm3.2 1.45L8.1 18H12l3.55-4.65-4.7-3.6Z',
-        ],
-        variant: 'solid',
-    },
-    'format.indent': {
-        paths: [
-            'M9 4h13v2H9Zm0 5h10v2H9Zm0 5h10v2H9Zm0 5h13v2H9ZM2 8l5 4-5 4Z',
-        ],
-        variant: 'solid',
-    },
-    'format.outdent': {
-        paths: [
-            'M9 4h13v2H9Zm0 5h10v2H9Zm0 5h10v2H9Zm0 5h13v2H9Zm-2-11-5 4 5 4Z',
-        ],
-        variant: 'solid',
-    },
-    'format.alignment.left': {
-        paths: ['M2 4h20v2H2Zm0 5h14v2H2Zm0 5h20v2H2Zm0 5h14v2H2Z'],
-        variant: 'solid',
-    },
-    'format.alignment.center': {
-        paths: ['M2 4h20v2H2ZM5 9h14v2H5Zm-3 5h20v2H2Zm3 5h14v2H5Z'],
-        variant: 'solid',
-    },
-    'format.alignment.right': {
-        paths: ['M2 4h20v2H2ZM8 9h14v2H8Zm-6 5h20v2H2Zm6 5h14v2H8Z'],
-        variant: 'solid',
-    },
-    'format.alignment.justify': {
-        paths: ['M2 4h20v2H2Zm0 5h20v2H2Zm0 5h20v2H2Zm0 5h20v2H2Z'],
-        variant: 'solid',
-    },
-    'font.family': { text: 'A', variant: 'solid' },
-    'font.size': {
-        paths: [
-            'M2 3h13v5h-2l-.55-2H10v13l2.5.65V22h-8v-2.35L7 19V6H4.55L4 8H2Zm16 2 4 4h-3v6h3l-4 4-4-4h3V9h-3Z',
-        ],
-        variant: 'solid',
-    },
-    'font.color': {
-        paths: [
-            'm3 19 7-17h4l7 17h-3.8l-1.45-4H8.1l-1.4 4Zm6.25-7h5.35L12 5Z',
-            'M3 21h18v2H3Z',
-        ],
-        variant: 'solid',
-    },
-    'font.backgroundColor': {
-        paths: ['m12 2 7 14H5Zm-9 17h18v4H3Z'],
-        variant: 'solid',
-    },
-    'font.highlight': {
-        paths: ['m14.1 2 5.2 4-8.8 11.5H5L4 15l10.1-13ZM3 20h18v3H3Z'],
         variant: 'solid',
     },
     'font.color.remove': {
@@ -95,18 +53,6 @@ const fallbackDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
         ],
         variant: 'solid',
     },
-    'link.set': {
-        paths: [
-            'M9.2 15.15 7.35 17a2.47 2.47 0 0 1-3.5-3.5l3.7-3.7a2.47 2.47 0 0 1 3.5 0l1.18 1.18 2.12-2.12-1.18-1.18a5.48 5.48 0 0 0-7.74 0l-3.7 3.7a5.47 5.47 0 0 0 7.74 7.74l1.85-1.85Zm5.6-6.3L16.65 7a2.47 2.47 0 1 1 3.5 3.5l-3.7 3.7a2.47 2.47 0 0 1-3.5 0l-1.18-1.18-2.12 2.12 1.18 1.18a5.48 5.48 0 0 0 7.74 0l3.7-3.7a5.47 5.47 0 0 0-7.74-7.74l-1.85 1.85Z',
-        ],
-        variant: 'solid',
-    },
-    'link.remove': {
-        paths: [
-            'M5.8 13.4 4 15.2a2.55 2.55 0 0 0 3.6 3.6l3-3 2.1 2.1-3 3a5.52 5.52 0 0 1-7.8-7.8l1.8-1.8Zm12.4-2.8 1.8-1.8a2.55 2.55 0 0 0-3.6-3.6l-3 3-2.1-2.1 3-3a5.52 5.52 0 0 1 7.8 7.8l-1.8 1.8ZM3.1 1 23 20.9 20.9 23 1 3.1Z',
-        ],
-        variant: 'solid',
-    },
     'link.edit': { paths: ['M4 20h4L19 9l-4-4L4 16Z', 'm13-13 4 4'] },
     'link.pick': {
         paths: ['M2 3h20v18H2Zm3 4v2h14V7Zm0 4v2h10v-2Zm0 4v2h12v-2Z'],
@@ -122,42 +68,12 @@ const fallbackDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
         ],
         variant: 'solid',
     },
-    'image.insert': {
-        paths: [
-            'M3 4h18a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm0 14h18v-2l-5-5-3.5 3.5L9 11l-6 6Zm3-7a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z',
-        ],
-        variant: 'solid',
-    },
-    'image.actions': {
-        paths: [
-            'M2 4h17a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H2Zm2 14h15v-2l-4-4-3 3-3-3-5 5Zm2-7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm16-3 2 2-2 2Z',
-        ],
-        variant: 'solid',
-    },
     'image.browse': {
         paths: ['M1 5h8l2 2h12v13H1Zm14 5v4h-3l5 5 5-5h-3v-4Z'],
         variant: 'solid',
     },
     'image.upload': {
         paths: ['M2 4h20v16H2Zm8 13h4v-5h3l-5-5-5 5h3Z'],
-        variant: 'solid',
-    },
-    'table.insert': {
-        paths: [
-            'M2 3h20a1 1 0 0 1 1 1v16a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1Zm1 2v3h5V5Zm7 0v3h4V5Zm6 0v3h5V5ZM3 10v4h5v-4Zm7 0v4h4v-4Zm6 0v4h5v-4ZM3 16v3h5v-3Zm7 0v3h4v-3Zm6 0v3h5v-3Z',
-        ],
-        variant: 'solid',
-    },
-    'paragraph.heading': { text: '¶', variant: 'solid' },
-    'list.ordered': {
-        paths: ['M8 5h14v2H8Zm0 6h14v2H8Zm0 6h14v2H8Z'],
-        text: '1',
-        variant: 'solid',
-    },
-    'list.unordered': {
-        paths: [
-            'M8 5h14v2H8Zm0 6h14v2H8Zm0 6h14v2H8ZM2 4h4v4H2Zm0 6h4v4H2Zm0 6h4v4H2Z',
-        ],
         variant: 'solid',
     },
     'blockquote.toggle': {
@@ -167,56 +83,63 @@ const fallbackDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
         ],
         variant: 'solid',
     },
-    'specialCharacter.insert': { text: 'Ω', variant: 'solid' },
-    'horizontalRule.insert': {
-        paths: ['M2 10h20v4H2Z'],
-        variant: 'solid',
-    },
-    'editor.source': {
-        paths: [
-            'm8.2 5.2-6.8 6.8 6.8 6.8 2.1-2.1L5.6 12l4.7-4.7Zm7.6 0-2.1 2.1 4.7 4.7-4.7 4.7 2.1 2.1 6.8-6.8ZM11.7 3 8.8 21h3.5l2.9-18Z',
-        ],
-        variant: 'solid',
-    },
-    'editor.visual': {
-        paths: ['M2 3h20v18H2Zm4 9 4 4 8-9-2.25-2L10 11.5 8.25 10Z'],
-        variant: 'solid',
-    },
-    'editor.preview': {
-        paths: [
-            'M12 4C6.7 4 2.3 7.25 0 12c2.3 4.75 6.7 8 12 8s9.7-3.25 12-8c-2.3-4.75-6.7-8-12-8Zm0 13a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-8a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z',
-        ],
-        variant: 'solid',
-    },
+    ...(SOURCE_TOOLBAR
+        ? {
+              'editor.visual': {
+                  paths: ['M2 3h20v18H2Zm4 9 4 4 8-9-2.25-2L10 11.5 8.25 10Z'],
+                  variant: 'solid',
+              },
+          }
+        : {}),
     'editor.preview.close': {
         paths: ['m10 4 2.2 2.2L7.9 10.5H22v3H7.9l4.3 4.3L10 20l-8-8Z'],
         variant: 'solid',
     },
-    'editor.view.sideBySide': {
-        paths: ['M2 3h20v18H2Zm2 2v14h7V5Zm9 0v14h7V5Z'],
-        variant: 'solid',
-    },
-    'editor.view.stacked': {
-        paths: ['M2 3h20v18H2Zm2 2v6h16V5Zm0 8v6h16v-6Z'],
-        variant: 'solid',
-    },
-    'editor.source.find': {
-        paths: [
-            'M2 2h13v4h-2V4H4v16h7v2H2Zm5 6h5v2H7Zm0 4h4v2H7Zm10 1a4 4 0 1 1-2.45 7.16L10.7 24 9 22.3l3.84-3.85A4 4 0 0 1 17 13Zm0 2.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Z',
-        ],
-        variant: 'solid',
-    },
+    ...(SOURCE_TOOLBAR
+        ? {
+              'editor.view.sideBySide': {
+                  paths: ['M2 3h20v18H2Zm2 2v14h7V5Zm9 0v14h7V5Z'],
+                  variant: 'solid',
+              },
+          }
+        : {}),
+    ...(SOURCE_TOOLBAR
+        ? {
+              'editor.view.stacked': {
+                  paths: ['M2 3h20v18H2Zm2 2v6h16V5Zm0 8v6h16v-6Z'],
+                  variant: 'solid',
+              },
+          }
+        : {}),
+    ...(SOURCE_TOOLBAR
+        ? {
+              'editor.source.find': {
+                  paths: [
+                      'M2 2h13v4h-2V4H4v16h7v2H2Zm5 6h5v2H7Zm0 4h4v2H7Zm10 1a4 4 0 1 1-2.45 7.16L10.7 24 9 22.3l3.84-3.85A4 4 0 0 1 17 13Zm0 2.2a1.8 1.8 0 1 0 0 3.6 1.8 1.8 0 0 0 0-3.6Z',
+                  ],
+                  variant: 'solid',
+              },
+          }
+        : {}),
     'editor.markdown': { text: 'M↓' },
-    'document.format': {
-        paths: [
-            'M3 4h18v3H3Zm0 6h12v3H3Zm0 6h18v3H3Zm15-5 4 4-4 4v-2h-3v-4h3Z',
-        ],
-        variant: 'solid',
-    },
-    'document.minify': {
-        paths: ['M2 5h20v3H2Zm4 6h12v3H6Zm4 6h4v3h-4Z'],
-        variant: 'solid',
-    },
+    ...(SOURCE_TOOLBAR
+        ? {
+              'document.format': {
+                  paths: [
+                      'M3 4h18v3H3Zm0 6h12v3H3Zm0 6h18v3H3Zm15-5 4 4-4 4v-2h-3v-4h3Z',
+                  ],
+                  variant: 'solid',
+              },
+          }
+        : {}),
+    ...(SOURCE_TOOLBAR
+        ? {
+              'document.minify': {
+                  paths: ['M2 5h20v3H2Zm4 6h12v3H6Zm4 6h4v3h-4Z'],
+                  variant: 'solid',
+              },
+          }
+        : {}),
     'html.cleanup': {
         paths: [
             'm3 15 8.5-11a2 2 0 0 1 2.8-.35l5.9 4.55a2 2 0 0 1 .35 2.8L13 21H6.5a2 2 0 0 1-1.22-.42L3.35 19A2 2 0 0 1 3 15Zm3.2 1.45L8.1 18H12l3.55-4.65-4.7-3.6Z',
@@ -241,12 +164,6 @@ const fallbackDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
     },
     'ui.toolbar.toggle': {
         paths: ['M5.4 8.4 12 15l6.6-6.6 2.1 2.1-8.7 8.7-8.7-8.7Z'],
-        variant: 'solid',
-    },
-    'editor.maximize': {
-        paths: [
-            'M2 2h8v3H5v5H2Zm12 0h8v8h-3V5h-5ZM2 14h3v5h5v3H2Zm17 0h3v8h-8v-3h5Z',
-        ],
         variant: 'solid',
     },
     'editor.maximize.restore': {
@@ -337,15 +254,6 @@ const fallbackDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
     },
     'table.cells.clear': { paths: ['M3 5h18v14H3z', 'm7 8 4 4', 'm0-4-4 4'] },
     'table.remove': { paths: ['M3 5h18v14H3z', 'm8 8 8 8', 'm0-8-8 8'] },
-});
-
-const joditViewBox = '0 0 1792 1792';
-
-function jodit(path: string, viewBox = joditViewBox): IconDrawing {
-    return { paths: [path], variant: 'solid', viewBox };
-}
-
-const joditDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
     'editor.undo': jodit(
         'M1664 896q0 156-61 298t-164 245-245 164-298 61q-172 0-327-72.5t-264-204.5q-7-10-6.5-22.5t8.5-20.5l137-138q10-9 25-9 16 2 23 12 73 95 179 147t225 52q104 0 198.5-40.5t163.5-109.5 109.5-163.5 40.5-198.5-40.5-198.5-109.5-163.5-163.5-109.5-198.5-40.5q-98 0-188 35.5t-160 101.5l137 138q31 30 14 69-17 40-59 40h-448q-26 0-45-19t-19-45v-448q0-42 40-59 39-17 69 14l130 129q107-101 244.5-156.5t284.5-55.5q156 0 298 61t245 164 164 245 61 298z',
     ),
@@ -373,9 +281,13 @@ const joditDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
     'format.remove': jodit(
         'M832 1408l336-384h-768l-336 384h768zm1013-1077q15 34 9.5 71.5t-30.5 65.5l-896 1024q-38 44-96 44h-768q-38 0-69.5-20.5t-47.5-54.5q-15-34-9.5-71.5t30.5-65.5l896-1024q38-44 96-44h768q38 0 69.5 20.5t47.5 54.5z',
     ),
-    'editor.source': jodit(
-        'M553 1399l-50 50q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l466-466q10-10 23-10t23 10l50 50q10 10 10 23t-10 23l-393 393 393 393q10 10 10 23t-10 23zm591-1067-373 1291q-4 13-15.5 19.5t-23.5 2.5l-62-17q-13-4-19.5-15.5t-2.5-24.5l373-1291q4-13 15.5-19.5t23.5-2.5l62 17q13 4 19.5 15.5t2.5 24.5zm657 651-466 466q-10 10-23 10t-23-10l-50-50q-10-10-10-23t10-23l393-393-393-393q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l466 466q10 10 10 23t-10 23z',
-    ),
+    ...(SOURCE_TOOLBAR
+        ? {
+              'editor.source': jodit(
+                  'M553 1399l-50 50q-10 10-23 10t-23-10l-466-466q-10-10-10-23t10-23l466-466q10-10 23-10t23 10l50 50q10 10 10 23t-10 23l-393 393 393 393q10 10 10 23t-10 23zm591-1067-373 1291q-4 13-15.5 19.5t-23.5 2.5l-62-17q-13-4-19.5-15.5t-2.5-24.5l373-1291q4-13 15.5-19.5t23.5-2.5l62 17q13 4 19.5 15.5t2.5 24.5zm657 651-466 466q-10 10-23 10t-23-10l-50-50q-10-10-10-23t10-23l393-393-393-393q-10-10-10-23t10-23l50-50q10-10 23-10t23 10l466 466q10 10 10 23t-10 23z',
+              ),
+          }
+        : {}),
     'paragraph.heading': jodit(
         'M1534 189v73q0 29-18.5 61t-42.5 32q-50 0-54 1-26 6-32 31-3 11-3 64v1152q0 25-18 43t-43 18h-108q-25 0-43-18t-18-43v-1218h-143v1218q0 25-17.5 43t-43.5 18h-108q-26 0-43.5-18t-17.5-43v-496q-147-12-245-59-126-58-192-179-64-117-64-259 0-166 88-286 88-118 209-159 111-37 417-37h479q25 0 43 18t18 43z',
     ),
@@ -449,11 +361,6 @@ const joditDrawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
         'M22 20.6 3.4 2H8V0H0v8h2V3.4L20.6 22H16v2h8v-8h-2v4.6zM16 0v2h4.7l-6.3 6.3 1.4 1.4L22 3.5V8h2V0H16zM8.3 14.3 2 20.6V16H0v8h8v-2H3.5l6.3-6.3-1.5-1.4z',
         '0 0 24 24',
     ),
-});
-
-const drawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
-    ...fallbackDrawings,
-    ...joditDrawings,
 });
 
 export function createSvgIcon(

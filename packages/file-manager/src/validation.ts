@@ -1,7 +1,17 @@
 import type { FileManagerResult } from './file-manager.js';
+import {
+    isBoundedResponsiveImageString,
+    isSafeResponsiveImageSourceSet,
+} from '@soeditor/rich-text';
 
 const maximumMetadataDepth = 32;
 const maximumMetadataValues = 10_000;
+const RESPONSIVE_ASSET_METADATA =
+    (
+        import.meta as ImportMeta & {
+            readonly env: Readonly<Record<string, string | undefined>>;
+        }
+    ).env.SOEDITOR_RESPONSIVE_ASSET_METADATA !== 'false';
 
 /** Reports malformed or unsafe data returned by a file manager. */
 export class InvalidFileManagerResultError extends TypeError {
@@ -36,14 +46,29 @@ export function normalizeFileManagerResult(
     const name = optionalString(value, 'name');
     const alt = optionalString(value, 'alt');
     const mime = optionalString(value, 'mime');
+    const assetId = RESPONSIVE_ASSET_METADATA
+        ? optionalBoundedString(value, 'assetId', 512)
+        : undefined;
+    const sizes = RESPONSIVE_ASSET_METADATA
+        ? optionalBoundedString(value, 'sizes', 2_048)
+        : undefined;
+    const srcset = RESPONSIVE_ASSET_METADATA
+        ? optionalBoundedString(value, 'srcset', 8_192)
+        : undefined;
+    if (srcset !== undefined && !isSafeResponsiveImageSourceSet(srcset)) {
+        throw invalid('"srcset" contains an unsafe URL candidate.');
+    }
     const metadataValue = optionalProperty(value, 'metadata');
     const metadata =
         metadataValue === undefined ? undefined : freezeMetadata(metadataValue);
     return Object.freeze({
         url,
+        ...(assetId === undefined ? {} : { assetId }),
         ...(name === undefined ? {} : { name }),
         ...(alt === undefined ? {} : { alt }),
         ...(mime === undefined ? {} : { mime }),
+        ...(sizes === undefined ? {} : { sizes }),
+        ...(srcset === undefined ? {} : { srcset }),
         ...(width === undefined ? {} : { width }),
         ...(height === undefined ? {} : { height }),
         ...(metadata === undefined ? {} : { metadata }),
@@ -78,6 +103,23 @@ function optionalString(value: object, key: string): string | undefined {
     return candidate;
 }
 
+function optionalBoundedString(
+    value: object,
+    key: string,
+    maximumLength: number,
+): string | undefined {
+    const candidate = optionalString(value, key);
+    if (
+        candidate !== undefined &&
+        !isBoundedResponsiveImageString(candidate, maximumLength)
+    ) {
+        throw invalid(
+            `"${key}" must be a non-empty bounded string without control characters.`,
+        );
+    }
+    return candidate;
+}
+
 function optionalDimension(value: object, key: string): number | undefined {
     const candidate = optionalProperty(value, key);
     if (
@@ -90,10 +132,14 @@ function optionalDimension(value: object, key: string): number | undefined {
 }
 
 function freezeMetadata(value: unknown): Readonly<Record<string, unknown>> {
+    const prototype =
+        typeof value === 'object' && value !== null
+            ? Object.getPrototypeOf(value)
+            : undefined;
     if (
         typeof value !== 'object' ||
         value === null ||
-        Object.getPrototypeOf(value) !== Object.prototype
+        (prototype !== Object.prototype && prototype !== null)
     ) {
         throw invalid('"metadata" must be a plain object.');
     }
@@ -153,11 +199,11 @@ function freezeMetadataValue(
         ancestors.delete(value);
         return Object.freeze(result);
     }
-    if (
-        typeof value === 'object' &&
-        value !== null &&
-        Object.getPrototypeOf(value) === Object.prototype
-    ) {
+    if (typeof value === 'object' && value !== null) {
+        const prototype = Object.getPrototypeOf(value);
+        if (prototype !== Object.prototype && prototype !== null) {
+            throw invalid('metadata values must be finite JSON-like data.');
+        }
         return freezeMetadataObject(value, ancestors, budget, depth);
     }
     throw invalid('metadata values must be finite JSON-like data.');

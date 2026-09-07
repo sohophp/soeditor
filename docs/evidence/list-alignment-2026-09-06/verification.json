@@ -1,0 +1,29 @@
+{
+    "date": "2026-09-06",
+    "unitPassed": 403,
+    "chromiumPassed": 126,
+    "chromiumSeconds": 34.5,
+    "cmsDesktopMobilePassed": 6,
+    "lint": "passed",
+    "typecheck": "passed",
+    "build": "passed",
+    "api": "24 package entry points match",
+    "docs": "244 browser scenarios",
+    "consumer": "passed",
+    "distribution": "passed",
+    "integrationPerformance": "passed",
+    "releaseBudgetPassed": false,
+    "global": {
+        "raw": 495753,
+        "gzip": 152159,
+        "gzipBudget": 150000
+    },
+    "css": {
+        "raw": 28652,
+        "rawBudget": 27000
+    },
+    "limitations": [
+        "Frozen size budgets exceeded; not release qualified",
+        "No real Safari or assistive technology manual validation"
+    ]
+}

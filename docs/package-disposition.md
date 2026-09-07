@@ -5,6 +5,18 @@
 Completed Phase 58 inventory. Classification describes the enforced product
 boundary, not an immediate deletion or compatibility promise.
 
+## 2026-09-05 retention and loading decision
+
+The active [WYSIWYG + Source program](wysiwyg-source-plan.zh-CN.md) retains existing
+optional and compatibility packages. Removal candidates below are candidates for
+removal from the default dependency graph, not authorization to delete features.
+Source is a primary editing capability with first-activation loading as its target.
+Formatting and advanced diagnostics require a further demand boundary. Existing
+layout/projection internals may support bounded WYSIWYG/Source split views without
+exposing or loading the historical generic workspace. The current implementation and automated checks are recorded in
+[the evidence](wysiwyg-source-evidence.zh-CN.md); this does not authorize removing
+compatibility packages.
+
 ## Default CMS runtime
 
 | Package               | Target role                                                    | Phase 58 action                                                       |
@@ -20,14 +32,14 @@ boundary, not an immediate deletion or compatibility promise.
 
 ## Optional CMS integrations
 
-| Package                      | Target role                                                           | Loading rule                                                                            |
-| ---------------------------- | --------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| `@soeditor/source`           | optional HTML Source mode                                             | dynamic import only when configured or activated                                        |
-| `@soeditor/preview`          | optional isolated Classic popup preview                               | dynamic import only when configured; never part of the standalone CMS global            |
-| `@soeditor/file-manager`     | upload and picker service contracts                                   | explicit integration or narrow lazy path                                                |
-| `@soeditor/adapter-sofinder` | SoFinder picker adapter                                               | explicit host import; never a Core dependency                                           |
-| `@soeditor/workspace`        | save/lifecycle helpers still needed by current Classic implementation | split essential host behavior from recovery/platform breadth before deciding final tier |
-| `@soeditor/html-tools`       | optional diagnostics and HTML formatting                              | remove from default; Prettier must not enter normal WYSIWYG startup                     |
+| Package                      | Target role                                                  | Loading rule                                                                         |
+| ---------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------------------------ |
+| `@soeditor/source`           | optional HTML Source mode                                    | first Source or Source split activation; configuration alone does not load it        |
+| `@soeditor/preview`          | optional isolated Classic popup preview                      | first preview request; never part of the standalone CMS global                       |
+| `@soeditor/file-manager`     | upload and picker service contracts                          | explicit integration or narrow lazy path                                             |
+| `@soeditor/adapter-sofinder` | SoFinder picker/upload adapters                              | explicit host import; never a Core dependency                                        |
+| `@soeditor/workspace`        | explicit save integration through `@soeditor/workspace/save` | configured save only; Classic uses a private host without generic Workspace recovery |
+| `@soeditor/html-tools`       | optional diagnostics and HTML formatting                     | remove from default; Prettier must not enter normal WYSIWYG startup                  |
 
 ## Compatibility-only
 

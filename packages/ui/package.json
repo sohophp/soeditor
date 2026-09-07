@@ -37,11 +37,20 @@
             "types": "./dist/index.d.ts",
             "import": "./dist/index.js"
         },
+        "./cms": {
+            "types": "./dist/cms.d.ts",
+            "import": "./dist/cms.js"
+        },
+        "./translations": {
+            "types": "./dist/translations.d.ts",
+            "import": "./dist/translations.js"
+        },
         "./compatibility": {
             "types": "./dist/compatibility.d.ts",
             "import": "./dist/compatibility.js"
         },
-        "./styles.css": "./dist/styles.css"
+        "./styles.css": "./dist/styles.css",
+        "./cms.css": "./dist/cms-styles.css"
     },
     "scripts": {
         "build": "vite build && tsc -p tsconfig.build.json",

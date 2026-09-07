@@ -3,7 +3,7 @@ import {
     type ClassicEditor,
     type ClassicEditorChange,
     type CreateClassicEditorOptions,
-} from '@soeditor/editor';
+} from '@soeditor/editor/cms/optional';
 import {
     pastePipelineServiceToken,
     visualEditingServiceToken,
@@ -107,7 +107,14 @@ const editor = await createClassicEditor(textarea, {
     },
     placeholder: testMode ? 'Write article content' : '开始撰写文章内容…',
     preview: true,
-    toolbar: [...cmsPreset.toolbar, '|', 'format', 'minify', 'popupPreview'],
+    toolbar: [
+        ...cmsPreset.toolbar,
+        '|',
+        'showBlocks',
+        'format',
+        'minify',
+        'popupPreview',
+    ],
     ...(testMode
         ? {}
         : {
@@ -168,6 +175,7 @@ editor.editor.services
 type UploadMode = 'fail' | 'manual' | 'success' | 'unsafe';
 let uploadMode: UploadMode = 'success';
 const uploadResolvers: (() => void)[] = [];
+const uploadProgressReporters = new Set<(fraction: number) => void>();
 editor.editor.services.register(uploadServiceToken, {
     create: (request: UploadRequest) => {
         const mode = uploadMode;
@@ -218,8 +226,17 @@ editor.editor.services.register(uploadServiceToken, {
                 }) => void,
             ) => {
                 progressListeners.add(listener);
+                const report = (fraction: number): void =>
+                    listener({
+                        loaded: Math.round(request.size * fraction),
+                        total: request.size,
+                    });
+                uploadProgressReporters.add(report);
                 listener({ loaded: 0, total: request.size });
-                return () => progressListeners.delete(listener);
+                return () => {
+                    progressListeners.delete(listener);
+                    uploadProgressReporters.delete(report);
+                };
             },
         };
     },
@@ -378,6 +395,9 @@ Reflect.set(
         pasteDiagnostics: (): readonly string[] => [...pasteDiagnostics],
         resolveUploads: (): void => {
             for (const resolve of uploadResolvers.splice(0)) resolve();
+        },
+        reportUploadProgress: (fraction: number): void => {
+            for (const report of uploadProgressReporters) report(fraction);
         },
         select: (selection: EditingSelection): boolean =>
             editor.editor.services

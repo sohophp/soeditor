@@ -1,4 +1,7 @@
-import { createClassicEditor, type ClassicEditor } from '@soeditor/editor';
+import {
+    createClassicEditor,
+    type ClassicEditor,
+} from '@soeditor/editor/cms/optional';
 import {
     fileManagerServiceToken,
     uploadServiceToken,
@@ -6,7 +9,7 @@ import {
     type FileManagerResult,
     type UploadRequest,
 } from '@soeditor/file-manager';
-import '@soeditor/editor/styles.css';
+import '@soeditor/editor/cms/styles.css';
 import { cmsPreset } from '@soeditor/presets/cms';
 
 const fixtureHtml = [
@@ -98,7 +101,8 @@ Reflect.set(
             instance.setReadonly(readonly),
         setWorkspaceView: (
             view: Parameters<ClassicEditor['setWorkspaceView']>[0],
-        ): void => instance.setWorkspaceView(view),
+        ): ReturnType<ClassicEditor['setWorkspaceView']> =>
+            instance.setWorkspaceView(view),
     }),
 );
 

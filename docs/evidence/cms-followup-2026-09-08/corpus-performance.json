@@ -1,0 +1,437 @@
+{
+    "measuredAt": "2026-09-07T16:39:11.152Z",
+    "node": "v22.14.0",
+    "platform": "linux",
+    "arch": "x64",
+    "chromium": "151.0.7922.34",
+    "viewport": {
+        "width": 1280,
+        "height": 800
+    },
+    "buildFiles": {
+        "assets/classic-block-paragraph-BzQLzVEV.js": "555e6c8f414229fc3cfe38c888149e76a8bb92e2d095499cab460744b26f1143",
+        "assets/classic-block-paragraph-BzQLzVEV.js.map": "56686f1d0e18ece813f96b2dc9884ca58fdb362e7fad34a7402709cdaaabe93c",
+        "assets/classic-image-context-Bf4fUrFE.js": "99a576cb9a2f164dd315dfb8b4a549c4c50778f8f9e983835f8ce9d49c178795",
+        "assets/classic-image-context-Bf4fUrFE.js.map": "7e815bbf3368405d14ea3f5a546dd879b7c4adc251e2a9c87b0ffc465f9edad8",
+        "assets/classic-link-context-DwSlpThT.js": "5aba6ac4e8fd929708a44c08a327699a7094a2b0fe71f191cc3af9aeb016fd9a",
+        "assets/classic-link-context-DwSlpThT.js.map": "515693c6a5c85432470acc733575c68ebcea2741806349edbd5781b23ad3931e",
+        "assets/classic-table-context-DnVyrvdO.js": "4e4dfce7c4e06e1c7a91f2331e7281ead8333475f5d41133bcc2e08199c84c74",
+        "assets/classic-table-context-DnVyrvdO.js.map": "f581d2ca8ee1c87b93826435bced9d42ddf25dba58c4d905d10d01e5b38eac25",
+        "assets/html-DwgzGnwN.js": "ce74ed2384db575e6f82206201d86f9ff20b0475d1b05d29adc857f422a43b09",
+        "assets/html-DwgzGnwN.js.map": "8c13fde09fe67ba9f8021308ee7fd1847013403183a81b1a4c1653173fb4b447",
+        "assets/index-BEG3aGi3.js": "d207b86c71cb8174d96fc77ce274f57316cc14bdd168889be2651730eea8ae2d",
+        "assets/index-BEG3aGi3.js.map": "8eaed377e334f864668696514f13aa8dd9d8c578383f31dc0f8a4876faeb07d7",
+        "assets/index-BQJmxRMV.js": "cb3cf6a85bd543a81af10fefe5e68ecd00798989195df19b84f7156fe7b84bba",
+        "assets/index-BQJmxRMV.js.map": "a6ad5bdfda330ff566a07bef1523518614a2588d29819687d82056b4468904f4",
+        "assets/index-Bbjuk9LT.css": "e104a00a64c088a933900cc4c174c54c7f688b55acdf7cf3e8408381e57f568b",
+        "assets/index-fAM-D4D9.js": "781fbbe4774cf6f132723339e2fc5e46b9178088d571b024a83ff952aa3e5182",
+        "assets/index-fAM-D4D9.js.map": "1d782be02c4f906fcf326b7d972a436dff6ce2d0bf12ade851eefd22e47922df",
+        "assets/index-y7BzmkN2.js": "417a7082b40d1f5cc2d38fb1428801c5ef18ff2d243b2e99ca18af87d3d99d6f",
+        "assets/index-y7BzmkN2.js.map": "74cee6ee9b193fa12d4393b597155804899bc28500edcca659df976a4ee7b0f0",
+        "assets/link-attributes-BtxVCsKd-r3DFj-kk.js": "7b96308ee859bf25cf75a27833cdb2071a01849b5f8ba704d2d7d1c46d08913f",
+        "assets/link-attributes-BtxVCsKd-r3DFj-kk.js.map": "e949c33ed2921977fa6f8933f4eb5a2582f762df7b6ff35a8511c57dd03f706f",
+        "assets/runtime-D3iFwSeV.js": "a88afe813a40bed648540e031f1b500693f95e8e755da1160cbb711b2405482b",
+        "assets/save-DzTcHyOP.js": "9d33570656f0ca84d29bd17400bdc6aad324c513ce2db9d433ef107d3254863d",
+        "assets/save-DzTcHyOP.js.map": "4189b5fbdbd36bf0f181ecf6aabc7c5eecf67d59e978e6891e1ec9faef724bed",
+        "assets/standalone-Cayz_KD-.js": "cef07f1829637991be507802100d3411117efabe485357b0693f4554b7e462de",
+        "assets/standalone-Cayz_KD-.js.map": "2ce3f785f07ed7011728b73fbc625df0910109b27acbdec06cdd7bbf929c6599",
+        "assets/table-editor-attributes-BwkVkTQA.js": "904565630b99133aea04b1a070a032b6e7ae145647d897ac14ffa71bd7ad45bf",
+        "assets/table-editor-attributes-BwkVkTQA.js.map": "75d3c033f3cfa204db12c1364cf2bb99b8016303de69918c70777fb28c22e921",
+        "assets/translations-ivdjbkgq.js": "c9eb3f0941dee19806291366aacdbad0fe5ca4dde423d78b69e0f6d055a9f06e",
+        "assets/translations-ivdjbkgq.js.map": "fcb41086993656feb346de6b33849a4cca450a01df0a88582bc99cca755860a7",
+        "index.html": "1f60a99f5ff13a218ac94aef157d33049c1674e16cb99f033b994157b05f0f5f"
+    },
+    "results": [
+        {
+            "path": "/var/www/node/SoEditor/tests/fixtures/cms/performance/long-article.html",
+            "kind": "synthetic",
+            "provenance": "Repository-generated CMS performance fixture, not customer or Office data.",
+            "sha256": "a59352b9d86b44d74c85c5485f0f7556dc1b059cab0b4cc435431892f84b085d",
+            "bytes": 128097,
+            "input": {
+                "samples": 30,
+                "median": 14.25,
+                "p95": 25
+            },
+            "selection": {
+                "samples": 30,
+                "median": 14,
+                "p95": 29.200000017881393
+            },
+            "runs": [
+                {
+                    "round": 0,
+                    "startup": 234.39999997615814,
+                    "input": [
+                        16.900000005960464, 25, 14.399999976158142,
+                        19.400000005960464, 13.699999988079071,
+                        20.600000023841858, 21.19999998807907,
+                        13.200000017881393, 13.200000017881393,
+                        13.099999994039536
+                    ],
+                    "selection": [
+                        11.599999994039536, 29.299999982118607, 11,
+                        14.299999982118607, 13.699999988079071,
+                        14.300000011920929, 13.900000005960464, 14,
+                        13.700000017881393, 13.199999988079071
+                    ],
+                    "views": [
+                        {
+                            "view": "source",
+                            "milliseconds": 227.59999999403954
+                        },
+                        {
+                            "view": "wysiwyg-source-horizontal",
+                            "milliseconds": 47.5
+                        },
+                        {
+                            "view": "wysiwyg-source-vertical",
+                            "milliseconds": 0.29999998211860657
+                        },
+                        {
+                            "view": "wysiwyg",
+                            "milliseconds": 20.799999982118607
+                        }
+                    ],
+                    "blockedRequests": [],
+                    "errors": []
+                },
+                {
+                    "round": 1,
+                    "startup": 231.30000001192093,
+                    "input": [
+                        14.300000011920929, 14, 12.5, 16.69999998807907,
+                        16.899999976158142, 12.099999994039536,
+                        14.199999988079071, 13.699999988079071,
+                        11.099999994039536, 11.099999994039536
+                    ],
+                    "selection": [
+                        23.80000001192093, 14.400000005960464,
+                        14.300000011920929, 14.399999976158142,
+                        14.100000023841858, 14.300000011920929,
+                        14.699999988079071, 13.799999982118607, 14,
+                        14.199999988079071
+                    ],
+                    "views": [
+                        {
+                            "view": "source",
+                            "milliseconds": 204.2000000178814
+                        },
+                        {
+                            "view": "wysiwyg-source-horizontal",
+                            "milliseconds": 41.099999994039536
+                        },
+                        {
+                            "view": "wysiwyg-source-vertical",
+                            "milliseconds": 0.19999998807907104
+                        },
+                        {
+                            "view": "wysiwyg",
+                            "milliseconds": 19.69999998807907
+                        }
+                    ],
+                    "blockedRequests": [],
+                    "errors": []
+                },
+                {
+                    "round": 2,
+                    "startup": 174.19999998807907,
+                    "input": [
+                        21.400000005960464, 25.30000001192093,
+                        20.900000005960464, 15.199999988079071,
+                        10.700000017881393, 13.5, 13.199999988079071,
+                        23.30000001192093, 19.599999994039536,
+                        13.400000005960464
+                    ],
+                    "selection": [
+                        18.30000001192093, 29.200000017881393,
+                        11.300000011920929, 14, 13.900000005960464, 14,
+                        13.899999976158142, 14.300000011920929, 14,
+                        13.800000011920929
+                    ],
+                    "views": [
+                        {
+                            "view": "source",
+                            "milliseconds": 225.40000000596046
+                        },
+                        {
+                            "view": "wysiwyg-source-horizontal",
+                            "milliseconds": 48.39999997615814
+                        },
+                        {
+                            "view": "wysiwyg-source-vertical",
+                            "milliseconds": 0.29999998211860657
+                        },
+                        {
+                            "view": "wysiwyg",
+                            "milliseconds": 22.69999998807907
+                        }
+                    ],
+                    "blockedRequests": [],
+                    "errors": []
+                }
+            ]
+        },
+        {
+            "path": "/var/www/node/SoEditor/tests/fixtures/cms/performance/image-list.html",
+            "kind": "synthetic",
+            "provenance": "Repository-generated CMS performance fixture, not customer or Office data.",
+            "sha256": "f61ad24bb6fe163d0039b884227b69d17369b863a6dee728f2cf88cae5dbb688",
+            "bytes": 29658,
+            "input": {
+                "samples": 30,
+                "median": 8.5,
+                "p95": 14.900000005960464
+            },
+            "selection": {
+                "samples": 30,
+                "median": 14.049999997019768,
+                "p95": 15.199999988079071
+            },
+            "runs": [
+                {
+                    "round": 0,
+                    "startup": 112,
+                    "input": [
+                        12.400000005960464, 9.300000011920929,
+                        9.300000011920929, 4.700000017881393,
+                        15.400000005960464, 5.300000011920929,
+                        14.900000005960464, 5.299999982118607,
+                        14.599999994039536, 5
+                    ],
+                    "selection": [
+                        18.599999994039536, 13, 14.099999994039536,
+                        12.400000005960464, 14.300000011920929, 14.5,
+                        14.199999988079071, 14, 14.299999982118607,
+                        14.799999982118607
+                    ],
+                    "views": [
+                        {
+                            "view": "source",
+                            "milliseconds": 214.09999999403954
+                        },
+                        {
+                            "view": "wysiwyg-source-horizontal",
+                            "milliseconds": 10.799999982118607
+                        },
+                        {
+                            "view": "wysiwyg-source-vertical",
+                            "milliseconds": 0.3999999761581421
+                        },
+                        {
+                            "view": "wysiwyg",
+                            "milliseconds": 15.699999988079071
+                        }
+                    ],
+                    "blockedRequests": [],
+                    "errors": []
+                },
+                {
+                    "round": 1,
+                    "startup": 100.90000000596046,
+                    "input": [
+                        8.900000005960464, 7.899999976158142,
+                        11.400000005960464, 8.099999994039536,
+                        13.600000023841858, 8.599999994039536, 8.5,
+                        5.100000023841858, 13.5, 8
+                    ],
+                    "selection": [
+                        15.199999988079071, 13.799999982118607,
+                        13.900000005960464, 13.900000005960464,
+                        14.099999994039536, 13.900000005960464,
+                        14.900000005960464, 14.5, 14.599999994039536, 14
+                    ],
+                    "views": [
+                        {
+                            "view": "source",
+                            "milliseconds": 198.10000002384186
+                        },
+                        {
+                            "view": "wysiwyg-source-horizontal",
+                            "milliseconds": 9.300000011920929
+                        },
+                        {
+                            "view": "wysiwyg-source-vertical",
+                            "milliseconds": 0.7000000178813934
+                        },
+                        {
+                            "view": "wysiwyg",
+                            "milliseconds": 15.700000017881393
+                        }
+                    ],
+                    "blockedRequests": [],
+                    "errors": []
+                },
+                {
+                    "round": 2,
+                    "startup": 111.7999999821186,
+                    "input": [
+                        9.300000011920929, 4.800000011920929, 4.699999988079071,
+                        10.599999994039536, 9.900000005960464, 4.5,
+                        4.199999988079071, 8.5, 5, 5
+                    ],
+                    "selection": [
+                        12.200000017881393, 12.5, 13.799999982118607, 14,
+                        13.900000005960464, 14.400000005960464,
+                        13.699999988079071, 14.900000005960464,
+                        14.199999988079071, 14
+                    ],
+                    "views": [
+                        {
+                            "view": "source",
+                            "milliseconds": 203.40000000596046
+                        },
+                        {
+                            "view": "wysiwyg-source-horizontal",
+                            "milliseconds": 11.099999994039536
+                        },
+                        {
+                            "view": "wysiwyg-source-vertical",
+                            "milliseconds": 0.5999999940395355
+                        },
+                        {
+                            "view": "wysiwyg",
+                            "milliseconds": 17.599999994039536
+                        }
+                    ],
+                    "blockedRequests": [],
+                    "errors": []
+                }
+            ]
+        },
+        {
+            "path": "/var/www/node/SoEditor/tests/fixtures/cms/performance/complex-table.html",
+            "kind": "synthetic",
+            "provenance": "Repository-generated CMS performance fixture, not customer or Office data.",
+            "sha256": "e84aca106f8aaa9c52efffd435594bfb0bdb51e3f6ce90ce03bceb1fdf64494b",
+            "bytes": 321664,
+            "input": {
+                "samples": 30,
+                "median": 36.849999994039536,
+                "p95": 47
+            },
+            "selection": {
+                "samples": 30,
+                "median": 22.200000002980232,
+                "p95": 45
+            },
+            "runs": [
+                {
+                    "round": 0,
+                    "startup": 490.2000000178814,
+                    "input": [
+                        38.69999998807907, 35.400000005960464,
+                        36.69999998807907, 37.10000002384186,
+                        38.099999994039536, 37.69999998807907,
+                        44.30000001192093, 48.79999998211861,
+                        31.400000005960464, 28.099999994039536
+                    ],
+                    "selection": [
+                        25.900000005960464, 14.300000011920929, 45,
+                        22.399999976158142, 22.700000017881393, 28,
+                        20.599999994039536, 22, 22.30000001192093,
+                        22.899999976158142
+                    ],
+                    "views": [
+                        {
+                            "view": "source",
+                            "milliseconds": 321
+                        },
+                        {
+                            "view": "wysiwyg-source-horizontal",
+                            "milliseconds": 129.7000000178814
+                        },
+                        {
+                            "view": "wysiwyg-source-vertical",
+                            "milliseconds": 0.29999998211860657
+                        },
+                        {
+                            "view": "wysiwyg",
+                            "milliseconds": 48.30000001192093
+                        }
+                    ],
+                    "tableSelection": 594.9000000059605,
+                    "blockedRequests": [],
+                    "errors": []
+                },
+                {
+                    "round": 1,
+                    "startup": 452.7999999821186,
+                    "input": [
+                        38.099999994039536, 36.599999994039536, 37,
+                        37.60000002384186, 38.900000005960464,
+                        38.39999997615814, 30.5, 26.69999998807907,
+                        28.69999998807907, 29.80000001192093
+                    ],
+                    "selection": [
+                        18.599999994039536, 46.5, 21.899999976158142,
+                        21.299999982118607, 20.80000001192093,
+                        18.599999994039536, 21.299999982118607,
+                        21.19999998807907, 22.099999994039536,
+                        23.299999982118607
+                    ],
+                    "views": [
+                        {
+                            "view": "source",
+                            "milliseconds": 390.10000002384186
+                        },
+                        {
+                            "view": "wysiwyg-source-horizontal",
+                            "milliseconds": 132.90000000596046
+                        },
+                        {
+                            "view": "wysiwyg-source-vertical",
+                            "milliseconds": 0.30000001192092896
+                        },
+                        {
+                            "view": "wysiwyg",
+                            "milliseconds": 69.59999999403954
+                        }
+                    ],
+                    "tableSelection": 542.0999999940395,
+                    "blockedRequests": [],
+                    "errors": []
+                },
+                {
+                    "round": 2,
+                    "startup": 503.59999999403954,
+                    "input": [
+                        37.30000001192093, 35.89999997615814, 31.69999998807907,
+                        38.400000005960464, 39.30000001192093,
+                        29.099999994039536, 47, 33.69999998807907,
+                        26.900000005960464, 29.700000017881393
+                    ],
+                    "selection": [
+                        9.400000005960464, 40.30000001192093,
+                        26.599999994039536, 13.900000005960464,
+                        24.19999998807907, 23.100000023841858,
+                        23.30000001192093, 22.099999994039536,
+                        22.69999998807907, 21
+                    ],
+                    "views": [
+                        {
+                            "view": "source",
+                            "milliseconds": 335.90000000596046
+                        },
+                        {
+                            "view": "wysiwyg-source-horizontal",
+                            "milliseconds": 167.59999999403954
+                        },
+                        {
+                            "view": "wysiwyg-source-vertical",
+                            "milliseconds": 0.30000001192092896
+                        },
+                        {
+                            "view": "wysiwyg",
+                            "milliseconds": 51
+                        }
+                    ],
+                    "tableSelection": 497.09999999403954,
+                    "blockedRequests": [],
+                    "errors": []
+                }
+            ]
+        }
+    ],
+    "note": "Three fresh production instances per sample. Input is beforeinput to next frame; selection/table timings include browser protocol overhead. External requests blocked. Synthetic samples are not real articles or manual device qualification. Compare only matching sample hashes, viewport, protocol and environment; build hashes identify the versions under comparison."
+}

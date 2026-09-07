@@ -1,14 +1,42 @@
 # Distribution and integration
 
-SoEditor is ESM-first. The `@soeditor/editor` package is the straightforward
-application entry; the other scoped packages remain available for smaller or
-more tightly controlled integrations.
+SoEditor is ESM-first. Ordinary CMS applications use `@soeditor/editor/cms`,
+or `@soeditor/editor/cms/optional` when exposing Source, Preview or a save adapter.
+Use `@soeditor/editor/cms/styles.css` for the CMS UI. Broad root exports and
+other scoped packages remain available for existing modular integrations.
 
 ## Install
 
 ```bash
 pnpm add @soeditor/editor
 ```
+
+## Supported CMS integration
+
+```ts
+import { createClassicEditor } from '@soeditor/editor/cms/optional';
+import '@soeditor/editor/cms/styles.css';
+
+const textarea = document.querySelector<HTMLTextAreaElement>('#content');
+if (textarea === null) throw new Error('Missing #content textarea.');
+const classic = await createClassicEditor(textarea, {
+    editingModes: ['wysiwyg', 'source'],
+});
+// Source is downloaded and mounted only when first requested.
+await classic.setWorkspaceView('source');
+await classic.destroy();
+```
+
+Ship all generated dynamic chunks and the Source recovery asset using the
+consumer bundler's base URL. Normal Source, formatting and Preview have separate
+first-use boundaries; the recovery copy is requested only after Source failure.
+The old full stylesheet remains available for compatibility UI. Neither
+optional Source nor Preview is supported by the standalone CMS browser global.
+
+## Historical modular integration
+
+The following lower-level example remains supported for explicit modular
+consumers; it is not the recommended CMS startup path.
 
 SoEditor does not create or mount a UI automatically. Create the document
 instance, then attach the surfaces your application needs:

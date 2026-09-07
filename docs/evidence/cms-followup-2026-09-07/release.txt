@@ -1,0 +1,4 @@
+Release audit passed for 24 packages at 1.1.0.
+CMS global: 478.13 kB raw / 147.59 kB gzip.
+Standalone CSS: 24.88 kB; ESM facade: 1.00 kB.
+Largest Playground chunk: runtime-DS96KwAP.js (753.16 kB).

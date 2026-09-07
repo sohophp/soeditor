@@ -16,12 +16,24 @@ import {
 } from '@soeditor/html';
 
 import { RichTextArgumentError } from './features.js';
+import {
+    isBoundedResponsiveImageString,
+    isSafeResponsiveImageSourceSet,
+} from './responsive-image.js';
+
+const RESPONSIVE_ASSET_METADATA =
+    (
+        import.meta as ImportMeta & {
+            readonly env: Readonly<Record<string, string | undefined>>;
+        }
+    ).env.SOEDITOR_RESPONSIVE_ASSET_METADATA !== 'false';
 
 const mediaType = 'soeditor.media';
 export type MediaAlignment = 'center' | 'left' | 'right' | 'wide';
 
 /** Options accepted by the structured `media.insert` command. */
 export interface MediaInsertOptions {
+    readonly assetId?: string;
     readonly alignment?: MediaAlignment;
     readonly src: string;
     readonly alt?: string;
@@ -32,11 +44,14 @@ export interface MediaInsertOptions {
     readonly link?: string;
     readonly linkTarget?: string;
     readonly responsiveClass?: string;
+    readonly sizes?: string;
+    readonly srcset?: string;
     readonly title?: string;
 }
 
 /** Partial values accepted by `media.update`. */
 export interface MediaUpdateOptions {
+    readonly assetId?: string | null;
     readonly alignment?: MediaAlignment | null;
     readonly src?: string;
     readonly alt?: string;
@@ -49,6 +64,8 @@ export interface MediaUpdateOptions {
     readonly link?: string | null;
     readonly linkTarget?: string | null;
     readonly responsiveClass?: string | null;
+    readonly sizes?: string | null;
+    readonly srcset?: string | null;
     readonly title?: string | null;
 }
 
@@ -568,6 +585,13 @@ function updateImageAttributes(
     if (options.responsiveClass !== undefined) {
         updates.set('class', options.responsiveClass);
     }
+    if (RESPONSIVE_ASSET_METADATA && options.assetId !== undefined) {
+        updates.set('data-asset-id', options.assetId);
+    }
+    if (RESPONSIVE_ASSET_METADATA && options.srcset !== undefined)
+        updates.set('srcset', options.srcset);
+    if (RESPONSIVE_ASSET_METADATA && options.sizes !== undefined)
+        updates.set('sizes', options.sizes);
     if (options.width !== undefined)
         updates.set(
             'width',
@@ -653,6 +677,15 @@ function createMediaFragment(options: MediaInsertOptions) {
     if (options.responsiveClass !== undefined) {
         attributes.push({ name: 'class', value: options.responsiveClass });
     }
+    if (RESPONSIVE_ASSET_METADATA && options.assetId !== undefined) {
+        attributes.push({ name: 'data-asset-id', value: options.assetId });
+    }
+    if (RESPONSIVE_ASSET_METADATA && options.srcset !== undefined) {
+        attributes.push({ name: 'srcset', value: options.srcset });
+    }
+    if (RESPONSIVE_ASSET_METADATA && options.sizes !== undefined) {
+        attributes.push({ name: 'sizes', value: options.sizes });
+    }
     if (options.width !== undefined) {
         attributes.push({ name: 'width', value: String(options.width) });
     }
@@ -733,13 +766,16 @@ function readMediaOptions(
             ![
                 'alignment',
                 'alt',
+                ...(RESPONSIVE_ASSET_METADATA ? ['assetId'] : []),
                 'aspectLocked',
                 'caption',
                 'height',
                 'link',
                 'linkTarget',
                 'responsiveClass',
+                ...(RESPONSIVE_ASSET_METADATA ? ['sizes'] : []),
                 'src',
+                ...(RESPONSIVE_ASSET_METADATA ? ['srcset'] : []),
                 'title',
                 'width',
             ].includes(key),
@@ -799,6 +835,44 @@ function readMediaOptions(
         command,
         'responsiveClass',
     );
+    const assetId = RESPONSIVE_ASSET_METADATA
+        ? optionalNullableString(
+              value.assetId,
+              !requireSource,
+              command,
+              'assetId',
+          )
+        : undefined;
+    const sizes = RESPONSIVE_ASSET_METADATA
+        ? optionalNullableString(value.sizes, !requireSource, command, 'sizes')
+        : undefined;
+    const srcset = RESPONSIVE_ASSET_METADATA
+        ? optionalNullableString(
+              value.srcset,
+              !requireSource,
+              command,
+              'srcset',
+          )
+        : undefined;
+    if (
+        typeof assetId === 'string' &&
+        !isBoundedResponsiveImageString(assetId, 512)
+    ) {
+        throw new RichTextArgumentError(command, 'requires a bounded assetId.');
+    }
+    if (
+        typeof sizes === 'string' &&
+        !isBoundedResponsiveImageString(sizes, 2_048)
+    ) {
+        throw new RichTextArgumentError(command, 'requires bounded sizes.');
+    }
+    if (
+        typeof srcset === 'string' &&
+        (!isBoundedResponsiveImageString(srcset, 8_192) ||
+            !isSafeResponsiveImageSourceSet(srcset))
+    ) {
+        throw new RichTextArgumentError(command, 'requires a safe srcset.');
+    }
     if (
         typeof responsiveClass === 'string' &&
         !/^[a-z][a-z0-9_-]*(?:\s+[a-z][a-z0-9_-]*){0,7}$/iu.test(
@@ -830,6 +904,7 @@ function readMediaOptions(
     );
     return {
         ...(src === undefined ? {} : { src }),
+        ...(assetId === undefined ? {} : { assetId }),
         ...(alt === undefined ? {} : { alt }),
         ...(alignment === undefined ? {} : { alignment }),
         ...(aspectLocked === undefined ? {} : { aspectLocked }),
@@ -839,6 +914,8 @@ function readMediaOptions(
         ...(link === undefined ? {} : { link }),
         ...(linkTarget === undefined ? {} : { linkTarget }),
         ...(responsiveClass === undefined ? {} : { responsiveClass }),
+        ...(sizes === undefined ? {} : { sizes }),
+        ...(srcset === undefined ? {} : { srcset }),
         ...(title === undefined ? {} : { title }),
     };
 }

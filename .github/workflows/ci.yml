@@ -32,6 +32,7 @@ jobs:
             - run: pnpm lint
             - run: pnpm typecheck
             - run: pnpm test
+            - run: pnpm test:loading
             - run: pnpm build
             - run: pnpm security:audit
             - run: pnpm release:dry-run
@@ -52,3 +53,4 @@ jobs:
             - run: pnpm build
             - run: pnpm exec playwright install --with-deps firefox webkit
             - run: pnpm test:browser:cross
+            - run: pnpm test:browser:source:all --project firefox --project webkit

@@ -1,5 +1,5 @@
 import { createClassicEditor } from '@soeditor/editor/cms';
-import '@soeditor/editor/styles.css';
+import '@soeditor/editor/cms/styles.css';
 
 const host = document.querySelector<HTMLTextAreaElement>('#content');
 if (host === null) throw new Error('Missing CMS textarea.');

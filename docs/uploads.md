@@ -31,6 +31,14 @@ Per-instance `cms.upload.maxFileBytes` (default 25 MB) and
 `cms.upload.maxConcurrent` (default 4, maximum 16) bound client work before the
 adapter is called.
 
+With `UploadPlugin`, the editor status area displays file names, progress and
+failure reasons. Authors can cancel pending tasks, retry failed tasks, and close
+completed or cancelled feedback. Rows retain focus while progress changes; retry
+is disabled in readonly mode. Feedback and preview URLs are not saved as HTML.
+Pasted image batches are preflighted together before starting any upload, so an
+invalid type, excessive file size or concurrency limit produces visible paste
+feedback without partially starting the batch.
+
 The adapter must resolve to the same validated asset shape used by
 `FileManager`: a safe `url` plus optional name, alt, MIME type, width, height,
 and bounded metadata. A rejected promise records failure evidence and may be

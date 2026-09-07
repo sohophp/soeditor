@@ -1,0 +1,449 @@
+{
+    "timestamp": "2026-09-05T02:48:59.099Z",
+    "commit": "6735db6b30a7e353554ea608a47686b08d82210d",
+    "node": "v22.14.0",
+    "dirty": " M AGENTS.md\n M apps/playground/vite.config.ts\n M docs/PRODUCT.md\n M docs/ROADMAP.md\n M docs/api-overview.md\n M docs/api-report.md\n M docs/cms-integration.md\n M docs/configuration.md\n M docs/package-disposition.md\n M docs/qualification.md\n M docs/status.md\n M docs/wysiwyg-editor.md\n M docs/wysiwyg-release-decision.md\n M packages/adapter-sofinder/CHANGELOG.md\n M packages/adapter-sofinder/README.md\n M packages/adapter-sofinder/package.json\n M packages/adapter-sofinder/src/index.ts\n M packages/adapter-sofinder/src/sofinder-adapter.ts\n M packages/adapter-sofinder/tests/sofinder-adapter.test.ts\n M packages/file-manager/README.md\n M packages/file-manager/src/file-manager-plugin.ts\n M packages/file-manager/src/file-manager.ts\n M packages/file-manager/src/upload.ts\n M packages/file-manager/src/validation.ts\n M packages/file-manager/tests/validation.test.ts\n M packages/html-tools/CHANGELOG.md\n M packages/html-tools/src/formatting.ts\n M packages/rich-text/src/features.ts\n M packages/rich-text/src/index.ts\n M packages/rich-text/src/media.ts\n M packages/rich-text/tests/features.test.ts\n M packages/rich-text/tests/media.test.ts\n M packages/soeditor/CHANGELOG.md\n M packages/soeditor/README.md\n M packages/soeditor/package.json\n M packages/soeditor/src/classic-editor.css\n M packages/soeditor/src/classic-editor.ts\n M packages/soeditor/src/classic-image-context.ts\n M packages/soeditor/src/wysiwyg-content.css\n M packages/soeditor/vite.config.ts\n M packages/soeditor/vite.global.config.ts\n M packages/source/README.md\n M packages/source/src/classic-source-enhancements.ts\n M packages/ui/CHANGELOG.md\n M packages/ui/README.md\n M packages/ui/package.json\n M packages/ui/src/editor-ui.ts\n M packages/ui/src/index.ts\n M packages/ui/src/localization.ts\n M packages/ui/src/styles.css\n M packages/ui/tests/ui-plugin.test.ts\n M packages/ui/vite.config.ts\n M scripts/verify-documentation.mjs\n M tests/browser/classic-editor.spec.ts\n M tests/browser/file-manager.spec.ts\n?? docs/wysiwyg-source-plan.zh-CN.md\n?? packages/adapter-sofinder/src/sofinder-upload-adapter.ts\n?? packages/rich-text/src/responsive-image.ts\n?? packages/soeditor/src/classic-dialog-windows.ts\n?? packages/soeditor/src/ui-translation-loader-inline.ts\n?? packages/soeditor/src/ui-translation-loader.ts\n?? packages/ui/src/cms.ts\n?? packages/ui/src/create-editor-ui.ts\n?? packages/ui/src/translation-resolution.ts\n?? packages/ui/src/translations.ts\n?? scripts/measure-cms-loading.mjs\n",
+    "budgets": {
+        "globalRaw": 510000,
+        "globalGzip": 150000,
+        "standaloneCssRaw": 27250
+    },
+    "artifacts": [
+        {
+            "path": "packages/soeditor/dist/soeditor.global.js",
+            "raw": 486672,
+            "gzip": 149968
+        },
+        {
+            "path": "packages/soeditor/dist/soeditor.css",
+            "raw": 26778,
+            "gzip": 4896
+        },
+        {
+            "path": "packages/soeditor/dist/cms.js",
+            "raw": 189,
+            "gzip": 156
+        }
+    ],
+    "chunks": [
+        {
+            "file": "assets/index-BmPcCe3X.js",
+            "entry": true,
+            "imports": [],
+            "dynamicImports": [
+                "assets/link-attributes-BtxVCsKd-r3DFj-kk.js",
+                "assets/translations-CJGTUUFS.js",
+                "assets/index-gFq24Baw.js",
+                "assets/index-C5s3i-SP.js",
+                "assets/index-YnaZT6pG.js",
+                "assets/classic-image-context-_haZNKRD.js",
+                "assets/classic-link-context-C1NF_jXZ.js",
+                "assets/classic-table-context-laLCAqkL.js"
+            ],
+            "modules": [
+                "\u0000vite/modulepreload-polyfill.js",
+                "packages/core/dist/index.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/unicode.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/error-codes.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/preprocessor.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/token.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/decode-codepoint.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/internal/decode-shared.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/generated/decode-data-html.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/internal/bin-trie-flags.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/decode.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/html.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/open-element-stack.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/formatting-element-list.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/tree-adapters/default.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/doctype.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/foreign-content.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/index.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/escape.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/index.js",
+                "packages/html/dist/index.js",
+                "packages/projections/dist/index.js",
+                "packages/engine/dist/index.js",
+                "packages/rich-text/dist/index.js",
+                "\u0000vite/preload-helper.js",
+                "packages/ui/dist/ui-plugin-Bmq7TKS9.js",
+                "packages/ui/dist/translation-resolution-Ro7XZZng.js",
+                "packages/ui/dist/editor-ui-BaszdJ9P.js",
+                "packages/presets/dist/create-preset-mkgk4ioM.js",
+                "packages/presets/dist/cms-runtime.js",
+                "packages/wysiwyg/dist/index.js",
+                "packages/soeditor/src/wysiwyg-content.css?inline",
+                "packages/soeditor/src/ui-translation-loader.ts",
+                "packages/workspace/dist/index.js",
+                "packages/soeditor/src/classic-editor-errors.ts",
+                "packages/soeditor/src/classic-dialog-windows.ts",
+                "packages/soeditor/src/classic-editor.ts",
+                "packages/soeditor/src/cms-optional.ts",
+                "packages/soeditor/src/styles.css",
+                "node_modules/.cache/soeditor-cms-loading/main.js",
+                "node_modules/.cache/soeditor-cms-loading/index.html"
+            ],
+            "raw": 514018,
+            "gzip": 152376
+        },
+        {
+            "file": "assets/index-gFq24Baw.js",
+            "entry": false,
+            "imports": ["assets/index-BmPcCe3X.js"],
+            "dynamicImports": [],
+            "modules": [
+                "node_modules/.pnpm/@lezer+common@1.5.2/node_modules/@lezer/common/dist/index.js",
+                "node_modules/.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js",
+                "node_modules/.pnpm/@lezer+highlight@1.2.3/node_modules/@lezer/highlight/dist/index.js",
+                "node_modules/.pnpm/@lezer+html@1.3.13/node_modules/@lezer/html/dist/index.js",
+                "node_modules/.pnpm/@lezer+css@1.3.6/node_modules/@lezer/css/dist/index.js",
+                "node_modules/.pnpm/@marijn+find-cluster-break@1.0.4/node_modules/@marijn/find-cluster-break/src/index.js",
+                "node_modules/.pnpm/@codemirror+state@6.7.1/node_modules/@codemirror/state/dist/index.js",
+                "node_modules/.pnpm/style-mod@4.1.3/node_modules/style-mod/src/style-mod.js",
+                "node_modules/.pnpm/w3c-keyname@2.2.8/node_modules/w3c-keyname/index.js",
+                "node_modules/.pnpm/crelt@1.0.7/node_modules/crelt/index.js",
+                "node_modules/.pnpm/@codemirror+view@6.43.9/node_modules/@codemirror/view/dist/index.js",
+                "node_modules/.pnpm/@codemirror+language@6.12.4/node_modules/@codemirror/language/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lang-css@6.3.1/node_modules/@codemirror/lang-css/dist/index.js",
+                "node_modules/.pnpm/@lezer+javascript@1.5.4/node_modules/@lezer/javascript/dist/index.js",
+                "node_modules/.pnpm/@codemirror+autocomplete@6.20.3/node_modules/@codemirror/autocomplete/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lang-javascript@6.2.5/node_modules/@codemirror/lang-javascript/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lang-html@6.4.12/node_modules/@codemirror/lang-html/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lint@6.9.7/node_modules/@codemirror/lint/dist/index.js",
+                "node_modules/.pnpm/@codemirror+search@6.7.1/node_modules/@codemirror/search/dist/index.js",
+                "node_modules/.pnpm/@codemirror+commands@6.11.0/node_modules/@codemirror/commands/dist/index.js",
+                "node_modules/.pnpm/codemirror@6.0.2/node_modules/codemirror/dist/index.js",
+                "packages/source/dist/index.js"
+            ],
+            "raw": 589229,
+            "gzip": 203176
+        },
+        {
+            "file": "assets/index-C5s3i-SP.js",
+            "entry": false,
+            "imports": ["assets/index-BmPcCe3X.js"],
+            "dynamicImports": [
+                "assets/standalone-Cayz_KD-.js",
+                "assets/html-DwgzGnwN.js"
+            ],
+            "modules": ["packages/html-tools/dist/index.js"],
+            "raw": 641555,
+            "gzip": 152808
+        },
+        {
+            "file": "assets/index-YnaZT6pG.js",
+            "entry": false,
+            "imports": ["assets/index-BmPcCe3X.js"],
+            "dynamicImports": [],
+            "modules": ["packages/preview/dist/index.js"],
+            "raw": 13964,
+            "gzip": 4852
+        },
+        {
+            "file": "assets/classic-image-context-_haZNKRD.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/classic-image-context.ts"],
+            "raw": 8172,
+            "gzip": 2965
+        },
+        {
+            "file": "assets/classic-link-context-C1NF_jXZ.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/classic-link-context.ts"],
+            "raw": 2194,
+            "gzip": 1021
+        },
+        {
+            "file": "assets/classic-table-context-laLCAqkL.js",
+            "entry": false,
+            "imports": ["assets/index-BmPcCe3X.js"],
+            "dynamicImports": [
+                "assets/table-editor-attributes-BwkVkTQA.js",
+                "assets/table-editor-attributes-BwkVkTQA.js",
+                "assets/table-editor-attributes-BwkVkTQA.js"
+            ],
+            "modules": ["packages/soeditor/src/classic-table-context.ts"],
+            "raw": 30600,
+            "gzip": 9163
+        },
+        {
+            "file": "assets/link-attributes-BtxVCsKd-r3DFj-kk.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/ui/dist/link-attributes-BtxVCsKd.js"],
+            "raw": 4784,
+            "gzip": 1917
+        },
+        {
+            "file": "assets/translations-CJGTUUFS.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": [
+                "packages/ui/dist/translations-ZK9g7Zyo.js",
+                "packages/ui/dist/translations.js"
+            ],
+            "raw": 17326,
+            "gzip": 5752
+        },
+        {
+            "file": "assets/standalone-Cayz_KD-.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": [
+                "node_modules/.pnpm/prettier@3.9.6/node_modules/prettier/standalone.mjs"
+            ],
+            "raw": 81506,
+            "gzip": 27166
+        },
+        {
+            "file": "assets/html-DwgzGnwN.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": [
+                "node_modules/.pnpm/prettier@3.9.6/node_modules/prettier/plugins/html.mjs"
+            ],
+            "raw": 160156,
+            "gzip": 50634
+        },
+        {
+            "file": "assets/table-editor-attributes-BwkVkTQA.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/table-editor-attributes.ts"],
+            "raw": 8698,
+            "gzip": 3229
+        }
+    ],
+    "runs": [
+        {
+            "size": 10240,
+            "source": false,
+            "create": {
+                "milliseconds": 126.89999999990687,
+                "characters": 10440
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-BmPcCe3X.js",
+                "/assets/index-CYi2-Veu.css"
+            ],
+            "destroy": 4.699999999953434,
+            "warmCreate": {
+                "milliseconds": 93,
+                "characters": 10440
+            },
+            "heapBefore": {
+                "usedSize": 4954100,
+                "totalSize": 9494528,
+                "embedderHeapUsedSize": 3563920,
+                "backingStorageSize": 612102
+            },
+            "heapAfter": {
+                "usedSize": 2580732,
+                "totalSize": 3203072,
+                "embedderHeapUsedSize": 2030976,
+                "backingStorageSize": 583855
+            }
+        },
+        {
+            "size": 10240,
+            "source": true,
+            "create": {
+                "milliseconds": 404.69999999995343,
+                "characters": 10440
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-BmPcCe3X.js",
+                "/assets/index-CYi2-Veu.css",
+                "/assets/index-gFq24Baw.js",
+                "/assets/index-C5s3i-SP.js"
+            ],
+            "sourceFirst": {
+                "milliseconds": 42.5,
+                "requests": []
+            },
+            "sourceAgain": 36.4000000001397,
+            "formatting": {
+                "milliseconds": 298.60000000009313,
+                "requests": [
+                    "http://127.0.0.1:4188/9533b200-4d87-4d80-9c6b-a860e4ebc375"
+                ]
+            },
+            "destroy": 18.800000000046566,
+            "warmCreate": {
+                "milliseconds": 128.4000000001397,
+                "characters": 10440
+            },
+            "heapBefore": {
+                "usedSize": 10191288,
+                "totalSize": 14843904,
+                "embedderHeapUsedSize": 5216864,
+                "backingStorageSize": 2592983
+            },
+            "heapAfter": {
+                "usedSize": 6346928,
+                "totalSize": 7720960,
+                "embedderHeapUsedSize": 2417456,
+                "backingStorageSize": 2553477
+            }
+        },
+        {
+            "size": 102400,
+            "source": false,
+            "create": {
+                "milliseconds": 486,
+                "characters": 102544
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-BmPcCe3X.js",
+                "/assets/index-CYi2-Veu.css"
+            ],
+            "destroy": 14,
+            "warmCreate": {
+                "milliseconds": 548,
+                "characters": 102544
+            },
+            "heapBefore": {
+                "usedSize": 24460612,
+                "totalSize": 42401792,
+                "embedderHeapUsedSize": 20230528,
+                "backingStorageSize": 739116
+            },
+            "heapAfter": {
+                "usedSize": 2649856,
+                "totalSize": 4513792,
+                "embedderHeapUsedSize": 3800472,
+                "backingStorageSize": 675959
+            }
+        },
+        {
+            "size": 102400,
+            "source": true,
+            "create": {
+                "milliseconds": 774.2000000001863,
+                "characters": 102544
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-BmPcCe3X.js",
+                "/assets/index-CYi2-Veu.css",
+                "/assets/index-gFq24Baw.js",
+                "/assets/index-C5s3i-SP.js"
+            ],
+            "sourceFirst": {
+                "milliseconds": 178.60000000009313,
+                "requests": []
+            },
+            "sourceAgain": 212.10000000009313,
+            "formatting": {
+                "milliseconds": 873.3000000000466,
+                "requests": [
+                    "http://127.0.0.1:4188/017a9c4e-7999-4bbe-b795-19c02c46cdc5"
+                ]
+            },
+            "destroy": 94.39999999990687,
+            "warmCreate": {
+                "milliseconds": 617.7000000001863,
+                "characters": 102544
+            },
+            "heapBefore": {
+                "usedSize": 40288252,
+                "totalSize": 60596224,
+                "embedderHeapUsedSize": 31642208,
+                "backingStorageSize": 2726364
+            },
+            "heapAfter": {
+                "usedSize": 6759664,
+                "totalSize": 9031680,
+                "embedderHeapUsedSize": 12556104,
+                "backingStorageSize": 2645596
+            }
+        },
+        {
+            "size": 512000,
+            "source": false,
+            "create": {
+                "milliseconds": 1709.5,
+                "characters": 512024
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-BmPcCe3X.js",
+                "/assets/index-CYi2-Veu.css"
+            ],
+            "destroy": 31.800000000046566,
+            "warmCreate": {
+                "milliseconds": 2039,
+                "characters": 512024
+            },
+            "heapBefore": {
+                "usedSize": 65938020,
+                "totalSize": 125456384,
+                "embedderHeapUsedSize": 93689128,
+                "backingStorageSize": 1206090
+            },
+            "heapAfter": {
+                "usedSize": 3078304,
+                "totalSize": 4509696,
+                "embedderHeapUsedSize": 15427488,
+                "backingStorageSize": 1085439
+            }
+        },
+        {
+            "size": 512000,
+            "source": true,
+            "create": {
+                "milliseconds": 2488.399999999907,
+                "characters": 512024
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-BmPcCe3X.js",
+                "/assets/index-CYi2-Veu.css",
+                "/assets/index-gFq24Baw.js",
+                "/assets/index-C5s3i-SP.js"
+            ],
+            "sourceFirst": {
+                "milliseconds": 767.0999999998603,
+                "requests": []
+            },
+            "sourceAgain": 648.6000000000931,
+            "formatting": {
+                "milliseconds": 3042.8000000000466,
+                "requests": [
+                    "http://127.0.0.1:4188/a84548ef-1f9d-4242-bb80-be355ffb8766"
+                ]
+            },
+            "destroy": 388.10000000009313,
+            "warmCreate": {
+                "milliseconds": 2288.9000000001397,
+                "characters": 512024
+            },
+            "heapBefore": {
+                "usedSize": 122159528,
+                "totalSize": 172511232,
+                "embedderHeapUsedSize": 151669712,
+                "backingStorageSize": 3188136
+            },
+            "heapAfter": {
+                "usedSize": 7833728,
+                "totalSize": 9154560,
+                "embedderHeapUsedSize": 57399040,
+                "backingStorageSize": 3697313
+            }
+        }
+    ]
+}
