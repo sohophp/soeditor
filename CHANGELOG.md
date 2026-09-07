@@ -7,6 +7,7 @@
 - Add the lightweight CMS Classic Editor with textarea binding, canonical HTML preservation, inert unknown/unsafe content, form submit/reset, dirty state and safe teardown.
 - Load optional HTML Source on first use, keep formatting and recovery behind separate demand boundaries, and support bounded horizontal/vertical WYSIWYG + Source views.
 - Improve table selection and resizing, nested lists, block formatting, links, image properties/alignment/resizing, keyboard controls, localized menus and upload/asset integration.
+- Prevent queued color-menu initialization from overwriting a color entered immediately after opening the menu.
 - Restore Show Blocks in the Classic demo and isolate the read-only element path from document statistics; Source no longer reports CodeMirror DOM as a body path.
 - Count semantic body text across block boundaries, exclude source indentation and static hidden content, and define deterministic Chinese/Japanese character and other word units.
 - Add `@soeditor/editor/content.css` for frontend rendering of saved image alignment, sharing the editing rules without editor JavaScript.

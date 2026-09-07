@@ -1290,7 +1290,28 @@ test('accepts typed and picked colors and persists a shared recent-color history
     await textColor.locator('summary').click();
     // A reopened menu reflects the applied selection color, not a discarded draft.
     await expect(textValue).toHaveValue('rgb(0, 0, 0)');
-    await textValue.fill('#123456');
+    await textColor.locator('summary').click();
+    await expect(textColor.locator('summary')).toHaveAttribute(
+        'aria-expanded',
+        'false',
+    );
+    // Input in the opening task must survive the queued native toggle task.
+    await textColor.evaluate(async (element) => {
+        if (!(element instanceof HTMLDetailsElement))
+            throw new Error('Expected color menu.');
+        const input = element.querySelector('input[type="text"]');
+        if (!(input instanceof HTMLInputElement))
+            throw new Error('Expected color input.');
+        const toggled = new Promise<void>((resolve) =>
+            element.addEventListener('toggle', () => resolve(), { once: true }),
+        );
+        element.open = true;
+        input.focus();
+        input.value = '#123456';
+        input.dispatchEvent(new Event('input', { bubbles: true }));
+        await toggled;
+    });
+    await expect(textValue).toHaveValue('#123456');
     await textValue.evaluate((input) => {
         const visual = document.querySelector('.soeditor-classic__visual');
         const root = visual?.shadowRoot;

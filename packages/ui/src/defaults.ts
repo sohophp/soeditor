@@ -1608,7 +1608,9 @@ function colorMenu(
             }
             commitColor(value);
         };
+        let colorEditedBeforeToggle = false;
         const valueInputEvent = (): void => {
+            colorEditedBeforeToggle = true;
             const value = normalizeColorInput(valueInput.value);
             if (value === undefined) {
                 valueInput.setAttribute('aria-invalid', 'true');
@@ -1620,6 +1622,7 @@ function colorMenu(
             feedback.textContent = '';
         };
         const pickerInput = (): void => {
+            colorEditedBeforeToggle = true;
             stageColor(picker.value);
         };
         apply.addEventListener('click', submit);
@@ -1684,11 +1687,16 @@ function colorMenu(
             details.open = false;
         }
         const toggle = (): void => {
+            const edited = colorEditedBeforeToggle;
+            colorEditedBeforeToggle = false;
             if (!details.open) return;
             renderRecentColors();
-            const state = ui.getEditingFormatState?.(command);
-            if (state?.status === 'uniform') stageColor(state.value);
-            else if (state?.status === 'mixed') valueInput.value = '';
+            // The native toggle task can run after the first input event.
+            if (!edited) {
+                const state = ui.getEditingFormatState?.(command);
+                if (state?.status === 'uniform') stageColor(state.value);
+                else if (state?.status === 'mixed') valueInput.value = '';
+            }
             ui.refresh();
         };
         details.addEventListener('toggle', toggle);
