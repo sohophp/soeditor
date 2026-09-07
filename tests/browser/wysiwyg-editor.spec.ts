@@ -2329,10 +2329,16 @@ test('chooses alignment and list marker galleries without losing list content', 
     await expect(surface.locator('#align-gallery')).toHaveText('Alignment');
     await page.setViewportSize({ width: 375, height: 812 });
     await ordered.locator('summary').click();
-    const bounds = await ordered.getByRole('menu').boundingBox();
-    expect(bounds).not.toBeNull();
-    expect(bounds!.x).toBeGreaterThanOrEqual(0);
-    expect(bounds!.x + bounds!.width).toBeLessThanOrEqual(375);
+    await expect
+        .poll(async () => {
+            const bounds = await ordered.getByRole('menu').boundingBox();
+            return (
+                bounds !== null &&
+                bounds.x >= 0 &&
+                bounds.x + bounds.width <= 375
+            );
+        })
+        .toBe(true);
 });
 
 test('limits list conversion to selected items and preserves following numbers', async ({
@@ -2906,6 +2912,11 @@ test('keeps toolbar menu navigation and placement consistent at viewport edges',
     await page.keyboard.press('Escape');
     const color = page.locator('[data-toolbar-item="fontColor"]');
     await color.locator('summary').click();
+    // Native details toggle initializes the panel in a queued task.
+    await expect(color.locator('summary')).toHaveAttribute(
+        'aria-expanded',
+        'true',
+    );
     const colorInput = color.locator('input[type="text"]');
     await colorInput.fill('#123456');
     await page.keyboard.press('ArrowLeft');
