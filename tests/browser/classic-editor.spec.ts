@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import type * as ElementPathModule from '../../packages/ui/src/element-path.js';
 import AxeBuilder from '@axe-core/playwright';
 import type {
@@ -2033,9 +2034,10 @@ test('element path follows WYSIWYG selection without exposing Source chrome', as
             .locator('.soeditor-ui__element-path'),
     ).toBeHidden();
 
-    const scheduling = await page.evaluate(async () => {
-        const modulePath =
-            '/@fs/var/www/node/SoEditor/packages/ui/src/element-path.ts';
+    const modulePath = `/@fs${fileURLToPath(
+        new URL('../../packages/ui/src/element-path.ts', import.meta.url),
+    )}`;
+    const scheduling = await page.evaluate(async (modulePath) => {
         const module: typeof ElementPathModule = await import(modulePath);
         let reads = 0;
         let mutations = 0;
@@ -2065,7 +2067,7 @@ test('element path follows WYSIWYG selection without exposing Source chrome', as
             mutations,
             connected: component.element.isConnected,
         };
-    });
+    }, modulePath);
     expect(scheduling).toEqual({
         firstReads: 1,
         secondReads: 2,
