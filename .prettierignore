@@ -8,3 +8,12 @@ pnpm-lock.yaml
 AGENTS.md
 docs/architecture.md
 docs/prompts
+
+docs/site/.vitepress/cache/
+docs/site/.wrangler/
+docs/site/public/demos/
+docs/site/.vitepress/reports/
+docs/site/.vitepress/.temp/
+docs/site/public/downloads/
+
+.wrangler/

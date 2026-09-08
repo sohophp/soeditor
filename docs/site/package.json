@@ -1,0 +1,32 @@
+{
+    "name": "@soeditor/docs",
+    "private": true,
+    "version": "0.0.0",
+    "type": "module",
+    "scripts": {
+        "dev": "node scripts/dev.mjs",
+        "build": "node scripts/build.mjs",
+        "preview": "wrangler dev --config wrangler.jsonc --ip 0.0.0.0 --port 4175",
+        "check": "vue-tsc --noEmit && node scripts/check.mjs",
+        "typecheck": "vue-tsc --noEmit",
+        "test:site": "playwright test -c playwright.config.ts",
+        "deploy": "wrangler deploy --config wrangler.jsonc"
+    },
+    "dependencies": {
+        "soeditor-release": "npm:@soeditor/editor@1.2.1",
+        "@soeditor/file-manager": "1.2.1",
+        "@soeditor/adapter-sofinder": "1.2.1",
+        "vue": "3.5.42",
+        "@soeditor/presets": "1.2.1"
+    },
+    "devDependencies": {
+        "vitepress": "1.6.4",
+        "wrangler": "4.128.0",
+        "vue-tsc": "3.0.6",
+        "vite": "7.3.6",
+        "typescript": "5.9.3",
+        "@types/node": "22.18.0",
+        "@playwright/test": "1.62.1",
+        "@axe-core/playwright": "4.13.0"
+    }
+}

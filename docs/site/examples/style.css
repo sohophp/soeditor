@@ -1,0 +1,62 @@
+html {
+    color-scheme: light;
+    font:
+        15px/1.6 system-ui,
+        sans-serif;
+    color: #202b3d;
+    background: #fff;
+}
+body {
+    margin: 12px;
+}
+* {
+    box-sizing: border-box;
+}
+.controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+}
+.controls button,
+.controls input {
+    max-width: 100%;
+    font: inherit;
+}
+.controls button {
+    border: 1px solid #b9c5d8;
+    border-radius: 6px;
+    background: #f7f9fc;
+    color: #203c68;
+    padding: 6px 12px;
+    cursor: pointer;
+}
+button:focus-visible,
+input:focus-visible {
+    outline: 3px solid #2459c4;
+    outline-offset: 2px;
+}
+button:disabled {
+    opacity: 0.6;
+    cursor: wait;
+}
+.notice {
+    color: #4b5870;
+    font-size: 13px;
+}
+[role='status'] {
+    min-height: 24px;
+}
+pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    background: #f5f7fa;
+    padding: 12px;
+}
+textarea {
+    width: 100%;
+    min-height: 200px;
+}
+form {
+    min-width: 0;
+}

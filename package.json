@@ -38,7 +38,13 @@
         "typecheck": "pnpm --filter @soeditor/editor... --filter @soeditor/plugin-sdk build && pnpm -r --if-present run typecheck",
         "dev": "pnpm --filter @soeditor/playground dev --host 0.0.0.0",
         "test:browser:source:all": "playwright test --config playwright.source.config.ts",
-        "test:loading": "node scripts/measure-cms-loading.mjs /tmp/soeditor-cms-loading.json --recovery"
+        "test:loading": "node scripts/measure-cms-loading.mjs /tmp/soeditor-cms-loading.json --recovery",
+        "docs:dev": "pnpm --filter @soeditor/docs dev",
+        "docs:build": "pnpm --filter @soeditor/docs build",
+        "docs:preview": "pnpm --filter @soeditor/docs preview",
+        "docs:check": "pnpm --filter @soeditor/docs check",
+        "docs:test": "pnpm --filter @soeditor/docs test:site",
+        "docs:deploy": "pnpm --filter @soeditor/docs deploy"
     },
     "devDependencies": {
         "@axe-core/playwright": "4.13.0",

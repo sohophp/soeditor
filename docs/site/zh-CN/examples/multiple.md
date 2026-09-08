@@ -1,0 +1,55 @@
+---
+title: 多实例与重建
+description: 分别编辑两个实例，再重建示例检查资源清理。
+---
+
+# 多实例与重建
+
+分别编辑两个实例，再重建示例检查资源清理。
+
+<EditorDemo example="multiple" />
+
+## 如何验证
+
+分别编辑两个实例，再重建示例检查资源清理。 “读取 HTML”显示规范内容，“重建示例”销毁并重新挂载实例。上传与保存不发送编辑内容，上传成功返回内置图片。
+
+## 完整接入代码
+
+[下载完整示例源码](/downloads/soeditor-examples-1.2.1.tar.gz)。解压后执行 `pnpm install`、`pnpm dev`，打开对应的 `basic.html` 等页面。
+
+以下代码与演示共用。使用 Vite TypeScript 页面，保留相同文件结构；别名用于固定 npm 发布包。
+
+```sh
+pnpm add soeditor-release@npm:@soeditor/editor@1.2.1 @soeditor/file-manager@1.2.1 @soeditor/adapter-sofinder@1.2.1 @soeditor/presets@1.2.1
+```
+
+<<< ../../examples/multiple.ts
+
+<details>
+<summary>共享上下文与生命周期</summary>
+
+<<< ../../examples/shared.ts
+
+</details>
+
+<details>
+<summary>页面挂载与重建</summary>
+
+<<< ../../examples/runner.ts
+
+</details>
+
+<details>
+<summary>HTML / CSS</summary>
+
+<<< ../../examples/multiple.html
+
+<<< ../../examples/style.css
+
+</details>
+
+## 配置与排错
+
+所有实例都在创建时传入 locale。结束体验会移除 iframe；重新开始使用初始内容。若样式或 Source 丢失，检查是否部署了全部构建资源。
+
+[API](/zh-CN/api/methods) · [常见问题](/zh-CN/support/troubleshooting)

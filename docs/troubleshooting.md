@@ -1,118 +1,12 @@
-# Troubleshooting
+# Troubleshooting index
 
-Start with the first thrown SoEditor error or Workspace diagnostic. Errors are
-designed to be actionable; do not suppress them and continue with a partially
-attached editor.
+The published CMS troubleshooting guidance is maintained in the bilingual site:
 
-## Installation and imports
+- [中文：常见问题](site/zh-CN/support/troubleshooting.md)
+- [English: troubleshooting](site/en/support/troubleshooting.md)
+- [Migration and release alignment](site/en/support/migration.md)
+- [Source loading](site/en/guide/source.md)
 
-### Package subpath is not exported
-
-Import only documented package roots and declared preset/CSS subpaths. Paths
-such as `@soeditor/engine/model`, `src/*`, or private `dist/*` files are
-internal. Use the generated [`api-report.md`](api-report.md) to confirm the
-public symbol owner.
-
-### Duplicate framework or peer warnings
-
-Install one aligned SoEditor version set. React must satisfy `>=18.2.0 <20` and
-Vue must satisfy `^3.5.0`. Framework packages are separate from
-`@soeditor/editor`; install only the adapter used by the application.
-
-### Styles are missing
-
-Import `@soeditor/editor/cms/styles.css` for Classic CMS. Use
-`@soeditor/editor/styles.css` for historical full UI, or the owning package
-styles such as `@soeditor/ui/styles.css` and
-`@soeditor/layout/styles.css` for modular integrations.
-
-Chrome themes use instance-scoped `themeVariables`; site/article CSS is a
-separate application stylesheet. Theme variables and icon resources are not
-saved into canonical HTML. Icon values must be bounded printable text, not SVG
-or HTML strings.
-
-## Startup and attachment
-
-| Error or diagnostic                        | Meaning and action                                                        |
-| ------------------------------------------ | ------------------------------------------------------------------------- |
-| `PluginNotFoundError`                      | Add the declared plugin dependency to the editor plugin list.             |
-| `PluginDependencyCycleError`               | Remove the cycle; plugin requirements must form a DAG.                    |
-| `PluginDuplicateIdError`                   | Keep one plugin constructor for each stable ID.                           |
-| `ServiceNotFoundError` / `missing-service` | Register the required per-editor service before attachment.               |
-| `incompatible-format`                      | Attach HTML surfaces only to HTML and Markdown surfaces only to Markdown. |
-| `unsafe-preview`                           | Use the isolated Preview policy for untrusted content.                    |
-| host-not-empty errors                      | Give a surface an empty, application-owned host.                          |
-| already-attached errors                    | Destroy the prior surface or use a different host/editor.                 |
-
-On partial Workspace startup failure, inspect diagnostics and the original
-cause. Successfully created earlier attachments are destroyed in reverse order;
-do not reuse their retained handles.
-
-## Editing behavior
-
-### A command is unavailable
-
-Check `editor.commands.has(id)` and `canExecute(id)`, document format, mode,
-readonly/review policy, current selection, required service, and projection
-ownership. UI buttons invoke the same command and do not bypass these rules.
-
-### Visual is locked but Source still contains data
-
-Parser-invalid or complete-document HTML may be Source-owned while Visual keeps
-the last valid model. Correct the source diagnostics rather than copying the
-Visual DOM back into the editor.
-
-### Unknown HTML appears as an opaque block
-
-This is preservation, not deletion. Add a structured conversion/node view only
-when the element needs a richer visual experience. Keep execution and source
-preservation separate.
-
-### HTML/Markdown conversion changed content
-
-The bridge is intentionally lossy. Inspect returned conversion loss notices;
-keep Markdown canonical in Markdown workflows and use raw HTML passthrough only
-with an isolated Preview boundary.
-
-## Preview, CSP, and assets
-
-Preview scripts do not run by design. If the iframe is blank, inspect template
-validation, URL policy, renderer format, and browser console. Do not add sandbox
-permissions to make an executable site preview.
-
-If Source or Markdown styling is blocked by CSP, supply the current response
-nonce as `cspNonce` when creating the CodeMirror engine and verify the nonce is
-allowed by `style-src`. FileManager results must use accepted URL schemes and
-valid metadata; cancellation intentionally leaves the document unchanged.
-
-## Recovery and persistence
-
-An `error` save state retains local dirty source and can be retried. A
-`conflict` means the adapter deliberately rejected the revision/token; resolve
-it in the CMS workflow and do not overwrite local source implicitly. If saves
-continue after field removal, verify that the application awaits `destroy()`
-and that the adapter observes its abort signal.
-
-Workspace recovery is in-memory and rate-limited. A `recovery-limit` terminal
-diagnostic requires application action: preserve/export current source, stop
-automatic restart, report the failure, and let the user reload deliberately.
-
-For comment/revision failures, inspect service snapshots or `lastError`, retry
-according to host policy, and reconcile against authoritative backend versions.
-Client-side permissions never replace server authorization.
-
-## Plugin package checks
-
-`REMOTE_IMPORT`, `DYNAMIC_CODE`, and `UNSAFE_DOM_OUTPUT` identify unsupported or
-risky package shapes. Install plugins through the audited application build,
-remove dynamic/remote execution, construct contributed DOM through safe node
-APIs, and run `soeditor-plugin check . --packed` only after building. A valid
-report is not a trust certificate.
-
-## Minimal diagnostic capture
-
-When reporting a reproducible issue, include SoEditor package versions, Node and
-browser/framework versions, document format/mode/readonly policy, relevant
-plugin IDs, exact error name/message, Workspace diagnostic code, smallest safe
-source sample, reproduction steps, and whether teardown completed. Remove
-credentials, personal data, unpublished content, and authentication headers.
+Historical workspace, framework and modular integration diagnostics remain in the
+[internal compatibility reference](compatibility/troubleshooting.md). They describe
+those optional packages and do not extend the default CMS product.

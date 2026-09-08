@@ -1,0 +1,45 @@
+name: Restore Docs Site
+on:
+    workflow_dispatch:
+        inputs:
+            archive:
+                description: Exact docs-<timestamp>-<sha>.tar.gz asset from docs-deployment-archives
+                required: true
+                type: string
+permissions:
+    contents: read
+concurrency:
+    group: docs-deploy-production
+    cancel-in-progress: false
+jobs:
+    restore:
+        runs-on: ubuntu-latest
+        environment: docs-production
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+              with:
+                  ref: master
+            - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+              with:
+                  node-version-file: .nvmrc
+            - name: Download and validate a previous verified archive
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  DOCS_ARCHIVE: ${{ inputs.archive }}
+              run: node docs/site/scripts/restore.mjs
+            - run: npm install --prefix /tmp/soeditor-docs-cli --ignore-scripts --no-audit --no-fund wrangler@4.128.0
+            - name: Restore and verify
+              env:
+                  DOCS_TARGET: production
+                  DOCS_ROLLBACK: '1'
+                  WRANGLER_SEND_METRICS: 'false'
+                  GH_TOKEN: ${{ github.token }}
+                  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+              run: node docs/site/scripts/deploy.mjs /tmp/soeditor-docs-artifact
+            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+              if: always()
+              with:
+                  name: docs-restore-record
+                  path: /tmp/soeditor-docs-deployment.json
+                  retention-days: 90

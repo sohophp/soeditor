@@ -1,0 +1,85 @@
+name: Docs Site Deploy
+on:
+    workflow_run:
+        workflows: ['Docs Site Check']
+        types: [completed]
+permissions:
+    contents: read
+    actions: read
+    pull-requests: read
+concurrency:
+    group: docs-deploy-${{ github.event.workflow_run.event == 'push' && 'production' || 'preview' }}
+    cancel-in-progress: false
+jobs:
+    deploy:
+        if: >-
+            github.event.workflow_run.conclusion == 'success' &&
+            github.event.workflow_run.head_repository.full_name == github.repository &&
+            (github.event.workflow_run.event == 'pull_request' ||
+            (github.event.workflow_run.event == 'push' && github.event.workflow_run.head_branch == 'master'))
+        runs-on: ubuntu-latest
+        timeout-minutes: 40
+        environment: ${{ github.event.workflow_run.event == 'push' && 'docs-production' || 'docs-preview' }}
+        env:
+            DOCS_TARGET: ${{ github.event.workflow_run.event == 'push' && 'production' || 'preview' }}
+            DOCS_SHA: ${{ github.event.workflow_run.head_sha }}
+            DOCS_RUN_ID: ${{ github.event.workflow_run.id }}
+            WRANGLER_SEND_METRICS: 'false'
+        steps:
+            # Trusted default-branch scripts only. Never execute PR code with a token.
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+              with:
+                  ref: master
+            - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+              with:
+                  node-version-file: .nvmrc
+            - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+              with:
+                  name: docs-site
+                  path: /tmp/soeditor-docs-artifact
+                  github-token: ${{ github.token }}
+                  run-id: ${{ github.event.workflow_run.id }}
+            - name: Validate checked artifact and wait for repository CI
+              env:
+                  GH_TOKEN: ${{ github.token }}
+              run: node docs/site/scripts/deploy-gate.mjs /tmp/soeditor-docs-artifact
+            - name: Install pinned deployment CLI separately
+              run: npm install --prefix /tmp/soeditor-docs-cli --ignore-scripts --no-audit --no-fund wrangler@4.128.0
+            - name: Publish verified assets
+              env:
+                  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+                  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+                  GH_TOKEN: ${{ github.token }}
+              run: node docs/site/scripts/deploy.mjs /tmp/soeditor-docs-artifact
+            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+              if: always()
+              with:
+                  name: docs-deployment-record
+                  path: /tmp/soeditor-docs-deployment.json
+                  retention-days: 90
+    archive:
+        needs: deploy
+        if: github.event.workflow_run.event == 'push'
+        runs-on: ubuntu-latest
+        permissions:
+            actions: read
+            contents: write
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+              with:
+                  ref: master
+            - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+              with:
+                  name: docs-site
+                  path: /tmp/soeditor-docs-artifact
+                  github-token: ${{ github.token }}
+                  run-id: ${{ github.event.workflow_run.id }}
+            - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+              with:
+                  name: docs-deployment-record
+                  path: /tmp/soeditor-docs-artifact/reports
+            - name: Keep durable rollback archives
+              env:
+                  GH_TOKEN: ${{ github.token }}
+                  DOCS_SHA: ${{ github.event.workflow_run.head_sha }}
+              run: node docs/site/scripts/archive.mjs /tmp/soeditor-docs-artifact

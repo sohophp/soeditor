@@ -1,6 +1,6 @@
 import { access, readFile, readdir } from 'node:fs/promises';
 import { dirname, join, relative, resolve } from 'node:path';
-import { stdout } from 'node:process';
+import process, { stdout } from 'node:process';
 import { fileURLToPath, URL } from 'node:url';
 
 const repositoryRoot = resolve(fileURLToPath(new URL('..', import.meta.url)));
@@ -48,7 +48,11 @@ for (const evidence of evidenceFiles) {
     await access(join(repositoryRoot, 'tests', 'browser', evidence));
 }
 
-const markdownFiles = [join(repositoryRoot, 'README.md')];
+const markdownFiles = [
+    join(repositoryRoot, 'README.md'),
+    join(docsRoot, 'compatibility/api-overview.md'),
+    join(docsRoot, 'compatibility/troubleshooting.md'),
+];
 for (const name of await readdir(docsRoot)) {
     if (name.endsWith('.md')) markdownFiles.push(join(docsRoot, name));
 }
@@ -61,6 +65,13 @@ for (const packageName of await readdir(join(repositoryRoot, 'packages'))) {
         // A package README is recommended but not an implicit public contract.
     }
 }
+
+// The public bilingual site has clean URLs and source includes; its dedicated
+// checker validates translation parity and source links, and build checks HTML anchors.
+const { execFileSync } = await import('node:child_process');
+execFileSync(process.execPath, [join(docsRoot, 'site/scripts/check.mjs')], {
+    stdio: 'inherit',
+});
 
 const broken = [];
 for (const file of markdownFiles) {

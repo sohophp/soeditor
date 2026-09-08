@@ -1,9 +1,38 @@
 packages:
     - 'apps/*'
+    - 'docs/site'
     - 'packages/*'
 
 allowBuilds:
     esbuild: true
+    sharp: false
+    workerd: true
+
+minimumReleaseAgeExclude:
+    - '@soeditor/adapter-sofinder@1.2.1'
+    - '@soeditor/comments@1.2.1'
+    - '@soeditor/core@1.2.1'
+    - '@soeditor/dev-tools@1.2.1'
+    - '@soeditor/editor@1.2.1'
+    - '@soeditor/engine@1.2.1'
+    - '@soeditor/file-manager@1.2.1'
+    - '@soeditor/html-tools@1.2.1'
+    - '@soeditor/html@1.2.1'
+    - '@soeditor/layout@1.2.1'
+    - '@soeditor/markdown@1.2.1'
+    - '@soeditor/presets@1.2.1'
+    - '@soeditor/preview@1.2.1'
+    - '@soeditor/projections@1.2.1'
+    - '@soeditor/revisions@1.2.1'
+    - '@soeditor/rich-text@1.2.1'
+    - '@soeditor/source@1.2.1'
+    - '@soeditor/ui@1.2.1'
+    - '@soeditor/workspace@1.2.1'
+    - '@soeditor/wysiwyg@1.2.1'
 
 onlyBuiltDependencies:
     - esbuild
+    - workerd
+
+overrides:
+    'vitepress>vite': '6.4.3'

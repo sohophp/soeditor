@@ -1,0 +1,58 @@
+name: Docs Site Check
+on:
+    push:
+        branches: [master]
+    pull_request:
+        branches: [master]
+permissions:
+    contents: read
+concurrency:
+    group: docs-check-${{ github.ref }}
+    cancel-in-progress: true
+jobs:
+    site:
+        runs-on: ubuntu-latest
+        timeout-minutes: 25
+        env:
+            DOCS_PREVIEW: ${{ github.event_name == 'pull_request' && '1' || '0' }}
+            WRANGLER_SEND_METRICS: 'false'
+        steps:
+            - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+              with:
+                  ref: ${{ github.event.pull_request.head.sha || github.sha }}
+            - uses: pnpm/action-setup@0977fd99725f1db4007ccb2928dbb4e90d06cc86
+              with:
+                  version: 11.20.0
+            - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020
+              with:
+                  node-version-file: .nvmrc
+                  cache: pnpm
+            - run: pnpm install --frozen-lockfile
+            - run: pnpm docs:check
+            - run: pnpm docs:build
+            - run: pnpm exec playwright install --with-deps chromium firefox webkit
+            - run: pnpm docs:test
+            - name: Check actual Workers routes and headers
+              run: |
+                  pnpm docs:preview > /tmp/soeditor-docs-preview.log 2>&1 &
+                  server_pid=$!
+                  trap 'kill "$server_pid" || true' EXIT
+                  for attempt in $(seq 1 30); do
+                    if curl --fail --silent http://127.0.0.1:4175/en/ > /dev/null; then break; fi
+                    sleep 1
+                  done
+                  node docs/site/scripts/smoke.mjs
+            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+              with:
+                  name: docs-site
+                  path: |
+                      docs/site/.vitepress/dist
+                      docs/site/.vitepress/reports
+                  include-hidden-files: true
+                  retention-days: 90
+            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+              if: failure()
+              with:
+                  name: docs-test-failure
+                  path: docs/site/test-results
+                  retention-days: 14

@@ -1,0 +1,14 @@
+{
+    "extends": "../../tsconfig.base.json",
+    "compilerOptions": {
+        "lib": ["ES2022", "ES2022.Intl", "DOM", "DOM.Iterable"],
+        "types": ["node", "vite/client"]
+    },
+    "include": [
+        ".vitepress/**/*.ts",
+        ".vitepress/**/*.vue",
+        "examples/**/*.ts",
+        "tests/**/*.ts",
+        "*.ts"
+    ]
+}
