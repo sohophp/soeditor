@@ -29,7 +29,10 @@ if (
 const homeResponse = await fetch(new URL('/en/', origin), {
     signal: AbortSignal.timeout(15000),
 });
-if (!homeResponse.headers.get('cache-control')?.includes('must-revalidate'))
+if (
+    !homeResponse.headers.get('cache-control')?.includes('must-revalidate') ||
+    !homeResponse.headers.get('cache-control')?.includes('no-transform')
+)
     throw new Error('HTML cache policy missing');
 const home = await homeResponse.text();
 const manifest = await fetch(new URL('/deployment.json', origin)).then(

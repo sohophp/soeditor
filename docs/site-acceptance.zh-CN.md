@@ -50,3 +50,7 @@
 ## 人工与长期检查边界
 
 WebKit 自动化不等于真实 Safari 认证。读屏、操作系统 IME、实际 Office 粘贴来源、目标地区网络与长期堆内存趋势尚需人工或长期验证。本次不把 DOM/iframe 清理检查宣称为内存泄漏的完整证明。
+
+## 首次上线后的网络检查
+
+线上 Chromium 的中英搜索、表单提交/重置、保存失败重试及 Source 延迟加载测试通过。资源选择与模拟上传操作通过，但 Cloudflare 自动注入的 `/cdn-cgi/rum` 请求触发了“无网络上传”断言。HTML 响应增加 `Cache-Control: no-transform`，阻止平台自动注入 Web Analytics，保持首期无监控 SDK 的部署约定；哈希资源的长期缓存策略不变。发布后的线上复测结果另行记录。依据：[Cloudflare Web Analytics FAQ](https://developers.cloudflare.com/web-analytics/faq/)。
