@@ -56,6 +56,14 @@ DNS 记录和管理 Worker 自定义域名所需权限。按 Cloudflare 当前�
 哈希 JS/CSS 长期缓存，其余资源重新验证。部署后核对 deployment.json 的
 提交标识与预期一致，避免把缓存中的旧页面误认为新版本上线。
 
+## 预览验收步骤
+
+同仓库 PR 的 Docs Site Check 成功后，在 Docs Site Deploy 的 Summary 打开
+版本预览 URL。核对 `/deployment.json` 的 commit 与 PR head 一致，确认
+首页响应带 `X-Robots-Tag: noindex, nofollow`，且 `/sitemap.xml` 返回 404。
+测试搜索和示例后保留对应运行链接。更新 PR 会产生新的版本 URL；旧 URL
+不会成为正式站点入口。正式站点仍只跟随检查通过的 master 提交。
+
 ## 恢复与保留
 
 每次成功正式部署将 dist 和 checksums 保存到专用 prerelease
