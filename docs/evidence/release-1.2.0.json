@@ -1,6 +1,6 @@
 {
     "version": "1.2.0",
-    "checkedAt": "2026-09-08T10:45:33.950Z",
+    "checkedAt": "2026-09-08T10:51:35.830Z",
     "scope": "Local working-tree qualification before release commit; publication evidence is the protected workflow and npm verification.",
     "checks": {
         "lint": "passed",
@@ -80,8 +80,8 @@
         "artifacts": [
             {
                 "path": "packages/soeditor/dist/soeditor.global.js",
-                "raw": 484272,
-                "gzip": 149692
+                "raw": 484292,
+                "gzip": 149705
             },
             {
                 "path": "packages/soeditor/dist/soeditor.css",
@@ -91,7 +91,7 @@
             {
                 "path": "packages/soeditor/dist/cms.js",
                 "raw": 189,
-                "gzip": 158
+                "gzip": 155
             }
         ],
         "recovery": {
@@ -107,222 +107,222 @@
                 "size": 10240,
                 "source": false,
                 "create": {
-                    "milliseconds": 104.40000003576279,
+                    "milliseconds": 105.60000002384186,
                     "characters": 10440
                 },
                 "initialRequests": [
                     "/",
-                    "/assets/index-w1jjJ0dC.js",
+                    "/assets/index-caNHxYA6.js",
                     "/assets/index-DfCwoAqr.css"
                 ],
-                "destroy": 4.599999964237213,
+                "destroy": 4,
                 "warmCreate": {
-                    "milliseconds": 49.69999998807907,
+                    "milliseconds": 42.80000001192093,
                     "characters": 10440
                 },
                 "lifecycle": [],
                 "heapBefore": {
-                    "usedSize": 4015804,
-                    "totalSize": 7135232,
-                    "embedderHeapUsedSize": 3155304,
-                    "backingStorageSize": 611458
+                    "usedSize": 3992292,
+                    "totalSize": 6348800,
+                    "embedderHeapUsedSize": 3155464,
+                    "backingStorageSize": 611146
                 },
                 "heapAfter": {
-                    "usedSize": 2505124,
+                    "usedSize": 2505620,
                     "totalSize": 3203072,
-                    "embedderHeapUsedSize": 1291744,
-                    "backingStorageSize": 584733
+                    "embedderHeapUsedSize": 1216240,
+                    "backingStorageSize": 584745
                 }
             },
             {
                 "size": 10240,
                 "source": true,
                 "create": {
-                    "milliseconds": 108.59999996423721,
+                    "milliseconds": 87.69999998807907,
                     "characters": 10440
                 },
                 "initialRequests": [
                     "/",
-                    "/assets/index-w1jjJ0dC.js",
+                    "/assets/index-caNHxYA6.js",
                     "/assets/index-DfCwoAqr.css"
                 ],
                 "sourceFirst": {
-                    "milliseconds": 222.60000002384186,
-                    "requests": ["/assets/index-Dmes_laz.js"]
+                    "milliseconds": 201.10000002384186,
+                    "requests": ["/assets/index-RiJrNDH3.js"]
                 },
-                "sourceAgain": 20.600000023841858,
+                "sourceAgain": 18.600000023841858,
                 "formatting": {
-                    "milliseconds": 330.80000001192093,
+                    "milliseconds": 342.39999997615814,
                     "requests": [
-                        "/assets/index-BFb7Cc1P.js",
-                        "http://127.0.0.1:4188/c9290de2-6ff0-4347-bc5e-9871d3826327"
+                        "/assets/index-DtesSmSm.js",
+                        "http://127.0.0.1:4188/d9b60222-ef82-4acc-9cac-4a2c9e5f4262"
                     ]
                 },
-                "destroy": 6,
+                "destroy": 11.800000011920929,
                 "warmCreate": {
-                    "milliseconds": 45.09999996423721,
+                    "milliseconds": 49.10000002384186,
                     "characters": 10440
                 },
                 "lifecycle": [],
                 "heapBefore": {
-                    "usedSize": 4097068,
-                    "totalSize": 7135232,
-                    "embedderHeapUsedSize": 3158216,
-                    "backingStorageSize": 612443
+                    "usedSize": 4078696,
+                    "totalSize": 6348800,
+                    "embedderHeapUsedSize": 3158200,
+                    "backingStorageSize": 612455
                 },
                 "heapAfter": {
-                    "usedSize": 6177580,
+                    "usedSize": 6173420,
                     "totalSize": 7196672,
-                    "embedderHeapUsedSize": 2429256,
-                    "backingStorageSize": 2555035
+                    "embedderHeapUsedSize": 2550472,
+                    "backingStorageSize": 2555047
                 }
             },
             {
                 "size": 102400,
                 "source": false,
                 "create": {
-                    "milliseconds": 259.5,
+                    "milliseconds": 252.0999999642372,
                     "characters": 102544
                 },
                 "initialRequests": [
                     "/",
-                    "/assets/index-w1jjJ0dC.js",
+                    "/assets/index-caNHxYA6.js",
                     "/assets/index-DfCwoAqr.css"
                 ],
-                "destroy": 16.19999998807907,
+                "destroy": 7.900000035762787,
                 "warmCreate": {
-                    "milliseconds": 254.89999997615814,
+                    "milliseconds": 199.20000004768372,
                     "characters": 102544
                 },
                 "lifecycle": [],
                 "heapBefore": {
-                    "usedSize": 10143964,
-                    "totalSize": 16834560,
-                    "embedderHeapUsedSize": 16101720,
-                    "backingStorageSize": 717002
+                    "usedSize": 10170852,
+                    "totalSize": 17096704,
+                    "embedderHeapUsedSize": 16101808,
+                    "backingStorageSize": 716906
                 },
                 "heapAfter": {
-                    "usedSize": 2529560,
-                    "totalSize": 3727360,
-                    "embedderHeapUsedSize": 4162648,
-                    "backingStorageSize": 676837
+                    "usedSize": 2529412,
+                    "totalSize": 3465216,
+                    "embedderHeapUsedSize": 3924576,
+                    "backingStorageSize": 676849
                 }
             },
             {
                 "size": 102400,
                 "source": true,
                 "create": {
-                    "milliseconds": 267.89999997615814,
+                    "milliseconds": 251.9000000357628,
                     "characters": 102544
                 },
                 "initialRequests": [
                     "/",
-                    "/assets/index-w1jjJ0dC.js",
+                    "/assets/index-caNHxYA6.js",
                     "/assets/index-DfCwoAqr.css"
                 ],
                 "sourceFirst": {
-                    "milliseconds": 270.89999997615814,
-                    "requests": ["/assets/index-Dmes_laz.js"]
+                    "milliseconds": 252.19999998807907,
+                    "requests": ["/assets/index-RiJrNDH3.js"]
                 },
-                "sourceAgain": 42.60000002384186,
+                "sourceAgain": 40.89999997615814,
                 "formatting": {
-                    "milliseconds": 836.9000000357628,
+                    "milliseconds": 966,
                     "requests": [
-                        "/assets/index-BFb7Cc1P.js",
-                        "http://127.0.0.1:4188/256d42ce-9028-4f0b-bce8-aad562a87c1d"
+                        "/assets/index-DtesSmSm.js",
+                        "http://127.0.0.1:4188/79c0ce09-c147-4bef-b931-cad4bc44d65e"
                     ]
                 },
-                "destroy": 8.199999988079071,
+                "destroy": 9.699999988079071,
                 "warmCreate": {
-                    "milliseconds": 241.60000002384186,
+                    "milliseconds": 216.39999997615814,
                     "characters": 102544
                 },
                 "lifecycle": [],
                 "heapBefore": {
-                    "usedSize": 10277296,
-                    "totalSize": 16310272,
-                    "embedderHeapUsedSize": 16229528,
-                    "backingStorageSize": 717821
+                    "usedSize": 10254236,
+                    "totalSize": 17096704,
+                    "embedderHeapUsedSize": 16229448,
+                    "backingStorageSize": 717810
                 },
                 "heapAfter": {
-                    "usedSize": 6366608,
-                    "totalSize": 7196672,
-                    "embedderHeapUsedSize": 12631888,
-                    "backingStorageSize": 2775789
+                    "usedSize": 6365928,
+                    "totalSize": 7458816,
+                    "embedderHeapUsedSize": 12626560,
+                    "backingStorageSize": 2775801
                 }
             },
             {
                 "size": 512000,
                 "source": false,
                 "create": {
-                    "milliseconds": 896.8999999761581,
+                    "milliseconds": 797.6999999880791,
                     "characters": 512024
                 },
                 "initialRequests": [
                     "/",
-                    "/assets/index-w1jjJ0dC.js",
+                    "/assets/index-caNHxYA6.js",
                     "/assets/index-DfCwoAqr.css"
                 ],
-                "destroy": 27.099999964237213,
+                "destroy": 30.69999998807907,
                 "warmCreate": {
-                    "milliseconds": 1016.1000000238419,
+                    "milliseconds": 878.8999999761581,
                     "characters": 512024
                 },
                 "lifecycle": [],
                 "heapBefore": {
-                    "usedSize": 8923436,
-                    "totalSize": 46596096,
-                    "embedderHeapUsedSize": 70740296,
-                    "backingStorageSize": 1086971
+                    "usedSize": 8771264,
+                    "totalSize": 52887552,
+                    "embedderHeapUsedSize": 70869104,
+                    "backingStorageSize": 1086983
                 },
                 "heapAfter": {
-                    "usedSize": 2548188,
-                    "totalSize": 3207168,
-                    "embedderHeapUsedSize": 15655760,
-                    "backingStorageSize": 1086317
+                    "usedSize": 2546844,
+                    "totalSize": 3469312,
+                    "embedderHeapUsedSize": 15773464,
+                    "backingStorageSize": 1086329
                 }
             },
             {
                 "size": 512000,
                 "source": true,
                 "create": {
-                    "milliseconds": 843.8000000119209,
+                    "milliseconds": 828.8000000119209,
                     "characters": 512024
                 },
                 "initialRequests": [
                     "/",
-                    "/assets/index-w1jjJ0dC.js",
+                    "/assets/index-caNHxYA6.js",
                     "/assets/index-DfCwoAqr.css"
                 ],
                 "sourceFirst": {
-                    "milliseconds": 440.2999999523163,
-                    "requests": ["/assets/index-Dmes_laz.js"]
+                    "milliseconds": 417.4000000357628,
+                    "requests": ["/assets/index-RiJrNDH3.js"]
                 },
-                "sourceAgain": 88.90000003576279,
+                "sourceAgain": 99.5,
                 "formatting": {
-                    "milliseconds": 2548.300000011921,
+                    "milliseconds": 2817.400000035763,
                     "requests": [
-                        "/assets/index-BFb7Cc1P.js",
-                        "http://127.0.0.1:4188/86573704-ea4d-482b-9db3-f643b14d628b"
+                        "/assets/index-DtesSmSm.js",
+                        "http://127.0.0.1:4188/401b543b-ba19-43a8-a5a2-5c668fb5f722"
                     ]
                 },
-                "destroy": 16.5,
+                "destroy": 21.69999998807907,
                 "warmCreate": {
-                    "milliseconds": 1003,
+                    "milliseconds": 920.3000000119209,
                     "characters": 512024
                 },
                 "lifecycle": [],
                 "heapBefore": {
-                    "usedSize": 8981936,
-                    "totalSize": 48168960,
-                    "embedderHeapUsedSize": 70934832,
-                    "backingStorageSize": 1087965
+                    "usedSize": 8989232,
+                    "totalSize": 47382528,
+                    "embedderHeapUsedSize": 70934128,
+                    "backingStorageSize": 1087977
                 },
                 "heapAfter": {
-                    "usedSize": 7050412,
+                    "usedSize": 7047284,
                     "totalSize": 7729152,
-                    "embedderHeapUsedSize": 57349304,
-                    "backingStorageSize": 3698884
+                    "embedderHeapUsedSize": 57357816,
+                    "backingStorageSize": 3698896
                 }
             }
         ]
@@ -386,6 +386,7 @@
     "followup": {
         "engineFocusoutRegressions": 18,
         "webkitStableAnchorTarget": 8,
-        "reason": "CI exposed missing engine focusout capture and toolbar layout shift between pointerdown and pointerup."
+        "reason": "CI exposed missing engine focusout capture and toolbar layout shift between pointerdown and pointerup.",
+        "validRangeUiRefreshRegressions": 16
     }
 }

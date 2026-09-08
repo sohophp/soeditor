@@ -455,7 +455,7 @@ export function createEditorUiWithTranslations(
         destroy(),
     );
     const selectionTargets = selectionEventTargets(options.element, document);
-    const captureEditingSelection = (preserveMissing = false): void => {
+    const captureEditingSelection = (preserveMissing = false): boolean => {
         const range = selectionTargets
             .map((target) => selectionRangeForTarget(target, document))
             .find((candidate) => {
@@ -485,7 +485,7 @@ export function createEditorUiWithTranslations(
                 editingSelection = undefined;
                 editingRange = undefined;
             }
-            return;
+            return false;
         }
         editingSelection = Object.freeze({
             anchor,
@@ -494,6 +494,7 @@ export function createEditorUiWithTranslations(
             focusOffset: range.endOffset,
         });
         editingRange = range.cloneRange();
+        return true;
     };
     const selectionChange = (): void => {
         if (editingSelectionFrozen) return;
@@ -525,8 +526,9 @@ export function createEditorUiWithTranslations(
                         node instanceof Element &&
                         isEditingNode(node, options.element),
                 )
-        )
-            captureEditingSelection(true);
+        ) {
+            if (captureEditingSelection(true)) update();
+        }
     };
     const selectionHighlightFocusIn = (event: FocusEvent): void => {
         const path = event.composedPath();
