@@ -1,26 +1,4 @@
 import { defineConfig } from 'vite';
-import { fileURLToPath } from 'node:url';
-import { collectPublicPropertyNames } from './vite-public-properties.js';
-
-const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url));
-const cmsRuntimePackages = [
-    'core',
-    'engine',
-    'html',
-    'layout',
-    'presets',
-    'projections',
-    'rich-text',
-    'soeditor',
-    'ui',
-    'wysiwyg',
-];
-const publicPropertyNames = collectPublicPropertyNames(
-    repositoryRoot,
-    cmsRuntimePackages,
-    ['createClassicEditor'],
-);
-
 export default defineConfig({
     define: {
         'import.meta.env.SOEDITOR_OPTIONAL_CLASSIC': JSON.stringify('false'),
@@ -42,11 +20,8 @@ export default defineConfig({
             },
             format: { comments: false, semicolons: false },
             mangle: {
-                properties: {
-                    builtins: false,
-                    keep_quoted: 'strict',
-                    reserved: [...publicPropertyNames],
-                },
+                // Vite minifies ESM chunks independently. Property mangling would
+                // rename shared object keys inconsistently across chunk boundaries.
                 toplevel: true,
             },
         },

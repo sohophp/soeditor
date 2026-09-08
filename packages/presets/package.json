@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/presets",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "license": "MIT",
     "description": "Immutable minimal, classic, CMS, developer, and Markdown presets for SoEditor.",
     "keywords": [

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1 — CMS ESM parser initialization
+
+- Fix property mangling in the default CMS ESM distribution: keep object keys stable across independently minified chunks so the HTML tokenizer and UI registry initialize correctly.
+- Add a browser regression that imports the built CMS artifact and checks initialization, tables, CMS attributes, comments, updates and destruction.
+- Keep public APIs and existing distribution budgets unchanged.
+
 ## 1.2.0 — Optional CMS video and editing stability
 
 - Add the explicit `@soeditor/editor/video` plugin for native video and YouTube, with lazy properties, asset picking, subtitle options and one-step undo.

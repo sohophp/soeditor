@@ -28,3 +28,7 @@ so fast keyboard formatting cannot fall back to an earlier caret.
 Source, formatter, video and dialog runtimes retain demand boundaries. No backend
 migration is required. Validate existing upload/picker adapters and stored CMS HTML
 in the host application's normal save-and-reopen flow before deployment.
+
+## 1.2.1 patch
+
+Use `1.2.1` for the default CMS ESM entry. It fixes a property-mangling error in the HTML tokenizer that could hang initialization in 1.2.0. All public packages remain aligned; there are no API changes.

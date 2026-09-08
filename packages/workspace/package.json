@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/workspace",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "license": "MIT",
     "description": "Framework-neutral application workspace lifecycle for SoEditor.",
     "keywords": [

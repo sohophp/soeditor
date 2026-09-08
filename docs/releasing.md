@@ -115,7 +115,7 @@ do not republish identical artifacts.
 After publication, or to recheck propagation:
 
 ```bash
-pnpm release:verify-registry 1.2.0
+pnpm release:verify-registry 1.2.1
 ```
 
 This creates a clean Vite consumer from the public npm registry and checks the

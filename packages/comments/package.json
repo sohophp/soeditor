@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/comments",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "license": "MIT",
     "description": "Host-owned mapped comments and annotations for SoEditor.",
     "keywords": [

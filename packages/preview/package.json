@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/preview",
-    "version": "1.2.0",
+    "version": "1.2.1",
     "license": "MIT",
     "description": "Sandboxed configurable HTML preview for SoEditor.",
     "keywords": [

@@ -185,7 +185,7 @@ async function verifyPublishedPackageIndexes() {
     }
     await Promise.all(
         packageNames.map((name) =>
-            fetchWithRetry(
+            waitForVersion(
                 `https://registry.npmjs.org/${encodeURIComponent(name)}`,
                 {
                     headers: {
@@ -196,6 +196,17 @@ async function verifyPublishedPackageIndexes() {
             ),
         ),
     );
+}
+
+// npm can serve a successful but stale install index immediately after publish.
+async function waitForVersion(url, init, attempts) {
+    for (let attempt = 0; attempt < attempts; attempt += 1) {
+        const response = await fetchWithRetry(url, init, 3);
+        const metadata = await response.json();
+        if (metadata.versions?.[version]) return;
+        if (attempt < attempts - 1) await delay(10_000);
+    }
+    throw new Error(`Published version ${version} is missing from ${url}.`);
 }
 
 async function fetchWithRetry(url, init = {}, attempts = 12) {

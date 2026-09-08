@@ -263,3 +263,40 @@ test('renders saved image alignment with the standalone frontend content stylesh
         expect(difference).toBeLessThan(1);
     }
 });
+
+// Exercise the actual minified ESM artifact, not Vite's source aliases.
+test('CMS ESM artifact parses HTML after property mangling', async ({
+    page,
+}) => {
+    await page.goto('/');
+    await page.setContent(
+        '<textarea id="artifact-content" name="content"></textarea>',
+    );
+    const entry = fileURLToPath(
+        new URL('../../packages/soeditor/dist/cms.js', import.meta.url),
+    );
+    const result = await page.evaluate(async (path) => {
+        const module: {
+            createClassicEditor(host: HTMLElement): Promise<{
+                getData(): string;
+                setData(html: string): void;
+                destroy(): Promise<void>;
+            }>;
+        } = await import(path);
+        const host =
+            document.querySelector<HTMLTextAreaElement>('#artifact-content');
+        if (!host) throw new Error('Missing artifact host');
+        host.value =
+            '<h2>Article</h2><p data-cms="kept">Text &amp; more</p><table><tbody><tr><td>Cell</td></tr></tbody></table><!-- marker -->';
+        const editor = await module.createClassicEditor(host);
+        const initial = editor.getData();
+        editor.setData('<p>Updated</p>');
+        const updated = editor.getData();
+        await editor.destroy();
+        return { initial, updated };
+    }, `/@fs${entry}`);
+    expect(result.initial).toContain('data-cms="kept"');
+    expect(result.initial).toContain('<td>Cell</td>');
+    expect(result.initial).toContain('<!-- marker -->');
+    expect(result.updated).toBe('<p>Updated</p>');
+});
