@@ -10,10 +10,10 @@ A page without a bundler can use the fixed-version CMS browser global. This path
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.2.1/dist/cms-styles.css"
+    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.3.0/dist/cms-styles.css"
 />
 <textarea id="content" name="content"><p>Hello</p></textarea>
-<script src="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.2.1/dist/soeditor.global.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.3.0/dist/soeditor.global.js"></script>
 <script>
     SoEditor.createClassicEditor(document.getElementById('content'), {
         locale: 'en',

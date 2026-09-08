@@ -33,7 +33,7 @@ features:
 ## Start with a textarea
 
 ```sh
-pnpm add @soeditor/editor@1.2.1
+pnpm add @soeditor/editor@1.3.0
 ```
 
 ```ts

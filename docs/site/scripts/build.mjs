@@ -15,8 +15,8 @@ const packageRoot = resolve(
 const editorPackage = JSON.parse(
     await readFile(resolve(packageRoot, 'package.json'), 'utf8'),
 );
-if (editorPackage.version !== '1.2.1' || !packageRoot.includes('node_modules'))
-    throw new Error('Expected published SoEditor 1.2.1');
+if (editorPackage.version !== '1.3.0' || !packageRoot.includes('node_modules'))
+    throw new Error('Expected published SoEditor 1.3.0');
 const workspacePreview = process.env.DOCS_WORKSPACE_PREVIEW === '1';
 const releasedExamples = [
     'basic',
@@ -26,11 +26,10 @@ const releasedExamples = [
     'save',
     'multiple',
     'video',
+    'react',
+    'vue',
 ];
-const examples = [
-    ...releasedExamples,
-    ...(workspacePreview ? ['react', 'vue'] : []),
-];
+const examples = releasedExamples;
 const graph = [];
 await buildExamples({
     configFile: false,
@@ -83,8 +82,9 @@ await rm(download, { recursive: true, force: true });
 await rm(resolve(root, 'public/downloads'), { recursive: true, force: true });
 await mkdir(download, { recursive: true });
 for (const name of await readdir(resolve(root, 'examples'))) {
-    if (['frameworks', 'react.html', 'vue.html'].includes(name)) continue;
-    await cp(resolve(root, 'examples', name), resolve(download, name));
+    await cp(resolve(root, 'examples', name), resolve(download, name), {
+        recursive: true,
+    });
 }
 await mkdir(resolve(download, 'public'), { recursive: true });
 await cp(
@@ -104,10 +104,16 @@ await writeFile(
             type: 'module',
             scripts: { dev: 'vite --host 0.0.0.0', build: 'vite build' },
             dependencies: {
-                'soeditor-release': 'npm:@soeditor/editor@1.2.1',
-                '@soeditor/file-manager': '1.2.1',
-                '@soeditor/adapter-sofinder': '1.2.1',
-                '@soeditor/presets': '1.2.1',
+                'soeditor-release': 'npm:@soeditor/editor@1.3.0',
+                '@soeditor/file-manager': '1.3.0',
+                '@soeditor/adapter-sofinder': '1.3.0',
+                '@soeditor/presets': '1.3.0',
+                '@soeditor/editor': '1.3.0',
+                '@soeditor/react': '1.3.0',
+                '@soeditor/vue': '1.3.0',
+                react: '19.2.8',
+                'react-dom': '19.2.8',
+                vue: '3.5.42',
             },
             devDependencies: { vite: '7.3.6', typescript: '5.9.3' },
         },
@@ -126,7 +132,7 @@ await writeFile(
 await mkdir(resolve(root, 'public/downloads'), { recursive: true });
 execFileSync('tar', [
     '-czf',
-    resolve(root, 'public/downloads/soeditor-examples-1.2.1.tar.gz'),
+    resolve(root, 'public/downloads/soeditor-examples-1.3.0.tar.gz'),
     '-C',
     download,
     '.',

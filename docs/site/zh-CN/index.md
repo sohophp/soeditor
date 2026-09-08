@@ -33,7 +33,7 @@ features:
 ## 从一个 textarea 开始
 
 ```sh
-pnpm add @soeditor/editor@1.2.1
+pnpm add @soeditor/editor@1.3.0
 ```
 
 ```ts

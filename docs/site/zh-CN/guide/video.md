@@ -5,14 +5,14 @@ description: '接入可选视频插件，编辑资源并预览文章。'
 
 # 视频编辑与预览
 
-视频是显式可选功能，自 1.2.0 提供，本站示例固定使用已发布的 1.2.1。默认 CMS 编辑器不会自动启用视频；从 `@soeditor/editor/video` 导入 `createCmsVideoPlugin()`，把插件加入 `plugins`，把 `cmsVideo` 加入工具栏。
+视频是显式可选功能，自 1.2.0 提供，本站示例固定使用已发布的 1.3.0。默认 CMS 编辑器不会自动启用视频；从 `@soeditor/editor/video` 导入 `createCmsVideoPlugin()`，把插件加入 `plugins`，把 `cmsVideo` 加入工具栏。
 
 ## 最小接入与文章预览
 
 下面使用 `soeditor-release` 别名锁定发布版本。在自己的项目中可改为相同版本的 `@soeditor/editor` 导入。
 
 ```sh
-pnpm add soeditor-release@npm:@soeditor/editor@1.2.1 @soeditor/presets@1.2.1
+pnpm add soeditor-release@npm:@soeditor/editor@1.3.0 @soeditor/presets@1.3.0
 ```
 
 <<< ../../examples/video.ts

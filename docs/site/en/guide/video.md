@@ -5,14 +5,14 @@ description: 'Enable optional video, edit media and preview the article.'
 
 # Video and article preview
 
-Video is an explicit optional feature introduced in 1.2.0. This site pins published 1.2.1. Import `createCmsVideoPlugin()` from `@soeditor/editor/video`, add it to `plugins` and add `cmsVideo` to the toolbar. The default CMS editor does not enable video automatically.
+Video is an explicit optional feature introduced in 1.2.0. This site pins published 1.3.0. Import `createCmsVideoPlugin()` from `@soeditor/editor/video`, add it to `plugins` and add `cmsVideo` to the toolbar. The default CMS editor does not enable video automatically.
 
 ## Minimal integration and article preview
 
 The example uses the `soeditor-release` alias to pin the published editor. In your application, equivalent imports from the same version of `@soeditor/editor` work too.
 
 ```sh
-pnpm add soeditor-release@npm:@soeditor/editor@1.2.1 @soeditor/presets@1.2.1
+pnpm add soeditor-release@npm:@soeditor/editor@1.3.0 @soeditor/presets@1.3.0
 ```
 
 <<< ../../examples/video.ts

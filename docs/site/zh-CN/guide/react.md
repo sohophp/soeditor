@@ -5,21 +5,15 @@ description: '绑定 CMS HTML、管理生命周期和按需启用 Source。'
 
 # React 接入
 
-::: warning 版本说明
-`/cms` 框架组件属于当前工作区的新增 API，尚未随 npm 1.2.1 发布。不要把下面的组件导入用于已发布的 1.2.1 适配包。旧的 `useSoEditorWorkspace` 入口继续兼容。
-:::
+## 安装与运行
 
-## 本地运行
-
-在 SoEditor 仓库根目录执行：
+`/cms` 组件从 1.3.0 起正式发布；原有 `useSoEditorWorkspace` 入口继续兼容。
 
 ```sh
-pnpm install
-pnpm --filter @soeditor/editor... --filter @soeditor/react --filter @soeditor/vue build
-DOCS_WORKSPACE_PREVIEW=1 pnpm docs:dev --host 0.0.0.0
+pnpm add @soeditor/editor@1.3.0 @soeditor/react@1.3.0 react react-dom
 ```
 
-打开终端显示的地址，进入本页后点击“开始体验”。此模式使用工作区组件和编辑器，标记为不索引的本地预览；正式构建仍使用发布包，部署检查会拒绝工作区预览产物。框架源码直接来自下面列出的仓库文件，不包含在 1.2.1 发布示例下载包中。
+点击示例的“开始体验”运行已发布的软件包。[下载完整示例源码](/downloads/soeditor-examples-1.3.0.tar.gz)，解压后执行 `pnpm install` 和 `pnpm dev`，打开 `react.html`。
 
 ## 绑定文章 HTML
 
@@ -60,7 +54,7 @@ export function ArticleField() {
 
 ## 排错与版本范围
 
-样式缺失时确认导入了 CMS CSS。找不到 `/cms` 时先核对版本：1.2.1 适配包没有这个新增入口。不要通过 `v-html` 或 `dangerouslySetInnerHTML` 渲染编辑内容，也不要在 render/setup 中创建实例。
+样式缺失时确认导入了 CMS CSS。找不到 `/cms` 时先核对版本：请安装 1.3.0 或更新版本，1.2.x 没有这个新增入口。不要通过 `v-html` 或 `dangerouslySetInnerHTML` 渲染编辑内容，也不要在 render/setup 中创建实例。
 
 声明的 peer 范围为 React 18.2–19、Vue 3.5；本轮自动化使用 React 19.2.8、Vue 3.5.42。SSR 支持不等于对全部 Next/Nuxt 版本的认证。
 

@@ -7,21 +7,15 @@ description: '运行绑定、只读、表单提交重置和 Source 示例。'
 
 <EditorDemo example="vue" />
 
-::: warning 版本说明
-`/cms` 框架组件属于当前工作区的新增 API，尚未随 npm 1.2.1 发布。不要把下面的组件导入用于已发布的 1.2.1 适配包。旧的 `useSoEditorWorkspace` 入口继续兼容。
-:::
+## 安装与运行
 
-## 本地运行
-
-在 SoEditor 仓库根目录执行：
+`/cms` 组件从 1.3.0 起正式发布；原有 `useSoEditorWorkspace` 入口继续兼容。
 
 ```sh
-pnpm install
-pnpm --filter @soeditor/editor... --filter @soeditor/react --filter @soeditor/vue build
-DOCS_WORKSPACE_PREVIEW=1 pnpm docs:dev --host 0.0.0.0
+pnpm add @soeditor/editor@1.3.0 @soeditor/vue@1.3.0 vue
 ```
 
-打开终端显示的地址，进入本页后点击“开始体验”。此模式使用工作区组件和编辑器，标记为不索引的本地预览；正式构建仍使用发布包，部署检查会拒绝工作区预览产物。框架源码直接来自下面列出的仓库文件，不包含在 1.2.1 发布示例下载包中。
+点击示例的“开始体验”运行已发布的软件包。[下载完整示例源码](/downloads/soeditor-examples-1.3.0.tar.gz)，解压后执行 `pnpm install` 和 `pnpm dev`，打开 `vue.html`。
 
 ## 体验步骤
 

@@ -47,10 +47,13 @@ for (const file of [...cn, ...en]) {
     }
 }
 for (const [specifier, version] of [
-    ['soeditor-release/cms', '1.2.1'],
-    ['@soeditor/file-manager', '1.2.1'],
-    ['@soeditor/adapter-sofinder', '1.2.1'],
-    ['@soeditor/presets/cms-runtime', '1.2.1'],
+    ['soeditor-release/cms', '1.3.0'],
+    ['@soeditor/editor/cms', '1.3.0'],
+    ['@soeditor/react/cms', '1.3.0'],
+    ['@soeditor/vue/cms', '1.3.0'],
+    ['@soeditor/file-manager', '1.3.0'],
+    ['@soeditor/adapter-sofinder', '1.3.0'],
+    ['@soeditor/presets/cms-runtime', '1.3.0'],
 ]) {
     const entry = fileURLToPath(import.meta.resolve(specifier));
     if (!entry.includes('/node_modules/'))

@@ -7,21 +7,15 @@ description: 'Try binding, readonly, form submit/reset and Source.'
 
 <EditorDemo example="react" />
 
-::: warning Version availability
-The framework `/cms` components are new workspace APIs and are not in the npm 1.2.1 adapters. Do not use these imports with the released 1.2.1 adapters. The existing `useSoEditorWorkspace` entry remains compatible.
-:::
+## Install and run
 
-## Run locally
-
-From the SoEditor repository root:
+The `/cms` components are released in 1.3.0. The existing `useSoEditorWorkspace` entry remains compatible.
 
 ```sh
-pnpm install
-pnpm --filter @soeditor/editor... --filter @soeditor/react --filter @soeditor/vue build
-DOCS_WORKSPACE_PREVIEW=1 pnpm docs:dev --host 0.0.0.0
+pnpm add @soeditor/editor@1.3.0 @soeditor/react@1.3.0 react react-dom
 ```
 
-Open the address printed in the terminal, visit this page and select “Start editing”. This mode uses workspace components and the workspace editor, is marked noindex and cannot pass the deployment gate. Standard builds still use published packages. The framework sources shown below live in the repository and are not part of the 1.2.1 released-example archive.
+Select “Start editing” to run the published packages. [Download complete example sources](/downloads/soeditor-examples-1.3.0.tar.gz), extract, run `pnpm install` and `pnpm dev`, then open `react.html`.
 
 ## Try it
 

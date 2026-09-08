@@ -5,7 +5,7 @@ description: 'Connect upload tasks, cancellation, progress and failure handling 
 
 # Upload images
 
-Install the matching `@soeditor/file-manager@1.2.1` and register `uploadServiceToken` per instance. `create(request)` returns a task with result, cancel and subscribe.
+Install the matching `@soeditor/file-manager@1.3.0` and register `uploadServiceToken` per instance. `create(request)` returns a task with result, cancel and subscribe.
 
 Resolve result with a safe URL and image metadata, reject on failure, cancel the actual request in cancel, and report progress through subscribe.
 
@@ -13,10 +13,10 @@ Client defaults are 25 MB per file and four concurrent uploads. The server still
 
 ## Plugins and adapter
 
-Use `/cms/optional` for external asset plugins in 1.2.1; see the [entry limitation](/en/api/imports#external-asset-plugins-in-1-2-1).
+Use `/cms/optional` for external asset plugins in 1.3.0; see the [entry limitation](/en/api/imports#external-asset-plugins).
 
 ```sh
-pnpm add @soeditor/file-manager@1.2.1 @soeditor/presets@1.2.1
+pnpm add @soeditor/file-manager@1.3.0 @soeditor/presets@1.3.0
 ```
 
 Preserve the CMS plugins and explicitly add asset plugins before registering services. A service registration alone does not register the `image.upload` command.

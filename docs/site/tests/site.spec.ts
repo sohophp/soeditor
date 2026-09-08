@@ -42,7 +42,7 @@ for (const locale of ['zh-CN', 'en']) {
         );
         await expect(page.locator('html')).toHaveAttribute('lang', locale);
         await expect(page.locator('.docs-version')).toContainText(
-            'SoEditor 1.2.1',
+            'SoEditor 1.3.0',
         );
         expect(
             await page.evaluate(

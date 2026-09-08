@@ -17,7 +17,7 @@ description: '运行视频编辑、HTML 保存和独立文章预览。'
 
 ## 下载与完整代码
 
-[下载发布版示例源码](/downloads/soeditor-examples-1.2.1.tar.gz)，解压执行 `pnpm install`、`pnpm dev`，打开 `video.html`。下载包含同源 `public/demo-video.webm`，不会上传编辑内容。
+[下载发布版示例源码](/downloads/soeditor-examples-1.3.0.tar.gz)，解压执行 `pnpm install`、`pnpm dev`，打开 `video.html`。下载包含同源 `public/demo-video.webm`，不会上传编辑内容。
 
 <<< ../../examples/video.ts
 

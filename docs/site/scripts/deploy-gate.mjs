@@ -12,7 +12,7 @@ if (manifest.workspacePreview === true)
 if (
     !/^[a-f0-9]{40}$/.test(process.env.DOCS_SHA ?? '') ||
     manifest.commit !== process.env.DOCS_SHA ||
-    manifest.editorVersion !== '1.2.1'
+    manifest.editorVersion !== '1.3.0'
 )
     throw new Error('Artifact identity mismatch');
 if (manifest.preview !== (process.env.DOCS_TARGET === 'preview'))

@@ -41,21 +41,9 @@ for (const framework of ['react', 'vue']) {
     }) => {
         const manifest = (await (
             await request.get('/deployment.json')
-        ).json()) as { workspacePreview?: boolean; preview: boolean };
+        ).json()) as { editorVersion: string };
+        expect(manifest.editorVersion).toBe('1.3.0');
         await page.goto(`/en/examples/${framework}`);
-        if (!manifest.workspacePreview) {
-            await expect(
-                page.getByRole('button', { name: 'Start editing' }),
-            ).toHaveCount(0);
-            await expect(page.locator('.editor-demo')).toContainText(
-                'not released yet',
-            );
-            expect(
-                (await request.get(`/demos/${framework}.html`)).status(),
-            ).toBe(404);
-            return;
-        }
-        expect(manifest.preview).toBe(true);
         await page.getByRole('button', { name: 'Start editing' }).click();
         const frame = page.frameLocator('iframe');
         await expect(frame.locator('body')).toHaveAttribute(

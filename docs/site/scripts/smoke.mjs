@@ -8,7 +8,7 @@ for (const [path, status, text] of [
     ['/demos/basic.html', 200, 'SoEditor'],
     ['/favicon.svg', 200, '<svg'],
     ['/not-a-document-9831', 404, '404'],
-    ['/deployment.json', 200, '1.2.1'],
+    ['/deployment.json', 200, '"editorVersion"'],
 ]) {
     const response = await fetch(new URL(path, origin), {
         signal: AbortSignal.timeout(15000),
@@ -38,6 +38,37 @@ const home = await homeResponse.text();
 const manifest = await fetch(new URL('/deployment.json', origin)).then(
     (response) => response.json(),
 );
+if (!['1.2.1', '1.3.0'].includes(manifest.editorVersion))
+    throw new Error('Unsupported documentation artifact version');
+if (manifest.editorVersion === '1.3.0') {
+    for (const topic of ['react', 'vue', 'video']) {
+        for (const path of [
+            `/en/examples/${topic}`,
+            `/zh-CN/guide/${topic}`,
+            `/demos/${topic}.html`,
+        ]) {
+            const response = await fetch(new URL(path, origin), {
+                signal: AbortSignal.timeout(15000),
+            });
+            if (
+                response.status !== 200 ||
+                !(await response.text()).includes('SoEditor')
+            )
+                throw new Error(`Released example missing: ${path}`);
+        }
+    }
+    const companion = await fetch(new URL('/zh-CN/guide/sofinder', origin), {
+        signal: AbortSignal.timeout(15000),
+    });
+    const html = await companion.text();
+    if (
+        companion.status !== 200 ||
+        !html.includes('https://sofinder.sohophp.app/') ||
+        !html.includes('最佳搭档')
+    )
+        throw new Error('SoFinder companion documentation missing');
+}
+
 if (
     manifest.preview &&
     (!homeResponse.headers.get('x-robots-tag')?.includes('noindex') ||

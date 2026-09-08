@@ -13,7 +13,7 @@ Existing consumers should follow their version’s public API and migration poli
 
 ## CMS framework integration
 
-The new [React](/en/guide/react) and [Vue](/en/guide/vue) CMS components are thin adapters for ordinary website forms and keep Core framework-independent. They are unreleased and use an explicit local preview. Published video support has a [guide](/en/guide/video) and [runnable example](/en/examples/video).
+The new [React](/en/guide/react) and [Vue](/en/guide/vue) CMS components are thin adapters for ordinary website forms and keep Core framework-independent. They are available through separate entries in 1.3.0. Published video support has a [guide](/en/guide/video) and [runnable example](/en/examples/video).
 
 ## Next steps
 

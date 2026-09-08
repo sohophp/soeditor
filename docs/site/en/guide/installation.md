@@ -8,7 +8,7 @@ description: 'Install a fixed version, import the CMS entry and stylesheet, and 
 Install a fixed version, import the CMS entry and stylesheet, and mount after the host DOM exists.
 
 ```sh
-pnpm add @soeditor/editor@1.2.1
+pnpm add @soeditor/editor@1.3.0
 ```
 
 ```html

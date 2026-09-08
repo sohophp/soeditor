@@ -5,21 +5,15 @@ description: 'Bind CMS HTML, manage lifecycle and enable Source on demand.'
 
 # Vue integration
 
-::: warning Version availability
-The framework `/cms` components are new workspace APIs and are not in the npm 1.2.1 adapters. Do not use these imports with the released 1.2.1 adapters. The existing `useSoEditorWorkspace` entry remains compatible.
-:::
+## Install and run
 
-## Run locally
-
-From the SoEditor repository root:
+The `/cms` components are released in 1.3.0. The existing `useSoEditorWorkspace` entry remains compatible.
 
 ```sh
-pnpm install
-pnpm --filter @soeditor/editor... --filter @soeditor/react --filter @soeditor/vue build
-DOCS_WORKSPACE_PREVIEW=1 pnpm docs:dev --host 0.0.0.0
+pnpm add @soeditor/editor@1.3.0 @soeditor/vue@1.3.0 vue
 ```
 
-Open the address printed in the terminal, visit this page and select “Start editing”. This mode uses workspace components and the workspace editor, is marked noindex and cannot pass the deployment gate. Standard builds still use published packages. The framework sources shown below live in the repository and are not part of the 1.2.1 released-example archive.
+Select “Start editing” to run the published packages. [Download complete example sources](/downloads/soeditor-examples-1.3.0.tar.gz), extract, run `pnpm install` and `pnpm dev`, then open `vue.html`.
 
 ## Bind article HTML
 
@@ -58,7 +52,7 @@ The default entry mounts CMS WYSIWYG. To enable Source, supply an explicit `crea
 
 ## Troubleshooting and versions
 
-Import the CMS stylesheet if chrome is missing. A missing `/cms` export usually means the released 1.2.1 adapter was used instead of the workspace component. Never render editor HTML with `v-html` or `dangerouslySetInnerHTML`, or create an editor during render/setup.
+Import the CMS stylesheet if chrome is missing. A missing `/cms` export usually means an older adapter is installed. Use 1.3.0 or later; 1.2.x does not provide this entry. Never render editor HTML with `v-html` or `dangerouslySetInnerHTML`, or create an editor during render/setup.
 
 Declared peer ranges are React 18.2–19 and Vue 3.5. This round uses React 19.2.8 and Vue 3.5.42 in automation. SSR support does not certify every Next/Nuxt version.
 
