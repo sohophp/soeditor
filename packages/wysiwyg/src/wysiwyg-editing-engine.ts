@@ -385,6 +385,7 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.element.addEventListener('paste', this.#handlePaste);
         this.element.addEventListener('drop', this.#handleDrop);
         this.element.addEventListener('focusin', this.#handleFocusIn);
+        this.element.addEventListener('focusout', this.#handleSelectionChange);
         this.element.addEventListener('pointerdown', this.#handlePointerDown);
         this.element.addEventListener('pointerover', this.#handlePointerOver);
         this.element.addEventListener('pointerup', this.#handlePointerUp);
@@ -614,6 +615,10 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.element.removeEventListener('paste', this.#handlePaste);
         this.element.removeEventListener('drop', this.#handleDrop);
         this.element.removeEventListener('focusin', this.#handleFocusIn);
+        this.element.removeEventListener(
+            'focusout',
+            this.#handleSelectionChange,
+        );
         this.element.removeEventListener(
             'pointerdown',
             this.#handlePointerDown,

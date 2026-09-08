@@ -1236,9 +1236,16 @@
 }
 
 .soeditor-classic .soeditor-ui__toolbar .soeditor-ui__value-control {
-    inline-size: auto;
+    inline-size: 7.5rem;
     max-inline-size: 7.5rem;
     flex-basis: auto;
     gap: 0.35rem;
     padding-inline: 0.45rem;
+}
+
+.soeditor-classic
+    .soeditor-ui__toolbar
+    [data-toolbar-item='fontSize']
+    > summary {
+    inline-size: 4.25rem;
 }

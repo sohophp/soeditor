@@ -1020,6 +1020,11 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+/* Keep neighboring hit targets stable when selection changes the label. */
 .soeditor-ui__value-control {
     gap: 0.35rem;
+    inline-size: 7.5rem;
+}
+.soeditor-ui__toolbar [data-toolbar-item='fontSize'] > summary {
+    inline-size: 4.25rem;
 }
