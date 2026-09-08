@@ -44,7 +44,13 @@ const repo = process.env.GITHUB_REPOSITORY;
 if (!repo) throw new Error('Missing repository');
 if (process.env.DOCS_TARGET === 'preview') {
     const run = gh(`repos/${repo}/actions/runs/${process.env.DOCS_RUN_ID}`);
-    const prs = run.pull_requests ?? [];
+    // GitHub may omit pull_requests after merge or branch deletion. Resolve
+    // the checked commit's PRs, then apply the same repository/head checks.
+    const prs = run.pull_requests?.length
+        ? run.pull_requests
+        : gh(`repos/${repo}/commits/${manifest.commit}/pulls`).filter(
+              (pr) => pr.head?.sha === manifest.commit,
+          );
     if (!prs.length)
         throw new Error('No trusted pull request associated with preview');
     for (const item of prs) {

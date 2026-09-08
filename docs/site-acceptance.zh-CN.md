@@ -32,12 +32,27 @@
 
 正式部署结果、版本 ID、提交和 lockfile SHA-256 由 Docs Site Deploy 的 Actions Summary 与 `docs-deployment-record` 记录。通过线上检查后才进入 `docs-deployment-archives`，保留最近十次及所有不足 90 天的成功产物。
 
-[正式站检查](https://github.com/sohophp/soeditor/actions/runs/34236020365)与
-[同提交仓库 CI](https://github.com/sohophp/soeditor/actions/runs/34236020201)已通过。
-首次[部署预检查](https://github.com/sohophp/soeditor/actions/runs/34236493457)
-在 Workers 自定义域名列表接口收到 403，尚未绑定域名，等待修正 Token 账号权限。
-正式域名的验收需另行记录成功部署运行；这些结果不代表已经上线。配置与恢复步骤见[运维说明](site-operations.zh-CN.md)。
+[正式站检查](https://github.com/sohophp/soeditor/actions/runs/34238901121)与
+[同提交仓库 CI](https://github.com/sohophp/soeditor/actions/runs/34238901123)已通过。
+更新 Cloudflare 凭据后，[正式部署及归档](https://github.com/sohophp/soeditor/actions/runs/34239363996)于 2026-09-08 15:10 UTC 成功。
+
+- 正式域名：[soeditor.sohophp.app](https://soeditor.sohophp.app/zh-CN/)，绑定 Worker `soeditor-docs`。
+- 首次验收提交：`cda8c6981ec2438811850d14a7d9995c5fc4a463`；编辑器版本：`1.2.1`。
+- Worker 版本 ID：`8033ed2e-570e-4895-b6d6-61613be726f8`。
+- 锁文件 SHA-256：`eb875278f4cec2607b2625070acd7416575060aa03f876433270813a44e3f419`。
+- Actions 线上检查通过 HTTPS、中英首页和深层页面、根路径 302、真实 404、示例与静态资源、缓存头、示例 noindex、正式 sitemap；线上部署标识与已检查提交一致。
+- Chromium 经本地网络代理访问正式域名，六个示例均完成初始化与规范 HTML 读取；文档页点击启动 iframe、关闭清理通过，没有页面脚本错误。这是线上功能验证，不作为生产网络性能测量。
+- 部署记录 `verified: true`、`rolledBack: false`；恢复产物已存入 [docs-deployment-archives](https://github.com/sohophp/soeditor/releases/tag/docs-deployment-archives)。
+- 本地直连 Cloudflare 网络不可达；Actions 的 HTTPS 检查与本地代理浏览器检查均成功，不能据此推断所有地区的直连可用性。
+
+预览重试在 GitHub 未返回运行关联 PR 时，通过已检查提交查询关联 PR，并继续核对同仓库与准确 head SHA；不会跳过产物或 PR 身份检查。配置与恢复步骤见[运维说明](site-operations.zh-CN.md)。
 
 ## 人工与长期检查边界
 
 WebKit 自动化不等于真实 Safari 认证。读屏、操作系统 IME、实际 Office 粘贴来源、目标地区网络与长期堆内存趋势尚需人工或长期验证。本次不把 DOM/iframe 清理检查宣称为内存泄漏的完整证明。
+
+## 首次上线后的网络检查
+
+线上 Chromium 的中英搜索、表单提交/重置、保存失败重试及 Source 延迟加载测试通过。资源选择与模拟上传操作通过，但 Cloudflare 自动注入的 `/cdn-cgi/rum` 请求触发了“无网络上传”断言。HTML 响应增加 `Cache-Control: no-transform`，阻止平台自动注入 Web Analytics，保持首期无监控 SDK 的部署约定；哈希资源的长期缓存策略不变。发布后的线上复测结果另行记录。依据：[Cloudflare Web Analytics FAQ](https://developers.cloudflare.com/web-analytics/faq/)。
+
+版本预览地址实测由 Cloudflare 将 `X-Robots-Tag` 覆盖为 `noindex`；稳定预览地址保留产物声明的 `noindex, nofollow`。因此版本预览验收同时要求响应头 `noindex` 与站点自行生成的 HTML robots `noindex, nofollow`，并要求 sitemap 返回 404。该平台差异不通过放宽索引保护处理。

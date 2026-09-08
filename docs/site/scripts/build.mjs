@@ -117,7 +117,7 @@ const preview = process.env.DOCS_PREVIEW === '1';
 await writeFile(resolve(dist, '_redirects'), '/ /zh-CN/ 302\n');
 await writeFile(
     resolve(dist, '_headers'),
-    `/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Cache-Control: public, max-age=0, must-revalidate\n${preview ? '  X-Robots-Tag: noindex, nofollow\n' : ''}\n/assets/*\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable\n/demos/assets/*\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable\n/demos/*\n  X-Robots-Tag: noindex, nofollow\n  Content-Security-Policy: frame-ancestors 'self'\n`,
+    `/*\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: strict-origin-when-cross-origin\n  Cache-Control: public, max-age=0, must-revalidate, no-transform\n${preview ? '  X-Robots-Tag: noindex, nofollow\n' : ''}\n/assets/*\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable\n/demos/assets/*\n  ! Cache-Control\n  Cache-Control: public, max-age=31536000, immutable\n/demos/*\n  X-Robots-Tag: noindex, nofollow\n  Content-Security-Policy: frame-ancestors 'self'\n`,
 );
 await writeFile(
     resolve(dist, 'robots.txt'),
