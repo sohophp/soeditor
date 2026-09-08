@@ -1,0 +1,631 @@
+{
+    "timestamp": "2026-09-08T06:22:59.370Z",
+    "commit": "676a633bb361044e4c30e44bc477317bd0e610ed",
+    "node": "v22.14.0",
+    "dirty": " M apps/playground/src/classic-demo.ts\n M apps/playground/src/wysiwyg-demo.ts\n M apps/playground/vite.config.ts\n M docs/api-report.md\n M docs/configuration.md\n M docs/performance.md\n M docs/wysiwyg-editor.md\n M packages/presets/src/cms-runtime.ts\n M packages/presets/src/cms.ts\n M packages/soeditor/package.json\n M packages/soeditor/src/classic-block-paragraph.ts\n M packages/soeditor/src/classic-editor.ts\n M packages/soeditor/src/wysiwyg-content.css\n M packages/soeditor/tsconfig.build.json\n M packages/soeditor/tsconfig.json\n M packages/soeditor/vite.config.ts\n M packages/ui/src/defaults.ts\n M packages/ui/src/editor-ui.ts\n M packages/ui/src/element-path.ts\n M packages/ui/src/index.ts\n M packages/ui/src/types.ts\n M packages/wysiwyg/src/index.ts\n M packages/wysiwyg/src/wysiwyg-editing-engine.ts\n M playwright.cross-browser.config.ts\n M playwright.product.config.ts\n M scripts/verify-documentation.mjs\n M tests/browser/classic-editor.spec.ts\n?? .changeset/configurable-toolbar-drawers.md\n?? .changeset/optional-cms-video.md\n?? .changeset/table-paragraph-position.md\n?? apps/playground/public/demo-video.vtt\n?? apps/playground/public/demo-video.webm\n?? docs/evidence/cms-video-current.json\n?? docs/evidence/cms-video-loading-current.json\n?? packages/soeditor/src/classic-dialog-loader.ts\n?? packages/soeditor/src/video-model.test.ts\n?? packages/soeditor/src/video-model.ts\n?? packages/soeditor/src/video-policy.ts\n?? packages/soeditor/src/video-runtime.ts\n?? packages/soeditor/src/video-transfer.ts\n?? packages/soeditor/src/video.ts\n?? packages/soeditor/vite.video-recovery.config.ts\n?? packages/ui/src/toolbar-mount.ts\n?? packages/wysiwyg/src/atomic-view.ts\n?? scripts/measure-cms-video.mjs\n?? tests/browser/video.spec.ts\n",
+    "budgets": {
+        "globalRaw": 500000,
+        "globalGzip": 150000,
+        "standaloneCssRaw": 27000,
+        "optionalInitialRaw": 514018,
+        "optionalInitialGzip": 152376,
+        "sourceIncrementRaw": 600000,
+        "sourceIncrementGzip": 210000,
+        "formatterIncrementRaw": 650000,
+        "formatterIncrementGzip": 160000,
+        "recoveryRaw": 800000,
+        "recoveryGzip": 260000,
+        "sourceLatency": {
+            "10240": {
+                "first": 1000,
+                "again": 300
+            },
+            "102400": {
+                "first": 2000,
+                "again": 1000
+            },
+            "512000": {
+                "first": 5000,
+                "again": 3000
+            }
+        }
+    },
+    "verification": {
+        "passed": true,
+        "limits": {
+            "globalRaw": 500000,
+            "globalGzip": 150000,
+            "standaloneCssRaw": 27000,
+            "optionalInitialRaw": 514018,
+            "optionalInitialGzip": 152376,
+            "sourceIncrementRaw": 600000,
+            "sourceIncrementGzip": 210000,
+            "formatterIncrementRaw": 650000,
+            "formatterIncrementGzip": 160000,
+            "recoveryRaw": 800000,
+            "recoveryGzip": 260000,
+            "sourceLatency": {
+                "10240": {
+                    "first": 1000,
+                    "again": 300
+                },
+                "102400": {
+                    "first": 2000,
+                    "again": 1000
+                },
+                "512000": {
+                    "first": 5000,
+                    "again": 3000
+                }
+            }
+        }
+    },
+    "artifacts": [
+        {
+            "path": "packages/soeditor/dist/soeditor.global.js",
+            "raw": 483993,
+            "gzip": 149632
+        },
+        {
+            "path": "packages/soeditor/dist/soeditor.css",
+            "raw": 24935,
+            "gzip": 4608
+        },
+        {
+            "path": "packages/soeditor/dist/cms.js",
+            "raw": 189,
+            "gzip": 157
+        }
+    ],
+    "assets": [
+        {
+            "file": "assets/runtime-D3iFwSeV.js",
+            "raw": 753220,
+            "gzip": 246485
+        },
+        {
+            "file": "assets/index-Bbjuk9LT.css",
+            "raw": 44751,
+            "gzip": 7480
+        },
+        {
+            "file": "assets/classic-link-context-DwSlpThT.js.map",
+            "raw": 8427,
+            "gzip": 2695
+        },
+        {
+            "file": "assets/index-uhQdLn_T.js.map",
+            "raw": 40804,
+            "gzip": 11501
+        },
+        {
+            "file": "assets/classic-block-paragraph-Hxaztgob.js.map",
+            "raw": 15090,
+            "gzip": 4522
+        },
+        {
+            "file": "assets/save-DzTcHyOP.js.map",
+            "raw": 10958,
+            "gzip": 3361
+        },
+        {
+            "file": "assets/translations-ivdjbkgq.js.map",
+            "raw": 31030,
+            "gzip": 8861
+        },
+        {
+            "file": "assets/classic-dialog-windows-CQ50S5SE.js.map",
+            "raw": 14954,
+            "gzip": 4401
+        },
+        {
+            "file": "assets/classic-image-context-Bf4fUrFE.js.map",
+            "raw": 47281,
+            "gzip": 11552
+        },
+        {
+            "file": "assets/link-attributes-BtxVCsKd-r3DFj-kk.js.map",
+            "raw": 13747,
+            "gzip": 4364
+        },
+        {
+            "file": "assets/classic-table-context-D_XbknP1.js.map",
+            "raw": 179390,
+            "gzip": 37697
+        },
+        {
+            "file": "assets/table-editor-attributes-BwkVkTQA.js.map",
+            "raw": 28019,
+            "gzip": 7619
+        },
+        {
+            "file": "assets/standalone-Cayz_KD-.js.map",
+            "raw": 181624,
+            "gzip": 48934
+        },
+        {
+            "file": "assets/html-DwgzGnwN.js.map",
+            "raw": 334238,
+            "gzip": 78328
+        },
+        {
+            "file": "assets/index-BNP4D_kE.js.map",
+            "raw": 805863,
+            "gzip": 167071
+        },
+        {
+            "file": "assets/index-Dt9YqYm4.js.map",
+            "raw": 1861062,
+            "gzip": 414072
+        },
+        {
+            "file": "assets/index-DdQhgaiI.js.map",
+            "raw": 2208626,
+            "gzip": 598576
+        }
+    ],
+    "recovery": {
+        "passed": true,
+        "scriptPolicy": "script-src 'self'",
+        "attempts": [
+            "http://127.0.0.1:4188/assets/runtime-D3iFwSeV.js?soeditor-retry=2",
+            "http://127.0.0.1:4188/assets/runtime-D3iFwSeV.js?soeditor-retry=3"
+        ]
+    },
+    "chunks": [
+        {
+            "file": "assets/index-Dt9YqYm4.js",
+            "entry": true,
+            "imports": [],
+            "dynamicImports": [
+                "assets/link-attributes-BtxVCsKd-r3DFj-kk.js",
+                "assets/translations-ivdjbkgq.js",
+                "assets/classic-dialog-windows-CQ50S5SE.js",
+                "assets/index-BNP4D_kE.js",
+                "assets/index-uhQdLn_T.js",
+                "assets/index-DdQhgaiI.js",
+                "assets/save-DzTcHyOP.js",
+                "assets/classic-block-paragraph-Hxaztgob.js",
+                "assets/classic-image-context-Bf4fUrFE.js",
+                "assets/classic-link-context-DwSlpThT.js",
+                "assets/classic-table-context-D_XbknP1.js"
+            ],
+            "modules": [
+                "\u0000vite/modulepreload-polyfill.js",
+                "packages/core/dist/index.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/unicode.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/error-codes.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/preprocessor.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/token.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/decode-codepoint.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/internal/decode-shared.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/generated/decode-data-html.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/internal/bin-trie-flags.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/decode.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/html.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/tokenizer/index.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/open-element-stack.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/formatting-element-list.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/tree-adapters/default.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/doctype.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/common/foreign-content.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/parser/index.js",
+                "node_modules/.pnpm/entities@8.0.0/node_modules/entities/dist/escape.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/serializer/index.js",
+                "node_modules/.pnpm/parse5@8.0.1/node_modules/parse5/dist/index.js",
+                "packages/html/dist/index.js",
+                "packages/projections/dist/index.js",
+                "packages/engine/dist/index.js",
+                "packages/rich-text/dist/index.js",
+                "\u0000vite/preload-helper.js",
+                "packages/ui/dist/ui-plugin-B97PUeID.js",
+                "packages/ui/dist/translation-resolution-Ro7XZZng.js",
+                "packages/ui/dist/editor-ui-CTpT0J0D.js",
+                "packages/presets/dist/create-preset-mkgk4ioM.js",
+                "packages/presets/dist/cms-runtime.js",
+                "packages/source/dist/recovery.js",
+                "packages/wysiwyg/dist/index.js",
+                "packages/soeditor/src/wysiwyg-content.css?inline",
+                "packages/soeditor/src/ui-translation-loader.ts",
+                "packages/soeditor/src/classic-editor-errors.ts",
+                "packages/soeditor/src/classic-host.ts",
+                "packages/soeditor/src/classic-dialog-loader.ts",
+                "packages/soeditor/src/classic-source-formatting.ts",
+                "packages/soeditor/src/classic-editor.ts",
+                "packages/soeditor/src/cms-optional.ts",
+                "packages/soeditor/src/cms-styles.css",
+                "node_modules/.cache/soeditor-cms-loading/main.js",
+                "node_modules/.cache/soeditor-cms-loading/index.html"
+            ],
+            "raw": 510918,
+            "gzip": 151821
+        },
+        {
+            "file": "assets/index-uhQdLn_T.js",
+            "entry": false,
+            "imports": ["assets/index-Dt9YqYm4.js"],
+            "dynamicImports": [],
+            "modules": ["packages/preview/dist/index.js"],
+            "raw": 13973,
+            "gzip": 4860
+        },
+        {
+            "file": "assets/index-DdQhgaiI.js",
+            "entry": false,
+            "imports": ["assets/index-Dt9YqYm4.js"],
+            "dynamicImports": [],
+            "modules": [
+                "node_modules/.pnpm/@lezer+common@1.5.2/node_modules/@lezer/common/dist/index.js",
+                "node_modules/.pnpm/@lezer+lr@1.4.10/node_modules/@lezer/lr/dist/index.js",
+                "node_modules/.pnpm/@lezer+highlight@1.2.3/node_modules/@lezer/highlight/dist/index.js",
+                "node_modules/.pnpm/@lezer+html@1.3.13/node_modules/@lezer/html/dist/index.js",
+                "node_modules/.pnpm/@lezer+css@1.3.6/node_modules/@lezer/css/dist/index.js",
+                "node_modules/.pnpm/@marijn+find-cluster-break@1.0.4/node_modules/@marijn/find-cluster-break/src/index.js",
+                "node_modules/.pnpm/@codemirror+state@6.7.1/node_modules/@codemirror/state/dist/index.js",
+                "node_modules/.pnpm/style-mod@4.1.3/node_modules/style-mod/src/style-mod.js",
+                "node_modules/.pnpm/w3c-keyname@2.2.8/node_modules/w3c-keyname/index.js",
+                "node_modules/.pnpm/crelt@1.0.7/node_modules/crelt/index.js",
+                "node_modules/.pnpm/@codemirror+view@6.43.9/node_modules/@codemirror/view/dist/index.js",
+                "node_modules/.pnpm/@codemirror+language@6.12.4/node_modules/@codemirror/language/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lang-css@6.3.1/node_modules/@codemirror/lang-css/dist/index.js",
+                "node_modules/.pnpm/@lezer+javascript@1.5.4/node_modules/@lezer/javascript/dist/index.js",
+                "node_modules/.pnpm/@codemirror+autocomplete@6.20.3/node_modules/@codemirror/autocomplete/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lang-javascript@6.2.5/node_modules/@codemirror/lang-javascript/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lang-html@6.4.12/node_modules/@codemirror/lang-html/dist/index.js",
+                "node_modules/.pnpm/@codemirror+lint@6.9.7/node_modules/@codemirror/lint/dist/index.js",
+                "node_modules/.pnpm/@codemirror+search@6.7.1/node_modules/@codemirror/search/dist/index.js",
+                "node_modules/.pnpm/@codemirror+commands@6.11.0/node_modules/@codemirror/commands/dist/index.js",
+                "node_modules/.pnpm/codemirror@6.0.2/node_modules/codemirror/dist/index.js",
+                "packages/source/dist/index.js"
+            ],
+            "raw": 589684,
+            "gzip": 203343
+        },
+        {
+            "file": "assets/save-DzTcHyOP.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/workspace/dist/save.js"],
+            "raw": 3290,
+            "gzip": 1295
+        },
+        {
+            "file": "assets/classic-block-paragraph-Hxaztgob.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/classic-block-paragraph.ts"],
+            "raw": 4374,
+            "gzip": 1723
+        },
+        {
+            "file": "assets/classic-image-context-Bf4fUrFE.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/classic-image-context.ts"],
+            "raw": 11678,
+            "gzip": 4191
+        },
+        {
+            "file": "assets/classic-link-context-DwSlpThT.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/classic-link-context.ts"],
+            "raw": 2261,
+            "gzip": 1038
+        },
+        {
+            "file": "assets/classic-table-context-D_XbknP1.js",
+            "entry": false,
+            "imports": ["assets/index-Dt9YqYm4.js"],
+            "dynamicImports": [
+                "assets/table-editor-attributes-BwkVkTQA.js",
+                "assets/table-editor-attributes-BwkVkTQA.js",
+                "assets/table-editor-attributes-BwkVkTQA.js"
+            ],
+            "modules": ["packages/soeditor/src/classic-table-context.ts"],
+            "raw": 41978,
+            "gzip": 12704
+        },
+        {
+            "file": "assets/link-attributes-BtxVCsKd-r3DFj-kk.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/ui/dist/link-attributes-BtxVCsKd.js"],
+            "raw": 4784,
+            "gzip": 1917
+        },
+        {
+            "file": "assets/translations-ivdjbkgq.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": [
+                "packages/ui/dist/translations-B4SF6ZvX.js",
+                "packages/ui/dist/translations.js"
+            ],
+            "raw": 17518,
+            "gzip": 6522
+        },
+        {
+            "file": "assets/classic-dialog-windows-CQ50S5SE.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/classic-dialog-windows.ts"],
+            "raw": 3433,
+            "gzip": 1505
+        },
+        {
+            "file": "assets/index-BNP4D_kE.js",
+            "entry": false,
+            "imports": ["assets/index-Dt9YqYm4.js"],
+            "dynamicImports": [
+                "assets/standalone-Cayz_KD-.js",
+                "assets/html-DwgzGnwN.js"
+            ],
+            "modules": ["packages/html-tools/dist/index.js"],
+            "raw": 641723,
+            "gzip": 152868
+        },
+        {
+            "file": "assets/table-editor-attributes-BwkVkTQA.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": ["packages/soeditor/src/table-editor-attributes.ts"],
+            "raw": 8698,
+            "gzip": 3229
+        },
+        {
+            "file": "assets/standalone-Cayz_KD-.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": [
+                "node_modules/.pnpm/prettier@3.9.6/node_modules/prettier/standalone.mjs"
+            ],
+            "raw": 81506,
+            "gzip": 27166
+        },
+        {
+            "file": "assets/html-DwgzGnwN.js",
+            "entry": false,
+            "imports": [],
+            "dynamicImports": [],
+            "modules": [
+                "node_modules/.pnpm/prettier@3.9.6/node_modules/prettier/plugins/html.mjs"
+            ],
+            "raw": 160156,
+            "gzip": 50634
+        }
+    ],
+    "runs": [
+        {
+            "size": 10240,
+            "source": false,
+            "create": {
+                "milliseconds": 91.19999998807907,
+                "characters": 10440
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-Dt9YqYm4.js",
+                "/assets/index-Bbjuk9LT.css"
+            ],
+            "destroy": 4.900000035762787,
+            "warmCreate": {
+                "milliseconds": 43.5,
+                "characters": 10440
+            },
+            "lifecycle": [],
+            "heapBefore": {
+                "usedSize": 3998640,
+                "totalSize": 6873088,
+                "embedderHeapUsedSize": 3155624,
+                "backingStorageSize": 610892
+            },
+            "heapAfter": {
+                "usedSize": 2504416,
+                "totalSize": 3203072,
+                "embedderHeapUsedSize": 1291112,
+                "backingStorageSize": 584446
+            }
+        },
+        {
+            "size": 10240,
+            "source": true,
+            "create": {
+                "milliseconds": 95.89999997615814,
+                "characters": 10440
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-Dt9YqYm4.js",
+                "/assets/index-Bbjuk9LT.css"
+            ],
+            "sourceFirst": {
+                "milliseconds": 174.20000004768372,
+                "requests": ["/assets/index-DdQhgaiI.js"]
+            },
+            "sourceAgain": 19,
+            "formatting": {
+                "milliseconds": 275.39999997615814,
+                "requests": [
+                    "/assets/index-BNP4D_kE.js",
+                    "http://127.0.0.1:4188/19ee39dc-7000-4d01-9d06-6f61545e7f1d"
+                ]
+            },
+            "destroy": 6.100000023841858,
+            "warmCreate": {
+                "milliseconds": 40.5,
+                "characters": 10440
+            },
+            "lifecycle": [],
+            "heapBefore": {
+                "usedSize": 4096008,
+                "totalSize": 6348800,
+                "embedderHeapUsedSize": 3159040,
+                "backingStorageSize": 612156
+            },
+            "heapAfter": {
+                "usedSize": 6172576,
+                "totalSize": 6934528,
+                "embedderHeapUsedSize": 2443032,
+                "backingStorageSize": 2554748
+            }
+        },
+        {
+            "size": 102400,
+            "source": false,
+            "create": {
+                "milliseconds": 292.5999999642372,
+                "characters": 102544
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-Dt9YqYm4.js",
+                "/assets/index-Bbjuk9LT.css"
+            ],
+            "destroy": 8.900000035762787,
+            "warmCreate": {
+                "milliseconds": 255.19999998807907,
+                "characters": 102544
+            },
+            "lifecycle": [],
+            "heapBefore": {
+                "usedSize": 10264340,
+                "totalSize": 17096704,
+                "embedderHeapUsedSize": 16101224,
+                "backingStorageSize": 716422
+            },
+            "heapAfter": {
+                "usedSize": 2528980,
+                "totalSize": 3727360,
+                "embedderHeapUsedSize": 3924616,
+                "backingStorageSize": 676550
+            }
+        },
+        {
+            "size": 102400,
+            "source": true,
+            "create": {
+                "milliseconds": 259.19999998807907,
+                "characters": 102544
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-Dt9YqYm4.js",
+                "/assets/index-Bbjuk9LT.css"
+            ],
+            "sourceFirst": {
+                "milliseconds": 233.30000001192093,
+                "requests": ["/assets/index-DdQhgaiI.js"]
+            },
+            "sourceAgain": 36,
+            "formatting": {
+                "milliseconds": 843.1000000238419,
+                "requests": [
+                    "/assets/index-BNP4D_kE.js",
+                    "http://127.0.0.1:4188/040503ea-75e1-45d4-a0be-0113bd2436ec"
+                ]
+            },
+            "destroy": 10.400000035762787,
+            "warmCreate": {
+                "milliseconds": 213.79999995231628,
+                "characters": 102544
+            },
+            "lifecycle": [],
+            "heapBefore": {
+                "usedSize": 10279272,
+                "totalSize": 16572416,
+                "embedderHeapUsedSize": 16229072,
+                "backingStorageSize": 717534
+            },
+            "heapAfter": {
+                "usedSize": 6366756,
+                "totalSize": 6934528,
+                "embedderHeapUsedSize": 12625960,
+                "backingStorageSize": 2775502
+            }
+        },
+        {
+            "size": 512000,
+            "source": false,
+            "create": {
+                "milliseconds": 800,
+                "characters": 512024
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-Dt9YqYm4.js",
+                "/assets/index-Bbjuk9LT.css"
+            ],
+            "destroy": 39.09999996423721,
+            "warmCreate": {
+                "milliseconds": 981.3000000119209,
+                "characters": 512024
+            },
+            "lifecycle": [],
+            "heapBefore": {
+                "usedSize": 8915112,
+                "totalSize": 47382528,
+                "embedderHeapUsedSize": 70733096,
+                "backingStorageSize": 1086684
+            },
+            "heapAfter": {
+                "usedSize": 2549356,
+                "totalSize": 3469312,
+                "embedderHeapUsedSize": 15647696,
+                "backingStorageSize": 1086030
+            }
+        },
+        {
+            "size": 512000,
+            "source": true,
+            "create": {
+                "milliseconds": 806.7000000476837,
+                "characters": 512024
+            },
+            "initialRequests": [
+                "/",
+                "/assets/index-Dt9YqYm4.js",
+                "/assets/index-Bbjuk9LT.css"
+            ],
+            "sourceFirst": {
+                "milliseconds": 430.7999999523163,
+                "requests": ["/assets/index-DdQhgaiI.js"]
+            },
+            "sourceAgain": 94.19999998807907,
+            "formatting": {
+                "milliseconds": 2776.099999964237,
+                "requests": [
+                    "/assets/index-BNP4D_kE.js",
+                    "http://127.0.0.1:4188/6ef1dfce-9add-4f21-9534-130062f47823"
+                ]
+            },
+            "destroy": 16.69999998807907,
+            "warmCreate": {
+                "milliseconds": 1015.0999999642372,
+                "characters": 512024
+            },
+            "lifecycle": [],
+            "heapBefore": {
+                "usedSize": 9059032,
+                "totalSize": 47382528,
+                "embedderHeapUsedSize": 70934720,
+                "backingStorageSize": 1087678
+            },
+            "heapAfter": {
+                "usedSize": 7046184,
+                "totalSize": 8515584,
+                "embedderHeapUsedSize": 57336752,
+                "backingStorageSize": 3698597
+            }
+        }
+    ]
+}

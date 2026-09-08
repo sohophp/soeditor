@@ -57,6 +57,12 @@ export default defineConfig({
                     import.meta.url,
                 ),
             ),
+            '@soeditor/editor/video': fileURLToPath(
+                new URL(
+                    '../../packages/soeditor/src/video.ts',
+                    import.meta.url,
+                ),
+            ),
             '@soeditor/editor': fileURLToPath(
                 new URL(
                     '../../packages/soeditor/src/index.ts',
@@ -105,6 +111,12 @@ export default defineConfig({
             '@soeditor/file-manager': fileURLToPath(
                 new URL(
                     '../../packages/file-manager/src/index.ts',
+                    import.meta.url,
+                ),
+            ),
+            '@soeditor/preview/media': fileURLToPath(
+                new URL(
+                    '../../packages/preview/src/media-service.ts',
                     import.meta.url,
                 ),
             ),

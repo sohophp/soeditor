@@ -1,0 +1,313 @@
+{
+    "checkedAt": "2026-09-08T08:59:32.810Z",
+    "production": {
+        "checkedAt": "2026-09-08T08:56:14.170Z",
+        "runtime": {
+            "file": "assets/video-runtime-Bi7kFhI8-agTB3j4m.js",
+            "bytes": 15284,
+            "gzip": 6616
+        },
+        "recovery": {
+            "file": "assets/video-runtime-5TONGix4.js",
+            "bytes": 47024,
+            "gzip": 17483
+        },
+        "cases": [
+            {
+                "enabled": false,
+                "startupMilliseconds": 53.90000003576279,
+                "requests": 4
+            },
+            {
+                "enabled": true,
+                "startupMilliseconds": 44.5,
+                "requests": 5,
+                "interaction": {
+                    "renderMilliseconds": 35.89999997615814,
+                    "characters": 11250,
+                    "cards": 150,
+                    "inputToFrameMilliseconds": {
+                        "samples": 13,
+                        "median": 4.699999988079071,
+                        "max": 16.099999964237213
+                    }
+                },
+                "productionRetry": true
+            }
+        ]
+    },
+    "loading": {
+        "timestamp": "2026-09-08T08:56:40.769Z",
+        "verification": {
+            "passed": true,
+            "limits": {
+                "globalRaw": 500000,
+                "globalGzip": 150000,
+                "standaloneCssRaw": 27000,
+                "optionalInitialRaw": 514018,
+                "optionalInitialGzip": 152376,
+                "sourceIncrementRaw": 600000,
+                "sourceIncrementGzip": 210000,
+                "formatterIncrementRaw": 650000,
+                "formatterIncrementGzip": 160000,
+                "recoveryRaw": 800000,
+                "recoveryGzip": 260000,
+                "sourceLatency": {
+                    "10240": {
+                        "first": 1000,
+                        "again": 300
+                    },
+                    "102400": {
+                        "first": 2000,
+                        "again": 1000
+                    },
+                    "512000": {
+                        "first": 5000,
+                        "again": 3000
+                    }
+                }
+            }
+        },
+        "artifacts": [
+            {
+                "path": "packages/soeditor/dist/soeditor.global.js",
+                "raw": 483993,
+                "gzip": 149632
+            },
+            {
+                "path": "packages/soeditor/dist/soeditor.css",
+                "raw": 24935,
+                "gzip": 4608
+            },
+            {
+                "path": "packages/soeditor/dist/cms.js",
+                "raw": 189,
+                "gzip": 157
+            }
+        ],
+        "runs": [
+            {
+                "size": 10240,
+                "source": false,
+                "create": {
+                    "milliseconds": 89.69999998807907,
+                    "characters": 10440
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-Cb-pDXDw.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "destroy": 3.699999988079071,
+                "warmCreate": {
+                    "milliseconds": 47.19999998807907,
+                    "characters": 10440
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 4035196,
+                    "totalSize": 7135232,
+                    "embedderHeapUsedSize": 3155840,
+                    "backingStorageSize": 611162
+                },
+                "heapAfter": {
+                    "usedSize": 2521524,
+                    "totalSize": 3203072,
+                    "embedderHeapUsedSize": 2032064,
+                    "backingStorageSize": 584446
+                }
+            },
+            {
+                "size": 10240,
+                "source": true,
+                "create": {
+                    "milliseconds": 116.60000002384186,
+                    "characters": 10440
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-Cb-pDXDw.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "sourceFirst": {
+                    "milliseconds": 197,
+                    "requests": ["/assets/index-DgQXO2ye.js"]
+                },
+                "sourceAgain": 22.5,
+                "formatting": {
+                    "milliseconds": 357.39999997615814,
+                    "requests": [
+                        "/assets/index-5iFNMG-i.js",
+                        "http://127.0.0.1:4188/d4bbec1b-dafa-4c0e-9850-a8469b236e03"
+                    ]
+                },
+                "destroy": 5.900000035762787,
+                "warmCreate": {
+                    "milliseconds": 39.60000002384186,
+                    "characters": 10440
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 4067896,
+                    "totalSize": 7135232,
+                    "embedderHeapUsedSize": 3158528,
+                    "backingStorageSize": 612156
+                },
+                "heapAfter": {
+                    "usedSize": 6172236,
+                    "totalSize": 6934528,
+                    "embedderHeapUsedSize": 2341584,
+                    "backingStorageSize": 2554748
+                }
+            },
+            {
+                "size": 102400,
+                "source": false,
+                "create": {
+                    "milliseconds": 242.60000002384186,
+                    "characters": 102544
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-Cb-pDXDw.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "destroy": 13.400000035762787,
+                "warmCreate": {
+                    "milliseconds": 263.7000000476837,
+                    "characters": 102544
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 10206792,
+                    "totalSize": 17096704,
+                    "embedderHeapUsedSize": 16101544,
+                    "backingStorageSize": 716557
+                },
+                "heapAfter": {
+                    "usedSize": 2528852,
+                    "totalSize": 3727360,
+                    "embedderHeapUsedSize": 3920920,
+                    "backingStorageSize": 676550
+                }
+            },
+            {
+                "size": 102400,
+                "source": true,
+                "create": {
+                    "milliseconds": 277.4000000357628,
+                    "characters": 102544
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-Cb-pDXDw.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "sourceFirst": {
+                    "milliseconds": 292.0999999642372,
+                    "requests": ["/assets/index-DgQXO2ye.js"]
+                },
+                "sourceAgain": 43.69999998807907,
+                "formatting": {
+                    "milliseconds": 914,
+                    "requests": [
+                        "/assets/index-5iFNMG-i.js",
+                        "http://127.0.0.1:4188/20f2d238-e511-4cea-ba0a-92c0a2536429"
+                    ]
+                },
+                "destroy": 10.300000011920929,
+                "warmCreate": {
+                    "milliseconds": 252.79999995231628,
+                    "characters": 102544
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 10242176,
+                    "totalSize": 16572416,
+                    "embedderHeapUsedSize": 16228904,
+                    "backingStorageSize": 717799
+                },
+                "heapAfter": {
+                    "usedSize": 6364064,
+                    "totalSize": 7196672,
+                    "embedderHeapUsedSize": 12640984,
+                    "backingStorageSize": 2775502
+                }
+            },
+            {
+                "size": 512000,
+                "source": false,
+                "create": {
+                    "milliseconds": 886.8000000119209,
+                    "characters": 512024
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-Cb-pDXDw.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "destroy": 26.80000001192093,
+                "warmCreate": {
+                    "milliseconds": 990.3999999761581,
+                    "characters": 512024
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 8869712,
+                    "totalSize": 48168960,
+                    "embedderHeapUsedSize": 70865472,
+                    "backingStorageSize": 1086684
+                },
+                "heapAfter": {
+                    "usedSize": 2547832,
+                    "totalSize": 3469312,
+                    "embedderHeapUsedSize": 15650360,
+                    "backingStorageSize": 1086030
+                }
+            },
+            {
+                "size": 512000,
+                "source": true,
+                "create": {
+                    "milliseconds": 856.6999999880791,
+                    "characters": 512024
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-Cb-pDXDw.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "sourceFirst": {
+                    "milliseconds": 392.5,
+                    "requests": ["/assets/index-DgQXO2ye.js"]
+                },
+                "sourceAgain": 91.89999997615814,
+                "formatting": {
+                    "milliseconds": 2686.199999988079,
+                    "requests": [
+                        "/assets/index-5iFNMG-i.js",
+                        "http://127.0.0.1:4188/59efe130-30ef-42f4-9d13-33382ef50cc4"
+                    ]
+                },
+                "destroy": 21.30000001192093,
+                "warmCreate": {
+                    "milliseconds": 981.1999999880791,
+                    "characters": 512024
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 8916172,
+                    "totalSize": 48955392,
+                    "embedderHeapUsedSize": 71004808,
+                    "backingStorageSize": 1087678
+                },
+                "heapAfter": {
+                    "usedSize": 7048228,
+                    "totalSize": 7991296,
+                    "embedderHeapUsedSize": 57346920,
+                    "backingStorageSize": 3698597
+                }
+            }
+        ]
+    }
+}

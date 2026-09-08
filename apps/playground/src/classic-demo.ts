@@ -59,7 +59,13 @@ let readonly = false;
 let darkTheme = false;
 let toastTimer: ReturnType<typeof setTimeout> | undefined;
 
+const videoPlugin = demoParameters.has('video')
+    ? (await import('@soeditor/editor/video')).createCmsVideoPlugin()
+    : undefined;
 const editor = await createClassicEditor(textarea, {
+    ...(videoPlugin === undefined
+        ? {}
+        : { plugins: [...cmsPreset.plugins, videoPlugin] }),
     preset: cmsPreset,
     ariaLabel: testMode ? 'Article editor' : '文章内容编辑器',
     autoGrow: testMode,
@@ -109,6 +115,7 @@ const editor = await createClassicEditor(textarea, {
     preview: true,
     toolbar: [
         ...cmsPreset.toolbar,
+        ...(videoPlugin === undefined ? [] : ['cmsVideo']),
         '|',
         'showBlocks',
         'format',
@@ -271,9 +278,15 @@ function openDemoAssetManager(
         {
             alt: '产品演示视频',
             kind: 'media',
-            mime: 'video/mp4',
-            name: '产品演示.mp4',
-            url: '/media/product-demo.mp4',
+            mime: videoPlugin === undefined ? 'video/mp4' : 'video/webm',
+            name:
+                videoPlugin === undefined
+                    ? '产品演示.mp4'
+                    : 'SoEditor 演示.webm',
+            url:
+                videoPlugin === undefined
+                    ? '/media/product-demo.mp4'
+                    : '/demo-video.webm',
         },
         {
             kind: 'file',
@@ -282,11 +295,34 @@ function openDemoAssetManager(
             url: '/assets/soeditor-content-guide.pdf',
         },
     ];
-    const compatible = assets.filter((asset) =>
-        options.kind === 'media'
-            ? asset.kind === 'media' || asset.kind === 'image'
-            : asset.kind === options.kind,
-    );
+    const candidates =
+        videoPlugin === undefined
+            ? assets
+            : [
+                  ...assets,
+                  {
+                      kind: 'file' as const,
+                      mime: 'text/vtt',
+                      name: '演示字幕.vtt',
+                      url: '/demo-video.vtt',
+                  },
+              ];
+    const compatible = candidates
+        .filter((asset) =>
+            options.kind === 'media'
+                ? asset.kind === 'media' || asset.kind === 'image'
+                : asset.kind === options.kind,
+        )
+        .filter(
+            (asset) =>
+                videoPlugin === undefined ||
+                options.accept === undefined ||
+                options.accept.some((mime) =>
+                    mime.endsWith('/*')
+                        ? asset.mime?.startsWith(mime.slice(0, -1))
+                        : asset.mime === mime,
+                ),
+        );
     const dialog = document.createElement('dialog');
     dialog.className = 'demo-asset-manager';
     dialog.setAttribute('aria-label', 'CMS asset manager');

@@ -3,8 +3,8 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     build: {
         lib: {
-            entry: 'src/index.ts',
-            fileName: 'index',
+            entry: { index: 'src/index.ts', media: 'src/media-service.ts' },
+            fileName: (_format, entryName) => `${entryName}.js`,
             formats: ['es'],
         },
         minify: false,

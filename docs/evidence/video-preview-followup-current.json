@@ -1,0 +1,20 @@
+{
+    "checkedAt": "2026-09-08T08:57:36.698Z",
+    "videos": 100,
+    "initialRequests": 1,
+    "requestsAfterTwelveTextEdits": 1,
+    "requestsAfterScrollToEnd": 2,
+    "retainedFirstPlayer": true,
+    "openMs": 875.8515499999994,
+    "scrollMs": 613.8914490000006,
+    "textRefresh": {
+        "samplesMs": [
+            226.49395699999968, 155.52206699999988, 159.84522600000037,
+            155.3546809999989, 169.52674099999967, 186.8489529999988,
+            164.09400300000016, 155.05109600000105, 172.42773399999896,
+            168.74549600000137, 167.90214500000002, 174.12509599999976
+        ],
+        "p95Ms": 226.49395699999968
+    },
+    "scope": "Production-built optional CMS fixture; deterministic YouTube response, no live playback claim."
+}

@@ -1,0 +1,98 @@
+{
+    "liveYoutubeMetadata": {
+        "checkedAt": "2026-09-08T07:09:29.131Z",
+        "title": "Rick Astley - Never Gonna Give You Up (Official Video) (4K Remaster)",
+        "poster": "https://i.ytimg.com/vi/dQw4w9WgXcQ/hqdefault.jpg",
+        "status": "Video details loaded. Your edits are preserved."
+    },
+    "loadingVerification": {
+        "passed": true,
+        "limits": {
+            "globalRaw": 500000,
+            "globalGzip": 150000,
+            "standaloneCssRaw": 27000,
+            "optionalInitialRaw": 514018,
+            "optionalInitialGzip": 152376,
+            "sourceIncrementRaw": 600000,
+            "sourceIncrementGzip": 210000,
+            "formatterIncrementRaw": 650000,
+            "formatterIncrementGzip": 160000,
+            "recoveryRaw": 800000,
+            "recoveryGzip": 260000,
+            "sourceLatency": {
+                "10240": {
+                    "first": 1000,
+                    "again": 300
+                },
+                "102400": {
+                    "first": 2000,
+                    "again": 1000
+                },
+                "512000": {
+                    "first": 5000,
+                    "again": 3000
+                }
+            }
+        }
+    },
+    "initial": [
+        {
+            "file": "assets/index-Dt9YqYm4.js",
+            "raw": 510918,
+            "gzip": 151821
+        }
+    ],
+    "artifacts": [
+        {
+            "path": "packages/soeditor/dist/soeditor.global.js",
+            "raw": 483993,
+            "gzip": 149632
+        },
+        {
+            "path": "packages/soeditor/dist/soeditor.css",
+            "raw": 24935,
+            "gzip": 4608
+        },
+        {
+            "path": "packages/soeditor/dist/cms.js",
+            "raw": 189,
+            "gzip": 157
+        }
+    ],
+    "video": {
+        "checkedAt": "2026-09-08T07:10:13.699Z",
+        "runtime": {
+            "file": "assets/video-runtime-BCMiQxr2-BY4jZZsQ.js",
+            "bytes": 15065,
+            "gzip": 6476
+        },
+        "recovery": {
+            "file": "assets/video-runtime-Dpv7WC52.js",
+            "bytes": 44562,
+            "gzip": 16402
+        },
+        "cases": [
+            {
+                "enabled": false,
+                "startupMilliseconds": 55.90000003576279,
+                "requests": 4
+            },
+            {
+                "enabled": true,
+                "startupMilliseconds": 44.60000002384186,
+                "requests": 4,
+                "interaction": {
+                    "renderMilliseconds": 34.69999998807907,
+                    "characters": 11250,
+                    "cards": 150,
+                    "inputToFrameMilliseconds": {
+                        "samples": 13,
+                        "median": 7.600000023841858,
+                        "max": 15.400000035762787
+                    }
+                },
+                "productionRetry": true
+            }
+        ]
+    }
+}

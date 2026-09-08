@@ -2,11 +2,11 @@
 
 ## Current worktree — 2026-09-08
 
-The `1.1.0` release is owner-authorized on 2026-09-08 and all 24 manifests are aligned. Publication and public verification are tracked by the protected npm workflow; local builds are not a registry publication claim.
+The `1.2.0` release is owner-authorized on 2026-09-08 and all 24 manifests are aligned. Publication and public verification are tracked by the protected npm workflow; local builds are not a registry publication claim.
 
 The active follow-up is [CMS correctness and article baselines](cms-followup-2026-09-08.zh-CN.md). That page is the single current acceptance summary for implementation, source/worktree identity, artifact measurements, commands and outstanding qualification. The latest follow-up has completed implementation and automated validation; real-device and real-material manual qualification remains pending. The linked report distinguishes the full matrix from subsequent targeted regression runs.
 
-The default product remains a CMS HTML WYSIWYG editor with optional first-use HTML Source and two bounded split views. Existing public compatibility entries remain supported outside the default loading graph. No public API removal, budget increase, publication, tag or deployment is part of this follow-up.
+The default product remains a CMS HTML WYSIWYG editor with optional first-use HTML Source and two bounded split views. Existing public compatibility entries remain supported outside the default loading graph. The 1.2.0 release is authorized separately; it has no public API removals or budget increases. See [release notes](releases/1.2.0.md) for the reviewed scope and verification status.
 
 ## Current verification boundaries
 

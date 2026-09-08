@@ -13,6 +13,7 @@
     "include": [
         "src/cms.ts",
         "src/cms-optional.ts",
+        "src/video.ts",
         "src/index.ts",
         "src/style-module.d.ts",
         "src/vite-env.d.ts"

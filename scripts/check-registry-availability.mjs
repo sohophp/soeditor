@@ -12,10 +12,10 @@ const releaseVersion = JSON.parse(
 
 if (
     typeof releaseVersion !== 'string' ||
-    !/^1\.1\.\d+$/u.test(releaseVersion)
+    !/^1\.2\.\d+$/u.test(releaseVersion)
 ) {
     throw new Error(
-        'Registry availability checks only accept a 1.1.x release version.',
+        'Registry availability checks only accept a 1.2.x release version.',
     );
 }
 
@@ -38,7 +38,7 @@ if (
     packageNames.length !== 24 ||
     packageNames.some((name) => typeof name !== 'string')
 ) {
-    throw new Error('Expected exactly 23 named public packages.');
+    throw new Error('Expected exactly 24 named public packages.');
 }
 if (
     !packageNames.includes('@soeditor/editor') ||

@@ -45,6 +45,7 @@ export type {
     StatusItemFactory,
     StatusItemInstance,
     ToolbarConfiguration,
+    ToolbarDrawerConfiguration,
     ToolbarItemContext,
     ToolbarItemFactory,
     ToolbarItemInstance,

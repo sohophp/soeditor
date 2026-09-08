@@ -7,7 +7,7 @@ symbol list or declaration hash requires explicit API review. CSS exports and
 CLI bins are listed as stable resources. Undeclared `src`/`dist` subpaths and
 implementation modules are internal even when present in a checkout or tarball.
 
-Summary: 24 packages; 944 stable, 395 experimental, and 0 deprecated symbol
+Summary: 24 packages; 962 stable, 395 experimental, and 0 deprecated symbol
 entries.
 
 ## @soeditor/adapter-sofinder
@@ -164,7 +164,7 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`4511b43628dda952feedfe7ceec593ef6cf08ab8936750816a6f2d9a1673bc6b`
+`3b28887e5966f52c2742319a45d60d91e251a3149fe0dd6c695ce6040b5f1582`
 
 ### .
 
@@ -179,6 +179,11 @@ Declaration SHA-256:
 | `AlignmentPlugin`                                     | type/value | experimental   | `3df4e73fbeb8d91d` |
 | `analyzeEmailContent`                                 | value      | experimental   | `b7a96156c7bfef2c` |
 | `applyPreviewTemplate`                                | value      | stable         | `4551f5a1a7045cf7` |
+| `AtomicTransferContext`                               | type       | stable         | `6ed9ddd0fd3f2c4a` |
+| `AtomicView`                                          | type       | stable         | `113f5e4af5c95997` |
+| `AtomicViewContext`                                   | type       | stable         | `c839ec97b50fcc50` |
+| `AtomicViewService`                                   | type       | stable         | `66bf85786f5f57d1` |
+| `atomicViewServiceToken`                              | value      | stable         | `dbe5f7c296a849c6` |
 | `attachClassicSourceEnhancements`                     | value      | stable         | `bd558d8b557de45d` |
 | `BalloonOptions`                                      | type       | stable         | `fe1b841d335c239b` |
 | `BalloonService`                                      | type       | stable         | `5efa888c1e4ca0d2` |
@@ -649,7 +654,8 @@ Declaration SHA-256:
 | `TableStructureInsertOptions`                         | type       | stable         | `0bc67cd85dbed8f8` |
 | `TableStructureSnapshot`                              | type       | stable         | `592d968fc2d467e2` |
 | `TextAlignment`                                       | type       | experimental   | `dda880ee7c63d1fb` |
-| `ToolbarConfiguration`                                | type       | stable         | `622e54f7531e5711` |
+| `ToolbarConfiguration`                                | type       | stable         | `e12d005b4f3fc0b3` |
+| `ToolbarDrawerConfiguration`                          | type       | stable         | `86307aaa0ccb52ab` |
 | `ToolbarItemContext`                                  | type       | stable         | `19bd4fe781eb4c79` |
 | `ToolbarItemFactory`                                  | type       | stable         | `09cb3bf4cbd71052` |
 | `ToolbarItemInstance`                                 | type       | stable         | `036c97d48fbbbe1c` |
@@ -777,6 +783,16 @@ Declaration SHA-256:
 - `./styles.css` — stable resource (./dist/styles.css)
 - `./content.css` — stable resource (./dist/content.css)
 - `./cms/styles.css` — stable resource (./dist/cms-styles.css)
+
+### ./video
+
+Declaration SHA-256:
+`2f7ffdb46727b79a2622e8e248e67e2d7c701d246b1afa71ae2f53296fa8f434`
+
+| Export                 | Kind  | Classification | Signature SHA-256  |
+| ---------------------- | ----- | -------------- | ------------------ |
+| `CmsVideoOptions`      | type  | stable         | `e3ca2b0107da0605` |
+| `createCmsVideoPlugin` | value | stable         | `966f668c645d04f5` |
 
 ## @soeditor/engine
 
@@ -1326,7 +1342,7 @@ Declaration SHA-256:
 ## @soeditor/preview
 
 Declaration tree SHA-256:
-`b48380008209fedd97223c033c4c9e84cb49e2a90ef2f182d3aece18d50a9f4b`
+`8f51c84071dad46327df673564feaad465f23f18419d14c4b95c6f9e56d0782d`
 
 ### .
 
@@ -1360,6 +1376,18 @@ Declaration SHA-256:
 | `previewServiceToken`                   | value      | stable         | `619c4b5bf98ebde8` |
 | `renderPreviewDocument`                 | value      | stable         | `b847993ba5866229` |
 | `UnsupportedPreviewDocumentFormatError` | type/value | stable         | `a7e5c38acc107a97` |
+
+### ./media
+
+Declaration SHA-256:
+`75cf4c0ef361c2fd048c2302da9f557aade4a86e29926e424cb60a8e2ef0f1f4`
+
+| Export                     | Kind  | Classification | Signature SHA-256  |
+| -------------------------- | ----- | -------------- | ------------------ |
+| `PreviewMediaPlayer`       | type  | stable         | `c97e9b8ac2ca1c41` |
+| `PreviewMediaService`      | type  | stable         | `193a046fa836c6f1` |
+| `previewMediaServiceToken` | value | stable         | `88dae980e28c2d7d` |
+| `PreviewMediaSource`       | type  | stable         | `ab7da8f5f045211e` |
 
 ## @soeditor/projections
 
@@ -1586,12 +1614,12 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`7454fbb52af33140155b77bc319334133b7400b41a738dcba0e932eb583fb429`
+`435242b3a9e9cd7e213bbf9c37f4a5c11be7a1d3a21c12cbce6c5eb08b283c87`
 
 ### .
 
 Declaration SHA-256:
-`9f4117dc31134930ede964714e795c13ace669cc6c9120d51ef755f231654dec`
+`a757f9db4d90e8243115ac1dd6b5a7eaf847f2369439700c7190f33a1bc5a924`
 
 | Export                                 | Kind       | Classification | Signature SHA-256  |
 | -------------------------------------- | ---------- | -------------- | ------------------ |
@@ -1630,7 +1658,8 @@ Declaration SHA-256:
 | `resolveUiTranslation`                 | value      | experimental   | `7844a7e71488dbc4` |
 | `StatusItemFactory`                    | type       | stable         | `477add2fa7d8c0fd` |
 | `StatusItemInstance`                   | type       | stable         | `cf33999b11e680ff` |
-| `ToolbarConfiguration`                 | type       | stable         | `622e54f7531e5711` |
+| `ToolbarConfiguration`                 | type       | stable         | `e12d005b4f3fc0b3` |
+| `ToolbarDrawerConfiguration`           | type       | stable         | `86307aaa0ccb52ab` |
 | `ToolbarItemContext`                   | type       | stable         | `19bd4fe781eb4c79` |
 | `ToolbarItemFactory`                   | type       | stable         | `09cb3bf4cbd71052` |
 | `ToolbarItemInstance`                  | type       | stable         | `036c97d48fbbbe1c` |
@@ -1760,15 +1789,20 @@ Declaration SHA-256:
 ## @soeditor/wysiwyg
 
 Declaration tree SHA-256:
-`bb18d7a4489d2bcf9ccab1dc9a8f56895c7e018f529590f13a268a631f5c2882`
+`375be9d28bd05b760ed6ab932063a89c6a7edd404c366656a0cea17cac50b85a`
 
 ### .
 
 Declaration SHA-256:
-`7d00c9162ebde0f25bffa5392bb29454cd979eedfd297914d9ae36fbbd4e2152`
+`f6adc02d11ed3c90e3d0a93f57156ebbd1b53e4cc63b68b5e0e34d67a102e380`
 
 | Export                               | Kind       | Classification | Signature SHA-256  |
 | ------------------------------------ | ---------- | -------------- | ------------------ |
+| `AtomicTransferContext`              | type       | stable         | `6ed9ddd0fd3f2c4a` |
+| `AtomicView`                         | type       | stable         | `113f5e4af5c95997` |
+| `AtomicViewContext`                  | type       | stable         | `c839ec97b50fcc50` |
+| `AtomicViewService`                  | type       | stable         | `66bf85786f5f57d1` |
+| `atomicViewServiceToken`             | value      | stable         | `dbe5f7c296a849c6` |
 | `createWysiwygEditingEngine`         | value      | experimental   | `4f1684f192033fe5` |
 | `setWysiwygContentStylePreset`       | value      | experimental   | `7622d99d8aaebf5c` |
 | `WysiwygContentStylePreset`          | type       | experimental   | `6ed4640781ba26c2` |

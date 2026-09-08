@@ -4,5 +4,10 @@
         "lib": ["DOM", "ES2022"],
         "types": ["node", "vitest/globals"]
     },
-    "include": ["src", "vite.config.ts", "vite.global.config.ts"]
+    "include": [
+        "src",
+        "vite.config.ts",
+        "vite.global.config.ts",
+        "vite.video-recovery.config.ts"
+    ]
 }

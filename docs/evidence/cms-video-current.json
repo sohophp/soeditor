@@ -1,0 +1,36 @@
+{
+    "checkedAt": "2026-09-08T06:23:08.117Z",
+    "runtime": {
+        "file": "assets/video-runtime-DI1JMROS-O43bVgXF.js",
+        "bytes": 12498,
+        "gzip": 5425
+    },
+    "recovery": {
+        "file": "assets/video-runtime-Br9htE3l.js",
+        "bytes": 41966,
+        "gzip": 15392
+    },
+    "cases": [
+        {
+            "enabled": false,
+            "startupMilliseconds": 54.80000001192093,
+            "requests": 4
+        },
+        {
+            "enabled": true,
+            "startupMilliseconds": 43.90000003576279,
+            "requests": 4,
+            "interaction": {
+                "renderMilliseconds": 39.80000001192093,
+                "characters": 11250,
+                "cards": 150,
+                "inputToFrameMilliseconds": {
+                    "samples": 13,
+                    "median": 3.800000011920929,
+                    "max": 14.099999964237213
+                }
+            },
+            "productionRetry": true
+        }
+    ]
+}

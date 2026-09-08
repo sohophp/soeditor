@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/wysiwyg",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "license": "MIT",
     "description": "CMS-oriented WYSIWYG editing projection for SoEditor.",
     "keywords": [

@@ -3,7 +3,11 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
     globalSetup: './tests/browser/cross-browser-preflight.ts',
     testDir: './tests/browser',
-    testMatch: ['cms-multibrowser.spec.ts', 'wysiwyg-editor.spec.ts'],
+    testMatch: [
+        'cms-multibrowser.spec.ts',
+        'wysiwyg-editor.spec.ts',
+        'video.spec.ts',
+    ],
     fullyParallel: false,
     projects: (['firefox', 'webkit'] as const).flatMap((browserName) => [
         { name: browserName, use: { browserName } },

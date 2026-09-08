@@ -448,7 +448,16 @@ test('presents the complete CMS showcase from the root URL', async ({
     ).toBeVisible();
     await expect(page.locator('.soeditor-classic')).toBeVisible();
     await page.locator('.soeditor-classic__visual p').first().click();
-    await page.locator('[data-toolbar-item="moreFormatting"] summary').click();
+    await expect(
+        page.locator('[data-toolbar-item="moreFormatting"]'),
+    ).toHaveCount(0);
+    for (const id of ['strike', 'subscript', 'superscript', 'removeFormat']) {
+        const button = page.locator(`[data-toolbar-item="${id}"]`);
+        await expect(button).toBeVisible();
+        await expect(button.locator('svg')).toHaveCount(1);
+        await expect(button.locator('xpath=ancestor::details')).toHaveCount(0);
+    }
+
     await expect(
         page.getByRole('button', { name: '删除线', exact: true }),
     ).toBeVisible();
@@ -935,6 +944,7 @@ test('keeps image properties usable while moving and resizing within the viewpor
     const footer = dialog.locator('.soeditor-ui__dialog-actions');
     const resize = dialog.getByRole('button', { name: 'Resize dialog' });
     await expect(dialog).toBeVisible();
+    await expect(resize).toBeVisible();
     await expect(title).toBeVisible();
     await expect(footer).toBeVisible();
     await expect(dialog).toHaveCSS('overflow', 'hidden');
@@ -5398,9 +5408,96 @@ test('table type-around inserts outside the table, preserves cells and supports 
     await visual.locator('td').first().hover();
     const controls = page.locator('.soeditor-block-paragraph');
     await expect(controls).toHaveCSS('opacity', '1');
+    const assertPlacement = async (): Promise<void> => {
+        await expect
+            .poll(async () => {
+                const table = await visual
+                    .locator('table')
+                    .first()
+                    .boundingBox();
+                const before = await controls
+                    .locator('[data-insert-paragraph="before"]')
+                    .boundingBox();
+                const after = await controls
+                    .locator('[data-insert-paragraph="after"]')
+                    .boundingBox();
+                return (
+                    table !== null &&
+                    before !== null &&
+                    after !== null &&
+                    Math.abs(before.y + before.height - table.y) <= 1 &&
+                    Math.abs(after.y - table.y - table.height) <= 1 &&
+                    before.x >= table.x &&
+                    after.x + after.width <= table.x + table.width
+                );
+            })
+            .toBe(true);
+    };
+    const clickControl = async (side: 'before' | 'after'): Promise<void> => {
+        await visual.locator('td').first().hover();
+        const button = controls.locator(`[data-insert-paragraph="${side}"]`);
+        const box = await button.boundingBox();
+        if (box === null) throw new Error('Missing paragraph control.');
+        // Cross the circular button's transparent corner slowly, as a real pointer does.
+        await page.mouse.move(box.x + 1, box.y + box.height - 1, { steps: 20 });
+        await page.waitForTimeout(150);
+        await page.mouse.move(box.x + box.width / 2, box.y + box.height / 2, {
+            steps: 10,
+        });
+        await expect(controls).toHaveCSS('opacity', '1');
+        await expect(button).toHaveCSS('pointer-events', 'auto');
+        await page.mouse.click(box.x + box.width / 2, box.y + box.height / 2);
+    };
+    await assertPlacement();
+    for (const zoom of ['0.8', '1.25', '1']) {
+        await page.locator('.soeditor-classic').evaluate((host, zoom) => {
+            host.style.zoom = zoom;
+        }, zoom);
+        await assertPlacement();
+    }
     expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
         source,
     );
+    for (const view of [
+        'wysiwyg-source-horizontal',
+        'wysiwyg-source-vertical',
+        'wysiwyg',
+    ] as const) {
+        await page.evaluate(
+            (view) => globalThis.__classicDemo.editor.setWorkspaceView(view),
+            view,
+        );
+        await visual.locator('td').first().hover();
+        await assertPlacement();
+    }
+    const visualHost = page.locator('.soeditor-classic__visual');
+    await visualHost.evaluate((host) => {
+        host.style.height = '200px';
+        host.style.overflow = 'auto';
+    });
+    await visual.evaluate((content) => {
+        content.style.paddingTop = '80px';
+        content.style.minHeight = '800px';
+    });
+    await visual.locator('td').first().hover();
+    await assertPlacement();
+    await visualHost.evaluate((host) => {
+        host.scrollTop = 40;
+    });
+    await expect
+        .poll(() => visualHost.evaluate((host) => host.scrollTop))
+        .toBe(40);
+    await assertPlacement();
+    await visualHost.evaluate((host) => {
+        host.scrollTop = 0;
+        host.style.removeProperty('height');
+        host.style.removeProperty('overflow');
+    });
+    await visual.evaluate((content) => {
+        content.style.removeProperty('padding-top');
+        content.style.removeProperty('min-height');
+    });
+    await assertPlacement();
     await page.mouse.move(1, 1);
     expect(
         await controls.evaluate((node) => getComputedStyle(node).opacity),
@@ -5409,16 +5506,12 @@ test('table type-around inserts outside the table, preserves cells and supports 
     await expect(controls).toHaveCSS('opacity', '1');
     await visual.locator('td').first().hover();
     await expect(controls).toHaveCSS('opacity', '1');
-    await page
-        .getByRole('button', { name: 'Insert paragraph before this block' })
-        .click();
+    await clickControl('before');
     await page.keyboard.type('Before table');
     await expect(visual.locator(':scope > p + table')).toHaveCount(1);
     await expect(visual.locator(':scope > p')).toHaveText('Before table');
     await visual.locator('td').last().click();
-    await page
-        .getByRole('button', { name: 'Insert paragraph after this block' })
-        .click();
+    await clickControl('after');
     await page.keyboard.type('After table');
     await expect(visual.locator(':scope > table + p')).toHaveText(
         'After table',
@@ -5588,7 +5681,10 @@ test('keeps the declared Classic toolbar controls present and localized', async 
         'fontColor',
         'fontBackgroundColor',
         'highlight',
-        'moreFormatting',
+        'strike',
+        'subscript',
+        'superscript',
+        'removeFormat',
         'alignment',
         'orderedList',
         'unorderedList',
@@ -5628,6 +5724,78 @@ test('keeps the declared Classic toolbar controls present and localized', async 
     await expect(blocks).toHaveAttribute('aria-pressed', 'true');
     await page.keyboard.press('Enter');
     await expect(blocks).toHaveAttribute('aria-pressed', 'false');
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        host.id = 'drawer-configuration';
+        document.body.append(host);
+        const editor = await globalThis.__classicDemo.create(host, {
+            data: '<p>Drawer text</p>',
+            locale: 'zh-CN',
+            toolbar: [
+                'bold',
+                {
+                    id: 'extraActions',
+                    label: '其他工具',
+                    items: ['strike', 'link', 'horizontalRule'],
+                },
+            ],
+        });
+        host.addEventListener('test:readonly', () => editor.setReadonly(true));
+        host.addEventListener('test:destroy', () => {
+            void editor.destroy();
+        });
+    });
+    const custom = page.locator('.soeditor-classic').last();
+    const drawer = custom.locator('[data-toolbar-item="extraActions"]');
+    const summary = drawer.locator('summary');
+    await expect(summary).toHaveAccessibleName('其他工具');
+    await expect(custom.locator('[data-toolbar-item="bold"] svg')).toHaveCount(
+        1,
+    );
+    await custom.locator('.soeditor-wysiwyg-content p').click();
+    await page.keyboard.press('ControlOrMeta+a');
+    // Transfer focus in the same task as selection, before selectionchange fires.
+    await custom.evaluate((host) => {
+        const surface = host
+            .querySelector('.soeditor-classic__visual')
+            ?.shadowRoot?.querySelector<HTMLElement>(
+                '.soeditor-wysiwyg-content',
+            );
+        if (surface === null || surface === undefined)
+            throw new Error('Missing editing surface');
+        surface.focus();
+        const range = document.createRange();
+        range.selectNodeContents(surface.querySelector('p')!);
+        const selection = document.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        host.querySelector<HTMLElement>(
+            '[data-toolbar-item="extraActions"] summary',
+        )!.focus();
+    });
+    await page.keyboard.press('ArrowDown');
+    const strike = drawer.locator('[data-toolbar-item="strike"]');
+    await expect(strike).toBeFocused();
+    await expect(strike).toHaveText('删除线');
+    await page.keyboard.press('Enter');
+    await expect(drawer).not.toHaveAttribute('open');
+    await expect(custom.locator('s')).toHaveText('Drawer text');
+    // Read active state at an explicit caret inside the newly formatted text.
+    await custom.locator('s').click();
+    await summary.click();
+    await expect(strike).toHaveAttribute('aria-pressed', 'true');
+    await drawer.locator('[data-toolbar-item="link"]').click();
+    await expect(page.getByRole('dialog')).toBeVisible();
+    await page.keyboard.press('Escape');
+    await expect(page.getByRole('dialog')).toHaveCount(0);
+    await page
+        .locator('#drawer-configuration')
+        .evaluate((host) => host.dispatchEvent(new Event('test:readonly')));
+    await expect(summary).toHaveAttribute('aria-disabled', 'true');
+    await page
+        .locator('#drawer-configuration')
+        .evaluate((host) => host.dispatchEvent(new Event('test:destroy')));
+    await expect(drawer).toHaveCount(0);
     await page.goto('/classic.html');
     await page.locator('body[data-ready="true"]').waitFor();
     await expect(

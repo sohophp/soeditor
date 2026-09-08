@@ -1,0 +1,60 @@
+{
+    "livePlayback": {
+        "checkedAt": "2026-09-08T07:44:42.719Z",
+        "bounds": {
+            "x": 277,
+            "y": 113.21875,
+            "width": 726,
+            "height": 408.375
+        },
+        "video": [
+            {
+                "currentTime": 1.487932,
+                "paused": false,
+                "readyState": 4,
+                "error": null
+            }
+        ]
+    },
+    "production": {
+        "checkedAt": "2026-09-08T07:43:38.265Z",
+        "runtime": {
+            "file": "assets/video-runtime-t8USDOKr-BX749ofA.js",
+            "bytes": 16772,
+            "gzip": 7068
+        },
+        "recovery": {
+            "file": "assets/video-runtime-BMb-BgZB.js",
+            "bytes": 46270,
+            "gzip": 16981
+        },
+        "cases": [
+            {
+                "enabled": false,
+                "startupMilliseconds": 48.19999998807907,
+                "requests": 4
+            },
+            {
+                "enabled": true,
+                "startupMilliseconds": 49.89999997615814,
+                "requests": 4,
+                "interaction": {
+                    "renderMilliseconds": 37.69999998807907,
+                    "characters": 11250,
+                    "cards": 150,
+                    "inputToFrameMilliseconds": {
+                        "samples": 13,
+                        "median": 6.399999976158142,
+                        "max": 15.100000023841858
+                    }
+                },
+                "productionRetry": true
+            }
+        ]
+    },
+    "browserScenarios": {
+        "chromium": 11,
+        "firefox": 11,
+        "webkit": 11
+    }
+}

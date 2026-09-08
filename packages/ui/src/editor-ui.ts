@@ -1,3 +1,5 @@
+import { mountToolbar } from './toolbar-mount.js';
+export { ToolbarItemNotRegisteredError } from './toolbar-mount.js';
 import { countDocumentStatus } from './document-statistics.js';
 import { createElementPath, elementPathForRange } from './element-path.js';
 import {
@@ -28,23 +30,13 @@ import type {
     EditorUiThemeVariables,
     StatusItemFactory,
     StatusItemInstance,
-    ToolbarConfiguration,
     ToolbarItemContext,
-    ToolbarItemFactory,
     ToolbarItemInstance,
     ToolbarLayoutOptions,
 } from './types.js';
 import { createSvgIcon } from './icons.js';
 
 const attachedHosts = new WeakMap<HTMLElement, EditorUi>();
-
-/** Reports an unknown configured toolbar item. */
-export class ToolbarItemNotRegisteredError extends Error {
-    constructor(id: string) {
-        super(`Toolbar item "${id}" is not registered.`);
-        this.name = 'ToolbarItemNotRegisteredError';
-    }
-}
 
 /** Reports a second UI attachment to the same host. */
 export class EditorUiAlreadyAttachedError extends Error {
@@ -463,21 +455,7 @@ export function createEditorUiWithTranslations(
         destroy(),
     );
     const selectionTargets = selectionEventTargets(options.element, document);
-    const selectionChange = (): void => {
-        if (editingSelectionFrozen) return;
-        const activeElement = deepActiveElement(document);
-        if (
-            editingSelection !== undefined &&
-            activeElement !== null &&
-            shell.contains(activeElement) &&
-            !isEditingNode(activeElement, options.element)
-        ) {
-            // Keyboard focus can enter chrome without a preceding pointer
-            // boundary. Preserve the last author range until focus/pointer
-            // returns to an editing surface; the explicit frozen state remains
-            // the primary lifecycle for pointer and overlay interactions.
-            return;
-        }
+    const captureEditingSelection = (preserveMissing = false): void => {
         const range = selectionTargets
             .map((target) => selectionRangeForTarget(target, document))
             .find((candidate) => {
@@ -503,9 +481,10 @@ export function createEditorUiWithTranslations(
             !isEditingNode(anchor, options.element) ||
             !isEditingNode(focus, options.element)
         ) {
-            editingSelection = undefined;
-            editingRange = undefined;
-            update();
+            if (!preserveMissing) {
+                editingSelection = undefined;
+                editingRange = undefined;
+            }
             return;
         }
         editingSelection = Object.freeze({
@@ -515,7 +494,39 @@ export function createEditorUiWithTranslations(
             focusOffset: range.endOffset,
         });
         editingRange = range.cloneRange();
+    };
+    const selectionChange = (): void => {
+        if (editingSelectionFrozen) return;
+        const activeElement = deepActiveElement(document);
+        if (
+            editingSelection !== undefined &&
+            activeElement !== null &&
+            shell.contains(activeElement) &&
+            !isEditingNode(activeElement, options.element)
+        ) {
+            // Keyboard focus can enter chrome without a preceding pointer
+            // boundary. Preserve the last author range until focus/pointer
+            // returns to an editing surface; the explicit frozen state remains
+            // the primary lifecycle for pointer and overlay interactions.
+            return;
+        }
+        captureEditingSelection();
         update();
+    };
+    // Capture before deferred selectionchange, but preserve the bookmark when
+    // native dialog focus restoration temporarily has no authoring DOM range.
+    const editingFocusOut = (event: FocusEvent): void => {
+        if (
+            !editingSelectionFrozen &&
+            event
+                .composedPath()
+                .some(
+                    (node) =>
+                        node instanceof Element &&
+                        isEditingNode(node, options.element),
+                )
+        )
+            captureEditingSelection(true);
     };
     const selectionHighlightFocusIn = (event: FocusEvent): void => {
         const path = event.composedPath();
@@ -735,6 +746,7 @@ export function createEditorUiWithTranslations(
         const errors: unknown[] = [];
         options.element.removeEventListener('keydown', keydown, true);
         options.element.removeEventListener('contextmenu', contextmenu);
+        options.element.removeEventListener('focusout', editingFocusOut, true);
         toolbar.removeEventListener('pointerdown', toolbarPointerDown, true);
         document.removeEventListener('pointerdown', dismissMenus, true);
         document.removeEventListener(
@@ -998,6 +1010,7 @@ export function createEditorUiWithTranslations(
         }
         options.element.addEventListener('keydown', keydown, true);
         options.element.addEventListener('contextmenu', contextmenu);
+        options.element.addEventListener('focusout', editingFocusOut, true);
         toolbar.addEventListener('pointerdown', toolbarPointerDown, true);
         document.addEventListener(
             'pointerdown',
@@ -1369,55 +1382,6 @@ function deepActiveElement(document: Document): Element | null {
         active = nested;
     }
     return active;
-}
-
-function mountToolbar(
-    configuration: ToolbarConfiguration,
-    toolbar: HTMLElement,
-    factories: ReadonlyMap<string, ToolbarItemFactory>,
-    context: ToolbarItemContext,
-    instances: ToolbarItemInstance[],
-): void {
-    let previousSeparator = true;
-    for (const id of configuration) {
-        if (id === '|') {
-            if (previousSeparator) {
-                throw new TypeError(
-                    'Toolbar separators must appear between toolbar items.',
-                );
-            }
-            const separator = context.document.createElement('span');
-            separator.className = 'soeditor-ui__separator';
-            separator.setAttribute('role', 'separator');
-            toolbar.append(separator);
-            previousSeparator = true;
-            continue;
-        }
-        if (typeof id !== 'string' || id.trim().length === 0) {
-            throw new TypeError('A toolbar item ID must not be empty.');
-        }
-        const factory = factories.get(id);
-        if (factory === undefined) {
-            throw new ToolbarItemNotRegisteredError(id);
-        }
-        const instance = factory(context);
-        if (
-            typeof instance !== 'object' ||
-            instance === null ||
-            instance.element.ownerDocument !== context.document
-        ) {
-            throw new TypeError(
-                `Toolbar item "${id}" returned an invalid element.`,
-            );
-        }
-        instance.element.dataset.toolbarItem = id;
-        toolbar.append(instance.element);
-        instances.push(instance);
-        previousSeparator = false;
-    }
-    if (previousSeparator && configuration.length > 0) {
-        throw new TypeError('A toolbar must not end with a separator.');
-    }
 }
 
 interface ValidToolbarLayout {

@@ -13,11 +13,15 @@ export function attachBlockParagraphContext(
     let block: Element | undefined;
     let imageAnchor: HTMLImageElement | undefined;
     let frame: number | undefined;
+    let hoverBounds:
+        | { left: number; right: number; top: number; bottom: number }
+        | undefined;
     const clear = (): void => {
         overlay?.remove();
         overlay = undefined;
         block = undefined;
         imageAnchor = undefined;
+        hoverBounds = undefined;
         observer?.disconnect();
         resizeObserver?.disconnect();
         if (frame !== undefined) view?.cancelAnimationFrame(frame);
@@ -49,15 +53,33 @@ export function attachBlockParagraphContext(
                 ? overlay.offsetParent
                 : ui.element;
         const origin = host.getBoundingClientRect();
-        overlay.style.left = `${String(bounds.left - origin.left - host.clientLeft + host.scrollLeft)}px`;
-        overlay.style.top = `${String(bounds.top - origin.top - host.clientTop + host.scrollTop)}px`;
-        overlay.style.width = `${String(bounds.width)}px`;
-        overlay.style.height = `${String(bottom - bounds.top)}px`;
-        // Short/broken images must remain clickable between the two controls.
+        // Viewport rectangles include host zoom; absolute offsets do not.
+        const scale =
+            host.offsetWidth > 0 ? origin.width / host.offsetWidth : 1;
+        overlay.style.left = `${String((bounds.left - origin.left) / scale - host.clientLeft + host.scrollLeft)}px`;
+        overlay.style.top = `${String((bounds.top - origin.top) / scale - host.clientTop + host.scrollTop)}px`;
+        overlay.style.width = `${String(bounds.width / scale)}px`;
+        overlay.style.height = `${String((bottom - bounds.top) / scale)}px`;
+        // Keep table text and short/broken images clear of the controls.
         overlay.style.setProperty(
             '--soeditor-block-offset',
-            bottom - bounds.top < 48 ? '-24px' : '-12px',
+            block.tagName === 'TABLE' ||
+                (imageAnchor !== undefined &&
+                    (bottom - bounds.top) / scale < 48)
+                ? '-24px'
+                : '-12px',
         );
+        // Cache the button corridor; pointer movement must not force layout.
+        const buttons = Array.from(
+            overlay.querySelectorAll('button'),
+            (button) => button.getBoundingClientRect(),
+        );
+        hoverBounds = {
+            left: Math.min(bounds.left, ...buttons.map((rect) => rect.left)),
+            right: Math.max(bounds.right, ...buttons.map((rect) => rect.right)),
+            top: Math.min(bounds.top, ...buttons.map((rect) => rect.top)),
+            bottom: Math.max(bottom, ...buttons.map((rect) => rect.bottom)),
+        };
     };
     const schedule = (): void => {
         if (overlay !== undefined && frame === undefined)
@@ -166,14 +188,24 @@ export function attachBlockParagraphContext(
             event.type === 'pointerout' && event instanceof MouseEvent
                 ? event.relatedTarget
                 : event.composedPath()[0];
+        const inCorridor =
+            event instanceof MouseEvent &&
+            event.type !== 'blur' &&
+            hoverBounds !== undefined &&
+            event.clientX >= hoverBounds.left &&
+            event.clientX <= hoverBounds.right &&
+            event.clientY >= hoverBounds.top &&
+            event.clientY <= hoverBounds.bottom;
         overlay?.classList.toggle(
             'is-hovered',
-            target instanceof Node &&
-                ((imageAnchor ?? block)?.contains(target) === true ||
-                    (imageAnchor !== undefined &&
-                        block?.querySelector('figcaption')?.contains(target) ===
-                            true) ||
-                    overlay.contains(target)),
+            inCorridor ||
+                (target instanceof Node &&
+                    ((imageAnchor ?? block)?.contains(target) === true ||
+                        (imageAnchor !== undefined &&
+                            block
+                                ?.querySelector('figcaption')
+                                ?.contains(target) === true) ||
+                        overlay.contains(target))),
         );
     };
     document.addEventListener('pointermove', hover);

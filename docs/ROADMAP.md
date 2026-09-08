@@ -2,6 +2,13 @@
 
 > 2026-09-08：当前工作区的优化状态、测量与验证统一见 [CMS 性能与稳定性优化](cms-followup-2026-09-08.zh-CN.md)。以下日期更早的数字为历史记录；人工设备验收单独列出。
 
+## Approved 1.2.0 release scope
+
+The owner approved optional CMS video, safe whole-article media preview, configurable
+toolbar drawers and associated editing fixes. These are implemented behind explicit
+imports; default WYSIWYG and lazy Source priorities remain unchanged. Release
+preparation and migration are recorded in [1.2.0](releases/1.2.0.md).
+
 ## Status
 
 Updated on 2026-09-08. The active follow-up is [CMS performance and stability](cms-followup-2026-09-08.zh-CN.md). Its current acceptance record takes precedence over dated measurements below. The completed preceding program is

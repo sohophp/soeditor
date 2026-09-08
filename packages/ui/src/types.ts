@@ -1,7 +1,16 @@
 import type { Editor } from '@soeditor/core';
 
-/** Ordered toolbar item IDs with `|` group separators. */
-export type ToolbarConfiguration = readonly (string | '|')[];
+/** A labeled drawer containing registered toolbar buttons (no nested menus). */
+export interface ToolbarDrawerConfiguration {
+    readonly id: string;
+    readonly label: string;
+    readonly items: readonly string[];
+}
+
+/** Ordered toolbar buttons, optional drawers, and `|` separators. */
+export type ToolbarConfiguration = readonly (
+    string | ToolbarDrawerConfiguration
+)[];
 
 /** Responsive layout policy for one editor toolbar. */
 export interface ToolbarLayoutOptions {

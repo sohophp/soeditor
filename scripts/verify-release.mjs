@@ -12,9 +12,9 @@ const releaseVersion = rootManifest.version;
 const releaseLicense = rootManifest.license;
 if (
     typeof releaseVersion !== 'string' ||
-    !/^1\.1\.\d+$/u.test(releaseVersion)
+    !/^1\.2\.\d+$/u.test(releaseVersion)
 ) {
-    throw new Error('The release audit only accepts an aligned 1.1.x version.');
+    throw new Error('The release audit only accepts an aligned 1.2.x version.');
 }
 const packagesRoot = join(repositoryRoot, 'packages');
 const publishable = [];
@@ -25,9 +25,9 @@ const [
     releaseGuide,
     statusDocument,
 ] = await Promise.all([
-    readFile(join(repositoryRoot, 'CHANGELOG.md'), 'utf8'),
+    readFile(join(repositoryRoot, 'docs/CHANGELOG.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/review-data-governance.md'), 'utf8'),
-    readFile(join(repositoryRoot, 'docs/migration-1.0-to-1.1.md'), 'utf8'),
+    readFile(join(repositoryRoot, 'docs/migration-1.1-to-1.2.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/releasing.md'), 'utf8'),
     readFile(join(repositoryRoot, 'docs/status.md'), 'utf8'),
 ]);

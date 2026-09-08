@@ -60,7 +60,9 @@ export function elementPathForRange(
         // Editing affordances are not canonical content.
         if (element.classList.contains('soeditor-image-resize-overlay'))
             return [];
-        parts.push(element.localName);
+        parts.push(
+            element.getAttribute('data-soeditor-element') ?? element.localName,
+        );
         element = element.parentElement;
     }
     return [];

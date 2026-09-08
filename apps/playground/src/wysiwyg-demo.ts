@@ -28,6 +28,27 @@ if (host === null) throw new Error('Missing WYSIWYG qualification host.');
 
 const instance = await createClassicEditor(host, {
     preset: cmsPreset,
+    toolbar: cmsPreset.toolbar.flatMap<(typeof cmsPreset.toolbar)[number]>(
+        (item) =>
+            item === 'strike'
+                ? [
+                      {
+                          id: 'moreFormatting',
+                          label: 'More text styles',
+                          items: [
+                              'strike',
+                              'subscript',
+                              'superscript',
+                              'removeFormat',
+                          ],
+                      },
+                  ]
+                : ['subscript', 'superscript', 'removeFormat'].includes(
+                        String(item),
+                    )
+                  ? []
+                  : [item],
+    ),
     ariaLabel: 'WYSIWYG qualification editor',
     data: fixtureHtml,
     editingModes: ['wysiwyg', 'source'],

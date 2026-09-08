@@ -1,3 +1,4 @@
+import { mountToolbarDrawer, destroyToolbarItems } from './toolbar-mount.js';
 import { showFormatState } from './format-state.js';
 import { blockFormatMenu } from './block-format-menu.js';
 import { SOURCE_TOOLBAR } from './source-toolbar.js';
@@ -227,51 +228,30 @@ const previewButton: ToolbarItemFactory = ({ document, editor, ui }) => {
     };
 };
 
-const moreFormattingMenu: ToolbarItemFactory = ({ document, editor, ui }) => {
-    const details = document.createElement('details');
-    details.className = 'soeditor-ui__menu';
-    const summary = document.createElement('summary');
-    summary.className = 'soeditor-ui__button';
-    summary.setAttribute('aria-label', 'More text styles');
-    summary.title = 'More text styles';
-    ui.setIcon(summary, 'format.more', '⋯');
-    const menu = document.createElement('div');
-    menu.className = 'soeditor-ui__menu-items';
-    const buttons = (
-        [
-            ['strike', 'Strikethrough', 'format.strike'],
-            ['subscript', 'Subscript', 'format.subscript'],
-            ['superscript', 'Superscript', 'format.superscript'],
-            ['removeFormat', 'Remove format', 'format.remove'],
-        ] as const
-    ).map(([item, label, id]) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'soeditor-ui__menu-item';
-        button.textContent = label;
-        button.dataset.toolbarItem = item;
-        const click = (): void => {
-            if (execute(editor, ui, id, [])) details.open = false;
-        };
-        button.addEventListener('click', click);
-        menu.append(button);
-        return { button, id, click };
-    });
-    details.append(summary, menu);
+const moreFormattingMenu: ToolbarItemFactory = (context) => {
+    const instances: ToolbarItemInstance[] = [];
+    const factories = new Map(defaultToolbarItems);
+    factories.set(
+        'strike',
+        commandButton('Strikethrough', 'format.strike', [], 'S'),
+    );
+    const element = mountToolbarDrawer(
+        {
+            id: 'moreFormatting',
+            label: 'More text styles',
+            items: ['strike', 'subscript', 'superscript', 'removeFormat'],
+        },
+        context.document.createElement('div'),
+        factories,
+        context,
+        instances,
+    );
     return {
-        element: details,
+        element,
         update: () => {
-            for (const { button, id } of buttons)
-                updateCommandButton(button, editor, id);
-            summary.setAttribute(
-                'aria-disabled',
-                String(buttons.every(({ button }) => button.disabled)),
-            );
+            for (const instance of instances) instance.update?.();
         },
-        destroy: () => {
-            for (const { button, click } of buttons)
-                button.removeEventListener('click', click);
-        },
+        destroy: () => destroyToolbarItems(instances),
     };
 };
 
@@ -2236,18 +2216,4 @@ function shortcut(
     return Object.freeze({ id: `default.${id}`, chord, command });
 }
 
-export function destroyToolbarItems(
-    items: readonly ToolbarItemInstance[],
-): void {
-    const errors: unknown[] = [];
-    for (const item of [...items].reverse()) {
-        try {
-            item.destroy?.();
-        } catch (error: unknown) {
-            errors.push(error);
-        }
-    }
-    if (errors.length > 0) {
-        throw new AggregateError(errors, 'Toolbar item cleanup failed.');
-    }
-}
+export { destroyToolbarItems } from './toolbar-mount.js';

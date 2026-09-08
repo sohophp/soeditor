@@ -261,7 +261,7 @@ content and IDs. Merging requires complete rectangular cells in one section.
 Row/column insertion and removal adjust intersecting spans. Removing the origin
 row of a surviving merged cell moves its content and attributes into the first
 remaining covered row. Column groups retain their attributes and widths.
-The browser scenario inventory now contains 263 scenarios; prior dated test
+The browser scenario inventory now contains 280 scenarios; prior dated test
 counts remain historical evidence.
 
 Initial dropdown verification: 46 rich-text unit tests, 116 product Chromium tests and

@@ -265,3 +265,171 @@ Use `editor.execute(commandId, argument?)` from buttons, menus, shortcuts, and
 host integrations. Inspect `editor.commands.ids()` for a frozen discoverable
 snapshot. Important events include `document:change`, `state:change`,
 `mode:change`, and `editor:destroy`; dispose subscriptions you create.
+
+## Optional toolbar drawers
+
+The CMS default toolbar shows Strikethrough (`strike`), Subscript (`subscript`),
+Superscript (`superscript`), and Remove format (`removeFormat`) as individual icon
+buttons. To keep infrequent actions in a text drawer, place a drawer object in
+`toolbar`:
+
+```ts
+const editor = await createClassicEditor(textarea, {
+    toolbar: [
+        'bold',
+        'italic',
+        'underline',
+        {
+            id: 'extraStyles',
+            label: '更多文字样式',
+            items: ['strike', 'subscript', 'superscript', 'removeFormat'],
+        },
+        '|',
+        'link',
+        'image-actions',
+        'table',
+    ],
+});
+```
+
+`id` identifies the drawer; `label` is its accessible name and may be translated
+through the usual UI translation resources. `items` lists registered toolbar
+button IDs in order. Button commands, selection restoration, disabled/active
+state, dialogs, keyboard navigation, and teardown remain owned by their original
+implementations. Drawers accept command/dialog buttons, not separators or nested
+menus such as `heading`, `alignment`, `image-actions`, or another drawer. Put
+those menus directly on the toolbar. Keep each action in one location to avoid
+duplicated controls. The existing `moreFormatting` string remains supported as
+a fixed four-action drawer for compatibility.
+
+## Optional Classic video
+
+Video is an explicit optional import. It does not change the CMS preset or load
+its dialog/player runtime during ordinary WYSIWYG startup. The runtime is loaded
+on the first video action; existing videos render as inert cards without loading
+a player. The historical structured `VideoPlugin` API remains supported.
+
+```ts
+import { createClassicEditor } from '@soeditor/editor/cms/optional';
+import { cmsPreset } from '@soeditor/presets/cms';
+import { createCmsVideoPlugin } from '@soeditor/editor/video';
+
+const editor = await createClassicEditor(textarea, {
+    preset: cmsPreset,
+    plugins: [
+        ...cmsPreset.plugins,
+        createCmsVideoPlugin({
+            allowedMediaOrigins: ['https://assets.example.com'],
+            youtube: true,
+        }),
+    ],
+    toolbar: [...cmsPreset.toolbar, '|', 'cmsVideo'],
+});
+```
+
+`plugins` replaces the preset plugin list, so retain `...cmsPreset.plugins`.
+Include `cmsVideo` to mount the plugin's UI. It is an icon by default and can
+instead be placed in a configured drawer:
+
+```ts
+const toolbar = [
+    ...cmsPreset.toolbar,
+    { id: 'extraMedia', label: 'More media', items: ['cmsVideo'] },
+];
+```
+
+The dialog accepts direct video asset URLs and supported YouTube watch, short,
+shorts and embed URLs. Native video provides a title, poster, pixel/percentage width,
+aspect ratio, alignment, controls, mute, loop and a WebVTT subtitle track with
+language/label. New videos default to controls on and autoplay off. Existing source alternatives, playback flags and authored layout are retained when those properties are not changed. A registered
+`fileManagerServiceToken` supplies the existing SoFinder/application picker:
+video uses `kind: 'media'`, poster uses `image`, subtitles use `file`. Return a
+direct asset URL, not a download landing page. Upload and transcoding remain the
+asset server's responsibility.
+
+After a YouTube URL is entered, the dialog waits 350 ms and requests YouTube's
+oEmbed JSON to fill an untouched title and cover URL. A Shorts URL suggests
+`9:16`; other YouTube URLs suggest `16:9`. These are layout suggestions, not
+measurements of the original video. Width keeps the responsive `100%` default;
+alignment, subtitles and playback flags are not inferred. Existing values and
+fields edited by the author (including intentionally emptied fields) are kept.
+Changing URLs clears previously generated values and cancels stale requests.
+
+Requests omit credentials, time out after five seconds and are canceled when
+the dialog closes or the editor is destroyed. A failed lookup leaves manual
+insertion available. No lookup runs merely because a stored video is displayed
+or its properties are opened. Set `youtubeMetadata: false` in
+`createCmsVideoPlugin` to disable lookups. A host CSP must allow
+`connect-src https://www.youtube.com` for metadata and
+`img-src https://i.ytimg.com` for the cover; a configured
+`allowedMediaOrigins` must also include `https://i.ytimg.com` to accept that cover.
+The provider endpoint is listed in the [oEmbed provider registry](https://oembed.com/providers.json).
+
+YouTube cover URLs are saved as `data-soeditor-poster` on the iframe and used by
+the inert editing card. The embedded YouTube player controls its own cover;
+this attribute does not override YouTube's player. Provider-returned HTML is
+never inserted or executed.
+
+Select a card and use the video toolbar icon, double-click it, or focus it and
+press Enter to edit. Delete/Backspace removes a focused card; shared block tools
+insert a paragraph before or after it. Dialog confirmation and deletion use the
+normal command/history path. Preview is a separate dialog and loads media only
+on explicit request; closing it releases the player. A changed document or
+read-only editor cannot be overwritten by an older dialog.
+
+YouTube's video-properties preview uses a wider dialog and constrains portrait
+players to the viewport. Its player has a minimum 200-pixel height, following
+the [YouTube player sizing requirements](https://developers.google.com/youtube/player_parameters).
+A loading message, reload button and direct YouTube watch link remain available
+when an embedded player cannot load or play. Reload replaces the iframe; closing
+the preview cancels its pending reminder and removes the player. An iframe load
+event is not treated as proof of successful playback. The separate whole-article
+preview keeps article scripts disabled. With `createCmsVideoPlugin()` enabled,
+recognized YouTube embeds receive independent sandboxed players positioned over
+their inert article placeholders. Players load when their article position enters the viewport, or when the author
+activates the cover with the keyboard. Unchanged media reuse the same player
+across text edits and template changes, preserving playback and article scroll.
+Changed or removed media and closing the window release their players. Identical
+media occurrences are matched in document order. Hidden or collapsed media do not
+load until revealed. Native video receives the same persistent preview treatment;
+media URLs are resolved against the article base and validated before loading. Unknown iframes and `srcdoc` remain
+inert; `youtube: false` disables these players too. The explicit `@soeditor/preview/media` service entry lets
+trusted optional plugins provide validated players without adding media code to
+the default CMS startup. The service resolves a stable key, title, optional cover and a demand-created player
+with explicit teardown. Never return arbitrary stored HTML from this service.
+
+Both preview surfaces provide keyboard-operable reload and original-video links,
+with loading and recovery messages. An iframe load event cannot certify playback.
+The video properties dialog keeps URL, title, cover, dimensions and alignment
+visible; native playback flags and subtitles are under the initially collapsed
+"More settings" disclosure. YouTube hides this inapplicable group. Switching back
+to a file retains the author's unsubmitted values.
+
+Copy and cut transfer canonical media HTML, without the card's labels or controls.
+Native dragging of a selection containing a media card is disabled to prevent
+the browser from inserting the editing placeholder into the article; use cut
+and paste to move these blocks.
+
+Saved content is standard `video`/`track` or a constrained YouTube `iframe`, with
+responsive inline layout declarations; published pages need no editor runtime.
+Unknown embeds and unrelated CMS attributes/comments remain preserved and inert
+in the authoring surface. No arbitrary embed HTML, scripts, audio or other
+platform adapters are introduced. Same-origin asset URLs are allowed; remote
+assets require HTTPS and, when configured, membership in `allowedMediaOrigins`.
+YouTube uses a separate fixed provider allowlist and can be disabled. Site-side
+HTML/CSP policy still governs rendering on published pages.
+
+The Classic demo opts in at `/classic.html?video=1` (add `&test=1` for the browser
+fixture). The normal `/classic.html` keeps its default request graph.
+
+The video-enabled demo includes a locally generated three-second WebM test
+pattern and a WebVTT subtitle fixture. Run `node scripts/measure-cms-video.mjs`
+after building to verify the production import boundary, failure recovery and
+150-card rendering/input measurements. `tests/browser/video.spec.ts` covers
+native playback, canonical copy, source round-trips, undo, readonly and teardown
+in Chromium, Firefox and WebKit. YouTube automation uses a controlled player
+response; external platform playback depends on the deployment's network/CSP.
+
+Adding subtitles supplies `crossorigin="anonymous"` unless the stored video
+already declares a CORS mode. Video and WebVTT servers on another origin must
+return the appropriate CORS headers; the editor does not proxy these requests.

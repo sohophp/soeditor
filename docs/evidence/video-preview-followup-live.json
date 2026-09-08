@@ -1,0 +1,16 @@
+{
+    "checkedAt": "2026-09-08T09:02:25.946Z",
+    "before": {
+        "currentTime": 3.15744,
+        "paused": false,
+        "readyState": 4,
+        "error": null
+    },
+    "after": {
+        "currentTime": 6.262682,
+        "paused": false,
+        "readyState": 4,
+        "error": null
+    },
+    "retained": true
+}

@@ -1,0 +1,386 @@
+{
+    "version": "1.2.0",
+    "checkedAt": "2026-09-08T10:08:14.005Z",
+    "scope": "Local working-tree qualification before release commit; publication evidence is the protected workflow and npm verification.",
+    "checks": {
+        "lint": "passed",
+        "typecheck": "passed",
+        "pnpmTest": "passed",
+        "unitTests": 413,
+        "chromiumProduct": 162,
+        "chromiumCmsDesktopMobile": 16,
+        "firefoxWebkit": {
+            "passed": 182,
+            "existingSkips": 4
+        },
+        "sourceFirefoxWebkit": 18,
+        "drawerDialogRepeated": 12,
+        "securityAudit": "No known vulnerabilities found",
+        "publicPackagesDryRun": 24
+    },
+    "loading": {
+        "node": "v22.14.0",
+        "budgets": {
+            "globalRaw": 500000,
+            "globalGzip": 150000,
+            "standaloneCssRaw": 27000,
+            "optionalInitialRaw": 514018,
+            "optionalInitialGzip": 152376,
+            "sourceIncrementRaw": 600000,
+            "sourceIncrementGzip": 210000,
+            "formatterIncrementRaw": 650000,
+            "formatterIncrementGzip": 160000,
+            "recoveryRaw": 800000,
+            "recoveryGzip": 260000,
+            "sourceLatency": {
+                "10240": {
+                    "first": 1000,
+                    "again": 300
+                },
+                "102400": {
+                    "first": 2000,
+                    "again": 1000
+                },
+                "512000": {
+                    "first": 5000,
+                    "again": 3000
+                }
+            }
+        },
+        "verification": {
+            "passed": true,
+            "limits": {
+                "globalRaw": 500000,
+                "globalGzip": 150000,
+                "standaloneCssRaw": 27000,
+                "optionalInitialRaw": 514018,
+                "optionalInitialGzip": 152376,
+                "sourceIncrementRaw": 600000,
+                "sourceIncrementGzip": 210000,
+                "formatterIncrementRaw": 650000,
+                "formatterIncrementGzip": 160000,
+                "recoveryRaw": 800000,
+                "recoveryGzip": 260000,
+                "sourceLatency": {
+                    "10240": {
+                        "first": 1000,
+                        "again": 300
+                    },
+                    "102400": {
+                        "first": 2000,
+                        "again": 1000
+                    },
+                    "512000": {
+                        "first": 5000,
+                        "again": 3000
+                    }
+                }
+            }
+        },
+        "artifacts": [
+            {
+                "path": "packages/soeditor/dist/soeditor.global.js",
+                "raw": 484167,
+                "gzip": 149678
+            },
+            {
+                "path": "packages/soeditor/dist/soeditor.css",
+                "raw": 24935,
+                "gzip": 4608
+            },
+            {
+                "path": "packages/soeditor/dist/cms.js",
+                "raw": 189,
+                "gzip": 156
+            }
+        ],
+        "recovery": {
+            "passed": true,
+            "scriptPolicy": "script-src 'self'",
+            "attempts": [
+                "http://127.0.0.1:4188/assets/runtime-D3iFwSeV.js?soeditor-retry=2",
+                "http://127.0.0.1:4188/assets/runtime-D3iFwSeV.js?soeditor-retry=3"
+            ]
+        },
+        "runs": [
+            {
+                "size": 10240,
+                "source": false,
+                "create": {
+                    "milliseconds": 96.39999997615814,
+                    "characters": 10440
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-DbuLciQJ.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "destroy": 4,
+                "warmCreate": {
+                    "milliseconds": 39.5,
+                    "characters": 10440
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 4027304,
+                    "totalSize": 6873088,
+                    "embedderHeapUsedSize": 3155736,
+                    "backingStorageSize": 611361
+                },
+                "heapAfter": {
+                    "usedSize": 2524040,
+                    "totalSize": 3203072,
+                    "embedderHeapUsedSize": 2031864,
+                    "backingStorageSize": 584631
+                }
+            },
+            {
+                "size": 10240,
+                "source": true,
+                "create": {
+                    "milliseconds": 85.19999998807907,
+                    "characters": 10440
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-DbuLciQJ.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "sourceFirst": {
+                    "milliseconds": 167.80000001192093,
+                    "requests": ["/assets/index-BGOEDWML.js"]
+                },
+                "sourceAgain": 17.30000001192093,
+                "formatting": {
+                    "milliseconds": 319.19999998807907,
+                    "requests": [
+                        "/assets/index-Cdos1XkD.js",
+                        "http://127.0.0.1:4188/6ef36d35-6a52-47ec-8b3c-c143f1cb540f"
+                    ]
+                },
+                "destroy": 5.799999952316284,
+                "warmCreate": {
+                    "milliseconds": 39.10000002384186,
+                    "characters": 10440
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 4062732,
+                    "totalSize": 6610944,
+                    "embedderHeapUsedSize": 3158376,
+                    "backingStorageSize": 612285
+                },
+                "heapAfter": {
+                    "usedSize": 6168500,
+                    "totalSize": 7196672,
+                    "embedderHeapUsedSize": 2488120,
+                    "backingStorageSize": 2554933
+                }
+            },
+            {
+                "size": 102400,
+                "source": false,
+                "create": {
+                    "milliseconds": 244.19999998807907,
+                    "characters": 102544
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-DbuLciQJ.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "destroy": 7.699999988079071,
+                "warmCreate": {
+                    "milliseconds": 208.29999995231628,
+                    "characters": 102544
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 10195216,
+                    "totalSize": 16834560,
+                    "embedderHeapUsedSize": 16100936,
+                    "backingStorageSize": 716832
+                },
+                "heapAfter": {
+                    "usedSize": 2589396,
+                    "totalSize": 3727360,
+                    "embedderHeapUsedSize": 10525256,
+                    "backingStorageSize": 676735
+                }
+            },
+            {
+                "size": 102400,
+                "source": true,
+                "create": {
+                    "milliseconds": 267.7999999523163,
+                    "characters": 102544
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-DbuLciQJ.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "sourceFirst": {
+                    "milliseconds": 213.70000004768372,
+                    "requests": ["/assets/index-BGOEDWML.js"]
+                },
+                "sourceAgain": 36.80000001192093,
+                "formatting": {
+                    "milliseconds": 855.7999999523163,
+                    "requests": [
+                        "/assets/index-Cdos1XkD.js",
+                        "http://127.0.0.1:4188/20e4fca1-8216-4994-8323-b47461f4bfdb"
+                    ]
+                },
+                "destroy": 10.100000023841858,
+                "warmCreate": {
+                    "milliseconds": 214.60000002384186,
+                    "characters": 102544
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 10275904,
+                    "totalSize": 16834560,
+                    "embedderHeapUsedSize": 16229248,
+                    "backingStorageSize": 717809
+                },
+                "heapAfter": {
+                    "usedSize": 6357524,
+                    "totalSize": 7196672,
+                    "embedderHeapUsedSize": 12690968,
+                    "backingStorageSize": 2775687
+                }
+            },
+            {
+                "size": 512000,
+                "source": false,
+                "create": {
+                    "milliseconds": 826.6999999880791,
+                    "characters": 512024
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-DbuLciQJ.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "destroy": 26.600000023841858,
+                "warmCreate": {
+                    "milliseconds": 898.2999999523163,
+                    "characters": 512024
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 8924668,
+                    "totalSize": 45809664,
+                    "embedderHeapUsedSize": 70867400,
+                    "backingStorageSize": 1086869
+                },
+                "heapAfter": {
+                    "usedSize": 2549300,
+                    "totalSize": 3207168,
+                    "embedderHeapUsedSize": 15724152,
+                    "backingStorageSize": 1086215
+                }
+            },
+            {
+                "size": 512000,
+                "source": true,
+                "create": {
+                    "milliseconds": 933.8999999761581,
+                    "characters": 512024
+                },
+                "initialRequests": [
+                    "/",
+                    "/assets/index-DbuLciQJ.js",
+                    "/assets/index-Bbjuk9LT.css"
+                ],
+                "sourceFirst": {
+                    "milliseconds": 368.39999997615814,
+                    "requests": ["/assets/index-BGOEDWML.js"]
+                },
+                "sourceAgain": 90.10000002384186,
+                "formatting": {
+                    "milliseconds": 2612.300000011921,
+                    "requests": [
+                        "/assets/index-Cdos1XkD.js",
+                        "http://127.0.0.1:4188/afa04333-f490-474f-9372-e3c9b88b83db"
+                    ]
+                },
+                "destroy": 17.899999976158142,
+                "warmCreate": {
+                    "milliseconds": 971,
+                    "characters": 512024
+                },
+                "lifecycle": [],
+                "heapBefore": {
+                    "usedSize": 8989684,
+                    "totalSize": 48955392,
+                    "embedderHeapUsedSize": 70933128,
+                    "backingStorageSize": 1087863
+                },
+                "heapAfter": {
+                    "usedSize": 7058588,
+                    "totalSize": 7729152,
+                    "embedderHeapUsedSize": 57323976,
+                    "backingStorageSize": 3698782
+                }
+            }
+        ]
+    },
+    "videoLoading": {
+        "checkedAt": "2026-09-08T10:08:22.551Z",
+        "runtime": {
+            "file": "assets/video-runtime-C7eApW5S-Du7LNnzQ.js",
+            "bytes": 15531,
+            "gzip": 6765
+        },
+        "recovery": {
+            "file": "assets/video-runtime-5Cf7Erqy.js",
+            "bytes": 47268,
+            "gzip": 17629
+        },
+        "cases": [
+            {
+                "enabled": false,
+                "startupMilliseconds": 42.700000047683716,
+                "requests": 4
+            },
+            {
+                "enabled": true,
+                "startupMilliseconds": 47.5,
+                "requests": 5,
+                "interaction": {
+                    "renderMilliseconds": 43.40000003576279,
+                    "characters": 11250,
+                    "cards": 150,
+                    "inputToFrameMilliseconds": {
+                        "samples": 13,
+                        "median": 3.799999952316284,
+                        "max": 13.5
+                    }
+                },
+                "productionRetry": true
+            }
+        ]
+    },
+    "videoPreview": {
+        "checkedAt": "2026-09-08T10:08:34.934Z",
+        "videos": 100,
+        "initialRequests": 1,
+        "requestsAfterTwelveTextEdits": 1,
+        "requestsAfterScrollToEnd": 2,
+        "retainedFirstPlayer": true,
+        "openMs": 860.6367829999999,
+        "scrollMs": 549.4123130000007,
+        "textRefresh": {
+            "samplesMs": [
+                275.64128400000027, 180.14879199999996, 167.92712399999982,
+                151.65956499999993, 155.80900400000064, 154.7155700000003,
+                165.5608310000007, 152.05014699999992, 171.37266100000124,
+                167.93042500000047, 149.71772000000055, 186.52125799999885
+            ],
+            "p95Ms": 275.64128400000027
+        },
+        "scope": "Production-built optional CMS fixture; deterministic YouTube response, no live playback claim."
+    }
+}

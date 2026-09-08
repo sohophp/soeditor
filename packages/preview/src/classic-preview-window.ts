@@ -1,3 +1,5 @@
+import { createPreviewMedia } from './classic-preview-media.js';
+import { previewMediaServiceToken } from './media-service.js';
 import type { Editor } from '@soeditor/core';
 import {
     isCompleteHtmlDocument,
@@ -135,6 +137,9 @@ export function createClassicPreviewWindow(
     let templateSelect: HTMLSelectElement | undefined;
     let activeTemplateId = options.initialTemplateId;
     let destroyed = false;
+    let mediaController: ReturnType<typeof createPreviewMedia> | undefined;
+    let rendered = '';
+    let disposeFrame = (): void => {};
 
     const refresh = (): void => {
         if (destroyed || popup === null || popup.closed) return;
@@ -158,13 +163,28 @@ export function createClassicPreviewWindow(
                         refresh();
                     },
                 );
+                disposeFrame();
                 iframe = frame.iframe;
+                const articleFrame = iframe;
+                const media = options.editor.services.tryGet(
+                    previewMediaServiceToken,
+                );
+                mediaController?.destroy();
+                mediaController = undefined;
+                if (media !== undefined) {
+                    articleFrame.setAttribute('sandbox', 'allow-same-origin');
+                    mediaController = createPreviewMedia(articleFrame, media);
+                }
+                const loaded = (): void => mediaController?.refresh();
+                articleFrame.addEventListener('load', loaded);
+                disposeFrame = () =>
+                    articleFrame.removeEventListener('load', loaded);
                 templateSelect = frame.select;
             }
             if (templateSelect !== undefined) {
                 templateSelect.value = activeTemplateId;
             }
-            iframe.srcdoc = renderPreviewDocument(
+            const html = renderPreviewDocument(
                 decorateWysiwygTables(
                     options.editor.getData(),
                     template.decorateWysiwygTables,
@@ -173,6 +193,10 @@ export function createClassicPreviewWindow(
                 configuration,
                 options.owner,
             );
+            if (html !== rendered || iframe.getAttribute('srcdoc') === null) {
+                rendered = html;
+                iframe.srcdoc = mediaController?.prepare(html) ?? html;
+            }
         } catch (error: unknown) {
             options.reportError(error);
         }
@@ -208,6 +232,8 @@ export function createClassicPreviewWindow(
     const destroy = (): void => {
         if (destroyed) return;
         destroyed = true;
+        mediaController?.destroy();
+        disposeFrame();
         disposeDocumentChange();
         disposeEditorDestroy();
         try {
@@ -251,6 +277,13 @@ function createPreviewFrame(
     pickerLabel: string,
     selectTemplate: (id: string) => void,
 ): { readonly iframe: HTMLIFrameElement; readonly select: HTMLSelectElement } {
+    // A trusted empty shell inherits the caller URL, giving external players
+    // a real HTTP referrer. Article HTML is only ever assigned to sandboxed srcdoc.
+    document.open();
+    document.write('<!doctype html><html><head></head><body></body></html>');
+    document.close();
+    // WebKit refreshes its outgoing referrer after a same-URL history update.
+    document.defaultView?.history.replaceState(null, '', document.URL);
     document.head.replaceChildren();
     document.body.replaceChildren();
     document.title = title;

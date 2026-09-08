@@ -499,18 +499,6 @@
     right: min(32px, 15%);
 }
 
-.soeditor-block-paragraph[data-block-kind='table']
-    [data-insert-paragraph='before'] {
-    left: -24px;
-    top: 0;
-}
-
-.soeditor-block-paragraph[data-block-kind='table']
-    [data-insert-paragraph='after'] {
-    bottom: 0;
-    right: -24px;
-}
-
 .soeditor-block-paragraph button:hover,
 .soeditor-block-paragraph button:focus-visible {
     background: #ffca28;

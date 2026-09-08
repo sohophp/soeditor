@@ -1,3 +1,4 @@
+import { atomicViewServiceToken, type AtomicView } from './atomic-view.js';
 import { readFormatStates } from './format-state.js';
 import {
     indentSelectedList,
@@ -33,6 +34,7 @@ import {
     serializeHtmlFragment,
     type HtmlAttribute,
     type HtmlChildNode,
+    type HtmlElement,
 } from '@soeditor/html';
 import {
     projectionCoordinatorServiceToken,
@@ -249,6 +251,10 @@ export class WysiwygEditingEngine implements EditingEngine {
         Readonly<{ className: string | null; style: string | null }>
     >();
     readonly #preservedNodes = new Map<string, HtmlChildNode>();
+    readonly #atomicViews = new WeakMap<
+        Element,
+        { readonly node: HtmlElement; readonly type: string }
+    >();
     #serializedBlocks = new WeakMap<Node, string>();
     #serializedNodes = new WeakMap<Node, HtmlChildNode>();
     #activeCell: HTMLTableCellElement | undefined;
@@ -382,6 +388,10 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.element.addEventListener('pointerdown', this.#handlePointerDown);
         this.element.addEventListener('pointerover', this.#handlePointerOver);
         this.element.addEventListener('pointerup', this.#handlePointerUp);
+        this.element.addEventListener('copy', this.#handleAtomicCopy);
+        this.element.addEventListener('cut', this.#handleAtomicCopy);
+        if (this.editor.services.has(atomicViewServiceToken))
+            this.element.addEventListener('dragstart', this.#handleAtomicCopy);
         this.element.addEventListener('dblclick', this.#handleDoubleClick);
         this.#document.addEventListener(
             'selectionchange',
@@ -490,6 +500,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     #paragraphBoundary(selected = this.#selectedElement): Element | undefined {
         if (selected === undefined || !this.element.contains(selected))
             return undefined;
+        if (this.#atomicViews.has(selected)) return selected;
         const image = selected.closest('img');
         let block: Element | null;
         if (image !== null) {
@@ -612,6 +623,9 @@ export class WysiwygEditingEngine implements EditingEngine {
             this.#handlePointerOver,
         );
         this.element.removeEventListener('pointerup', this.#handlePointerUp);
+        this.element.removeEventListener('copy', this.#handleAtomicCopy);
+        this.element.removeEventListener('cut', this.#handleAtomicCopy);
+        this.element.removeEventListener('dragstart', this.#handleAtomicCopy);
         this.element.removeEventListener('dblclick', this.#handleDoubleClick);
         this.#document.removeEventListener(
             'selectionchange',
@@ -807,6 +821,31 @@ export class WysiwygEditingEngine implements EditingEngine {
             event.preventDefault();
             this.#adjustIndent(event.shiftKey ? -1 : 1);
         }
+    };
+
+    readonly #handleAtomicCopy = (event: ClipboardEvent | DragEvent): void => {
+        const range = this.#range();
+        if (range === undefined || range.collapsed) return;
+        this.editor.services.tryGet(atomicViewServiceToken)?.transfer({
+            event,
+            range,
+            element: this.element,
+            isAtomic: (node) => this.#atomicViews.has(node),
+            copySource: (source, clone) => {
+                const metadata = this.#atomicViews.get(source);
+                if (metadata !== undefined && !clone.isConnected)
+                    this.#atomicViews.set(clone, metadata);
+            },
+            serialize: (node) => this.#serializeNode(node),
+            cut: () => {
+                if (this.#canEdit())
+                    this.#mutateRange(range, (selected) => {
+                        selected.deleteContents();
+                        selected.collapse(true);
+                        return selected;
+                    });
+            },
+        });
     };
 
     readonly #handlePaste = (event: ClipboardEvent): void => {
@@ -1473,6 +1512,51 @@ export class WysiwygEditingEngine implements EditingEngine {
         if (node.type === 'comment') {
             return this.#document.createComment(node.value);
         }
+        let atomic: AtomicView | undefined = undefined;
+        const select = (): boolean => {
+            if (
+                atomic === undefined ||
+                !this.element.contains(atomic.element) ||
+                !this.#canEdit(false)
+            )
+                return false;
+            this.#activateFromUserIntent();
+            const range = this.#document.createRange();
+            range.selectNode(atomic.element);
+            this.#selectRange(range);
+            this.#selectedElement = atomic.element;
+            return true;
+        };
+        atomic = this.editor.services.tryGet(atomicViewServiceToken)?.create({
+            document: this.#document,
+            node,
+            isSelected: () =>
+                atomic !== undefined &&
+                this.#structuredElement(atomic.type) === atomic.element,
+            select,
+            replace: (replacement) => {
+                if (!select() || atomic === undefined) return false;
+                this.#replaceStructuredBlockContent(
+                    atomic.type,
+                    replacement,
+                    replacement,
+                );
+                return true;
+            },
+            insertParagraph: (position) => {
+                if (atomic !== undefined)
+                    this.#paragraphAction(atomic.element)(position);
+            },
+        });
+        if (atomic !== undefined) {
+            atomic.element.contentEditable = 'false';
+            atomic.element.dataset.soeditorAtomic = String(
+                ++this.#preservedSequence,
+            );
+            atomic.element.dataset.soeditorElement = node.tagName;
+            this.#atomicViews.set(atomic.element, { node, type: atomic.type });
+            return atomic.element;
+        }
         if (
             node.namespace !== 'html' ||
             preservedTags.has(node.tagName) ||
@@ -1669,6 +1753,8 @@ export class WysiwygEditingEngine implements EditingEngine {
         }
         const view = this.#document.defaultView;
         if (view === null || !(node instanceof view.Element)) return undefined;
+        const atomic = this.#atomicViews.get(node);
+        if (atomic !== undefined) return atomic.node;
         const tagName = node.tagName.toLowerCase();
         const projected = this.#tableProjectionAttributes.get(node);
         const attributes = Array.from(node.attributes)
@@ -1820,6 +1906,13 @@ export class WysiwygEditingEngine implements EditingEngine {
         if (range === undefined) return;
         if (!this.element.contains(range.commonAncestorContainer)) return;
         this.#savedRange = range.cloneRange();
+        const atomic = this.editor.services
+            .tryGet(atomicViewServiceToken)
+            ?.selected(this.element, range);
+        if (atomic !== undefined) {
+            this.#selectedElement = atomic.element;
+            return;
+        }
         const selected =
             range.commonAncestorContainer instanceof Element
                 ? range.commonAncestorContainer
@@ -2733,6 +2826,14 @@ export class WysiwygEditingEngine implements EditingEngine {
                 ? range.commonAncestorContainer
                 : range?.commonAncestorContainer.parentElement);
         if (origin === undefined || origin === null) return undefined;
+        const atomic = this.editor.services
+            .tryGet(atomicViewServiceToken)
+            ?.selected(origin);
+        if (atomic !== undefined)
+            return (type === undefined || atomic.type === type) &&
+                this.element.contains(atomic.element)
+                ? atomic.element
+                : undefined;
         const selector =
             type === 'soeditor.table'
                 ? 'table'
@@ -2758,7 +2859,10 @@ export class WysiwygEditingEngine implements EditingEngine {
         if (element === undefined) return undefined;
         const parsed = this.#serializeNode(element);
         if (parsed?.type !== 'element') return undefined;
-        const type = requestedType ?? structuredType(element);
+        const type =
+            requestedType ??
+            this.#atomicViews.get(element)?.type ??
+            structuredType(element);
         if (type === undefined) return undefined;
         return Object.freeze({
             attributes: parsed.attributes,
@@ -2772,17 +2876,20 @@ export class WysiwygEditingEngine implements EditingEngine {
     #replaceStructuredBlockContent(
         type: string,
         content: EditingStructuredBlockContent,
+        root?: HtmlElement,
     ): void {
         const current = this.#structuredElement(type);
         if (current === undefined) return;
         const parsed = parseHtmlFragment(
             serializeHtmlFragment({
                 children: [
-                    {
+                    root ?? {
                         attributes: content.attributes,
                         children: content.children,
                         namespace: 'html',
-                        tagName: current.tagName.toLowerCase(),
+                        tagName:
+                            this.#atomicViews.get(current)?.node.tagName ??
+                            current.tagName.toLowerCase(),
                         type: 'element',
                     },
                 ],
@@ -2837,6 +2944,14 @@ export class WysiwygEditingEngine implements EditingEngine {
     ): void {
         const element = this.#structuredElement(type);
         if (element === undefined) return;
+        const atomic = this.#atomicViews.get(element);
+        if (atomic !== undefined) {
+            this.#replaceStructuredBlockContent(type, {
+                attributes,
+                children: atomic.node.children,
+            });
+            return;
+        }
         this.#mutate(() => {
             for (const attribute of Array.from(element.attributes)) {
                 element.removeAttribute(attribute.name);
@@ -3368,7 +3483,15 @@ function isSafeEditingAttribute(
     attribute: HtmlAttribute,
 ): boolean {
     const name = attribute.name.toLowerCase();
-    if (name.startsWith('on') || name === 'contenteditable') return false;
+    if (
+        name.startsWith('on') ||
+        [
+            'contenteditable',
+            'data-soeditor-atomic',
+            'data-soeditor-element',
+        ].includes(name)
+    )
+        return false;
     if (name === 'style') {
         return !/(?:expression|url\s*\(|behavior\s*:|-moz-binding)/iu.test(
             attribute.value,

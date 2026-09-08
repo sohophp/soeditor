@@ -1,4 +1,4 @@
-# Releasing SoEditor 1.1.x
+# Releasing SoEditor 1.2.x
 
 Publication is an owner-authorized operation. Local quality gates and dry runs
 do not grant permission to choose a license, publish packages, create a tag, or
@@ -42,18 +42,15 @@ exchange warning does not replace the granular token requirement.
 
 ## Release-line policy
 
-The 1.1.0 release adds the CMS Classic Editor capability set to the published
-1.0.0 baseline. Registry state must be verified from the publication workflow. The
-1.1.x line accepts correctness, security, accessibility, compatibility,
-documentation, and measured performance fixes within that scope. New product
-capabilities belong in a separately approved roadmap. Patch releases must
-remain compatible; additive compatible capability belongs in a minor release,
-and an unavoidable stable API break requires a new major version with migration
-guidance.
+The owner-authorized 1.2.0 release adds optional CMS video and preview integration
+to the published 1.1 baseline. The 1.2.x line accepts correctness, security,
+accessibility, compatibility, documentation and measured performance fixes within
+that scope. Additive capabilities use a minor release; stable API breaks require
+a major release and migration guidance.
 
 All 24 public packages use an aligned version so consumers and support reports
 can identify one tested release set. Add a Changeset for each user-visible
-patch, update `CHANGELOG.md`, and let the release change deliberately advance
+patch, update `docs/CHANGELOG.md`, and let the release change deliberately advance
 the package versions.
 
 ## Local release candidate verification
@@ -118,13 +115,13 @@ do not republish identical artifacts.
 After publication, or to recheck propagation:
 
 ```bash
-pnpm release:verify-registry 1.1.0
+pnpm release:verify-registry 1.2.0
 ```
 
 This creates a clean Vite consumer from the public npm registry and checks the
 version-pinned jsDelivr JavaScript, CSS, source map, immutable global facade,
 and basic editor lifecycle in Chromium.
 
-This command uses the current 24-package 1.1 release manifest and deliberately
+This command uses the current 24-package 1.2 release manifest and deliberately
 does not claim to re-verify the historical 15-package 0.5 release set or the
 unpublished 0.6/0.7 candidates.

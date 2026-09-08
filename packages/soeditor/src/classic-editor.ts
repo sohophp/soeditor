@@ -58,7 +58,7 @@ import {
     ClassicEditorAlreadyAttachedError,
     ClassicEditorDestroyedError,
 } from './classic-editor-errors.js';
-import { attachClassicDialogWindows } from './classic-dialog-windows.js';
+import { attachLazyClassicDialogWindows } from './classic-dialog-loader.js';
 import type { ClassicPreviewWindow } from '@soeditor/preview';
 import { attachClassicSourceFormatting } from './classic-source-formatting.js';
 
@@ -1417,7 +1417,7 @@ export async function createClassicEditor(
         );
         if (statusBar !== null) dom.surfaces.after(statusBar);
         if (OPTIONAL_CLASSIC_FEATURES) {
-            disposeDialogWindows = attachClassicDialogWindows(
+            disposeDialogWindows = attachLazyClassicDialogWindows(
                 dom.root,
                 ui.translate,
                 translation.locale,
@@ -2096,9 +2096,10 @@ function withClassicPreviewTool(
 function compactClassicToolbar(
     toolbar: ToolbarConfiguration,
 ): ToolbarConfiguration {
-    const visible: string[] = [];
+    const visible: Array<ToolbarConfiguration[number]> = [];
     for (const item of toolbar) {
-        if (HIDDEN_CLASSIC_TOOLBAR_ITEMS.has(item)) continue;
+        if (typeof item === 'string' && HIDDEN_CLASSIC_TOOLBAR_ITEMS.has(item))
+            continue;
         if (item === '|' && (visible.length === 0 || visible.at(-1) === '|')) {
             continue;
         }
@@ -2121,7 +2122,7 @@ function groupClassicToolbarActions(toolbar: HTMLElement): void {
     group.setAttribute('role', 'group');
     group.setAttribute('aria-label', 'Editor views and preview');
     const preview = toolbar.querySelector<HTMLElement>(
-        '[data-toolbar-item="popupPreview"]',
+        ':scope > [data-toolbar-item="popupPreview"]',
     );
     if (
         preview?.previousElementSibling?.classList.contains(
@@ -2136,7 +2137,7 @@ function groupClassicToolbarActions(toolbar: HTMLElement): void {
         '[data-classic-action="workspace-view"]',
         '[data-classic-action="maximize"]',
     ]) {
-        const item = toolbar.querySelector<HTMLElement>(selector);
+        const item = toolbar.querySelector<HTMLElement>(`:scope > ${selector}`);
         if (item !== null) group.append(item);
     }
     if (group.childElementCount > 0) toolbar.append(group);
