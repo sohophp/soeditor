@@ -159,3 +159,10 @@ a:focus-visible {
 .VPHero .actions {
     justify-content: center;
 }
+
+.docs-version {
+    margin: 0 0 16px;
+    color: var(--vp-c-text-2);
+    font-size: 14px;
+    line-height: 1.5;
+}

@@ -16,6 +16,7 @@ jobs:
         env:
             DOCS_PREVIEW: ${{ github.event_name == 'pull_request' && '1' || '0' }}
             WRANGLER_SEND_METRICS: 'false'
+            WRANGLER_LOG_PATH: ${{ github.workspace }}/docs/site/.vitepress/reports/wrangler-tests.log
         steps:
             - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
               with:
@@ -54,5 +55,8 @@ jobs:
               if: failure()
               with:
                   name: docs-test-failure
-                  path: docs/site/test-results
+                  path: |
+                      docs/site/test-results
+                      docs/site/.vitepress/reports/wrangler-tests.log
+                  include-hidden-files: true
                   retention-days: 14

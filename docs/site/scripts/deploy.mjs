@@ -41,8 +41,21 @@ const api = async (path, options = {}) => {
         },
     );
     const data = await response.json();
-    if (!response.ok || !data.success)
-        throw new Error(`Cloudflare API request failed: ${response.status}`);
+    if (!response.ok || !data.success) {
+        const endpoint = path
+            .replace(/accounts\/[^/]+/, 'accounts/<account>')
+            .replace(/zones\/[a-f0-9]+/, 'zones/<zone>');
+        const codes = Array.isArray(data.errors)
+            ? data.errors
+                  .map((error) =>
+                      typeof error.code === 'number' ? error.code : 'unknown',
+                  )
+                  .join(', ')
+            : 'unknown';
+        throw new Error(
+            `Cloudflare ${options.method ?? 'GET'} ${endpoint} failed: HTTP ${response.status}; error codes: ${codes}`,
+        );
+    }
     return data.result;
 };
 const account = process.env.CLOUDFLARE_ACCOUNT_ID;

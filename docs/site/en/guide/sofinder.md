@@ -21,7 +21,7 @@ Checked against the published types; see [imports and types](/en/api/imports) fo
 
 <<< ../../examples/api.ts#asset-plugins
 
-Then call `registerSoFinder` below. The host opens the real SoFinder picker and passes its result to the adapter. The demo's fixed-image callback does not deploy a SoFinder backend.
+Then call `registerSoFinder`. The host opens the real SoFinder picker and passes its result to the adapter. The demo's fixed-image callback does not deploy a SoFinder backend.
 
 ## Common errors
 

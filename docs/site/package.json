@@ -7,7 +7,7 @@
         "dev": "node scripts/dev.mjs",
         "build": "node scripts/build.mjs",
         "preview": "wrangler dev --config wrangler.jsonc --ip 0.0.0.0 --port 4175",
-        "check": "vue-tsc --noEmit && node scripts/check.mjs",
+        "check": "vue-tsc --noEmit && node scripts/check.mjs && node --test scripts/deploy-gate.test.mjs",
         "typecheck": "vue-tsc --noEmit",
         "test:site": "playwright test -c playwright.config.ts",
         "deploy": "wrangler deploy --config wrangler.jsonc"

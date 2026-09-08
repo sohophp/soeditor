@@ -22,7 +22,9 @@
 - 每种浏览器配置执行 20 次实例重建和 20 次进入/退出示例，编辑器 DOM 数量稳定，关闭及切换路由后没有残留 iframe。
 - 普通阅读和未启动演示无编辑器请求；Source 与格式化运行时各自在首次激活对应操作时加载。
 - 中英搜索定位到 Source、保存、上传和表格指南；文档外壳浅色首页与深色文档页无 axe serious/critical 问题。
+- 部署产物篡改、缺失和越界符号链接三个拒绝测试通过。
 - 下载的完整示例在独立目录安装和构建通过。
+- 精确版本 CDN 接入代码在独立空白页验证初始化、读取 HTML 和销毁成功。
 
 移动性能：360×800、1×设备像素比、4× CPU 降速、40 ms 延迟、10 Mbps 下载，三个全新浏览器上下文。LCP 中位数 **576 ms**，CLS **0**，首次资源传输约 **280 KB**。这是本地 Workers 服务的固定模拟结果，不是全球生产用户性能数据。
 
@@ -30,7 +32,11 @@
 
 正式部署结果、版本 ID、提交和 lockfile SHA-256 由 Docs Site Deploy 的 Actions Summary 与 `docs-deployment-record` 记录。通过线上检查后才进入 `docs-deployment-archives`，保留最近十次及所有不足 90 天的成功产物。
 
-正式域名的验收需另行记录实际部署运行；本地结果不代表已经上线。配置与恢复步骤见[运维说明](site-operations.zh-CN.md)。
+[正式站检查](https://github.com/sohophp/soeditor/actions/runs/34236020365)与
+[同提交仓库 CI](https://github.com/sohophp/soeditor/actions/runs/34236020201)已通过。
+首次[部署预检查](https://github.com/sohophp/soeditor/actions/runs/34236493457)
+在 Workers 自定义域名列表接口收到 403，尚未绑定域名，等待修正 Token 账号权限。
+正式域名的验收需另行记录成功部署运行；这些结果不代表已经上线。配置与恢复步骤见[运维说明](site-operations.zh-CN.md)。
 
 ## 人工与长期检查边界
 

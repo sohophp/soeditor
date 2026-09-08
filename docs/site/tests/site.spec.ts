@@ -31,6 +31,9 @@ for (const locale of ['zh-CN', 'en']) {
             `https://soeditor.sohophp.app/${locale}/guide/installation`,
         );
         await expect(page.locator('html')).toHaveAttribute('lang', locale);
+        await expect(page.locator('.docs-version')).toContainText(
+            'SoEditor 1.2.1',
+        );
         expect(
             await page.evaluate(
                 () => document.documentElement.scrollWidth <= window.innerWidth,

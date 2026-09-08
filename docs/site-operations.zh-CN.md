@@ -40,9 +40,11 @@ pnpm docs:test
 
 两个 GitHub 环境分别为 `docs-production`、`docs-preview`。
 各自设置 `CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_API_TOKEN`。
-Token 需要相应账号的 Workers Scripts 编辑权限；正式环境还需查看 Zone、
-DNS 记录和管理 Worker 自定义域名所需权限。按 Cloudflare 当前权限模型
-配置最小范围，不把 Token 写入源文件或示例资源。
+Token 需要 `Account → Workers Scripts → Edit`，账号资源范围必须包含对应账号。
+正式环境还需要 `Zone → Zone → Read` 和 `Zone → DNS → Read`，限定到
+`sohophp.app`。自定义域名列表与绑定接口使用 Workers Scripts 权限；只有
+DNS 编辑权限不够。按最小范围配置，不把 Token 写入源文件或示例资源。
+[自定义域名 API 权限](https://developers.cloudflare.com/api/resources/workers/subresources/domains/methods/list/)。
 
 首次绑定前检查 Zone 为 active，且目标域名没有别的 Worker 或已有 DNS
 服务。发现冲突立即停止，不自动覆盖。先完成域名所有者审核再重新发布。
@@ -55,6 +57,14 @@ DNS 记录和管理 Worker 自定义域名所需权限。按 Cloudflare 当前�
 
 哈希 JS/CSS 长期缓存，其余资源重新验证。部署后核对 deployment.json 的
 提交标识与预期一致，避免把缓存中的旧页面误认为新版本上线。
+
+## 预览验收步骤
+
+同仓库 PR 的 Docs Site Check 成功后，在 Docs Site Deploy 的 Summary 打开
+版本预览 URL。核对 `/deployment.json` 的 commit 与 PR head 一致，确认
+首页响应带 `X-Robots-Tag: noindex, nofollow`，且 `/sitemap.xml` 返回 404。
+测试搜索和示例后保留对应运行链接。更新 PR 会产生新的版本 URL；旧 URL
+不会成为正式站点入口。正式站点仍只跟随检查通过的 master 提交。
 
 ## 恢复与保留
 
