@@ -1466,8 +1466,39 @@ test('inserts a collapsed link and a named anchor at the active caret', async ({
     await expect(target).toContainText('Alpha site omega');
 
     await clickTextBoundary(page, target, 0);
+    const anchorEvents: string[] = [];
+    page.on('console', (message) => {
+        if (message.text().startsWith('anchor-debug:'))
+            anchorEvents.push(message.text());
+    });
+    await page.evaluate(() => {
+        for (const type of ['pointerdown', 'pointerup', 'click', 'focusin'])
+            document.addEventListener(
+                type,
+                (event) => {
+                    const target = event.target;
+                    if (target instanceof Element)
+                        console.log(
+                            'anchor-debug:',
+                            type,
+                            target.outerHTML.slice(0, 500),
+                        );
+                },
+                true,
+            );
+    });
     await page.locator('[data-toolbar-item="anchor"]').click();
     const anchorDialog = page.getByRole('dialog', { name: 'Named anchor' });
+    try {
+        await expect(anchorDialog).toBeVisible();
+    } catch (error) {
+        console.log(
+            'Anchor diagnostic',
+            anchorEvents,
+            await page.locator('body').innerText(),
+        );
+        throw error;
+    }
     await anchorDialog.getByLabel('Anchor name').fill('section-start');
     await anchorDialog
         .getByRole('button', { name: 'Insert named anchor' })
