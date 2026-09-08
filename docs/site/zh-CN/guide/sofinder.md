@@ -21,7 +21,7 @@ description: '安装 @soeditor/adapter-sofinder@1.2.1 与 @soeditor/file-manager
 
 <<< ../../examples/api.ts#asset-plugins
 
-随后调用下面的 `registerSoFinder`。宿主负责打开真正的 SoFinder 窗口并把结果交给适配器；示例的固定图片回调没有部署 SoFinder 服务端。
+随后调用 `registerSoFinder`。宿主负责打开真正的 SoFinder 窗口并把结果交给适配器；示例的固定图片回调没有部署 SoFinder 服务端。
 
 ## 常见错误
 

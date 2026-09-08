@@ -40,9 +40,11 @@ pnpm docs:test
 
 两个 GitHub 环境分别为 `docs-production`、`docs-preview`。
 各自设置 `CLOUDFLARE_ACCOUNT_ID`、`CLOUDFLARE_API_TOKEN`。
-Token 需要相应账号的 Workers Scripts 编辑权限；正式环境还需查看 Zone、
-DNS 记录和管理 Worker 自定义域名所需权限。按 Cloudflare 当前权限模型
-配置最小范围，不把 Token 写入源文件或示例资源。
+Token 需要 `Account → Workers Scripts → Edit`，账号资源范围必须包含对应账号。
+正式环境还需要 `Zone → Zone → Read` 和 `Zone → DNS → Read`，限定到
+`sohophp.app`。自定义域名列表与绑定接口使用 Workers Scripts 权限；只有
+DNS 编辑权限不够。按最小范围配置，不把 Token 写入源文件或示例资源。
+[自定义域名 API 权限](https://developers.cloudflare.com/api/resources/workers/subresources/domains/methods/list/)。
 
 首次绑定前检查 Zone 为 active，且目标域名没有别的 Worker 或已有 DNS
 服务。发现冲突立即停止，不自动覆盖。先完成域名所有者审核再重新发布。
