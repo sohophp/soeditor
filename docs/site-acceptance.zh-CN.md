@@ -45,7 +45,7 @@
 - 部署记录 `verified: true`、`rolledBack: false`；恢复产物已存入 [docs-deployment-archives](https://github.com/sohophp/soeditor/releases/tag/docs-deployment-archives)。
 - 本地直连 Cloudflare 网络不可达；Actions 的 HTTPS 检查与本地代理浏览器检查均成功，不能据此推断所有地区的直连可用性。
 
-旧 PR 合并后，其预览重跑因失去可信 PR 关联而被检查阻止；正式上线成功不代替新 PR 的预览部署验收。配置与恢复步骤见[运维说明](site-operations.zh-CN.md)。
+预览重试在 GitHub 未返回运行关联 PR 时，通过已检查提交查询关联 PR，并继续核对同仓库与准确 head SHA；不会跳过产物或 PR 身份检查。配置与恢复步骤见[运维说明](site-operations.zh-CN.md)。
 
 ## 人工与长期检查边界
 
@@ -54,3 +54,5 @@ WebKit 自动化不等于真实 Safari 认证。读屏、操作系统 IME、实�
 ## 首次上线后的网络检查
 
 线上 Chromium 的中英搜索、表单提交/重置、保存失败重试及 Source 延迟加载测试通过。资源选择与模拟上传操作通过，但 Cloudflare 自动注入的 `/cdn-cgi/rum` 请求触发了“无网络上传”断言。HTML 响应增加 `Cache-Control: no-transform`，阻止平台自动注入 Web Analytics，保持首期无监控 SDK 的部署约定；哈希资源的长期缓存策略不变。发布后的线上复测结果另行记录。依据：[Cloudflare Web Analytics FAQ](https://developers.cloudflare.com/web-analytics/faq/)。
+
+版本预览地址实测由 Cloudflare 将 `X-Robots-Tag` 覆盖为 `noindex`；稳定预览地址保留产物声明的 `noindex, nofollow`。因此版本预览验收同时要求响应头 `noindex` 与站点自行生成的 HTML robots `noindex, nofollow`，并要求 sitemap 返回 404。该平台差异不通过放宽索引保护处理。
