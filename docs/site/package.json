@@ -27,6 +27,13 @@
         "typescript": "5.9.3",
         "@types/node": "22.18.0",
         "@playwright/test": "1.62.1",
-        "@axe-core/playwright": "4.13.0"
+        "@axe-core/playwright": "4.13.0",
+        "@soeditor/react": "workspace:*",
+        "@soeditor/vue": "workspace:*",
+        "@soeditor/editor": "workspace:*",
+        "react": "19.2.8",
+        "react-dom": "19.2.8",
+        "@types/react": "19.2.18",
+        "@types/react-dom": "19.2.5"
     }
 }

@@ -23,6 +23,9 @@ features:
     - title: 宿主拥有数据
       details: 对接表单、保存接口和可替换的资源选择器。
       link: /zh-CN/guide/forms
+    - title: SoFinder 最佳搭档
+      details: SoEditor 编辑内容，SoFinder 管理图片、视频和文件，一起完成 CMS 资源工作流。
+      link: /zh-CN/guide/sofinder
 ---
 
 <div class="home-install">
@@ -40,5 +43,11 @@ import '@soeditor/editor/cms/styles.css';
 const host = document.querySelector<HTMLTextAreaElement>('#content');
 if (host) await createClassicEditor(host, { locale: 'zh-CN' });
 ```
+
+## SoEditor + SoFinder：最佳搭档
+
+用 SoEditor 编写文章，用 [SoFinder](https://sofinder.sohophp.app/) 管理和选择资源。通过独立适配器连接资源库，让图片插入、文件链接和视频资源使用融入日常 CMS 编辑流程。
+
+[访问 SoFinder 官网](https://sofinder.sohophp.app/) · [搭配说明与接入代码](/zh-CN/guide/sofinder) · [体验资源选择示例](/zh-CN/examples/assets)
 
 </div>

@@ -7,6 +7,7 @@ import {
     type DemoInstance,
 } from './shared.js';
 const loaders = {
+    video: () => import('./video.js'),
     basic: () => import('./basic.js'),
     form: () => import('./form.js'),
     source: () => import('./source.js'),

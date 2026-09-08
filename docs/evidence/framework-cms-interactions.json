@@ -1,0 +1,54 @@
+{
+    "timestamp": "2026-09-08T16:30:12.701Z",
+    "environment": "Local Chromium, Vite development server, concurrent repository checks; beforeinput to requestAnimationFrame, 100 real keys per instance",
+    "runs": [
+        {
+            "run": 0,
+            "framework": "react",
+            "characters": 100,
+            "samples": 100,
+            "inputToFrameMedianMs": 9.299999952316284,
+            "inputToFrameP95Ms": 15.799999952316284
+        },
+        {
+            "run": 0,
+            "framework": "vue",
+            "characters": 100,
+            "samples": 100,
+            "inputToFrameMedianMs": 9.100000023841858,
+            "inputToFrameP95Ms": 15.900000035762787
+        },
+        {
+            "run": 1,
+            "framework": "react",
+            "characters": 100,
+            "samples": 100,
+            "inputToFrameMedianMs": 9.300000011920929,
+            "inputToFrameP95Ms": 16.599999964237213
+        },
+        {
+            "run": 1,
+            "framework": "vue",
+            "characters": 100,
+            "samples": 100,
+            "inputToFrameMedianMs": 8.100000023841858,
+            "inputToFrameP95Ms": 16.599999964237213
+        },
+        {
+            "run": 2,
+            "framework": "react",
+            "characters": 100,
+            "samples": 100,
+            "inputToFrameMedianMs": 9,
+            "inputToFrameP95Ms": 17.400000035762787
+        },
+        {
+            "run": 2,
+            "framework": "vue",
+            "characters": 100,
+            "samples": 100,
+            "inputToFrameMedianMs": 8.299999952316284,
+            "inputToFrameP95Ms": 17.700000047683716
+        }
+    ]
+}

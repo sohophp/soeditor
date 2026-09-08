@@ -23,6 +23,9 @@ features:
     - title: Your host owns the data
       details: Connect forms, save endpoints and replaceable asset pickers.
       link: /en/guide/forms
+    - title: SoFinder — our best companion
+      details: Edit content with SoEditor and manage images, videos and files with SoFinder.
+      link: /en/guide/sofinder
 ---
 
 <div class="home-install">
@@ -40,5 +43,11 @@ import '@soeditor/editor/cms/styles.css';
 const host = document.querySelector<HTMLTextAreaElement>('#content');
 if (host) await createClassicEditor(host, { locale: 'en' });
 ```
+
+## SoEditor + SoFinder: our best companion for CMS authoring
+
+Write articles with SoEditor and manage assets with [SoFinder](https://sofinder.sohophp.app/). Connect your asset library through the separate adapter for image insertion, file links and video resource workflows.
+
+[Visit SoFinder](https://sofinder.sohophp.app/) · [Integration guide and code](/en/guide/sofinder) · [Try the asset picker example](/en/examples/assets)
 
 </div>

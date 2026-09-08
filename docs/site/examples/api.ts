@@ -105,6 +105,14 @@ export async function format(editor: ClassicEditor) {
 export async function createAssetEditor(host: HTMLElement) {
     return createOptionalEditor(host, {
         plugins: [...cmsRuntimePreset.plugins, FileManagerPlugin, UploadPlugin],
+        toolbar: [
+            'undo',
+            'redo',
+            'bold',
+            'italic',
+            'image-browse',
+            'file-link',
+        ],
     });
 }
 // #endregion asset-plugins

@@ -122,9 +122,9 @@ for (const name of await readdir(join(repositoryRoot, 'tests', 'browser'))) {
     );
     browserScenarios += content.match(/^test\s*\(/gmu)?.length ?? 0;
 }
-if (browserScenarios !== 281) {
+if (browserScenarios !== 285) {
     throw new Error(
-        `Expected 281 documented Chromium scenarios, found ${String(browserScenarios)}.`,
+        `Expected 285 documented Chromium scenarios, found ${String(browserScenarios)}.`,
     );
 }
 

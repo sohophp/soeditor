@@ -1,3 +1,4 @@
+import { SoEditor } from '../src/cms.js';
 import { Editor } from '@soeditor/core';
 import { renderToString } from 'react-dom/server';
 import { describe, expect, it } from 'vitest';
@@ -21,4 +22,15 @@ describe('React Workspace adapter', () => {
         expect(renderToString(<Example />)).toBe('<output>idle</output>');
         expect(creates).toBe(0);
     });
+});
+
+it('renders CMS HTML as inert textarea text during SSR', () => {
+    const html =
+        '<script>throw new Error("must stay inert")</script><p>CMS</p>';
+    expect(renderToString(<SoEditor name="body" value={html} />)).toContain(
+        '&lt;script&gt;',
+    );
+    expect(renderToString(<SoEditor name="body" value={html} />)).not.toContain(
+        '<script>',
+    );
 });

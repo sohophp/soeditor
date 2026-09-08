@@ -32,3 +32,7 @@ For an unregistered command, check `UploadPlugin`. For a pending upload, check t
 ## Next steps
 
 [Examples](/en/examples/basic) · [Configuration](/en/api/configuration) · [Troubleshooting](/en/support/troubleshooting)
+
+## Our best companion: SoFinder
+
+[SoFinder](https://sofinder.sohophp.app/) is our recommended asset management companion. See the [integration guide and example](/en/guide/sofinder) for image, file and video URL workflows, and how the simulated picker differs from a real backend.

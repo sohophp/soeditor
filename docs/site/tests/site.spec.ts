@@ -12,6 +12,16 @@ for (const locale of ['zh-CN', 'en']) {
         });
         await page.goto(`/${locale}/`);
         await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+        await expect(
+            page
+                .locator(
+                    '.home-install a[href="https://sofinder.sohophp.app/"]',
+                )
+                .first(),
+        ).toBeVisible();
+        await expect(
+            page.locator(`.home-install a[href="/${locale}/guide/sofinder"]`),
+        ).toBeVisible();
         expect(demoRequests).toEqual([]);
         expect(
             await page.evaluate(
@@ -61,12 +71,20 @@ for (const locale of ['zh-CN', 'en']) {
                       ['saving', 'guide/saving'],
                       ['upload', 'guide/uploads'],
                       ['tables', 'guide/tables'],
+                      ['SoFinder', 'guide/sofinder'],
+                      ['React', 'guide/react'],
+                      ['Vue', 'guide/vue'],
+                      ['Video', 'guide/video'],
                   ]
                 : [
                       ['源码', 'guide/source'],
                       ['保存', 'guide/saving'],
                       ['上传', 'guide/uploads'],
                       ['表格', 'guide/tables'],
+                      ['SoFinder', 'guide/sofinder'],
+                      ['React', 'guide/react'],
+                      ['Vue', 'guide/vue'],
+                      ['视频', 'guide/video'],
                   ];
         for (const [term, topic] of queries) {
             await page.locator('button.DocSearch-Button').click();

@@ -12,6 +12,8 @@ export const groups = [
         en: 'CMS integration',
         zh: 'CMS 集成',
         pages: [
+            ['guide/react', 'React 接入', 'React integration'],
+            ['guide/vue', 'Vue 接入', 'Vue integration'],
             ['guide/forms', '表单提交与重置', 'Forms and reset'],
             ['guide/saving', 'Ajax 保存与脏状态', 'Saving and dirty state'],
             ['guide/multiple', '多实例与销毁', 'Multiple instances'],
@@ -24,6 +26,7 @@ export const groups = [
             ['guide/toolbar', '配置工具栏', 'Toolbar'],
             ['guide/text', '文本与列表', 'Text and lists'],
             ['guide/links', '链接与 CMS 标记', 'Links and CMS markers'],
+            ['guide/video', '视频编辑与预览', 'Video and preview'],
             ['guide/images', '图片编辑', 'Images'],
             ['guide/tables', '表格编辑', 'Tables'],
             ['guide/paste', '粘贴内容', 'Paste'],
@@ -62,6 +65,9 @@ export const groups = [
         en: 'Examples',
         zh: '运行示例',
         pages: [
+            ['examples/react', 'React 表单组件', 'React form component'],
+            ['examples/vue', 'Vue 双向绑定', 'Vue two-way binding'],
+            ['examples/video', '视频与文章预览', 'Video and article preview'],
             ['examples/basic', '最小编辑器', 'Minimal editor'],
             ['examples/form', '原生表单', 'Native form'],
             ['examples/source', 'WYSIWYG + Source', 'WYSIWYG + Source'],

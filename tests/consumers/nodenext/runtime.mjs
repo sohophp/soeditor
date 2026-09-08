@@ -1,3 +1,6 @@
+import { SoEditor as ReactCmsEditor } from '@soeditor/react/cms';
+import { SoEditor as VueCmsEditor } from '@soeditor/vue/cms';
+
 import {
     Editor,
     EditorDestroyedError,
@@ -56,6 +59,8 @@ import { useSoEditorWorkspace as useVueSoEditorWorkspace } from '@soeditor/vue';
 import { pluginTemplateVersion } from '@soeditor/plugin-tools';
 
 if (
+    typeof ReactCmsEditor !== 'function' ||
+    typeof VueCmsEditor.setup !== 'function' ||
     typeof useReactSoEditorWorkspace !== 'function' ||
     typeof useVueSoEditorWorkspace !== 'function' ||
     pluginTemplateVersion !== 3

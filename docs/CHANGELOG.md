@@ -1,5 +1,12 @@
 # Changelog
 
+## 1.3.0
+
+- Add independent `@soeditor/react/cms` and `@soeditor/vue/cms` components with HTML binding, native form integration, readonly state, SSR-safe rendering and asynchronous teardown.
+- Preserve native typing under React event capture while keeping cancelled-input DOM repair active.
+- Keep framework dependencies outside the default CMS bundle and retain the existing Workspace compatibility hooks.
+- Add bilingual React, Vue, video and SoFinder companion documentation and examples.
+
 ## 1.2.1 — CMS ESM parser initialization
 
 - Fix property mangling in the default CMS ESM distribution: keep object keys stable across independently minified chunks so the HTML tokenizer and UI registry initialize correctly.

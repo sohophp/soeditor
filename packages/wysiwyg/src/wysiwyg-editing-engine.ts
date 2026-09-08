@@ -266,6 +266,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     #inputSequence = 0;
     #locked = false;
     #pendingInputGroup: string | undefined;
+    #nativeInputTimer: number | undefined;
     #pendingMark: VisualTextMark | undefined;
     #pendingPreLineBreak: PendingPreLineBreak | undefined;
     #pendingSource: string | undefined;
@@ -598,6 +599,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     destroy(): void {
         if (this.#destroyed) return;
         this.#destroyed = true;
+        this.#finishNativeInput();
         this.element.removeEventListener(
             'beforeinput',
             this.#handleBeforeInput,
@@ -672,6 +674,15 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     readonly #handleBeforeInput = (event: InputEvent): void => {
+        // Ancestor capture listeners (including React's delegated input handler)
+        // can trigger a mutation-observer checkpoint before our input listener.
+        // Keep the browser edit intact until input commits it. A canceled
+        // beforeinput may have no input event, so release the guard next task.
+        this.#finishNativeInput();
+        this.#nativeInputTimer = this.#document.defaultView?.setTimeout(() => {
+            this.#nativeInputTimer = undefined;
+            this.#repairExternalMutation();
+        }, 0);
         if (event.inputType === 'historyUndo') {
             event.preventDefault();
             this.#executeHistory('editor.undo');
@@ -744,6 +755,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     };
 
     readonly #handleInput = (event: Event): void => {
+        this.#finishNativeInput();
         const isComposing =
             'isComposing' in event && event.isComposing === true;
         const historyGroup =
@@ -1843,11 +1855,19 @@ export class WysiwygEditingEngine implements EditingEngine {
         if (this.#pendingSource !== source) this.#render(source);
     }
 
+    #finishNativeInput(): void {
+        if (this.#nativeInputTimer !== undefined) {
+            this.#document.defaultView?.clearTimeout(this.#nativeInputTimer);
+            this.#nativeInputTimer = undefined;
+        }
+    }
+
     #repairExternalMutation(): void {
         if (
             this.#destroyed ||
             this.#locked ||
-            this.#pendingSource !== undefined
+            this.#pendingSource !== undefined ||
+            this.#nativeInputTimer !== undefined
         ) {
             return;
         }

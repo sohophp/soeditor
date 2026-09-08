@@ -54,3 +54,4 @@ jobs:
             - run: pnpm exec playwright install --with-deps firefox webkit
             - run: pnpm test:browser:cross
             - run: pnpm test:browser:source:all --project firefox --project webkit
+            - run: pnpm test:browser:frameworks --project firefox --project webkit

@@ -35,6 +35,34 @@ for (const directory of packageNames) {
     }
 }
 
+for (const framework of ['react', 'vue']) {
+    const cmsEntry = await readFile(
+        join(packagesRoot, framework, 'dist', 'cms.js'),
+        'utf8',
+    );
+    if (framework === 'react' && !/^['"]use client['"];/.test(cmsEntry)) {
+        throw new Error(
+            'React CMS entry lost its server-component client boundary.',
+        );
+    }
+    if (!cmsEntry.includes('import("@soeditor/editor/cms")')) {
+        throw new Error(
+            `${framework} CMS must defer the editor import until mount.`,
+        );
+    }
+    for (const unrelated of [
+        '@soeditor/workspace',
+        '@soeditor/source',
+        '@soeditor/markdown',
+        '@soeditor/dev-tools',
+    ]) {
+        if (cmsEntry.includes(unrelated))
+            throw new Error(
+                `${framework} CMS unexpectedly imports ${unrelated}.`,
+            );
+    }
+}
+
 const umbrellaRoot = join(packagesRoot, 'soeditor', 'dist');
 const globalBundle = await readFile(
     join(umbrellaRoot, 'soeditor.global.js'),

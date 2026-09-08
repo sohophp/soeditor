@@ -8,6 +8,9 @@ export default defineConfig({
                 classic: fileURLToPath(
                     new URL('classic.html', import.meta.url),
                 ),
+                frameworkCms: fileURLToPath(
+                    new URL('framework-cms.html', import.meta.url),
+                ),
                 frameworks: fileURLToPath(
                     new URL('framework-adapters.html', import.meta.url),
                 ),
@@ -24,6 +27,12 @@ export default defineConfig({
     },
     resolve: {
         alias: {
+            '@soeditor/react/cms': fileURLToPath(
+                new URL('../../packages/react/src/cms.ts', import.meta.url),
+            ),
+            '@soeditor/vue/cms': fileURLToPath(
+                new URL('../../packages/vue/src/cms.ts', import.meta.url),
+            ),
             '@soeditor/editor/cms/styles.css': fileURLToPath(
                 new URL(
                     '../../packages/soeditor/src/cms-styles.css',
@@ -50,6 +59,9 @@ export default defineConfig({
                     '../../packages/soeditor/src/cms-optional.ts',
                     import.meta.url,
                 ),
+            ),
+            '@soeditor/editor/cms': fileURLToPath(
+                new URL('../../packages/soeditor/src/cms.ts', import.meta.url),
             ),
             '@soeditor/editor/styles.css': fileURLToPath(
                 new URL(

@@ -3,7 +3,8 @@ import { groups } from '../catalog.js';
 import { tokenize } from './search.js';
 
 const origin = 'https://soeditor.sohophp.app';
-const preview = process.env.DOCS_PREVIEW === '1';
+const workspacePreview = process.env.DOCS_WORKSPACE_PREVIEW === '1';
+const preview = process.env.DOCS_PREVIEW === '1' || workspacePreview;
 function theme(locale: 'zh-CN' | 'en'): DefaultTheme.Config {
     const zh = locale === 'zh-CN';
     return {
@@ -17,6 +18,7 @@ function theme(locale: 'zh-CN' | 'en'): DefaultTheme.Config {
                 link: `/${locale}/examples/basic`,
             },
             { text: 'API', link: `/${locale}/api/configuration` },
+            { text: 'SoFinder', link: 'https://sofinder.sohophp.app/' },
             {
                 text: zh ? '更新记录' : 'Changelog',
                 link: `/${locale}/support/changelog`,
@@ -54,6 +56,13 @@ function theme(locale: 'zh-CN' | 'en'): DefaultTheme.Config {
     };
 }
 export default defineConfig({
+    vite: {
+        define: {
+            'import.meta.env.VITE_WORKSPACE_DOCS_PREVIEW': JSON.stringify(
+                workspacePreview ? '1' : '0',
+            ),
+        },
+    },
     title: 'SoEditor',
     description: 'Lightweight HTML WYSIWYG + Source editor for website CMS.',
     cleanUrls: true,

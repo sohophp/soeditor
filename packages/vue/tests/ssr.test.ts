@@ -1,3 +1,4 @@
+import { SoEditor } from '../src/cms.js';
 import { Editor } from '@soeditor/core';
 import { renderToString } from '@vue/server-renderer';
 import { createSSRApp, defineComponent, h } from 'vue';
@@ -26,4 +27,17 @@ describe('Vue Workspace adapter', () => {
         );
         expect(creates).toBe(0);
     });
+});
+
+it('renders CMS HTML as inert textarea text during SSR', async () => {
+    const app = createSSRApp({
+        render: () =>
+            h(SoEditor, {
+                name: 'body',
+                modelValue: '<script>alert(1)</script><p>CMS</p>',
+            }),
+    });
+    const html = await renderToString(app);
+    expect(html).toContain('&lt;script&gt;');
+    expect(html).not.toContain('<script>');
 });

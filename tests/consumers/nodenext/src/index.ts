@@ -1,3 +1,14 @@
+import { createElement } from 'react';
+import { h } from 'vue';
+import {
+    SoEditor as ReactCmsEditor,
+    type SoEditorProps,
+} from '@soeditor/react/cms';
+import {
+    SoEditor as VueCmsEditor,
+    type SoEditorOptions,
+} from '@soeditor/vue/cms';
+
 import { Editor, createServiceToken, type Transaction } from '@soeditor/core';
 import {
     DiagnosticsPlugin as SdkDiagnosticsPlugin,
@@ -749,3 +760,20 @@ editor.events.clear();
 editor.events.emit('editor:ready', { editor });
 
 await editor.destroy();
+
+const cmsOptions = { locale: 'zh-CN' } satisfies SoEditorOptions;
+const reactCmsProps = {
+    value: '<p>CMS</p>',
+    options: cmsOptions,
+    onChange: (html: string) => {
+        void html;
+    },
+} satisfies SoEditorProps;
+void createElement(ReactCmsEditor, reactCmsProps);
+void h(VueCmsEditor, {
+    modelValue: '<p>CMS</p>',
+    options: cmsOptions,
+    'onUpdate:modelValue': (html: string) => {
+        void html;
+    },
+});

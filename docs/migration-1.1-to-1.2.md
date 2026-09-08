@@ -32,3 +32,10 @@ in the host application's normal save-and-reopen flow before deployment.
 ## 1.2.1 patch
 
 Use `1.2.1` for the default CMS ESM entry. It fixes a property-mangling error in the HTML tokenizer that could hang initialization in 1.2.0. All public packages remain aligned; there are no API changes.
+
+## 1.3.0 framework components
+
+Upgrade all packages together to `1.3.0`. The new `@soeditor/react/cms` and
+`@soeditor/vue/cms` entries wrap ClassicEditor for CMS forms; existing root
+Workspace hooks remain compatible. Import the CMS stylesheet explicitly and
+use an optional editor factory when enabling Source. See [framework adapters](framework-adapters.md).

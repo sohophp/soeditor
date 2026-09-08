@@ -53,3 +53,7 @@ pnpm add soeditor-release@npm:@soeditor/editor@1.2.1 @soeditor/file-manager@1.2.
 所有实例都在创建时传入 locale。结束体验会移除 iframe；重新开始使用初始内容。若样式或 Source 丢失，检查是否部署了全部构建资源。
 
 [API](/zh-CN/api/methods) · [常见问题](/zh-CN/support/troubleshooting)
+
+## 最佳搭档：SoFinder
+
+[SoFinder](https://sofinder.sohophp.app/) 是我们推荐的资源管理搭档。查看[搭配说明与接入示例](/zh-CN/guide/sofinder)，了解图片、文件与视频 URL 的使用方式，以及模拟选择与真实服务端的区别。

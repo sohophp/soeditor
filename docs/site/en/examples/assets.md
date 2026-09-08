@@ -53,3 +53,7 @@ pnpm add soeditor-release@npm:@soeditor/editor@1.2.1 @soeditor/file-manager@1.2.
 Each instance receives locale at creation. Closing removes the iframe; starting again restores initial content. If styles or Source are missing, check that all build assets were deployed.
 
 [API](/en/api/methods) · [Troubleshooting](/en/support/troubleshooting)
+
+## Our best companion: SoFinder
+
+[SoFinder](https://sofinder.sohophp.app/) is our recommended asset management companion. See the [integration guide and example](/en/guide/sofinder) for image, file and video URL workflows, and how the simulated picker differs from a real backend.

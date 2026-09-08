@@ -1,4 +1,4 @@
-# Releasing SoEditor 1.2.x
+# Releasing SoEditor 1.3.x
 
 Publication is an owner-authorized operation. Local quality gates and dry runs
 do not grant permission to choose a license, publish packages, create a tag, or
@@ -41,6 +41,8 @@ the long-lived publishing secret. Until that migration is complete, an OIDC
 exchange warning does not replace the granular token requirement.
 
 ## Release-line policy
+
+The owner-authorized 1.3.0 release adds separate React and Vue CMS component entries and preserves existing APIs and the framework-neutral default bundle.
 
 The owner-authorized 1.2.0 release adds optional CMS video and preview integration
 to the published 1.1 baseline. The 1.2.x line accepts correctness, security,
@@ -115,7 +117,7 @@ do not republish identical artifacts.
 After publication, or to recheck propagation:
 
 ```bash
-pnpm release:verify-registry 1.2.1
+pnpm release:verify-registry 1.3.0
 ```
 
 This creates a clean Vite consumer from the public npm registry and checks the

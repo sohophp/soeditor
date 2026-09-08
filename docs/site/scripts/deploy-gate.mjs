@@ -7,6 +7,8 @@ const root = resolve(process.argv[2]);
 const manifest = JSON.parse(
     await readFile(resolve(root, 'dist/deployment.json'), 'utf8'),
 );
+if (manifest.workspacePreview === true)
+    throw new Error('Workspace examples are local previews only');
 if (
     !/^[a-f0-9]{40}$/.test(process.env.DOCS_SHA ?? '') ||
     manifest.commit !== process.env.DOCS_SHA ||

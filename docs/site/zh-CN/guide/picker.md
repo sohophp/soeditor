@@ -30,3 +30,7 @@ description: '资源选择器实现 FileManager.open(options)。返回一项带�
 ## 下一步
 
 [运行示例](/zh-CN/examples/basic) · [配置参考](/zh-CN/api/configuration) · [常见问题](/zh-CN/support/troubleshooting)
+
+## 最佳搭档：SoFinder
+
+[SoFinder](https://sofinder.sohophp.app/) 是我们推荐的资源管理搭档。查看[搭配说明与接入示例](/zh-CN/guide/sofinder)，了解图片、文件与视频 URL 的使用方式，以及模拟选择与真实服务端的区别。

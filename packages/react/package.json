@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/react",
-    "version": "1.2.1",
+    "version": "1.3.0",
     "license": "MIT",
     "description": "React lifecycle adapter for SoEditor Workspace.",
     "keywords": [
@@ -34,6 +34,10 @@
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/index.js"
+        },
+        "./cms": {
+            "types": "./dist/cms.d.ts",
+            "import": "./dist/cms.js"
         }
     },
     "scripts": {
@@ -44,7 +48,8 @@
     "peerDependencies": {
         "@soeditor/core": "workspace:*",
         "@soeditor/workspace": "workspace:*",
-        "react": ">=18.2.0 <20"
+        "react": ">=18.2.0 <20",
+        "@soeditor/editor": "workspace:*"
     },
     "devDependencies": {
         "@soeditor/core": "workspace:*",
@@ -52,6 +57,12 @@
         "@types/react": "19.2.18",
         "react": "19.2.8",
         "react-dom": "19.2.8",
-        "@types/react-dom": "19.2.5"
+        "@types/react-dom": "19.2.5",
+        "@soeditor/editor": "workspace:*"
+    },
+    "peerDependenciesMeta": {
+        "@soeditor/editor": {
+            "optional": true
+        }
     }
 }

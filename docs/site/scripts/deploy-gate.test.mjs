@@ -74,3 +74,19 @@ test('rejects links outside the artifact', async () => {
         /Symlink in artifact/,
     );
 });
+
+test('rejects workspace component previews before deployment access', async () => {
+    await rejectedArtifact(
+        (root) =>
+            writeFile(
+                join(root, 'dist/deployment.json'),
+                JSON.stringify({
+                    commit: sha,
+                    editorVersion: '1.2.1',
+                    preview: false,
+                    workspacePreview: true,
+                }),
+            ),
+        /Workspace examples are local previews only/,
+    );
+});

@@ -17,7 +17,20 @@ const editorPackage = JSON.parse(
 );
 if (editorPackage.version !== '1.2.1' || !packageRoot.includes('node_modules'))
     throw new Error('Expected published SoEditor 1.2.1');
-const examples = ['basic', 'form', 'source', 'assets', 'save', 'multiple'];
+const workspacePreview = process.env.DOCS_WORKSPACE_PREVIEW === '1';
+const releasedExamples = [
+    'basic',
+    'form',
+    'source',
+    'assets',
+    'save',
+    'multiple',
+    'video',
+];
+const examples = [
+    ...releasedExamples,
+    ...(workspacePreview ? ['react', 'vue'] : []),
+];
 const graph = [];
 await buildExamples({
     configFile: false,
@@ -40,7 +53,8 @@ await buildExamples({
                 for (const id of this.getModuleIds()) {
                     if (
                         /\/packages\/[^/]+\/(src|dist)\//.test(id) &&
-                        !id.includes('/node_modules/')
+                        !id.includes('/node_modules/') &&
+                        !workspacePreview
                     )
                         throw new Error(`Workspace source in docs: ${id}`);
                 }
@@ -68,12 +82,18 @@ const download = resolve(root, '.vitepress/reports/example-source');
 await rm(download, { recursive: true, force: true });
 await rm(resolve(root, 'public/downloads'), { recursive: true, force: true });
 await mkdir(download, { recursive: true });
-for (const name of await readdir(resolve(root, 'examples')))
+for (const name of await readdir(resolve(root, 'examples'))) {
+    if (['frameworks', 'react.html', 'vue.html'].includes(name)) continue;
     await cp(resolve(root, 'examples', name), resolve(download, name));
+}
 await mkdir(resolve(download, 'public'), { recursive: true });
 await cp(
     resolve(root, 'public/sample-image.svg'),
     resolve(download, 'public/sample-image.svg'),
+);
+await cp(
+    resolve(root, 'public/demo-video.webm'),
+    resolve(download, 'public/demo-video.webm'),
 );
 await writeFile(
     resolve(download, 'package.json'),
@@ -101,7 +121,7 @@ await writeFile(
 );
 await writeFile(
     resolve(download, 'vite.config.js'),
-    `import { defineConfig } from 'vite';\nexport default defineConfig({build:{rollupOptions:{input:${JSON.stringify(examples.map((name) => name + '.html'))}}}});\n`,
+    `import { defineConfig } from 'vite';\nexport default defineConfig({build:{rollupOptions:{input:${JSON.stringify(releasedExamples.map((name) => name + '.html'))}}}});\n`,
 );
 await mkdir(resolve(root, 'public/downloads'), { recursive: true });
 execFileSync('tar', [
@@ -113,7 +133,7 @@ execFileSync('tar', [
 ]);
 await buildDocs(root);
 const dist = resolve(root, '.vitepress/dist');
-const preview = process.env.DOCS_PREVIEW === '1';
+const preview = process.env.DOCS_PREVIEW === '1' || workspacePreview;
 await writeFile(resolve(dist, '_redirects'), '/ /zh-CN/ 302\n');
 await writeFile(
     resolve(dist, '_headers'),
@@ -133,6 +153,7 @@ const lock = await readFile(resolve(root, '../../pnpm-lock.yaml'));
 const manifest = {
     commit,
     editorVersion: editorPackage.version,
+    workspacePreview,
     preview,
     lockSha256: createHash('sha256').update(lock).digest('hex'),
 };

@@ -4,6 +4,7 @@ export default defineConfig({
     testDir: './tests/browser',
     testMatch: [
         'classic-editor.spec.ts',
+        'framework-cms.spec.ts',
         'video.spec.ts',
         'cms-multibrowser.spec.ts',
         'distribution.spec.ts',

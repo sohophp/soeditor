@@ -4,6 +4,9 @@ import { useData, useRoute } from 'vitepress';
 const props = withDefaults(defineProps<{ example?: string }>(), {
     example: 'basic',
 });
+const workspacePreview = import.meta.env.VITE_WORKSPACE_DOCS_PREVIEW === '1';
+const unreleased = computed(() => ['react', 'vue'].includes(props.example));
+const available = computed(() => !unreleased.value || workspacePreview);
 const { lang } = useData();
 const route = useRoute();
 const active = ref(false);
@@ -27,7 +30,16 @@ watch(
         :aria-label="zh ? 'SoEditor 交互演示' : 'Interactive SoEditor demo'"
     >
         <div class="demo-heading">
-            <span>SoEditor <small>1.2.1</small></span>
+            <span
+                >SoEditor
+                <small>{{
+                    unreleased
+                        ? zh
+                            ? '组件预览'
+                            : 'Component preview'
+                        : '1.2.1'
+                }}</small></span
+            >
             <button v-if="active" type="button" @click="active = false">
                 {{ zh ? '结束体验' : 'Close demo' }}
             </button>
@@ -62,10 +74,22 @@ watch(
                 <div class="demo-features">
                     <span>WYSIWYG</span><span>HTML Source</span><span>CMS</span>
                 </div>
-                <button class="demo-start" type="button" @click="active = true">
+                <button
+                    v-if="available"
+                    class="demo-start"
+                    type="button"
+                    @click="active = true"
+                >
                     {{ zh ? '开始体验' : 'Start editing' }} →
                 </button>
-                <p class="demo-note">
+                <p v-if="!available" class="demo-note">
+                    {{
+                        zh
+                            ? '此组件尚未发布。下方提供完整代码和本地预览步骤。'
+                            : 'This component is not released yet. Full code and local preview steps follow below.'
+                    }}
+                </p>
+                <p v-else class="demo-note">
                     {{
                         zh
                             ? '点击后加载 · 内容仅保留在当前页面'

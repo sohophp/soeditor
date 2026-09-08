@@ -7,7 +7,7 @@ symbol list or declaration hash requires explicit API review. CSS exports and
 CLI bins are listed as stable resources. Undeclared `src`/`dist` subpaths and
 implementation modules are internal even when present in a checkout or tarball.
 
-Summary: 24 packages; 962 stable, 395 experimental, and 0 deprecated symbol
+Summary: 24 packages; 967 stable, 395 experimental, and 0 deprecated symbol
 entries.
 
 ## @soeditor/adapter-sofinder
@@ -1418,7 +1418,7 @@ Declaration SHA-256:
 ## @soeditor/react
 
 Declaration tree SHA-256:
-`15ad82e57d542aea51b9fdc9e811e0dafa5aea6a100c1b570e84ffe6dd3d302f`
+`67e2257af83aae512e125fd38a64da89ed4a4603ec3208f3e94db2ff6a79c9a2`
 
 ### .
 
@@ -1431,6 +1431,16 @@ Declaration SHA-256:
 | `ReactWorkspaceResult`  | type  | stable         | `0c99a083988924d8` |
 | `ReactWorkspaceStatus`  | type  | stable         | `f4be973e90d668bc` |
 | `useSoEditorWorkspace`  | value | stable         | `607f7d8d094d364f` |
+
+### ./cms
+
+Declaration SHA-256:
+`1644943a166ffe113bfacdc92b79a8699da6f82adefec302a408b4fd2b4bf8c3`
+
+| Export          | Kind  | Classification | Signature SHA-256  |
+| --------------- | ----- | -------------- | ------------------ |
+| `SoEditor`      | value | stable         | `f067be92ba3d7d86` |
+| `SoEditorProps` | type  | stable         | `9150a7b5cd3a1a8a` |
 
 ## @soeditor/revisions
 
@@ -1708,7 +1718,7 @@ Declaration SHA-256:
 ## @soeditor/vue
 
 Declaration tree SHA-256:
-`2c46a3d5a02d9b6b4aed0046bab68bbdaa6158a4c6aa2b8fdf3559b0f6b5dd3b`
+`a477f0c86fd32f32088678415770f48a3c170764680f1aa058f33a1c79b582da`
 
 ### .
 
@@ -1721,6 +1731,17 @@ Declaration SHA-256:
 | `VueWorkspaceOptions`  | type  | stable         | `63d354af0d92ce3f` |
 | `VueWorkspaceResult`   | type  | stable         | `0b71b5d45869cb97` |
 | `VueWorkspaceStatus`   | type  | stable         | `a563327d4564fd0f` |
+
+### ./cms
+
+Declaration SHA-256:
+`8d6ff1c3c4d72c7373140adf670e29b640f81be2c773d3c3ab57edaa6546b34d`
+
+| Export            | Kind  | Classification | Signature SHA-256  |
+| ----------------- | ----- | -------------- | ------------------ |
+| `SoEditor`        | value | stable         | `0815aaa57638d9bb` |
+| `SoEditorFactory` | type  | stable         | `a010c7f45378ceaa` |
+| `SoEditorOptions` | type  | stable         | `134a3d7675c3129c` |
 
 ## @soeditor/workspace
 
