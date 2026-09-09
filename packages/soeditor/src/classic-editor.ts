@@ -58,6 +58,7 @@ import {
     ClassicEditorAlreadyAttachedError,
     ClassicEditorDestroyedError,
 } from './classic-editor-errors.js';
+import { createCmsVideoPlugin, type CmsVideoOptions } from './video.js';
 import { attachLazyClassicDialogWindows } from './classic-dialog-loader.js';
 import type { ClassicPreviewWindow } from '@soeditor/preview';
 import { attachClassicSourceFormatting } from './classic-source-formatting.js';
@@ -277,6 +278,8 @@ export interface CreateClassicEditorOptions {
     readonly source?: ClassicSourceOptions;
     readonly theme?: EditorUiTheme;
     readonly themeVariables?: EditorUiThemeVariables;
+    /** Video is enabled by default; false disables the built-in plugin. */
+    readonly video?: false | CmsVideoOptions;
     readonly toolbar?: ToolbarConfiguration;
     readonly toolbarLayout?: ToolbarLayoutOptions;
     readonly translations?: readonly EditorUiTranslationResource[];
@@ -388,7 +391,18 @@ export async function createClassicEditor(
     let visualChangedWhileSourceLoads = false;
     let formattingService: HtmlFormattingService | undefined;
     let viewRequest = 0;
-    const plugins = options.plugins ?? preset.plugins;
+    const configuredPlugins = options.plugins ?? preset.plugins;
+    const plugins =
+        options.video === false ||
+        configuredPlugins.some((plugin) => plugin.id === 'cms-video')
+            ? configuredPlugins
+            : [
+                  ...configuredPlugins,
+                  createCmsVideoPlugin({
+                      youtubeMetadata: false,
+                      ...options.video,
+                  }),
+              ];
     const initialEditingMode = readInitialEditingMode(
         options.initialEditingMode,
         editingModes,
@@ -1401,7 +1415,10 @@ export async function createClassicEditor(
             toolbar: compactClassicToolbar(
                 options.toolbar ??
                     withClassicPreviewTool(
-                        preset.toolbar,
+                        options.video === false ||
+                            preset.toolbar.includes('cmsVideo')
+                            ? preset.toolbar
+                            : [...preset.toolbar, 'cmsVideo'],
                         previewOptions !== undefined,
                     ),
             ),

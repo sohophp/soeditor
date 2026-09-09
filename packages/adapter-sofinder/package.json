@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/adapter-sofinder",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "license": "MIT",
     "description": "Dependency-free SoFinder picker and upload adapters for SoEditor.",
     "keywords": [

@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.4.0
+
+- Enable focused video tools by default in Classic CMS editors. Use `video: false` to opt out or configure media origins through `video`; explicit video plugins remain compatible.
+- Keep video dialogs and players lazy. The CDN/global distribution now loads image tools from the companion `classic-image-tools.js` file on first image interaction; deploy the complete `dist` directory when self-hosting.
+- Fix image paragraph tools anchoring to an entire text block after resize or when switching inline images.
+
 ## 1.3.0
 
 - Add independent `@soeditor/react/cms` and `@soeditor/vue/cms` components with HTML binding, native form integration, readonly state, SSR-safe rendering and asynchronous teardown.

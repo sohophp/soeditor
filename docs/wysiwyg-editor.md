@@ -132,8 +132,7 @@ content that cannot be converted without losing meaning remains unchanged.
 - make decorative versus informative alt policy explicit;
 - keep storage and file-manager implementations outside editor feature code.
 
-Generic video/media insertion is not a default control. A CMS may add a focused,
-inert and security-reviewed media plugin explicitly.
+Since the owner-approved 1.4.0 release, focused video insertion is a default Classic control. Cards remain inert; dialogs and players load on demand. Use `video: false` to disable it, or configure its origin policy through `video`. Arbitrary embeds remain optional.
 
 ### Tables
 

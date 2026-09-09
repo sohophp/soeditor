@@ -5349,6 +5349,60 @@ test('image type-around inserts outside the caption and linked inline paragraph 
         '<figcaption>Rich <strong>caption</strong></figcaption>',
     );
     expect(html).not.toContain('soeditor-');
+    // A resized inline image must anchor the controls, even when its block
+    // also contains text or another image. Insertion still uses the block.
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData(
+            '<h2>Article <img src="/demo-editor-cover.svg" width="200" height="75" alt="First"> <img src="/demo-editor-cover.svg" width="120" height="60" alt="Second"></h2>',
+        ),
+    );
+    const assertImageAnchor = async (index: number): Promise<void> => {
+        await expect
+            .poll(async () => {
+                const [overlayBox, imageBox] = await Promise.all([
+                    controls.boundingBox(),
+                    visual.locator('img').nth(index).boundingBox(),
+                ]);
+                if (overlayBox === null || imageBox === null) return null;
+                return (['x', 'y', 'width', 'height'] as const).map((axis) => {
+                    return Math.round(
+                        Math.abs(overlayBox[axis] - imageBox[axis]),
+                    );
+                });
+            })
+            .toEqual([0, 0, 0, 0]);
+    };
+    await visual.locator('img').first().click();
+    await assertImageAnchor(0);
+    const resizeHandle = page.locator('[data-resize-direction="se"]');
+    await resizeHandle.focus();
+    await resizeHandle.press('ArrowRight');
+    await expect(visual.locator('img').first()).toHaveAttribute('width', '201');
+    await resizeHandle.press('ArrowDown');
+    await expect(visual.locator('img').first()).toHaveAttribute('height', '76');
+    const resizeBox = await resizeHandle.boundingBox();
+    if (resizeBox === null) throw new Error('Missing inline resize handle.');
+    await page.mouse.move(
+        resizeBox.x + resizeBox.width / 2,
+        resizeBox.y + resizeBox.height / 2,
+    );
+    await page.mouse.down();
+    await page.mouse.move(resizeBox.x + 45, resizeBox.y + 35, { steps: 5 });
+    await page.mouse.up();
+    await expect
+        .poll(async () =>
+            Number(await visual.locator('img').first().getAttribute('width')),
+        )
+        .toBeGreaterThan(201);
+    await visual.locator('img').first().hover();
+    await assertImageAnchor(0);
+    await visual.locator('img').nth(1).hover();
+    await assertImageAnchor(1);
+    await after.click();
+    await expect(visual.locator(':scope > h2 + p')).toHaveCount(1);
+    await expect(visual.locator('h2 img')).toHaveCount(2);
+    await page.keyboard.press('Control+z');
+    await expect(visual.locator(':scope > h2 + p')).toHaveCount(0);
     await page.evaluate(() =>
         globalThis.__classicDemo.editor.setData(
             '<p>Lead <a href="/photo"><img src="/demo-editor-cover.svg" width="200" height="75" alt="Inline"></a> tail</p>',

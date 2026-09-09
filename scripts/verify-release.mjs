@@ -12,9 +12,9 @@ const releaseVersion = rootManifest.version;
 const releaseLicense = rootManifest.license;
 if (
     typeof releaseVersion !== 'string' ||
-    !/^1\.3\.\d+$/u.test(releaseVersion)
+    !/^1\.4\.\d+$/u.test(releaseVersion)
 ) {
-    throw new Error('The release audit only accepts an aligned 1.3.x version.');
+    throw new Error('The release audit only accepts an aligned 1.4.x version.');
 }
 const packagesRoot = join(repositoryRoot, 'packages');
 const publishable = [];

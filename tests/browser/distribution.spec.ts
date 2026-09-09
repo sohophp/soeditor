@@ -10,6 +10,34 @@ const stylesheet = fileURLToPath(
     new URL('../../packages/soeditor/dist/soeditor.css', import.meta.url),
 );
 
+// Load companion assets from the same origin as a deployed CDN/global build.
+test.beforeEach(async ({ page }) => {
+    await page.route('**/global-fixture', (route) =>
+        route.fulfill({
+            contentType: 'text/html',
+            body: '<!doctype html><html><body></body></html>',
+        }),
+    );
+    for (const name of [
+        'classic-image-tools.js',
+        'video-runtime.js',
+        'soeditor.global.js',
+    ]) {
+        await page.route(`**/${name}*`, (route) =>
+            route.fulfill({
+                contentType: 'text/javascript',
+                path: fileURLToPath(
+                    new URL(
+                        `../../packages/soeditor/dist/${name}`,
+                        import.meta.url,
+                    ),
+                ),
+            }),
+        );
+    }
+    await page.goto('/global-fixture');
+});
+
 test('loads the self-contained CMS CDN editor', async ({ page }) => {
     await access(globalMap);
     await access(stylesheet);
@@ -299,4 +327,49 @@ test('CMS ESM artifact parses HTML after property mangling', async ({
     expect(result.initial).toContain('<td>Cell</td>');
     expect(result.initial).toContain('<!-- marker -->');
     expect(result.updated).toBe('<p>Updated</p>');
+});
+
+test('CMS global enables video by default and loads its dialog only on demand', async ({
+    page,
+}) => {
+    await page.setContent(
+        '<textarea id="content"><p>Video article</p></textarea>',
+    );
+    await page.addStyleTag({ path: stylesheet });
+    await page.addScriptTag({ url: '/cdn/soeditor.global.js' });
+    await page.evaluate(async () => {
+        const api = Reflect.get(globalThis, 'SoEditor') as {
+            createClassicEditor(host: HTMLElement): Promise<unknown>;
+        };
+        const host = document.querySelector<HTMLElement>('#content');
+        if (host === null) throw new Error('Missing host');
+        await api.createClassicEditor(host);
+    });
+    const tool = page.locator('[data-toolbar-item="cmsVideo"]');
+    await expect(tool).toBeVisible();
+    expect(
+        await page.evaluate(() =>
+            performance
+                .getEntriesByType('resource')
+                .some((entry) => entry.name.includes('video-runtime')),
+        ),
+    ).toBe(false);
+    await page.locator('.soeditor-wysiwyg-content p').click();
+    await tool.click();
+    const dialog = page.getByRole('dialog', {
+        name: 'Insert video',
+        exact: true,
+    });
+    await expect(dialog).toBeVisible();
+    await dialog.getByLabel('Video URL', { exact: true }).fill('/movie.mp4');
+    await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
+    const card = page.locator('[data-soeditor-video-card]');
+    await expect(card).toBeVisible();
+    await expect(page.locator('.soeditor-wysiwyg-content video')).toHaveCount(
+        0,
+    );
+    await card.dblclick();
+    await expect(
+        page.getByRole('dialog').getByLabel('Video URL', { exact: true }),
+    ).toHaveValue('/movie.mp4');
 });

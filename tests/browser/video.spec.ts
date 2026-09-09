@@ -569,7 +569,7 @@ test('optional CMS video: switches provider with one undo step and keeps other i
     );
 });
 
-test('optional CMS video: leaves the default request graph untouched and retries a failed lazy import', async ({
+test('CMS video: default tools stay lazy, support opt-out and retry failed imports', async ({
     page,
 }) => {
     await page.goto('/classic.html?test=1');
@@ -580,14 +580,18 @@ test('optional CMS video: leaves the default request graph untouched and retries
             performance
                 .getEntriesByType('resource')
                 .some((entry) =>
-                    /\/packages\/soeditor\/src\/video(?:-runtime|-model|-policy)?\.ts/u.test(
+                    /\/packages\/soeditor\/src\/(?:video-runtime|video-player|youtube-metadata)\.ts/u.test(
                         entry.name,
                     ),
                 ),
         ),
     ).toBe(false);
-    await page.goto('/classic.html?test=1&video=1');
+    await page.goto('/classic.html?test=1&default-toolbar&no-video');
     await page.locator('body[data-ready="true"]').waitFor();
+    await expect(page.locator('[data-toolbar-item="cmsVideo"]')).toHaveCount(0);
+    await page.goto('/classic.html?test=1&default-toolbar');
+    await page.locator('body[data-ready="true"]').waitFor();
+    await expect(page.locator('[data-toolbar-item="cmsVideo"]')).toHaveCount(1);
     await page.locator('.soeditor-wysiwyg-content p').click();
     let failed = false;
     await page.route('**/video-runtime.ts*', async (route) => {

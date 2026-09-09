@@ -113,15 +113,20 @@ const editor = await createClassicEditor(textarea, {
     },
     placeholder: testMode ? 'Write article content' : '开始撰写文章内容…',
     preview: true,
-    toolbar: [
-        ...cmsPreset.toolbar,
-        ...(videoPlugin === undefined ? [] : ['cmsVideo']),
-        '|',
-        'showBlocks',
-        'format',
-        'minify',
-        'popupPreview',
-    ],
+    ...(demoParameters.has('default-toolbar')
+        ? {}
+        : {
+              toolbar: [
+                  ...cmsPreset.toolbar,
+                  ...(videoPlugin === undefined ? [] : ['cmsVideo']),
+                  '|',
+                  'showBlocks',
+                  'format',
+                  'minify',
+                  'popupPreview',
+              ],
+          }),
+    ...(demoParameters.has('no-video') ? { video: false as const } : {}),
     ...(testMode
         ? {}
         : {

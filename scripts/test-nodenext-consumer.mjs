@@ -612,9 +612,9 @@ try {
         0,
     );
     const viteJavaScriptGzip = gzipSync(startupSources.join('\n')).length;
-    if (viteJavaScriptSize > 500_000 || viteJavaScriptGzip > 150_000) {
+    if (viteJavaScriptSize > 510_000 || viteJavaScriptGzip > 155_000) {
         throw new Error(
-            `CMS Vite startup exceeds its 500/150 kB guard (${String(viteJavaScriptSize)} raw / ${String(viteJavaScriptGzip)} gzip).`,
+            `CMS Vite startup exceeds its 510/155 kB guard (${String(viteJavaScriptSize)} raw / ${String(viteJavaScriptGzip)} gzip).`,
         );
     }
     for (const excludedMarker of [

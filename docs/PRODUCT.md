@@ -9,6 +9,10 @@ Manual Safari and assistive-technology qualification remain separate.
 SoEditor is a lightweight, stable HTML WYSIWYG + Source editor for the administration
 area of websites and content-management systems.
 
+## Default video decision (2026-09-09)
+
+The owner approved default CMS video controls for 1.4.0. Video cards stay inert, the dialog and player load on first use, and `video: false` disables the built-in video plugin. Arbitrary embeds and article preview remain optional. Global bundle and interaction budgets remain unchanged; the measured ESM startup tradeoff is recorded in [ADR 0081](decisions/0081-default-classic-video.md).
+
 ## Product promise
 
 A CMS developer can attach SoEditor to a textarea or element with little code.

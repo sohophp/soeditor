@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { collectPublicPropertyNames } from './vite-public-properties.js';
 
@@ -35,7 +35,13 @@ const globalRuntimePackages = [
 const publicPropertyNames = collectPublicPropertyNames(
     repositoryRoot,
     globalRuntimePackages,
-    ['SoEditor', 'create', 'createClassicEditor'],
+    [
+        'SoEditor',
+        'create',
+        'createClassicEditor',
+        'attachClassicImageContext',
+        'createVideoRuntime',
+    ],
 );
 const stripOptionalGlobalStyles = (code: string): string =>
     code
@@ -88,7 +94,9 @@ export default defineConfig({
             },
         ],
     },
+    base: './',
     define: {
+        'import.meta.env.SOEDITOR_STANDALONE_VIDEO': JSON.stringify('true'),
         'import.meta.env.SOEDITOR_OPTIONAL_CLASSIC': JSON.stringify('false'),
         'import.meta.env.SOEDITOR_TABLE_CONTEXT': JSON.stringify('false'),
         'import.meta.env.SOEDITOR_SOURCE_TOOLBAR': JSON.stringify('false'),
@@ -96,6 +104,47 @@ export default defineConfig({
             JSON.stringify('false'),
     },
     plugins: [
+        {
+            enforce: 'pre',
+            name: 'soeditor-global-lazy-image-tools',
+            resolveId(source, importer) {
+                if (
+                    source === './classic-image-context.js' &&
+                    importer?.endsWith('/src/classic-editor.ts')
+                )
+                    return { id: './classic-image-tools.js', external: true };
+            },
+            generateBundle() {
+                const dist = new URL('./dist/', import.meta.url);
+                const candidates = readdirSync(dist).filter((name) =>
+                    /^classic-image-context-.*\.js$/.test(name),
+                );
+                const selected = candidates
+                    .map((name) => ({
+                        name,
+                        source: readFileSync(new URL(name, dist), 'utf8'),
+                    }))
+                    .sort((a, b) => a.source.length - b.source.length)[0];
+                if (selected === undefined || /^import /m.test(selected.source))
+                    throw new Error('Missing self-contained image tools');
+                this.emitFile({
+                    type: 'asset',
+                    fileName: 'classic-image-tools.js',
+                    source: selected.source.replace(
+                        /sourceMappingURL=.*$/m,
+                        'sourceMappingURL=classic-image-tools.js.map',
+                    ),
+                });
+                this.emitFile({
+                    type: 'asset',
+                    fileName: 'classic-image-tools.js.map',
+                    source: readFileSync(
+                        new URL(`${selected.name}.map`, dist),
+                        'utf8',
+                    ),
+                });
+            },
+        },
         {
             enforce: 'pre',
             name: 'soeditor-inline-ui-translations',

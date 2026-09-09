@@ -2,6 +2,10 @@
 
 > 2026-09-08：当前工作区的优化状态、测量与验证统一见 [CMS 性能与稳定性优化](cms-followup-2026-09-08.zh-CN.md)。以下日期更早的数字为历史记录；人工设备验收单独列出。
 
+## Approved 1.4.0 release scope
+
+The owner requested default video tools, the image type-around positioning fix, a new npm release and synchronized published-package documentation. Source and video dialogs remain lazy; arbitrary embeds remain outside the default product.
+
 ## Approved 1.2.0 release scope
 
 The owner approved optional CMS video, safe whole-article media preview, configurable

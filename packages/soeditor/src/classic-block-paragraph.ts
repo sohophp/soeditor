@@ -108,19 +108,20 @@ export function attachBlockParagraphContext(
             !(root instanceof ShadowRoot)
         )
             return;
-        if (block === boundary && overlay !== undefined) {
+        if (
+            block === boundary &&
+            imageAnchor === (image ?? undefined) &&
+            overlay !== undefined
+        ) {
             if (event.type !== 'soeditor:table-selection')
                 overlay.classList.add('is-hovered');
             return;
         }
         clear();
         block = boundary;
-        if (
-            image !== null &&
-            (boundary.tagName === 'FIGURE' ||
-                boundary.textContent?.trim() === '')
-        )
-            imageAnchor = image;
+        // Position against the selected image, including inline images in
+        // text blocks. Keep `block` as the semantic insertion boundary.
+        imageAnchor = image ?? undefined;
         overlay = document.createElement('div');
         overlay.className = 'soeditor-block-paragraph is-hovered';
         overlay.setAttribute(

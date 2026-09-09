@@ -39,3 +39,9 @@ Upgrade all packages together to `1.3.0`. The new `@soeditor/react/cms` and
 `@soeditor/vue/cms` entries wrap ClassicEditor for CMS forms; existing root
 Workspace hooks remain compatible. Import the CMS stylesheet explicitly and
 use an optional editor factory when enabling Source. See [framework adapters](framework-adapters.md).
+
+## 1.4.0 default video
+
+Upgrade the aligned package set to `1.4.0`. Classic CMS enables its video plugin and default toolbar item automatically. Use `video: false` to preserve the earlier disabled default, or `video: { allowedMediaOrigins: ['https://media.example.com'] }` to configure it. An explicit toolbar remains authoritative: include `cmsVideo` where required. Existing `createCmsVideoPlugin()` instances are not duplicated.
+
+Self-host the entire editor `dist` directory. The global script now loads `classic-image-tools.js` on first image interaction and `video-runtime.js` on first video edit; keep their relative URLs available. Source and article preview still require the optional ESM entry. Default video metadata lookup is disabled.

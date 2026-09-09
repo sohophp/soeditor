@@ -164,7 +164,7 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`3b28887e5966f52c2742319a45d60d91e251a3149fe0dd6c695ce6040b5f1582`
+`674aac838c238e7df563d448ce8bbbb180455b00f2d37ad5a7d2277cebe01315`
 
 ### .
 
@@ -245,7 +245,7 @@ Declaration SHA-256:
 | `ControlledWorkspaceValue`                            | type       | stable         | `9e3aaa705c6a70e3` |
 | `CoreEventMap`                                        | type       | stable         | `281f660668ce273c` |
 | `createClassicEditor`                                 | value      | experimental   | `0f31728333355113` |
-| `CreateClassicEditorOptions`                          | type       | experimental   | `df2057900cdc73e3` |
+| `CreateClassicEditorOptions`                          | type       | experimental   | `d15b7d2536c95ff4` |
 | `createClassicPreviewTemplates`                       | value      | stable         | `5e22309d2ff491af` |
 | `createClassicPreviewWindow`                          | value      | stable         | `1baeb80f259cc799` |
 | `createCommentsPlugin`                                | value      | stable         | `3673444dcdbacbef` |
@@ -758,7 +758,7 @@ Declaration SHA-256:
 | `ClassicSourceOptions`              | type       | stable         | `615409f49de1197a` |
 | `ClassicWorkspaceView`              | type       | stable         | `c97fa57f190c55a9` |
 | `createClassicEditor`               | value      | experimental   | `0f31728333355113` |
-| `CreateClassicEditorOptions`        | type       | experimental   | `df2057900cdc73e3` |
+| `CreateClassicEditorOptions`        | type       | experimental   | `d15b7d2536c95ff4` |
 
 ### ./cms/optional
 
@@ -778,7 +778,7 @@ Declaration SHA-256:
 | `ClassicSourceOptions`              | type       | stable         | `615409f49de1197a` |
 | `ClassicWorkspaceView`              | type       | stable         | `c97fa57f190c55a9` |
 | `createClassicEditor`               | value      | experimental   | `0f31728333355113` |
-| `CreateClassicEditorOptions`        | type       | experimental   | `df2057900cdc73e3` |
+| `CreateClassicEditorOptions`        | type       | experimental   | `d15b7d2536c95ff4` |
 
 - `./styles.css` — stable resource (./dist/styles.css)
 - `./content.css` — stable resource (./dist/content.css)

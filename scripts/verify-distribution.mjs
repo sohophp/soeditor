@@ -76,6 +76,15 @@ if (
         'CDN bundle exceeds its review guard or lacks a source map.',
     );
 }
+for (const [file, entry] of [
+    ['classic-image-tools.js', 'attachClassicImageContext'],
+    ['video-runtime.js', 'createVideoRuntime'],
+]) {
+    const companion = await readFile(join(umbrellaRoot, file), 'utf8');
+    if (!globalBundle.includes(file) || !companion.includes(entry)) {
+        throw new Error(`Missing CDN first-use companion: ${file}.`);
+    }
+}
 const minimalEntry = await readFile(
     join(packagesRoot, 'presets', 'dist', 'minimal.js'),
     'utf8',

@@ -52,6 +52,7 @@ editing:
 - ordered and unordered lists;
 - links, anchors, and file links;
 - images, upload, and a replaceable asset picker;
+- owner-approved default video controls with inert cards and first-use loading of video dialogs and players;
 - production HTML tables;
 - horizontal rules, page breaks, special characters, and configured CMS
   placeholders;
@@ -62,7 +63,7 @@ editing:
   entry into a bounded WYSIWYG/Source side-by-side or stacked view;
 - preservation of unknown CMS HTML without executing it.
 
-Features such as video, arbitrary embeds, templates, diagnostics, preview, or
+Features such as arbitrary embeds, templates, diagnostics, preview, or
 save adapters may exist as focused optional plugins when a real CMS integration
 requires them. They must not increase the default path.
 

@@ -3,7 +3,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 
 // A self-contained recovery asset avoids reusing a failed module graph. It is
-// requested only after a failed normal load, never on the normal video path.
+// requested after a failed ESM load, or on first video use in the global build.
 export default defineConfig({
     plugins: [
         {

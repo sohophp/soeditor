@@ -2,9 +2,9 @@
 
 ## Current worktree — 2026-09-08
 
-The `1.3.0` release is owner-authorized on 2026-09-09 and all 24 manifests are aligned. Publication and public verification are tracked by the protected npm workflow; local builds are not a registry publication claim.
+The `1.4.0` release is owner-authorized on 2026-09-09 and all 24 manifests are aligned. Publication and public verification are tracked by the protected npm workflow; local builds are not a registry publication claim.
 
-The React/Vue CMS release is documented in [1.3.0](releases/1.3.0.md).
+Default video and the image tool fix are documented in [1.4.0](releases/1.4.0.md).
 
 The active follow-up is [CMS correctness and article baselines](cms-followup-2026-09-08.zh-CN.md). That page is the single current acceptance summary for implementation, source/worktree identity, artifact measurements, commands and outstanding qualification. The latest follow-up has completed implementation and automated validation; real-device and real-material manual qualification remains pending. The linked report distinguishes the full matrix from subsequent targeted regression runs.
 

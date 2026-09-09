@@ -61,73 +61,76 @@ export function createCmsVideoPlugin(
         readonly #cards = new WeakMap<Element, AtomicView>();
 
         override init(): void {
-            this.editor.services.register(previewMediaServiceToken, {
-                resolve: (source) => {
-                    const id = youtubeId(source.getAttribute('src') ?? '');
-                    if (
-                        source.localName !== 'video' &&
-                        (source.localName !== 'iframe' ||
-                            policy.youtube === false ||
-                            source.hasAttribute('srcdoc') ||
-                            id === undefined)
-                    )
-                        return undefined;
-                    const html = source.outerHTML;
-                    const base =
-                        source.ownerDocument.baseURI === 'about:blank'
-                            ? (this.#ui?.element.ownerDocument.baseURI ??
-                              source.ownerDocument.baseURI)
-                            : source.ownerDocument.baseURI;
-                    let poster: string | undefined;
-                    try {
-                        const value =
-                            source.getAttribute('poster') ||
-                            source.getAttribute('data-soeditor-poster');
-                        if (value)
-                            poster = new URL(
-                                mediaUrl(value, base, policy),
-                                base,
-                            ).href;
-                    } catch {
-                        /* Invalid covers never trigger requests. */
-                    }
-                    return {
-                        key: html,
-                        ...(poster === undefined ? {} : { poster }),
-                        title:
-                            source.getAttribute('title') ||
-                            (this.#ui?.locale.startsWith('zh')
-                                ? '视频'
-                                : 'Video'),
-                        create: async (document) => {
-                            const { resolveVideoPreview } =
-                                await import('./video-preview.js');
-                            const template = document.createElement('template');
-                            template.innerHTML = html;
-                            const element = template.content.firstElementChild;
-                            const description =
-                                element === null
-                                    ? undefined
-                                    : resolveVideoPreview(
-                                          element,
-                                          policy,
-                                          base,
-                                          (en, zh) =>
-                                              this.#ui?.translate(
-                                                  this.#ui.locale.startsWith(
-                                                      'zh',
-                                                  )
-                                                      ? zh
-                                                      : en,
-                                              ) ?? en,
-                                      );
-                            if (description === undefined)
-                                throw new Error('Unsupported video.');
-                            return description.create(document);
-                        },
-                    };
-                },
-            });
+            if (import.meta.env.SOEDITOR_OPTIONAL_CLASSIC !== 'false')
+                this.editor.services.register(previewMediaServiceToken, {
+                    resolve: (source) => {
+                        const id = youtubeId(source.getAttribute('src') ?? '');
+                        if (
+                            source.localName !== 'video' &&
+                            (source.localName !== 'iframe' ||
+                                policy.youtube === false ||
+                                source.hasAttribute('srcdoc') ||
+                                id === undefined)
+                        )
+                            return undefined;
+                        const html = source.outerHTML;
+                        const base =
+                            source.ownerDocument.baseURI === 'about:blank'
+                                ? (this.#ui?.element.ownerDocument.baseURI ??
+                                  source.ownerDocument.baseURI)
+                                : source.ownerDocument.baseURI;
+                        let poster: string | undefined;
+                        try {
+                            const value =
+                                source.getAttribute('poster') ||
+                                source.getAttribute('data-soeditor-poster');
+                            if (value)
+                                poster = new URL(
+                                    mediaUrl(value, base, policy),
+                                    base,
+                                ).href;
+                        } catch {
+                            /* Invalid covers never trigger requests. */
+                        }
+                        return {
+                            key: html,
+                            ...(poster === undefined ? {} : { poster }),
+                            title:
+                                source.getAttribute('title') ||
+                                (this.#ui?.locale.startsWith('zh')
+                                    ? '视频'
+                                    : 'Video'),
+                            create: async (document) => {
+                                const { resolveVideoPreview } =
+                                    await import('./video-preview.js');
+                                const template =
+                                    document.createElement('template');
+                                template.innerHTML = html;
+                                const element =
+                                    template.content.firstElementChild;
+                                const description =
+                                    element === null
+                                        ? undefined
+                                        : resolveVideoPreview(
+                                              element,
+                                              policy,
+                                              base,
+                                              (en, zh) =>
+                                                  this.#ui?.translate(
+                                                      this.#ui.locale.startsWith(
+                                                          'zh',
+                                                      )
+                                                          ? zh
+                                                          : en,
+                                                  ) ?? en,
+                                          );
+                                if (description === undefined)
+                                    throw new Error('Unsupported video.');
+                                return description.create(document);
+                            },
+                        };
+                    },
+                });
             const registry = this.editor.services.get(uiRegistryServiceToken);
             this.#dispose = registry.registerToolbarItem(
                 'cmsVideo',
@@ -136,12 +139,12 @@ export function createCmsVideoPlugin(
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = 'soeditor-ui__button';
-                    button.dataset.toolbarItem = 'cmsVideo';
+                    button.setAttribute('data-toolbar-item', 'cmsVideo');
                     button.title = ui.translate(
                         ui.locale.startsWith('zh') ? '视频' : 'Video',
                     );
                     button.setAttribute('aria-label', button.title);
-                    // Optional icon is kept out of the default icon table.
+                    // Keep the focused video icon beside its toolbar factory.
                     const svg = document.createElementNS(
                         'http://www.w3.org/2000/svg',
                         'svg',
@@ -276,7 +279,7 @@ export function createCmsVideoPlugin(
                 return undefined;
             const { document } = context;
             const card = document.createElement('figure');
-            card.dataset.soeditorVideoCard = '';
+            card.setAttribute('data-soeditor-video-card', '');
             card.tabIndex = 0;
             card.setAttribute('role', 'group');
             card.style.cssText =
@@ -384,7 +387,8 @@ export function createCmsVideoPlugin(
 async function loadVideoRuntime(
     attempt: number,
 ): Promise<typeof VideoRuntimeModule> {
-    if (attempt === 0) return import('./video-runtime.js');
+    if (attempt === 0 && import.meta.env.SOEDITOR_STANDALONE_VIDEO !== 'true')
+        return import('./video-runtime.js');
     // Browsers remember a failed module fetch. The separately emitted entry
     // permits a fresh URL without evaluating any downloaded text ourselves.
     const url = new URL(

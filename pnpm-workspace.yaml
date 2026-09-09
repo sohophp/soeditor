@@ -60,3 +60,4 @@ onlyBuiltDependencies:
 
 overrides:
     'vitepress>vite': '6.4.3'
+    'miniflare>sharp': '0.35.4'

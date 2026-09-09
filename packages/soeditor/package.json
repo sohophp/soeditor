@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/editor",
-    "version": "1.3.0",
+    "version": "1.4.0",
     "license": "MIT",
     "description": "Lightweight HTML WYSIWYG editor for website CMS administration.",
     "keywords": [

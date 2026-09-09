@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 
-// Existing CMS caps remain frozen. Optional initial JS may not exceed WS1.
+// Default video adds synchronous inert-card support; see ADR 0081.
 // First-use caps are distinct from installed recovery storage and total usage.
 export const cmsLoadingBudgets = Object.freeze({
     globalRaw: 500000,
     globalGzip: 150000,
     standaloneCssRaw: 27000,
-    optionalInitialRaw: 514018,
-    optionalInitialGzip: 152376,
+    optionalInitialRaw: 525000,
+    optionalInitialGzip: 157000,
     sourceIncrementRaw: 600000,
     sourceIncrementGzip: 210000,
     formatterIncrementRaw: 650000,
@@ -56,7 +56,12 @@ export function verifyCmsLoading({ artifacts, assets, chunks, runs }) {
         );
         for (const chunk of initial) {
             assert.ok(
-                !chunk.modules.some((id) => forbidden.test(id)),
+                !chunk.modules.some(
+                    (id) =>
+                        forbidden.test(id) &&
+                        // This explicit leaf contains only the typed service token.
+                        !/packages\/preview\/dist\/media\.js$/u.test(id),
+                ),
                 `Initial graph contains optional runtime: ${chunk.file}`,
             );
         }
