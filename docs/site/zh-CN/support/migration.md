@@ -1,11 +1,11 @@
 ---
 title: '升级指南'
-description: '本网站以 1.3.0 为接入基线。升级时同步所有显式安装的 @soeditor/* 包版本，保留原始 HTML 样本和可回退构建。'
+description: '本网站以 1.4.0 为接入基线。升级时同步所有显式安装的 @soeditor/* 包版本，保留原始 HTML 样本和可回退构建。'
 ---
 
 # 升级指南
 
-本网站以 1.3.0 为接入基线。升级时同步所有显式安装的 `@soeditor/*` 包版本，保留原始 HTML 样本和可回退构建。
+本网站以 1.4.0 为接入基线。升级时同步所有显式安装的 `@soeditor/*` 包版本，保留原始 HTML 样本和可回退构建。
 
 从旧的广泛入口迁移至 CMS 时，改用 `/cms` 或 `/cms/optional` 及 CMS 样式。Source 必须验证首次激活加载，不能仅检查按钮是否出现。
 
@@ -16,3 +16,5 @@ description: '本网站以 1.3.0 为接入基线。升级时同步所有显式�
 ## 下一步
 
 [运行示例](/zh-CN/examples/basic) · [配置参考](/zh-CN/api/configuration) · [常见问题](/zh-CN/support/troubleshooting)
+
+1.4 默认开启视频工具；使用 `video: false` 保持不启用视频的界面。自定义工具栏需显式包含 `cmsVideo`。自托管 CDN 请同步完整 `dist` 目录及配套脚本。

@@ -8,7 +8,7 @@ description: '安装固定版本，然后引入 CMS 入口和样式。把下面�
 安装固定版本，然后引入 CMS 入口和样式。把下面的 textarea 放进宿主页面，在 DOM 就绪后挂载。
 
 ```sh
-pnpm add @soeditor/editor@1.3.0
+pnpm add @soeditor/editor@1.4.0
 ```
 
 ```html

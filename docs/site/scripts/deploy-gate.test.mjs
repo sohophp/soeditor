@@ -17,7 +17,7 @@ async function rejectedArtifact(mutate, message) {
         const files = {
             'deployment.json': JSON.stringify({
                 commit: sha,
-                editorVersion: '1.3.0',
+                editorVersion: '1.4.0',
                 preview: false,
             }),
             'index.html': '<p>Checked artifact</p>',
@@ -82,7 +82,7 @@ test('rejects workspace component previews before deployment access', async () =
                 join(root, 'dist/deployment.json'),
                 JSON.stringify({
                     commit: sha,
-                    editorVersion: '1.3.0',
+                    editorVersion: '1.4.0',
                     preview: false,
                     workspacePreview: true,
                 }),

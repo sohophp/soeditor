@@ -46,14 +46,28 @@ for (const file of [...cn, ...en]) {
             throw new Error(`Broken link in ${file}: ${match[1]}`);
     }
 }
+for (const locale of ['zh-CN', 'en']) {
+    const cdnGuide = await readFile(
+        resolve(root, locale, 'guide/cdn.md'),
+        'utf8',
+    );
+    if (
+        !/<script[^>]+soeditor\.global\.js[^>]+crossorigin="anonymous"/.test(
+            cdnGuide,
+        )
+    )
+        throw new Error(
+            `CDN guide must enable CORS for lazy image tools: ${locale}`,
+        );
+}
 for (const [specifier, version] of [
-    ['soeditor-release/cms', '1.3.0'],
-    ['@soeditor/editor/cms', '1.3.0'],
-    ['@soeditor/react/cms', '1.3.0'],
-    ['@soeditor/vue/cms', '1.3.0'],
-    ['@soeditor/file-manager', '1.3.0'],
-    ['@soeditor/adapter-sofinder', '1.3.0'],
-    ['@soeditor/presets/cms-runtime', '1.3.0'],
+    ['soeditor-release/cms', '1.4.0'],
+    ['@soeditor/editor/cms', '1.4.0'],
+    ['@soeditor/react/cms', '1.4.0'],
+    ['@soeditor/vue/cms', '1.4.0'],
+    ['@soeditor/file-manager', '1.4.0'],
+    ['@soeditor/adapter-sofinder', '1.4.0'],
+    ['@soeditor/presets/cms-runtime', '1.4.0'],
 ]) {
     const entry = fileURLToPath(import.meta.resolve(specifier));
     if (!entry.includes('/node_modules/'))

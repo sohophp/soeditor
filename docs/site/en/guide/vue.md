@@ -7,13 +7,13 @@ description: 'Bind CMS HTML, manage lifecycle and enable Source on demand.'
 
 ## Install and run
 
-The `/cms` components are released in 1.3.0. The existing `useSoEditorWorkspace` entry remains compatible.
+The `/cms` components were introduced in 1.3.0; these examples use 1.4.0. The existing `useSoEditorWorkspace` entry remains compatible.
 
 ```sh
-pnpm add @soeditor/editor@1.3.0 @soeditor/vue@1.3.0 vue
+pnpm add @soeditor/editor@1.4.0 @soeditor/vue@1.4.0 vue
 ```
 
-Select “Start editing” to run the published packages. [Download complete example sources](/downloads/soeditor-examples-1.3.0.tar.gz), extract, run `pnpm install` and `pnpm dev`, then open `vue.html`.
+Select “Start editing” to run the published packages. [Download complete example sources](/downloads/soeditor-examples-1.4.0.tar.gz), extract, run `pnpm install` and `pnpm dev`, then open `vue.html`.
 
 ## Bind article HTML
 
@@ -52,7 +52,7 @@ The default entry mounts CMS WYSIWYG. To enable Source, supply an explicit `crea
 
 ## Troubleshooting and versions
 
-Import the CMS stylesheet if chrome is missing. A missing `/cms` export usually means an older adapter is installed. Use 1.3.0 or later; 1.2.x does not provide this entry. Never render editor HTML with `v-html` or `dangerouslySetInnerHTML`, or create an editor during render/setup.
+Import the CMS stylesheet if chrome is missing. A missing `/cms` export usually means an older adapter is installed. Use 1.4.0 or later; 1.2.x does not provide this entry. Never render editor HTML with `v-html` or `dangerouslySetInnerHTML`, or create an editor during render/setup.
 
 Declared peer ranges are React 18.2–19 and Vue 3.5. This round uses React 19.2.8 and Vue 3.5.42 in automation. SSR support does not certify every Next/Nuxt version.
 

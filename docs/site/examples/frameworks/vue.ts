@@ -30,8 +30,8 @@ const ArticleForm = defineComponent({
                         'p',
                         { className: 'notice' },
                         label(
-                            'Vue 组件预览：内容仅保存在本页。',
-                            'Vue component preview: content stays in this page.',
+                            'Vue 组件示例：内容仅保存在本页。',
+                            'Vue component demo: content stays in this page.',
                         ),
                     ),
                     h('div', { className: 'controls' }, [

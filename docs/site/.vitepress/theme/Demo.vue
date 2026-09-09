@@ -27,7 +27,7 @@ watch(
         :aria-label="zh ? 'SoEditor 交互演示' : 'Interactive SoEditor demo'"
     >
         <div class="demo-heading">
-            <span>SoEditor <small>1.3.0</small></span>
+            <span>SoEditor <small>1.4.0</small></span>
             <button v-if="active" type="button" @click="active = false">
                 {{ zh ? '结束体验' : 'Close demo' }}
             </button>

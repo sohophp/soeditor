@@ -15,12 +15,12 @@ description: 选择示例图片，或选择本地文件模拟上传。启用下�
 
 ## 完整接入代码
 
-[下载完整示例源码](/downloads/soeditor-examples-1.3.0.tar.gz)。解压后执行 `pnpm install`、`pnpm dev`，打开对应的 `basic.html` 等页面。
+[下载完整示例源码](/downloads/soeditor-examples-1.4.0.tar.gz)。解压后执行 `pnpm install`、`pnpm dev`，打开对应的 `basic.html` 等页面。
 
 以下代码与演示共用。使用 Vite TypeScript 页面，保留相同文件结构；别名用于固定 npm 发布包。
 
 ```sh
-pnpm add soeditor-release@npm:@soeditor/editor@1.3.0 @soeditor/file-manager@1.3.0 @soeditor/adapter-sofinder@1.3.0 @soeditor/presets@1.3.0
+pnpm add soeditor-release@npm:@soeditor/editor@1.4.0 @soeditor/file-manager@1.4.0 @soeditor/adapter-sofinder@1.4.0 @soeditor/presets@1.4.0
 ```
 
 <<< ../../examples/assets.ts

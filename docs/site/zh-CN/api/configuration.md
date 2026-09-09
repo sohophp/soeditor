@@ -7,17 +7,18 @@ description: 'CreateClassicEditorOptions 为只读的创建配置类型。下表
 
 `CreateClassicEditorOptions` 为只读的创建配置类型。下表列出 CMS 常用字段；完整类型以安装包声明为准。
 
-| 字段                              | 用途                     |
-| --------------------------------- | ------------------------ |
-| locale / translations             | 语言及宿主翻译           |
-| data                              | 初始 HTML                |
-| readonly                          | 初始只读状态             |
-| minHeight / maxHeight             | 编辑区高度约束           |
-| toolbar / toolbarLayout           | 工具栏内容与布局         |
-| editingModes / initialEditingMode | 可选入口的编辑模式       |
-| source                            | Source 增强配置          |
-| save                              | 可选入口的宿主保存适配器 |
-| onChange / onError                | 内容变更与错误回调       |
+| 字段                              | 用途                               |
+| --------------------------------- | ---------------------------------- |
+| locale / translations             | 语言及宿主翻译                     |
+| data                              | 初始 HTML                          |
+| readonly                          | 初始只读状态                       |
+| minHeight / maxHeight             | 编辑区高度约束                     |
+| toolbar / toolbarLayout           | 工具栏内容与布局                   |
+| editingModes / initialEditingMode | 可选入口的编辑模式                 |
+| video                             | 默认视频策略；`false` 关闭自动安装 |
+| source                            | Source 增强配置                    |
+| save                              | 可选入口的宿主保存适配器           |
+| onChange / onError                | 内容变更与错误回调                 |
 
 默认入口拒绝需要可选运行时的配置。不要通过类型断言绕过错误，改用正确入口。
 
@@ -26,6 +27,10 @@ description: 'CreateClassicEditorOptions 为只读的创建配置类型。下表
 <<< ../../examples/api.ts#configuration
 
 此代码使用发布版类型检查；完整导入说明见[入口与类型](/zh-CN/api/imports)。
+
+## 视频
+
+默认开启。`video: false` 禁用自动安装；`video: { youtube: false, allowedMediaOrigins: ['https://media.example.com'] }` 配置来源策略。自动安装时 `youtubeMetadata` 默认为 `false`。自定义 `toolbar` 需包含 `cmsVideo`。详见[视频指南](/zh-CN/guide/video)。
 
 ## 下一步
 

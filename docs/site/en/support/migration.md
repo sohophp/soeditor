@@ -1,11 +1,11 @@
 ---
 title: 'Migration'
-description: 'This site targets 1.3.0. Upgrade all explicitly installed @soeditor/* packages together, preserve representative HTML and keep a rollback build.'
+description: 'This site targets 1.4.0. Upgrade all explicitly installed @soeditor/* packages together, preserve representative HTML and keep a rollback build.'
 ---
 
 # Migration
 
-This site targets 1.3.0. Upgrade all explicitly installed `@soeditor/*` packages together, preserve representative HTML and keep a rollback build.
+This site targets 1.4.0. Upgrade all explicitly installed `@soeditor/*` packages together, preserve representative HTML and keep a rollback build.
 
 When moving from a broad historical entry, use `/cms` or `/cms/optional` and the CMS stylesheet. Verify Source loading on first activation, rather than checking only button visibility.
 
@@ -16,3 +16,5 @@ A narrower default entry does not remove historical APIs. Check the versioned pu
 ## Next steps
 
 [Examples](/en/examples/basic) · [Configuration](/en/api/configuration) · [Troubleshooting](/en/support/troubleshooting)
+
+Version 1.4 enables video tools by default; set `video: false` to opt out. Explicit toolbars must include `cmsVideo`. Self-hosted CDN integrations must update the complete `dist` directory and companion scripts.

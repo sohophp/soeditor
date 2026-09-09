@@ -42,7 +42,7 @@ for (const framework of ['react', 'vue']) {
         const manifest = (await (
             await request.get('/deployment.json')
         ).json()) as { editorVersion: string };
-        expect(manifest.editorVersion).toBe('1.3.0');
+        expect(manifest.editorVersion).toBe('1.4.0');
         await page.goto(`/en/examples/${framework}`);
         await page.getByRole('button', { name: 'Start editing' }).click();
         const frame = page.frameLocator('iframe');

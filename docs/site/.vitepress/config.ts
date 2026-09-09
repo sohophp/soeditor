@@ -51,7 +51,7 @@ function theme(locale: 'zh-CN' | 'en'): DefaultTheme.Config {
             message: zh
                 ? '面向网站 CMS 的 HTML 编辑器 · MIT'
                 : 'HTML editing for website CMS · MIT',
-            copyright: 'SoEditor 1.3.0',
+            copyright: 'SoEditor 1.4.0',
         },
     };
 }

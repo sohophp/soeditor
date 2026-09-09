@@ -28,8 +28,8 @@ function ArticleForm() {
             'p',
             { className: 'notice' },
             label(
-                'React 组件预览：内容仅保存在本页。',
-                'React component preview: content stays in this page.',
+                'React 组件示例：内容仅保存在本页。',
+                'React component demo: content stays in this page.',
             ),
         ),
         h(

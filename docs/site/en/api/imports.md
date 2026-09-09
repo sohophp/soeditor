@@ -24,13 +24,13 @@ Use `/cms/optional` when composing `@soeditor/presets` with separately imported 
 
 ## Framework components and video
 
-| Entry                    | Availability and purpose                                    |
-| ------------------------ | ----------------------------------------------------------- |
-| `@soeditor/editor/video` | Published; `createCmsVideoPlugin()` enables optional video. |
-| `@soeditor/react/cms`    | Published 1.3.0 CMS component using `value/onChange`.       |
-| `@soeditor/vue/cms`      | Published 1.3.0 CMS component supporting `v-model`.         |
+| Entry                    | Availability and purpose                                                            |
+| ------------------------ | ----------------------------------------------------------------------------------- |
+| `@soeditor/editor/video` | Explicit plugin compatibility entry; configure default 1.4.0 video through `video`. |
+| `@soeditor/react/cms`    | Published 1.4.0 CMS component using `value/onChange`.                               |
+| `@soeditor/vue/cms`      | Published 1.4.0 CMS component supporting `v-model`.                                 |
 
-[React guide](/en/guide/react) · [Vue guide](/en/guide/vue) · [Video guide](/en/guide/video). Framework examples use the published npm 1.3.0 packages.
+[React guide](/en/guide/react) · [Vue guide](/en/guide/vue) · [Video guide](/en/guide/video). Framework examples use the published npm 1.4.0 packages.
 
 ## Next steps
 

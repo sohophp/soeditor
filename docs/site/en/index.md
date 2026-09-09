@@ -15,7 +15,7 @@ hero:
           link: /en/examples/basic
 features:
     - title: Familiar authoring
-      details: Paragraphs, lists, images and tables for daily CMS work.
+      details: Paragraphs, lists, images, video and tables for daily CMS work.
       link: /en/guide/toolbar
     - title: Source on demand
       details: Loads on first use, with stacked and side-by-side views.
@@ -33,7 +33,7 @@ features:
 ## Start with a textarea
 
 ```sh
-pnpm add @soeditor/editor@1.3.0
+pnpm add @soeditor/editor@1.4.0
 ```
 
 ```ts
@@ -43,6 +43,8 @@ import '@soeditor/editor/cms/styles.css';
 const host = document.querySelector<HTMLTextAreaElement>('#content');
 if (host) await createClassicEditor(host, { locale: 'en' });
 ```
+
+Version 1.4.0 enables [video tools](/en/guide/video) by default, with dialogs and players loaded on demand; use `video: false` to opt out. Separate [React](/en/guide/react) and [Vue](/en/guide/vue) components are also available.
 
 ## SoEditor + SoFinder: our best companion for CMS authoring
 

@@ -17,7 +17,7 @@ description: 'Try video editing, canonical HTML and independent article preview.
 
 ## Download and complete code
 
-[Download the published examples](/downloads/soeditor-examples-1.3.0.tar.gz), extract, run `pnpm install` and `pnpm dev`, then open `video.html`. The archive includes same-origin `public/demo-video.webm`. No article content is uploaded.
+[Download the published examples](/downloads/soeditor-examples-1.4.0.tar.gz), extract, run `pnpm install` and `pnpm dev`, then open `video.html`. The archive includes same-origin `public/demo-video.webm`. No article content is uploaded.
 
 <<< ../../examples/video.ts
 

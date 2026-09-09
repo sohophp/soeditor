@@ -17,8 +17,8 @@ export default {
                             'p',
                             { class: 'docs-version' },
                             lang.value === 'zh-CN'
-                                ? '文档对应 SoEditor 1.3.0'
-                                : 'Documentation for SoEditor 1.3.0',
+                                ? '文档对应 SoEditor 1.4.0'
+                                : 'Documentation for SoEditor 1.4.0',
                         ),
                 });
         },

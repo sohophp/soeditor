@@ -15,8 +15,8 @@ const packageRoot = resolve(
 const editorPackage = JSON.parse(
     await readFile(resolve(packageRoot, 'package.json'), 'utf8'),
 );
-if (editorPackage.version !== '1.3.0' || !packageRoot.includes('node_modules'))
-    throw new Error('Expected published SoEditor 1.3.0');
+if (editorPackage.version !== '1.4.0' || !packageRoot.includes('node_modules'))
+    throw new Error('Expected published SoEditor 1.4.0');
 const workspacePreview = process.env.DOCS_WORKSPACE_PREVIEW === '1';
 const releasedExamples = [
     'basic',
@@ -104,13 +104,13 @@ await writeFile(
             type: 'module',
             scripts: { dev: 'vite --host 0.0.0.0', build: 'vite build' },
             dependencies: {
-                'soeditor-release': 'npm:@soeditor/editor@1.3.0',
-                '@soeditor/file-manager': '1.3.0',
-                '@soeditor/adapter-sofinder': '1.3.0',
-                '@soeditor/presets': '1.3.0',
-                '@soeditor/editor': '1.3.0',
-                '@soeditor/react': '1.3.0',
-                '@soeditor/vue': '1.3.0',
+                'soeditor-release': 'npm:@soeditor/editor@1.4.0',
+                '@soeditor/file-manager': '1.4.0',
+                '@soeditor/adapter-sofinder': '1.4.0',
+                '@soeditor/presets': '1.4.0',
+                '@soeditor/editor': '1.4.0',
+                '@soeditor/react': '1.4.0',
+                '@soeditor/vue': '1.4.0',
                 react: '19.2.8',
                 'react-dom': '19.2.8',
                 vue: '3.5.42',
@@ -132,7 +132,7 @@ await writeFile(
 await mkdir(resolve(root, 'public/downloads'), { recursive: true });
 execFileSync('tar', [
     '-czf',
-    resolve(root, 'public/downloads/soeditor-examples-1.3.0.tar.gz'),
+    resolve(root, 'public/downloads/soeditor-examples-1.4.0.tar.gz'),
     '-C',
     download,
     '.',

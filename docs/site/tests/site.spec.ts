@@ -42,7 +42,7 @@ for (const locale of ['zh-CN', 'en']) {
         );
         await expect(page.locator('html')).toHaveAttribute('lang', locale);
         await expect(page.locator('.docs-version')).toContainText(
-            'SoEditor 1.3.0',
+            'SoEditor 1.4.0',
         );
         expect(
             await page.evaluate(
@@ -138,6 +138,39 @@ for (const example of [
         expect(await page.locator('pre').textContent()).not.toContain(
             'soeditor-',
         );
+        if (example === 'basic') {
+            const tool = page.locator('[data-toolbar-item="cmsVideo"]');
+            await expect(tool).toBeVisible();
+            expect(
+                await page.evaluate(() =>
+                    performance
+                        .getEntriesByType('resource')
+                        .some((entry) => entry.name.includes('video-runtime')),
+                ),
+            ).toBe(false);
+            await page.locator('.soeditor-wysiwyg-content p').first().click();
+            await tool.click();
+            const dialog = page.getByRole('dialog', {
+                name: 'Insert video',
+                exact: true,
+            });
+            await dialog
+                .getByLabel('Video URL', { exact: true })
+                .fill('/demo-video.webm');
+            await dialog
+                .getByRole('button', { name: 'Apply', exact: true })
+                .click();
+            await expect(
+                page.locator('[data-soeditor-video-card]'),
+            ).toBeVisible();
+            await expect(
+                page.locator('.soeditor-wysiwyg-content video'),
+            ).toHaveCount(0);
+            await page
+                .getByRole('button', { name: 'Read HTML', exact: true })
+                .click();
+            await expect(page.locator('pre')).toContainText('<video');
+        }
         expect(errors).toEqual([]);
     });
 }

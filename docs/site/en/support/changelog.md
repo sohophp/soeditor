@@ -1,9 +1,13 @@
 ---
 title: 'Changelog'
-description: 'Changes in SoEditor 1.3.0 and the published documentation baseline.'
+description: 'Changes in SoEditor 1.4.0 and the published documentation baseline.'
 ---
 
 # Changelog
+
+## 1.4.0
+
+Video tools are enabled by default with lazy dialogs and players; use `video: false` to opt out. Fixes paragraph tool positioning after image resizing. React, Vue, video and SoFinder examples now use npm 1.4.0. Self-hosted global scripts require the complete dist directory.
 
 ## 1.3.0
 

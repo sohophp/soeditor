@@ -5,18 +5,18 @@ description: '搭配 SoFinder 管理图片、视频和文件，包含官网入�
 
 # SoFinder：SoEditor 的最佳搭档
 
-我们推荐 [SoFinder](https://sofinder.sohophp.app/) 作为 SoEditor 的最佳资源管理搭档：**SoEditor 负责 HTML 内容编辑，SoFinder 负责资源管理与选择**。将两者接入同一个 CMS，作者可以从资源库选图片、插入文件链接，并将视频资源 URL 用于可选视频插件。
+我们推荐 [SoFinder](https://sofinder.sohophp.app/) 作为 SoEditor 的最佳资源管理搭档：**SoEditor 负责 HTML 内容编辑，SoFinder 负责资源管理与选择**。将两者接入同一个 CMS，作者可以从资源库选图片、插入文件链接，并将视频资源 URL 用于默认视频工具。
 
 [访问 SoFinder 官网](https://sofinder.sohophp.app/) · [SoFinder 官方编辑器集成说明](https://sofinder.sohophp.app/editor-integrations) · [在线资源选择示例](/zh-CN/examples/assets)
 
 ## 搭配方式
 
-| CMS 工作       | SoEditor 与 SoFinder 的分工                                                                                                                |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| 文章和产品图片 | SoFinder 管理与选择图片，SoEditor 插入图片并编辑替代文本和布局。                                                                           |
-| 附件和下载链接 | SoFinder 返回文件 URL，SoEditor 通过文件选择命令插入链接。                                                                                 |
-| 视频资源       | 在 SoFinder 中取得视频 URL，再填入 SoEditor 的[视频对话框](/zh-CN/guide/video)。视频插件需单独启用，本示例不自动向视频对话框添加选择按钮。 |
-| 上传与存储     | SoFinder 部署负责资源上传、访问权限和存储；编辑器内直接上传仍需单独配置上传适配器。                                                        |
+| CMS 工作       | SoEditor 与 SoFinder 的分工                                                                                                          |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| 文章和产品图片 | SoFinder 管理与选择图片，SoEditor 插入图片并编辑替代文本和布局。                                                                     |
+| 附件和下载链接 | SoFinder 返回文件 URL，SoEditor 通过文件选择命令插入链接。                                                                           |
+| 视频资源       | 在 SoFinder 中取得视频 URL，再填入 SoEditor 的[视频对话框](/zh-CN/guide/video)。视频默认开启，本示例不自动向视频对话框添加选择按钮。 |
+| 上传与存储     | SoFinder 部署负责资源上传、访问权限和存储；编辑器内直接上传仍需单独配置上传适配器。                                                  |
 
 SoFinder 是可选搭配，通过独立包接入；默认编辑器不加载资源管理界面或服务端 SDK。
 
@@ -25,7 +25,7 @@ SoFinder 是可选搭配，通过独立包接入；默认编辑器不加载资�
 先按照 [SoFinder 官网](https://sofinder.sohophp.app/) 配置自己的服务端和资源目录，再安装编辑器适配器：
 
 ```sh
-pnpm add @soeditor/editor@1.3.0 @soeditor/presets@1.3.0 @soeditor/adapter-sofinder@1.3.0 @soeditor/file-manager@1.3.0
+pnpm add @soeditor/editor@1.4.0 @soeditor/presets@1.4.0 @soeditor/adapter-sofinder@1.4.0 @soeditor/file-manager@1.4.0
 ```
 
 将以下函数放入项目的 `api.ts`。`createOptionalEditor` 从 `@soeditor/editor/cms/optional` 导入，`cmsRuntimePreset` 从 `@soeditor/presets/cms-runtime` 导入，`FileManagerPlugin`、`UploadPlugin` 和 `fileManagerServiceToken` 从 `@soeditor/file-manager` 导入；`SoFinderAdapter` 与 `SoFinderPicker` 类型从 `@soeditor/adapter-sofinder` 导入。`ClassicEditor` 类型从 `@soeditor/editor/cms` 导入，并加载 `@soeditor/editor/cms/styles.css`。

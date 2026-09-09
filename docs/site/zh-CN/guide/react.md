@@ -7,13 +7,13 @@ description: '绑定 CMS HTML、管理生命周期和按需启用 Source。'
 
 ## 安装与运行
 
-`/cms` 组件从 1.3.0 起正式发布；原有 `useSoEditorWorkspace` 入口继续兼容。
+`/cms` 组件从 1.3.0 起正式发布，本站示例引用 1.4.0；原有 `useSoEditorWorkspace` 入口继续兼容。
 
 ```sh
-pnpm add @soeditor/editor@1.3.0 @soeditor/react@1.3.0 react react-dom
+pnpm add @soeditor/editor@1.4.0 @soeditor/react@1.4.0 react react-dom
 ```
 
-点击示例的“开始体验”运行已发布的软件包。[下载完整示例源码](/downloads/soeditor-examples-1.3.0.tar.gz)，解压后执行 `pnpm install` 和 `pnpm dev`，打开 `react.html`。
+点击示例的“开始体验”运行已发布的软件包。[下载完整示例源码](/downloads/soeditor-examples-1.4.0.tar.gz)，解压后执行 `pnpm install` 和 `pnpm dev`，打开 `react.html`。
 
 ## 绑定文章 HTML
 
@@ -54,7 +54,7 @@ export function ArticleField() {
 
 ## 排错与版本范围
 
-样式缺失时确认导入了 CMS CSS。找不到 `/cms` 时先核对版本：请安装 1.3.0 或更新版本，1.2.x 没有这个新增入口。不要通过 `v-html` 或 `dangerouslySetInnerHTML` 渲染编辑内容，也不要在 render/setup 中创建实例。
+样式缺失时确认导入了 CMS CSS。找不到 `/cms` 时先核对版本：请安装 1.4.0 或更新版本，1.2.x 没有这个新增入口。不要通过 `v-html` 或 `dangerouslySetInnerHTML` 渲染编辑内容，也不要在 render/setup 中创建实例。
 
 声明的 peer 范围为 React 18.2–19、Vue 3.5；本轮自动化使用 React 19.2.8、Vue 3.5.42。SSR 支持不等于对全部 Next/Nuxt 版本的认证。
 

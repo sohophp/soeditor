@@ -5,18 +5,18 @@ description: 'Pair SoEditor with SoFinder for images, videos and files, with off
 
 # SoFinder: SoEditor’s best companion
 
-We recommend [SoFinder](https://sofinder.sohophp.app/) as SoEditor’s best asset management companion: **SoEditor edits HTML content; SoFinder manages and selects assets**. Together in your CMS, they let authors choose images, insert file links and use video URLs with the optional video plugin.
+We recommend [SoFinder](https://sofinder.sohophp.app/) as SoEditor’s best asset management companion: **SoEditor edits HTML content; SoFinder manages and selects assets**. Together in your CMS, they let authors choose images, insert file links and use video URLs with the default video tools.
 
 [Visit SoFinder](https://sofinder.sohophp.app/) · [Official editor integration documentation](https://sofinder.sohophp.app/editor-integrations) · [Try the asset picker example](/en/examples/assets)
 
 ## How they work together
 
-| CMS task                   | Responsibilities                                                                                                                                                                 |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Article and product images | SoFinder manages and selects images; SoEditor inserts them and edits alternative text and layout.                                                                                |
-| Attachments and downloads  | SoFinder returns a file URL; SoEditor inserts a link through its file selection command.                                                                                         |
-| Video assets               | Get a video URL from SoFinder and enter it in the [video dialog](/en/guide/video). Enable the video plugin separately; this example does not add a picker button to that dialog. |
-| Uploads and storage        | Your SoFinder deployment owns uploads, access permissions and storage. Direct editor uploads still need a separate upload adapter.                                               |
+| CMS task                   | Responsibilities                                                                                                                                                          |
+| -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Article and product images | SoFinder manages and selects images; SoEditor inserts them and edits alternative text and layout.                                                                         |
+| Attachments and downloads  | SoFinder returns a file URL; SoEditor inserts a link through its file selection command.                                                                                  |
+| Video assets               | Get a video URL from SoFinder and enter it in the [video dialog](/en/guide/video). Video is enabled by default; this example does not add a picker button to that dialog. |
+| Uploads and storage        | Your SoFinder deployment owns uploads, access permissions and storage. Direct editor uploads still need a separate upload adapter.                                        |
 
 SoFinder is optional and connects through a separate package. The default editor does not load its management interface or server SDK.
 
@@ -25,7 +25,7 @@ SoFinder is optional and connects through a separate package. The default editor
 Configure your own server and resources following the [SoFinder documentation](https://sofinder.sohophp.app/), then install the editor adapter:
 
 ```sh
-pnpm add @soeditor/editor@1.3.0 @soeditor/presets@1.3.0 @soeditor/adapter-sofinder@1.3.0 @soeditor/file-manager@1.3.0
+pnpm add @soeditor/editor@1.4.0 @soeditor/presets@1.4.0 @soeditor/adapter-sofinder@1.4.0 @soeditor/file-manager@1.4.0
 ```
 
 Place these functions in your project’s `api.ts`. Import `createClassicEditor as createOptionalEditor` from `@soeditor/editor/cms/optional`, `cmsRuntimePreset` from `@soeditor/presets/cms-runtime`, and `FileManagerPlugin`, `UploadPlugin`, `fileManagerServiceToken` from `@soeditor/file-manager`. Import `SoFinderAdapter` and the `SoFinderPicker` type from `@soeditor/adapter-sofinder`, the `ClassicEditor` type from `@soeditor/editor/cms`, and load `@soeditor/editor/cms/styles.css`.

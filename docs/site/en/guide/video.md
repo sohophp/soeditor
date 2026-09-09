@@ -1,18 +1,33 @@
 ---
 title: 'Video and article preview'
-description: 'Enable optional video, edit media and preview the article.'
+description: 'Default video tools, lazy loading, origin configuration and runnable examples.'
 ---
 
 # Video and article preview
 
-Video is an explicit optional feature introduced in 1.2.0. This site pins published 1.3.0. Import `createCmsVideoPlugin()` from `@soeditor/editor/video`, add it to `plugins` and add `cmsVideo` to the toolbar. The default CMS editor does not enable video automatically.
+Since 1.4.0, Classic editors include the video button and inert video cards by default, including the React and Vue components. Dialogs and players load on first use. All examples here use published npm 1.4.0.
+
+## Default behavior and opt-out
+
+```ts
+import { createClassicEditor } from '@soeditor/editor/cms';
+import '@soeditor/editor/cms/styles.css';
+
+const host = document.querySelector<HTMLTextAreaElement>('#content');
+if (host === null) throw new Error('Missing textarea');
+const editor = await createClassicEditor(host);
+// Opt out: createClassicEditor(host, { video: false })
+// Configure: createClassicEditor(host, { video: { youtube: false } })
+```
+
+Include `cmsVideo` when supplying your own `toolbar`; explicit toolbars are not extended automatically. The automatically installed plugin disables YouTube metadata queries by default.
 
 ## Minimal integration and article preview
 
 The example uses the `soeditor-release` alias to pin the published editor. In your application, equivalent imports from the same version of `@soeditor/editor` work too.
 
 ```sh
-pnpm add soeditor-release@npm:@soeditor/editor@1.3.0 @soeditor/presets@1.3.0
+pnpm add soeditor-release@npm:@soeditor/editor@1.4.0
 ```
 
 <<< ../../examples/video.ts
@@ -25,7 +40,7 @@ Enter a supported media URL or YouTube URL in the dialog, then configure title, 
 
 The editing surface displays inert cards and does not play stored video/iframes. `getData()` returns actual HTML, not card DOM. Article preview renders allowed video independently; player UI never replaces saved article data.
 
-An explicit `plugins` list replaces the default plugins. Keep `...cmsRuntimePreset.plugins` before appending the video plugin, as shown above.
+Configure policy through `video`. Existing explicit `createCmsVideoPlugin()` integrations remain supported and take precedence over automatic installation; use `/cms/optional` when composing external plugins.
 
 ## Origin policy
 
@@ -35,11 +50,11 @@ An explicit `plugins` list replaces the default plugins. Keep `...cmsRuntimePres
 | `youtube`             | Set to `false` to disable YouTube; the example explicitly enables it.                                                           |
 | `youtubeMetadata`     | Set to `false` to disable automatic title/poster lookup. This site disables it to avoid implicit third-party metadata requests. |
 
-For example, `createCmsVideoPlugin({ allowedMediaOrigins: ['https://media.example.com'], youtube: false })` permits your media CDN, not arbitrary embed providers. Metadata lookup contacts YouTube; never inject returned embed HTML into your page.
+For example, `createClassicEditor(host, { video: { allowedMediaOrigins: ['https://media.example.com'], youtube: false } })` permits your media CDN, not arbitrary embed providers. Metadata lookup contacts YouTube; never inject returned embed HTML into your page.
 
 ## Troubleshooting
 
-- A missing video button usually means the plugin or `cmsVideo` toolbar item was omitted.
+- For a missing video button, check `video: false` and whether your explicit toolbar includes `cmsVideo`.
 - Playback belongs to article preview or the frontend. Check URL, codec, response Content-Type, cross-origin policy and CSP if it fails; cards do not play video.
 - External media and YouTube need appropriate `media-src`, `img-src` and `frame-src`; metadata queries also require `connect-src`.
 - Upload and storage remain host responsibilities. The video button is not an upload backend. Preserving stored HTML never grants execution in the authoring surface.

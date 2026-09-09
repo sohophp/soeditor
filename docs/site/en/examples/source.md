@@ -15,12 +15,12 @@ Switch to Source, side-by-side and stacked views, then return to WYSIWYG. Read H
 
 ## Complete integration code
 
-[Download all example sources](/downloads/soeditor-examples-1.3.0.tar.gz). Extract, run `pnpm install` and `pnpm dev`, then open `basic.html` or another example page.
+[Download all example sources](/downloads/soeditor-examples-1.4.0.tar.gz). Extract, run `pnpm install` and `pnpm dev`, then open `basic.html` or another example page.
 
 The demo runs this exact code. Use a Vite TypeScript page with the same file structure; the alias pins the npm release.
 
 ```sh
-pnpm add soeditor-release@npm:@soeditor/editor@1.3.0 @soeditor/file-manager@1.3.0 @soeditor/adapter-sofinder@1.3.0 @soeditor/presets@1.3.0
+pnpm add soeditor-release@npm:@soeditor/editor@1.4.0 @soeditor/file-manager@1.4.0 @soeditor/adapter-sofinder@1.4.0 @soeditor/presets@1.4.0
 ```
 
 <<< ../../examples/source.ts

@@ -15,7 +15,7 @@ hero:
           link: /zh-CN/examples/basic
 features:
     - title: 熟悉的编辑体验
-      details: 段落、列表、图片和表格，覆盖日常 CMS 工作。
+      details: 段落、列表、图片、视频和表格，覆盖日常 CMS 工作。
       link: /zh-CN/guide/toolbar
     - title: 按需 HTML Source
       details: 首次使用才加载，保留上下和左右分屏。
@@ -33,7 +33,7 @@ features:
 ## 从一个 textarea 开始
 
 ```sh
-pnpm add @soeditor/editor@1.3.0
+pnpm add @soeditor/editor@1.4.0
 ```
 
 ```ts
@@ -43,6 +43,8 @@ import '@soeditor/editor/cms/styles.css';
 const host = document.querySelector<HTMLTextAreaElement>('#content');
 if (host) await createClassicEditor(host, { locale: 'zh-CN' });
 ```
+
+1.4.0 默认开启[视频工具](/zh-CN/guide/video)，对话框与播放器按需加载；可用 `video: false` 关闭。也可通过独立的 [React](/zh-CN/guide/react) 和 [Vue](/zh-CN/guide/vue) 组件接入。
 
 ## SoEditor + SoFinder：最佳搭档
 

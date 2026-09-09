@@ -1,11 +1,11 @@
 ---
 title: '上传图片'
-description: '安装相同版本的 @soeditor/file-manager@1.3.0，在每个实例上注册 uploadServiceToken。create(request) 返回包含 result、cancel 和 subscribe 的上传任务。'
+description: '安装相同版本的 @soeditor/file-manager@1.4.0，在每个实例上注册 uploadServiceToken。create(request) 返回包含 result、cancel 和 subscribe 的上传任务。'
 ---
 
 # 上传图片
 
-安装相同版本的 `@soeditor/file-manager@1.3.0`，在每个实例上注册 `uploadServiceToken`。`create(request)` 返回包含 result、cancel 和 subscribe 的上传任务。
+安装相同版本的 `@soeditor/file-manager@1.4.0`，在每个实例上注册 `uploadServiceToken`。`create(request)` 返回包含 result、cancel 和 subscribe 的上传任务。
 
 result 成功时返回安全 URL 与图片元数据，失败时拒绝 Promise；cancel 应取消实际网络请求。通过 subscribe 向编辑器提供进度。
 
@@ -13,10 +13,10 @@ result 成功时返回安全 URL 与图片元数据，失败时拒绝 Promise；
 
 ## 插件与适配器
 
-1.3.0 的外部资源插件使用 `/cms/optional`，原因见[入口限制说明](/zh-CN/api/imports)。
+1.4.0 的外部资源插件使用 `/cms/optional`，原因见[入口限制说明](/zh-CN/api/imports)。
 
 ```sh
-pnpm add @soeditor/file-manager@1.3.0 @soeditor/presets@1.3.0
+pnpm add @soeditor/file-manager@1.4.0 @soeditor/presets@1.4.0
 ```
 
 为实例保留 CMS 插件并显式添加上传和资源插件，然后注册服务。只注册服务不会注册 `image.upload` 命令。

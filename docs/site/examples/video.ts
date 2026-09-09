@@ -1,15 +1,10 @@
 import { createClassicEditor } from 'soeditor-release/cms/optional';
-import { cmsRuntimePreset } from '@soeditor/presets/cms-runtime';
-import { createCmsVideoPlugin } from 'soeditor-release/video';
 import { button, instance, options, type DemoContext } from './shared.js';
 
 export async function mount(ctx: DemoContext) {
     const editor = await createClassicEditor(ctx.host, {
         ...options(ctx),
-        plugins: [
-            ...cmsRuntimePreset.plugins,
-            createCmsVideoPlugin({ youtube: true, youtubeMetadata: false }),
-        ],
+        video: { youtube: true, youtubeMetadata: false },
         editingModes: ['wysiwyg', 'source'],
         preview: true,
         toolbar: [

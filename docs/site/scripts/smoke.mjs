@@ -38,9 +38,9 @@ const home = await homeResponse.text();
 const manifest = await fetch(new URL('/deployment.json', origin)).then(
     (response) => response.json(),
 );
-if (!['1.2.1', '1.3.0'].includes(manifest.editorVersion))
+if (!['1.2.1', '1.3.0', '1.4.0'].includes(manifest.editorVersion))
     throw new Error('Unsupported documentation artifact version');
-if (manifest.editorVersion === '1.3.0') {
+if (['1.3.0', '1.4.0'].includes(manifest.editorVersion)) {
     for (const topic of ['react', 'vue', 'video']) {
         for (const path of [
             `/en/examples/${topic}`,
