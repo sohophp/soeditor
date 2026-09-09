@@ -41,6 +41,8 @@ const publicPropertyNames = collectPublicPropertyNames(
         'createClassicEditor',
         'attachClassicImageContext',
         'createVideoRuntime',
+        // WebKit requires this platform option to recover shadow selections.
+        'shadowRoots',
     ],
 );
 const stripOptionalGlobalStyles = (code: string): string =>

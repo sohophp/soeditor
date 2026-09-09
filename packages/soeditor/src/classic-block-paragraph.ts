@@ -175,6 +175,11 @@ export function attachBlockParagraphContext(
         if (
             overlay === undefined ||
             event.composedPath().includes(overlay) ||
+            // Resizing returns focus to the editing surface. Keep the selected
+            // image anchor when Firefox does not dispatch another pointerover.
+            (event.type === 'focusin' &&
+                target === visual &&
+                imageAnchor?.isConnected === true) ||
             (target instanceof Node && block?.contains(target) === true) ||
             (target instanceof Element &&
                 target.closest('.soeditor-image-resize-overlay') !== null)
