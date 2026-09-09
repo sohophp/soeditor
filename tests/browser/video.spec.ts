@@ -562,10 +562,29 @@ test('optional CMS video: switches provider with one undo step and keeps other i
         });
         Reflect.set(globalThis, '__videoSecond', second);
     });
-    await expect(page.locator('[data-toolbar-item="cmsVideo"]')).toHaveCount(1);
+    await expect(page.locator('[data-toolbar-item="cmsVideo"]')).toHaveCount(2);
     await page.evaluate(() => globalThis.__classicDemo.destroy());
     await expect(page.locator('.soeditor-wysiwyg-content')).toContainText(
         'Second editor',
+    );
+    await expect(page.locator('[data-toolbar-item="cmsVideo"]')).toHaveCount(1);
+    await page.locator('.soeditor-wysiwyg-content p').click();
+    await page.locator('[data-toolbar-item="cmsVideo"]').click();
+    const secondDialog = page.getByRole('dialog', {
+        name: 'Insert video',
+        exact: true,
+    });
+    await expect(
+        secondDialog.getByLabel('Video URL', { exact: true }),
+    ).toHaveValue('');
+    await secondDialog
+        .getByLabel('Video URL', { exact: true })
+        .fill('/second.mp4');
+    await secondDialog
+        .getByRole('button', { name: 'Apply', exact: true })
+        .click();
+    await expect(page.locator('[data-soeditor-video-card]')).toContainText(
+        '/second.mp4',
     );
 });
 
