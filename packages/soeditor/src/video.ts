@@ -20,6 +20,16 @@ import {
 import type { VideoRuntime } from './video-runtime.js';
 import type * as VideoRuntimeModule from './video-runtime.js';
 
+// Capture the global script's asset URL while document.currentScript is set.
+// Later clicks may happen on a page in a different directory or origin.
+const standaloneRuntimeUrl =
+    import.meta.env.SOEDITOR_STANDALONE_VIDEO === 'true'
+        ? new URL(
+              '../node_modules/.cache/video-recovery/video-runtime.js?no-inline',
+              import.meta.url,
+          ).href
+        : undefined;
+
 /** Explicit optional CMS video policy. Same-origin assets are always allowed. */
 export interface CmsVideoOptions {
     readonly allowedMediaOrigins?: readonly string[];
@@ -392,8 +402,11 @@ async function loadVideoRuntime(
     // Browsers remember a failed module fetch. The separately emitted entry
     // permits a fresh URL without evaluating any downloaded text ourselves.
     const url = new URL(
-        '../node_modules/.cache/video-recovery/video-runtime.js?no-inline',
-        import.meta.url,
+        standaloneRuntimeUrl ??
+            new URL(
+                '../node_modules/.cache/video-recovery/video-runtime.js?no-inline',
+                import.meta.url,
+            ).href,
     );
     url.searchParams.set('soeditor-video-retry', String(attempt));
     const module: unknown = await import(/* @vite-ignore */ url.href);

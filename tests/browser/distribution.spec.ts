@@ -135,7 +135,7 @@ test('CMS global image resizing and table paragraph controls work after property
 }) => {
     await page.setContent('<textarea id="content"></textarea>');
     await page.addStyleTag({ path: stylesheet });
-    await page.addScriptTag({ path: globalBundle });
+    await page.addScriptTag({ url: '/cdn/soeditor.global.js' });
     await page.evaluate(async () => {
         const api = Reflect.get(globalThis, 'SoEditor') as {
             createClassicEditor(
@@ -169,6 +169,14 @@ test('CMS global image resizing and table paragraph controls work after property
     await image.click();
     const imageTools = page.locator('[data-image-tools]');
     await expect(imageTools.getByRole('button')).toHaveCount(4);
+    expect(
+        await page.evaluate(() =>
+            performance
+                .getEntriesByType('resource')
+                .filter((entry) => entry.name.includes('classic-image-tools'))
+                .map((entry) => new URL(entry.name).pathname),
+        ),
+    ).toEqual(['/cdn/classic-image-tools.js']);
     await imageTools
         .getByRole('button', { name: 'Align center', exact: true })
         .click();
@@ -361,6 +369,14 @@ test('CMS global enables video by default and loads its dialog only on demand', 
         exact: true,
     });
     await expect(dialog).toBeVisible();
+    expect(
+        await page.evaluate(() =>
+            performance
+                .getEntriesByType('resource')
+                .filter((entry) => entry.name.includes('video-runtime'))
+                .map((entry) => new URL(entry.name).pathname),
+        ),
+    ).toEqual(['/cdn/video-runtime.js']);
     await dialog.getByLabel('Video URL', { exact: true }).fill('/movie.mp4');
     await dialog.getByRole('button', { name: 'Apply', exact: true }).click();
     const card = page.locator('[data-soeditor-video-card]');
