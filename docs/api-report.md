@@ -7,7 +7,7 @@ symbol list or declaration hash requires explicit API review. CSS exports and
 CLI bins are listed as stable resources. Undeclared `src`/`dist` subpaths and
 implementation modules are internal even when present in a checkout or tarball.
 
-Summary: 24 packages; 967 stable, 395 experimental, and 0 deprecated symbol
+Summary: 24 packages; 980 stable, 395 experimental, and 0 deprecated symbol
 entries.
 
 ## @soeditor/adapter-sofinder
@@ -164,12 +164,12 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`674aac838c238e7df563d448ce8bbbb180455b00f2d37ad5a7d2277cebe01315`
+`423daa45cbd7028cfe26dc262786c5a6c17ac2fc563ecc44b099e58a11b8b877`
 
 ### .
 
 Declaration SHA-256:
-`b77fb950a769ed9972db4976b21beb1f7b604cafe915f49a601131c1bf20c29b`
+`76544d0f05332dc672d63f6aea75779813d2e5af62db1ce0e77ab60a51241891`
 
 | Export                                                | Kind       | Classification | Signature SHA-256  |
 | ----------------------------------------------------- | ---------- | -------------- | ------------------ |
@@ -190,19 +190,22 @@ Declaration SHA-256:
 | `BlockquotePlugin`                                    | type/value | stable         | `057726cf4923a7b5` |
 | `BoldPlugin`                                          | type/value | stable         | `80e810f75ff4e330` |
 | `builtInUiTranslations`                               | value      | experimental   | `a83547fa9b47531e` |
+| `ClassicCanvasOptions`                                | type       | stable         | `78a983178b548872` |
+| `ClassicCanvasPreset`                                 | type       | stable         | `9b6b6118fd0a376c` |
+| `ClassicCanvasPresetId`                               | type       | stable         | `5e670687d2ff1c25` |
 | `ClassicEditingMode`                                  | type       | experimental   | `66351b7c3ba6bbd0` |
-| `ClassicEditor`                                       | type       | experimental   | `347cce25d7713289` |
+| `ClassicEditor`                                       | type       | experimental   | `d1c7d28208ef4539` |
 | `ClassicEditorAlreadyAttachedError`                   | type/value | experimental   | `5168db0f6ce77de0` |
 | `ClassicEditorChange`                                 | type       | experimental   | `07ca0f0d4bc6a499` |
 | `ClassicEditorDestroyedError`                         | type/value | experimental   | `27394a56a2762fe6` |
 | `ClassicEditorSaveOptions`                            | type       | experimental   | `84d1e35562192eeb` |
 | `classicPreset`                                       | value      | stable         | `530b94f1c5748e37` |
-| `ClassicPreviewOptions`                               | type       | stable         | `5b865c529a6ca73a` |
+| `ClassicPreviewOptions`                               | type       | stable         | `b5c7a4e9c3e66ec4` |
 | `ClassicPreviewTemplate`                              | type       | stable         | `5d9f30dc13f34f81` |
 | `ClassicPreviewTemplateOptions`                       | type       | stable         | `992ce37f74009d96` |
 | `ClassicPreviewTemplatesOptions`                      | type       | stable         | `8692d41cc59b60e3` |
 | `ClassicPreviewWindow`                                | type       | stable         | `1044976e9c409301` |
-| `ClassicPreviewWindowOptions`                         | type       | stable         | `aaadf303a3f428e2` |
+| `ClassicPreviewWindowOptions`                         | type       | stable         | `9d9ea1b69d468e92` |
 | `ClassicPreviewWindowTemplate`                        | type       | stable         | `30d6bd8da1ef6c15` |
 | `ClassicSourceEnhancementOptions`                     | type       | stable         | `1edd3fd4f2fe79ef` |
 | `ClassicSourceOptions`                                | type       | stable         | `615409f49de1197a` |
@@ -245,7 +248,7 @@ Declaration SHA-256:
 | `ControlledWorkspaceValue`                            | type       | stable         | `9e3aaa705c6a70e3` |
 | `CoreEventMap`                                        | type       | stable         | `281f660668ce273c` |
 | `createClassicEditor`                                 | value      | experimental   | `0f31728333355113` |
-| `CreateClassicEditorOptions`                          | type       | experimental   | `d15b7d2536c95ff4` |
+| `CreateClassicEditorOptions`                          | type       | experimental   | `c2d8ff6f0f233f18` |
 | `createClassicPreviewTemplates`                       | value      | stable         | `5e22309d2ff491af` |
 | `createClassicPreviewWindow`                          | value      | stable         | `1baeb80f259cc799` |
 | `createCommentsPlugin`                                | value      | stable         | `3673444dcdbacbef` |
@@ -341,7 +344,7 @@ Declaration SHA-256:
 | `EditorSaveSuccess`                                   | type       | experimental   | `73935987b399a7c2` |
 | `EditorSaveWorkflow`                                  | type       | experimental   | `c804bed752ba43f8` |
 | `EditorState`                                         | type       | stable         | `5e50c65a795e772b` |
-| `EditorUi`                                            | type       | stable         | `7320bdf24c7a9cca` |
+| `EditorUi`                                            | type       | stable         | `5320444f21e160ba` |
 | `EditorUiAlreadyAttachedError`                        | type/value | stable         | `ff4fec646d257bce` |
 | `EditorUiDestroyedError`                              | type/value | stable         | `f36fc578d3ef1450` |
 | `EditorUiDirection`                                   | type       | experimental   | `4a9f02de07873b7b` |
@@ -523,7 +526,7 @@ Declaration SHA-256:
 | `readEditingOperations`                               | value      | experimental   | `aaf722180d4693e6` |
 | `ReentrantDispatchError`                              | type/value | stable         | `ba715cf2c52c283c` |
 | `RemoveFormatPlugin`                                  | type/value | experimental   | `ae09e00c4567a997` |
-| `renderPreviewDocument`                               | value      | stable         | `b847993ba5866229` |
+| `renderPreviewDocument`                               | value      | stable         | `f5c92636fb363e89` |
 | `ReplaceDocumentOperation`                            | type       | stable         | `812814c5bca58c25` |
 | `ResolvedCommentThread`                               | type       | stable         | `a7e05891b84e9252` |
 | `ResolvedUiTranslation`                               | type       | experimental   | `1f9cc4f9dee84093` |
@@ -738,47 +741,65 @@ Declaration SHA-256:
 | `WysiwygContentStylePreset`                           | type       | experimental   | `6ed4640781ba26c2` |
 | `WysiwygEditingEngine`                                | type/value | stable         | `b91de0e12a6a1942` |
 | `WysiwygEditingEngineDestroyedError`                  | type/value | stable         | `8497fc65b325c3a8` |
-| `WysiwygEditingEngineOptions`                         | type       | experimental   | `31d00c8fcdfa6643` |
+| `WysiwygEditingEngineOptions`                         | type       | experimental   | `5dc553badd9d0754` |
 
 ### ./cms
 
 Declaration SHA-256:
-`d18030be127d165edd47abd8318efd235cab7f20e31d876ec7b531931aa951f9`
+`54a0091274da5c688d11080ff98463346ba8c49b4eb745213730f39354704cd7`
 
 | Export                              | Kind       | Classification | Signature SHA-256  |
 | ----------------------------------- | ---------- | -------------- | ------------------ |
+| `ClassicCanvasOptions`              | type       | stable         | `78a983178b548872` |
+| `ClassicCanvasPreset`               | type       | stable         | `9b6b6118fd0a376c` |
+| `ClassicCanvasPresetId`             | type       | stable         | `5e670687d2ff1c25` |
 | `ClassicEditingMode`                | type       | experimental   | `66351b7c3ba6bbd0` |
-| `ClassicEditor`                     | type       | experimental   | `347cce25d7713289` |
+| `ClassicEditor`                     | type       | experimental   | `d1c7d28208ef4539` |
 | `ClassicEditorAlreadyAttachedError` | type/value | experimental   | `5168db0f6ce77de0` |
 | `ClassicEditorChange`               | type       | experimental   | `07ca0f0d4bc6a499` |
 | `ClassicEditorDestroyedError`       | type/value | experimental   | `27394a56a2762fe6` |
 | `ClassicEditorSaveOptions`          | type       | experimental   | `84d1e35562192eeb` |
-| `ClassicPreviewOptions`             | type       | stable         | `5b865c529a6ca73a` |
+| `ClassicPreviewOptions`             | type       | stable         | `b5c7a4e9c3e66ec4` |
 | `ClassicPreviewTemplate`            | type       | stable         | `5d9f30dc13f34f81` |
 | `ClassicSourceOptions`              | type       | stable         | `615409f49de1197a` |
 | `ClassicWorkspaceView`              | type       | stable         | `c97fa57f190c55a9` |
 | `createClassicEditor`               | value      | experimental   | `0f31728333355113` |
-| `CreateClassicEditorOptions`        | type       | experimental   | `d15b7d2536c95ff4` |
+| `CreateClassicEditorOptions`        | type       | experimental   | `c2d8ff6f0f233f18` |
 
 ### ./cms/optional
 
 Declaration SHA-256:
-`d53d84cfe5eff5c2767eaf2854c354f3e8a7a400e100177966ce91f3284a08f8`
+`5516c99c2b6099f8e01269b4428bab969bed72d64dc59a6cb690661a7b2f9b9f`
 
 | Export                              | Kind       | Classification | Signature SHA-256  |
 | ----------------------------------- | ---------- | -------------- | ------------------ |
+| `ClassicCanvasOptions`              | type       | stable         | `78a983178b548872` |
+| `ClassicCanvasPreset`               | type       | stable         | `9b6b6118fd0a376c` |
+| `ClassicCanvasPresetId`             | type       | stable         | `5e670687d2ff1c25` |
 | `ClassicEditingMode`                | type       | experimental   | `66351b7c3ba6bbd0` |
-| `ClassicEditor`                     | type       | experimental   | `347cce25d7713289` |
+| `ClassicEditor`                     | type       | experimental   | `d1c7d28208ef4539` |
 | `ClassicEditorAlreadyAttachedError` | type/value | experimental   | `5168db0f6ce77de0` |
 | `ClassicEditorChange`               | type       | experimental   | `07ca0f0d4bc6a499` |
 | `ClassicEditorDestroyedError`       | type/value | experimental   | `27394a56a2762fe6` |
 | `ClassicEditorSaveOptions`          | type       | experimental   | `84d1e35562192eeb` |
-| `ClassicPreviewOptions`             | type       | stable         | `5b865c529a6ca73a` |
+| `ClassicPreviewOptions`             | type       | stable         | `b5c7a4e9c3e66ec4` |
 | `ClassicPreviewTemplate`            | type       | stable         | `5d9f30dc13f34f81` |
 | `ClassicSourceOptions`              | type       | stable         | `615409f49de1197a` |
 | `ClassicWorkspaceView`              | type       | stable         | `c97fa57f190c55a9` |
 | `createClassicEditor`               | value      | experimental   | `0f31728333355113` |
-| `CreateClassicEditorOptions`        | type       | experimental   | `d15b7d2536c95ff4` |
+| `CreateClassicEditorOptions`        | type       | experimental   | `c2d8ff6f0f233f18` |
+
+### ./cms/disclosure
+
+Declaration SHA-256:
+`aa0e87a3450bb68a7055e444de5a23f87e14b89c9fe1ca24fd2429cb38466193`
+
+| Export                                 | Kind  | Classification | Signature SHA-256  |
+| -------------------------------------- | ----- | -------------- | ------------------ |
+| `ClassicEditorDisclosure`              | type  | stable         | `85e7cc1d91c32ce5` |
+| `ClassicEditorDisclosureLabels`        | type  | stable         | `09289021778bb48c` |
+| `createClassicEditorDisclosure`        | value | stable         | `0ece2667557ac530` |
+| `CreateClassicEditorDisclosureOptions` | type  | stable         | `9ceb37709a4484dc` |
 
 - `./styles.css` — stable resource (./dist/styles.css)
 - `./content.css` — stable resource (./dist/content.css)
@@ -1122,7 +1143,7 @@ Declaration SHA-256:
 | `Editor`                                              | type/value | stable         | `c08a94ea5df13778` |
 | `EditorEvents`                                        | type       | stable         | `a3eefcfe4f0ffaa7` |
 | `EditorState`                                         | type       | stable         | `5e50c65a795e772b` |
-| `EditorUi`                                            | type       | stable         | `7320bdf24c7a9cca` |
+| `EditorUi`                                            | type       | stable         | `5320444f21e160ba` |
 | `EditorUiDirection`                                   | type       | experimental   | `4a9f02de07873b7b` |
 | `EditorUiIconResource`                                | type       | experimental   | `c70444b8bfdd9c49` |
 | `EditorUiTheme`                                       | type       | stable         | `edd668b911e22704` |
@@ -1342,7 +1363,7 @@ Declaration SHA-256:
 ## @soeditor/preview
 
 Declaration tree SHA-256:
-`8f51c84071dad46327df673564feaad465f23f18419d14c4b95c6f9e56d0782d`
+`23fe5386dbb9640950094f54dd001d98bdebcc2de99a698a3f8f1a554724ca18`
 
 ### .
 
@@ -1355,7 +1376,7 @@ Declaration SHA-256:
 | `ClassicPreviewTemplateOptions`         | type       | stable         | `992ce37f74009d96` |
 | `ClassicPreviewTemplatesOptions`        | type       | stable         | `8692d41cc59b60e3` |
 | `ClassicPreviewWindow`                  | type       | stable         | `1044976e9c409301` |
-| `ClassicPreviewWindowOptions`           | type       | stable         | `aaadf303a3f428e2` |
+| `ClassicPreviewWindowOptions`           | type       | stable         | `9d9ea1b69d468e92` |
 | `ClassicPreviewWindowTemplate`          | type       | stable         | `30d6bd8da1ef6c15` |
 | `createClassicPreviewTemplates`         | value      | stable         | `5e22309d2ff491af` |
 | `createClassicPreviewWindow`            | value      | stable         | `1baeb80f259cc799` |
@@ -1374,7 +1395,7 @@ Declaration SHA-256:
 | `PreviewPlugin`                         | type/value | stable         | `edba30b9e3112c2e` |
 | `PreviewService`                        | type       | stable         | `bb53ebe81f40114b` |
 | `previewServiceToken`                   | value      | stable         | `619c4b5bf98ebde8` |
-| `renderPreviewDocument`                 | value      | stable         | `b847993ba5866229` |
+| `renderPreviewDocument`                 | value      | stable         | `f5c92636fb363e89` |
 | `UnsupportedPreviewDocumentFormatError` | type/value | stable         | `a7e5c38acc107a97` |
 
 ### ./media
@@ -1624,7 +1645,7 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`435242b3a9e9cd7e213bbf9c37f4a5c11be7a1d3a21c12cbce6c5eb08b283c87`
+`7c769ef0bfd5605737d1554efcbbe2f0bfe72a87c43db40dfc85fc426cecb529`
 
 ### .
 
@@ -1646,7 +1667,7 @@ Declaration SHA-256:
 | `DialogOptions`                        | type       | stable         | `1da46417d28bf824` |
 | `DialogService`                        | type       | stable         | `a73020dcd4c251eb` |
 | `DismissibleUiHandle`                  | type       | stable         | `e5c208df79f7ccfb` |
-| `EditorUi`                             | type       | stable         | `7320bdf24c7a9cca` |
+| `EditorUi`                             | type       | stable         | `5320444f21e160ba` |
 | `EditorUiAlreadyAttachedError`         | type/value | stable         | `ff4fec646d257bce` |
 | `EditorUiDestroyedError`               | type/value | stable         | `f36fc578d3ef1450` |
 | `EditorUiDirection`                    | type       | experimental   | `4a9f02de07873b7b` |
@@ -1810,7 +1831,7 @@ Declaration SHA-256:
 ## @soeditor/wysiwyg
 
 Declaration tree SHA-256:
-`375be9d28bd05b760ed6ab932063a89c6a7edd404c366656a0cea17cac50b85a`
+`7e912ef40d426ec1819ca7fb703b3e8d968ebe43de62fd329fd4910ea6ab7a02`
 
 ### .
 
@@ -1829,4 +1850,4 @@ Declaration SHA-256:
 | `WysiwygContentStylePreset`          | type       | experimental   | `6ed4640781ba26c2` |
 | `WysiwygEditingEngine`               | type/value | stable         | `b91de0e12a6a1942` |
 | `WysiwygEditingEngineDestroyedError` | type/value | stable         | `8497fc65b325c3a8` |
-| `WysiwygEditingEngineOptions`        | type       | experimental   | `31d00c8fcdfa6643` |
+| `WysiwygEditingEngineOptions`        | type       | experimental   | `5dc553badd9d0754` |

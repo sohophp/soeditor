@@ -1,0 +1,71 @@
+.soeditor-video-player {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) auto;
+    height: 100%;
+    min-height: 0;
+    background: #101827;
+    color: var(--soeditor-text, #172033);
+}
+
+.soeditor-video-player__slot {
+    min-height: 0;
+    overflow: hidden;
+}
+
+.soeditor-video-player__actions {
+    display: grid;
+    gap: 0.5rem;
+    padding: 0.75rem;
+    border-top: 1px solid var(--soeditor-border, #d0d7de);
+    background: var(--soeditor-panel-bg, #f6f8fa);
+    font:
+        0.875rem/1.5 system-ui,
+        sans-serif;
+}
+
+.soeditor-video-player__actions [role='status'] {
+    color: var(--soeditor-muted, #59636e);
+    overflow-wrap: anywhere;
+}
+
+.soeditor-video-player__controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* The player also runs in an independent article preview document. */
+.soeditor-video-player__controls .soeditor-ui__dialog-action {
+    box-sizing: border-box;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--soeditor-control-size, 2rem);
+    padding: 0.35rem 0.55rem;
+    border: 1px solid var(--soeditor-border, #d0d7de);
+    border-radius: var(--soeditor-radius, 0.375rem);
+    background: var(--soeditor-bg, #fff);
+    color: var(--soeditor-text, #172033);
+    font: inherit;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.soeditor-video-player__controls .soeditor-ui__dialog-action:hover {
+    background: var(--soeditor-panel-bg, #f6f8fa);
+    border-color: var(--soeditor-accent, #0969da);
+}
+
+.soeditor-video-player__controls .soeditor-ui__dialog-action:active {
+    background: color-mix(
+        in srgb,
+        var(--soeditor-panel-bg, #f6f8fa) 78%,
+        var(--soeditor-accent, #0969da)
+    );
+}
+
+.soeditor-video-player__controls .soeditor-ui__dialog-action:focus-visible {
+    outline: 2px solid var(--soeditor-focus-ring, #0969da);
+    outline-offset: 2px;
+}

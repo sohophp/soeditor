@@ -26,8 +26,8 @@ test('reuses one popup per editor and isolates popups across editor instances', 
     await expect(firstFrame.getByText('Hello')).toBeVisible();
     await expect(templatePicker.locator('option')).toHaveText([
         'Web page',
-        'Email newsletter',
-        'Word document',
+        'Email newsletter · 600px',
+        'Word · A4 210 × 297mm',
     ]);
     await page.evaluate(() =>
         globalThis.__classicDemo.editor.setData(
@@ -944,6 +944,23 @@ test('keeps image properties usable while moving and resizing within the viewpor
     const footer = dialog.locator('.soeditor-ui__dialog-actions');
     const resize = dialog.getByRole('button', { name: 'Resize dialog' });
     await expect(dialog).toBeVisible();
+    await expect
+        .poll(() =>
+            dialog
+                .locator('input:not([type="checkbox"]), select')
+                .evaluateAll((fields) =>
+                    fields.every((field) => {
+                        const bounds = field.getBoundingClientRect();
+                        const parent =
+                            field.parentElement?.getBoundingClientRect();
+                        return (
+                            parent !== undefined &&
+                            bounds.right <= parent.right + 1
+                        );
+                    }),
+                ),
+        )
+        .toBe(true);
     await expect(resize).toBeVisible();
     await expect(title).toBeVisible();
     await expect(footer).toBeVisible();
@@ -3088,6 +3105,46 @@ test('provides responsive toolbar navigation, status, resize, and maximize resto
     const resizeHandle = classic.getByRole('separator', {
         name: 'Resize editor height',
     });
+    await expect(resizeHandle).toHaveCSS('position', 'absolute');
+    await expect
+        .poll(async () => {
+            const rootBox = await classic.boundingBox();
+            const handleBox = await resizeHandle.boundingBox();
+            return rootBox === null || handleBox === null
+                ? Number.NaN
+                : Math.abs(
+                      rootBox.y +
+                          rootBox.height -
+                          (handleBox.y + handleBox.height),
+                  );
+        })
+        .toBeLessThanOrEqual(1);
+    await expect
+        .poll(() =>
+            resizeHandle.evaluate(
+                (element) => getComputedStyle(element, '::after').opacity,
+            ),
+        )
+        .toBe('1');
+    await page.evaluate(() =>
+        (document.activeElement as HTMLElement | null)?.blur(),
+    );
+    await page.locator('body').hover({ position: { x: 1, y: 1 } });
+    await expect
+        .poll(() =>
+            resizeHandle.evaluate(
+                (element) => getComputedStyle(element, '::after').opacity,
+            ),
+        )
+        .toBe('0');
+    await resizeHandle.hover();
+    await expect
+        .poll(() =>
+            resizeHandle.evaluate(
+                (element) => getComputedStyle(element, '::after').opacity,
+            ),
+        )
+        .toBe('1');
     const resizeBox = await resizeHandle.boundingBox();
     if (resizeBox === null) throw new Error('Missing resize handle bounds.');
     await page.mouse.move(
@@ -5855,4 +5912,431 @@ test('keeps the declared Classic toolbar controls present and localized', async 
     await expect(
         page.locator('[data-classic-action="show-blocks"]'),
     ).toHaveAccessibleName('显示区块边界');
+});
+
+test('canvas presets are isolated per instance and never enter saved HTML', async ({
+    page,
+}) => {
+    await page.goto('/classic.html?test=1');
+    await page.locator('body[data-ready="true"]').waitFor();
+    await page.evaluate(async () => {
+        for (const [id, canvas] of [
+            ['canvas-one', { initialPreset: 'email' }],
+            [
+                'canvas-two',
+                {
+                    initialPreset: 'compact',
+                    presets: [
+                        'webpage',
+                        {
+                            id: 'compact',
+                            label: 'Compact',
+                            width: '420px',
+                            padding: '20px',
+                        },
+                    ],
+                },
+            ],
+        ] as const) {
+            const host = document.createElement('textarea');
+            host.id = id;
+            host.value = '<p>Unchanged content</p>';
+            document.body.append(host);
+            const instance = await globalThis.__classicDemo.create(host, {
+                canvas,
+            });
+            instance.element.id = `${id}-editor`;
+        }
+    });
+    const first = page.locator('#canvas-one-editor');
+    const second = page.locator('#canvas-two-editor');
+    await expect(first.getByLabel('Editing size')).toHaveValue('email');
+    await expect(second.getByLabel('Editing size')).toHaveValue('compact');
+    expect(
+        await first
+            .locator('.soeditor-wysiwyg-content')
+            .evaluate((e) => e.getBoundingClientRect().width),
+    ).toBe(600);
+    expect(
+        await second
+            .locator('.soeditor-wysiwyg-content')
+            .evaluate((e) => e.getBoundingClientRect().width),
+    ).toBe(420);
+    await first.getByLabel('Editing size').selectOption('word');
+    await expect(first.locator('.soeditor-classic__visual')).toHaveAttribute(
+        'data-canvas-preset',
+        'word',
+    );
+    await expect(second.getByLabel('Editing size')).toHaveValue('compact');
+    await expect(page.locator('#canvas-one')).toHaveValue(
+        '<p>Unchanged content</p>',
+    );
+    await expect(page.locator('#canvas-two')).toHaveValue(
+        '<p>Unchanged content</p>',
+    );
+    await page.setViewportSize({ width: 390, height: 700 });
+    expect(
+        await first
+            .locator('.soeditor-wysiwyg-content')
+            .evaluate(
+                (e) =>
+                    e.getBoundingClientRect().width <=
+                    (e.getRootNode() as ShadowRoot).host.getBoundingClientRect()
+                        .width,
+            ),
+    ).toBe(true);
+});
+
+test('canvas API validates instance choices before changing presentation', async ({
+    page,
+}) => {
+    await page.goto('/classic.html?test=1');
+    await page.locator('body[data-ready="true"]').waitFor();
+    const result = await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        host.value = '<p>Canvas API</p>';
+        document.body.append(host);
+        const instance = await globalThis.__classicDemo.create(host, {
+            canvas: { presets: ['email', 'word'] },
+        });
+        instance.setCanvasPreset('word');
+        let invalid = false;
+        try {
+            instance.setCanvasPreset('missing');
+        } catch (error) {
+            invalid = error instanceof TypeError;
+        }
+        const value = {
+            preset: instance.canvasPreset,
+            html: instance.getData(),
+            invalid,
+        };
+        await instance.destroy();
+        return {
+            ...value,
+            restored: !host.hidden,
+            controls: host.parentElement!.querySelectorAll(
+                '.soeditor-classic__canvas-control',
+            ).length,
+        };
+    });
+    expect(result).toEqual({
+        preset: 'word',
+        html: '<p>Canvas API</p>',
+        invalid: true,
+        restored: true,
+        controls: 0,
+    });
+});
+
+test('device canvas widths remain exact when wider than the editor', async ({
+    page,
+}) => {
+    await page.goto('/classic.html?test=1');
+    await page.locator('body[data-ready="true"]').waitFor();
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        host.value = '<p>Device width</p>';
+        document.body.append(host);
+        const instance = await globalThis.__classicDemo.create(host, {
+            canvas: {},
+        });
+        instance.element.id = 'device-canvas';
+    });
+    const root = page.locator('#device-canvas');
+    for (const [preset, width] of [
+        ['mobile', 390],
+        ['mobile-wide', 430],
+        ['ipad', 768],
+        ['ipad-landscape', 1024],
+        ['desktop', 1200],
+        ['macbook', 1280],
+        ['desktop-wide', 1440],
+        ['full-hd', 1920],
+    ] as const) {
+        await root.getByLabel('Editing size').selectOption(preset);
+        expect(
+            await root
+                .locator('.soeditor-wysiwyg-content')
+                .evaluate((e) => e.getBoundingClientRect().width),
+        ).toBe(width);
+    }
+    await root.getByLabel('Editing size').selectOption('webpage');
+    expect(
+        await root
+            .locator('.soeditor-wysiwyg-content')
+            .evaluate((e) => e.getBoundingClientRect().width),
+    ).toBeLessThan(1920);
+});
+
+test('popup widths share instance presets and templates load independent CSS', async ({
+    page,
+    context,
+}) => {
+    await context.route('**/preview-red.css', (route) =>
+        route.fulfill({
+            contentType: 'text/css',
+            body: '#preview-content { color: rgb(180, 0, 0); } @media (max-width: 500px) { #preview-content { font-size: 22px; } }',
+        }),
+    );
+    await context.route('**/preview-blue.css', (route) =>
+        route.fulfill({
+            contentType: 'text/css',
+            body: '#preview-content { color: rgb(0, 0, 180); }',
+        }),
+    );
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        host.value = '<p id="preview-content">Styled article</p>';
+        document.body.append(host);
+        const instance = await globalThis.__classicDemo.create(host, {
+            canvas: {
+                initialPreset: 'mobile',
+                presets: ['webpage', 'mobile', 'desktop', 'email', 'word'],
+            },
+            preview: {
+                initialTemplateId: 'red',
+                templates: [
+                    {
+                        id: 'red',
+                        label: 'Red template',
+                        baseUrl: location.href,
+                        template:
+                            '<html><body><main class="red-template">{{ content }}</main></body></html>',
+                        stylesheets: ['/preview-red.css'],
+                        wysiwygStyles: false,
+                    },
+                    {
+                        id: 'blue',
+                        label: 'Blue template',
+                        baseUrl: location.href,
+                        template:
+                            '<html><body><main class="blue-template">{{ content }}</main></body></html>',
+                        stylesheets: ['/preview-blue.css'],
+                        styles: ['body { background: rgb(240, 240, 250); }'],
+                        wysiwygStyles: false,
+                    },
+                ],
+            },
+        });
+        instance.element.id = 'preview-config-editor';
+    });
+    const pending = context.waitForEvent('page');
+    await page
+        .locator('#preview-config-editor [data-toolbar-item="popupPreview"]')
+        .click();
+    const popup = await pending;
+    const width = popup.getByLabel('Preview width');
+    const frame = popup.locator('body > iframe');
+    const content = frame.contentFrame().locator('#preview-content');
+    await expect(width).toHaveValue('mobile');
+    await expect(width.locator('option')).toHaveCount(5);
+    await expect(frame).toHaveCSS('width', '390px');
+    await expect(content).toHaveCSS('color', 'rgb(180, 0, 0)');
+    await expect(content).toHaveCSS('font-size', '22px');
+    await popup.getByLabel('Preview template').selectOption('blue');
+    await expect(content).toHaveCSS('color', 'rgb(0, 0, 180)');
+    await expect(frame.contentFrame().locator('body')).toHaveCSS(
+        'background-color',
+        'rgb(240, 240, 250)',
+    );
+    await expect(
+        frame.contentFrame().locator('link[href$="preview-red.css"]'),
+    ).toHaveCount(0);
+    await expect(width).toHaveValue('mobile');
+    await width.selectOption('desktop');
+    await expect(frame).toHaveCSS('width', '1200px');
+    await expect(popup.getByLabel('Preview template')).toHaveValue('blue');
+    await expect(
+        page.locator('#preview-config-editor').getByLabel('Editing size'),
+    ).toHaveValue('mobile');
+    await popup.close();
+});
+
+test('baseHref resolves per-instance resources without changing saved relative URLs', async ({
+    page,
+}) => {
+    await page.evaluate(async () => {
+        for (const [id, baseHref] of [
+            ['base-a', 'https://assets.example/a/'],
+            ['base-b', 'https://assets.example/b/'],
+        ]) {
+            const host = document.createElement('textarea');
+            host.id = id!;
+            document.body.append(host);
+            const editor = await globalThis.__classicDemo.create(host, {
+                baseHref: baseHref!,
+                data: '<p>Hello <a href="guide.html">guide</a><img src="photo.png" srcset="small.png 1x, large.png 2x"></p>',
+            });
+            Reflect.set(globalThis, id!, editor);
+        }
+    });
+    const editors = page.locator('.soeditor-classic');
+    await expect(editors.nth(1).locator('img')).toHaveAttribute(
+        'src',
+        'https://assets.example/a/photo.png',
+    );
+    await expect(editors.nth(2).locator('img')).toHaveAttribute(
+        'src',
+        'https://assets.example/b/photo.png',
+    );
+    await expect(editors.nth(1).locator('a[href]')).toHaveAttribute(
+        'href',
+        'https://assets.example/a/guide.html',
+    );
+    const visual = editors.nth(1).locator('[contenteditable="true"]');
+    await visual.click();
+    await page.keyboard.press('Home');
+    await page.keyboard.type('Edited ');
+    const html = await page.evaluate(() => {
+        const editor = Reflect.get(globalThis, 'base-a') as ClassicEditor;
+        return editor.getData();
+    });
+    expect(html).toContain('src="photo.png"');
+    expect(html).toContain('href="guide.html"');
+    expect(html).toContain('srcset="small.png 1x, large.png 2x"');
+    expect(html).not.toContain('assets.example');
+    expect(await page.locator('head base').count()).toBe(0);
+});
+
+test('baseHref validates protocols and supplies the preview base', async ({
+    page,
+}) => {
+    const invalid = await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        document.body.append(host);
+        try {
+            await globalThis.__classicDemo.create(host, {
+                baseHref: 'javascript:alert(1)',
+            });
+            return false;
+        } catch (error) {
+            return error instanceof TypeError;
+        } finally {
+            host.remove();
+        }
+    });
+    expect(invalid).toBe(true);
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        host.id = 'relative-preview';
+        document.body.append(host);
+        const editor = await globalThis.__classicDemo.create(host, {
+            baseHref: '/content-assets/',
+            preview: true,
+            data: '<p><img src="photo.png"></p>',
+        });
+        Reflect.set(globalThis, 'relative-preview', editor);
+    });
+    const popupEvent = page.context().waitForEvent('page');
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, 'relative-preview') as ClassicEditor
+        ).openPreview(),
+    );
+    const popup = await popupEvent;
+    await expect(
+        popup.locator('iframe').contentFrame().locator('base'),
+    ).toHaveAttribute('href', 'http://127.0.0.1:4173/content-assets/');
+    await popup.close();
+});
+
+test('split-pane caret reveal never scrolls the clicked pane back', async ({
+    page,
+}) => {
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        host.id = 'stable-scroll-host';
+        document.body.append(host);
+        const editor = await globalThis.__classicDemo.create(host, {
+            data: Array.from(
+                { length: 80 },
+                (_, index) => `<p style="height:90px">Row ${index} content</p>`,
+            ).join('\n'),
+            editingModes: ['wysiwyg', 'source'],
+            initialHeight: 300,
+            minHeight: 300,
+            maxHeight: 300,
+            source: { scrollSync: true },
+        });
+        await editor.setWorkspaceView('wysiwyg-source-horizontal');
+    });
+    const editor = page.locator('.soeditor-classic').last();
+    const visual = editor.locator('.soeditor-classic__visual');
+    const source = editor.locator('.cm-scroller');
+    await visual.scrollIntoViewIfNeeded();
+    await visual.evaluate((element) => {
+        element.scrollTop = 1200;
+    });
+    await expect
+        .poll(() => source.evaluate((element) => element.scrollTop))
+        .toBeGreaterThan(0);
+    const before = await visual.evaluate((element) => ({
+        top: element.scrollTop,
+        left: element.scrollLeft,
+    }));
+    await visual.click({ position: { x: 100, y: 110 } });
+    await page.waitForTimeout(200);
+    expect(
+        await visual.evaluate((element) => ({
+            top: element.scrollTop,
+            left: element.scrollLeft,
+        })),
+    ).toEqual(before);
+    const sourceBefore = await source.evaluate((element) => ({
+        top: element.scrollTop,
+        left: element.scrollLeft,
+    }));
+    await source.click({ position: { x: 140, y: 110 } });
+    await page.waitForTimeout(200);
+    expect(
+        await source.evaluate((element) => ({
+            top: element.scrollTop,
+            left: element.scrollLeft,
+        })),
+    ).toEqual(sourceBefore);
+    await source.evaluate((element) => {
+        element.scrollTop = 0;
+    });
+    await expect
+        .poll(() => visual.evaluate((element) => element.scrollTop))
+        .toBeLessThan(1);
+});
+
+test('image properties use canonical URLs when baseHref projects absolute resources', async ({
+    page,
+}) => {
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        document.body.append(host);
+        const editor = await globalThis.__classicDemo.create(host, {
+            baseHref: 'https://assets.example/media/',
+            data: '<p><a href="guide.html"><img src="photo.png" srcset="small.png 320w, large.png 640w" width="80" height="60" alt="Photo"></a></p>',
+        });
+        Reflect.set(globalThis, 'image-url-editor', editor);
+    });
+    const editor = page.locator('.soeditor-classic').last();
+    await editor.locator('img').dblclick();
+    const dialog = page.getByRole('dialog', { name: 'Image properties' });
+    await expect(
+        dialog.getByRole('textbox', { name: 'Image URL', exact: true }),
+    ).toHaveValue('photo.png');
+    await expect(
+        dialog.getByRole('textbox', { name: 'Link URL', exact: true }),
+    ).toHaveValue('guide.html');
+    await expect(
+        dialog.getByLabel('Responsive sources', { exact: true }),
+    ).toHaveValue('small.png 320w, large.png 640w');
+    await dialog
+        .getByRole('button', { name: 'Update image', exact: true })
+        .click();
+    const html = await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, 'image-url-editor') as ClassicEditor
+        ).getData(),
+    );
+    expect(html).toContain('src="photo.png"');
+    expect(html).toContain('href="guide.html"');
+    expect(html).toContain('srcset="small.png 320w, large.png 640w"');
+    expect(html).not.toContain('assets.example');
 });

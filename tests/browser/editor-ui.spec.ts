@@ -67,7 +67,7 @@ test('renders the configured integrated toolbar, groups, status, and theme', asy
     );
     await expect(strikeIcon).toHaveAttribute('viewBox', '0 0 1792 1792');
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
-        'Visual · Saved',
+        'Visual · Unmodified',
     );
     await expect(
         page.locator('[data-status-item="demo.word-count"]'),
@@ -162,7 +162,7 @@ test('uses the heading dropdown and mode button through shared commands', async 
 
     await page.locator('[data-toolbar-item="source"]').click();
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
-        'Source · Unsaved',
+        'Source · Modified',
     );
     await expect(page.locator('[data-toolbar-item="bold"]')).toBeDisabled();
     await page.evaluate(() => {
@@ -176,7 +176,7 @@ test('uses the heading dropdown and mode button through shared commands', async 
     await expect(page.locator(source)).toHaveText('<h2>Hello</h2>');
     await page.locator('[data-toolbar-item="source"]').click();
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
-        'Visual · Unsaved · h2',
+        'Visual · Modified · h2',
     );
 });
 

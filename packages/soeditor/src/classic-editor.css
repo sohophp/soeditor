@@ -146,23 +146,37 @@
 }
 
 .soeditor-classic__resize-handle {
-    background: var(--soeditor-panel-bg, #f6f8fa);
-    border-block-start: 1px solid var(--soeditor-border, #d0d7de);
+    background: transparent;
+    block-size: 1rem;
     cursor: ns-resize;
-    height: 0.5rem;
-    position: relative;
+    inline-size: 1rem;
+    inset-block-end: 0;
+    inset-inline-end: 0;
+    position: absolute;
     touch-action: none;
+    z-index: 2;
 }
 
 .soeditor-classic__resize-handle::after {
-    border-block-start: 2px solid var(--soeditor-muted, #59636e);
-    border-block-end: 2px solid var(--soeditor-muted, #59636e);
+    background: repeating-linear-gradient(
+        135deg,
+        transparent 0 3px,
+        var(--soeditor-muted, #59636e) 3px 4px
+    );
+    clip-path: polygon(100% 0, 100% 100%, 0 100%);
     content: '';
-    height: 0.125rem;
-    inset-block-start: 0.125rem;
-    inset-inline-start: calc(50% - 1rem);
+    height: 0.75rem;
+    inset-block-end: 0;
+    inset-inline-end: 0.125rem;
+    opacity: 0;
     position: absolute;
-    width: 2rem;
+    transition: opacity 120ms ease;
+    width: 0.75rem;
+}
+
+.soeditor-classic__resize-handle:hover::after,
+.soeditor-classic__resize-handle:focus-visible::after {
+    opacity: 1;
 }
 
 .soeditor-classic.is-maximized > .soeditor-classic__resize-handle {
@@ -308,16 +322,39 @@
 
 .soeditor-classic__image-properties {
     display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    align-content: start;
     gap: 1rem;
 }
 
+.soeditor-classic__image-properties > :first-child,
+.soeditor-classic__image-properties > .soeditor-classic__image-advanced {
+    grid-column: 1 / -1;
+}
+
+@media (max-width: 640px) {
+    .soeditor-classic__image-properties {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
 .soeditor-classic__image-dialog {
-    inline-size: min(42rem, calc(100vw - 2rem));
+    inline-size: min(48rem, calc(100vw - 2rem));
     max-block-size: min(46rem, calc(100dvh - 2rem));
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.soeditor-classic__image-dialog *,
+.soeditor-classic__image-dialog *::before,
+.soeditor-classic__image-dialog *::after {
+    box-sizing: border-box;
 }
 
 .soeditor-classic__image-dialog .soeditor-ui__dialog-body {
     overflow-y: auto;
+    padding: 1rem;
+    scrollbar-gutter: stable;
 }
 
 .soeditor-classic__image-group {
@@ -326,11 +363,15 @@
     gap: 0.75rem 1rem;
     grid-template-columns: repeat(2, minmax(0, 1fr));
     margin: 0;
+    min-inline-size: 0;
     padding: 0;
 }
 
 .soeditor-classic__image-group > legend {
-    color: var(--soeditor-ui-muted, #606575);
+    color: var(--soeditor-muted, #606575);
+    float: none;
+    inline-size: auto;
+    padding: 0;
     font-size: 0.75rem;
     font-weight: 700;
     letter-spacing: 0.04em;
@@ -342,6 +383,7 @@
     display: grid;
     gap: 0.3rem;
     min-width: 0;
+    margin: 0;
 }
 
 .soeditor-classic__image-field--wide {
@@ -353,16 +395,18 @@
 }
 
 .soeditor-classic__image-field > small {
-    color: var(--soeditor-ui-muted, #606575);
+    color: var(--soeditor-muted, #606575);
     font-size: 0.75rem;
 }
 
 .soeditor-classic__image-properties input,
 .soeditor-classic__image-properties select {
-    background: var(--soeditor-ui-bg, #fff);
-    border: 1px solid var(--soeditor-ui-border, #d7d9e3);
-    border-radius: var(--soeditor-ui-radius, 0.4rem);
+    background: var(--soeditor-bg, #fff);
+    border: 1px solid var(--soeditor-border, #d7d9e3);
+    border-radius: var(--soeditor-radius, 0.4rem);
     color: inherit;
+    font: inherit;
+    min-width: 0;
     min-height: 2.4rem;
     padding-inline: 0.65rem;
     width: 100%;
@@ -381,7 +425,7 @@
 }
 
 .soeditor-classic__image-advanced {
-    border-block-start: 1px solid var(--soeditor-ui-border, #d7d9e3);
+    border-block-start: 1px solid var(--soeditor-border, #d7d9e3);
     padding-block-start: 0.75rem;
 }
 
@@ -1248,4 +1292,34 @@
     [data-toolbar-item='fontSize']
     > summary {
     inline-size: 4.25rem;
+}
+
+.soeditor-classic__canvas-control {
+    display: inline-flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.375rem;
+    margin: 0;
+    font: inherit;
+}
+
+.soeditor-classic__canvas-control select {
+    max-width: 12rem;
+    font: inherit;
+}
+
+.soeditor-classic__image-preview-panel {
+    grid-column: 1 / -1;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+.soeditor-classic__image-preview-panel img {
+    max-inline-size: 6rem;
+    max-block-size: 4rem;
+    object-fit: contain;
+}
+.soeditor-classic__image-preview-panel span {
+    flex: 1 1 12rem;
 }

@@ -1,4 +1,14 @@
 import {
+    createClassicCanvas,
+    resolveClassicCanvasPresets,
+    type ClassicCanvasOptions,
+} from './classic-canvas.js';
+export type {
+    ClassicCanvasOptions,
+    ClassicCanvasPreset,
+    ClassicCanvasPresetId,
+} from './classic-canvas.js';
+import {
     Editor,
     type EditorConfig,
     type PluginConstructor,
@@ -138,9 +148,22 @@ const CLASSIC_TRANSLATIONS: readonly EditorUiTranslationResource[] =
                       'HTML Source failed to load. Select Source to retry.':
                           'HTML 源码加载失败，请再次选择源码重试。',
                       'Preview in new window': '在新窗口中预览',
+                      'Editing size': '编辑尺寸',
+                      'Preview width': '预览宽度',
+                      'Responsive · 100%': '自适应 · 100%',
+                      'Phone · 390px': '手机 · 390px',
+                      'Large phone · 430px': '大屏手机 · 430px',
+                      'iPad portrait · 768px': 'iPad 竖屏 · 768px',
+                      'iPad landscape · 1024px': 'iPad 横屏 · 1024px',
+                      'PC · 1200px': 'PC · 1200px',
+                      'Mac laptop · 1280px': 'Mac 笔记本 · 1280px',
+                      'Desktop · 1440px': '宽屏桌面 · 1440px',
+                      'Large desktop · 1920px': '大屏桌面 · 1920px',
                       'Preview template': '预览模板',
                       'Web page': '网页',
                       'Email newsletter': 'Email 电子报',
+                      'Email newsletter · 600px': '电子报 · 600px',
+                      'Word · A4 210 × 297mm': 'Word · A4 210 × 297mm',
                       'Email newsletter preview': 'Email 电子报预览',
                       'Word document': 'Word 文档',
                       'Word document preview': 'Word 文档预览',
@@ -171,9 +194,22 @@ const CLASSIC_TRANSLATIONS: readonly EditorUiTranslationResource[] =
                       'HTML Source failed to load. Select Source to retry.':
                           'HTML 原始碼載入失敗，請再次選擇原始碼重試。',
                       'Preview in new window': '在新視窗中預覽',
+                      'Editing size': '編輯尺寸',
+                      'Preview width': '預覽寬度',
+                      'Responsive · 100%': '自適應 · 100%',
+                      'Phone · 390px': '手機 · 390px',
+                      'Large phone · 430px': '大螢幕手機 · 430px',
+                      'iPad portrait · 768px': 'iPad 直向 · 768px',
+                      'iPad landscape · 1024px': 'iPad 橫向 · 1024px',
+                      'PC · 1200px': 'PC · 1200px',
+                      'Mac laptop · 1280px': 'Mac 筆電 · 1280px',
+                      'Desktop · 1440px': '寬螢幕桌面 · 1440px',
+                      'Large desktop · 1920px': '大螢幕桌面 · 1920px',
                       'Preview template': '預覽範本',
                       'Web page': '網頁',
                       'Email newsletter': 'Email 電子報',
+                      'Email newsletter · 600px': '電子報 · 600px',
+                      'Word · A4 210 × 297mm': 'Word · A4 210 × 297mm',
                       'Email newsletter preview': 'Email 電子報預覽',
                       'Word document': 'Word 文件',
                       'Word document preview': 'Word 文件預覽',
@@ -223,6 +259,8 @@ export interface ClassicSourceOptions {
 
 /** Optional isolated preview rendered in a reusable browser window. */
 export interface ClassicPreviewOptions extends PreviewConfiguration {
+    /** Preview widths; defaults to this instance's editing canvas choices. */
+    readonly canvas?: ClassicCanvasOptions;
     /** Template selected when the preview window first opens. */
     readonly initialTemplateId?: string;
     /** Additional application-owned preview templates. */
@@ -242,7 +280,10 @@ export interface ClassicPreviewTemplate extends PreviewConfiguration {
 
 /** Options for the complete textarea/element-hosted classic editor. */
 export interface CreateClassicEditorOptions {
+    /** Base URL for relative content resources; stored HTML remains relative. */
+    readonly baseHref?: string;
     readonly ariaLabel?: string;
+    readonly canvas?: ClassicCanvasOptions;
     readonly autoGrow?: boolean;
     readonly config?: EditorConfig;
     readonly cspNonce?: string;
@@ -294,6 +335,10 @@ export interface ClassicEditor {
     readonly editor: Editor;
     readonly element: HTMLElement;
     readonly host: HTMLElement;
+    /** Persistent host-owned content rendered in this editor's status bar. */
+    readonly statusElement: HTMLElement;
+    readonly canvasPreset: string | undefined;
+    setCanvasPreset(id: string): void;
     readonly contentStylePreset: WysiwygContentStylePreset;
     readonly maximized: boolean;
     readonly saveWorkflow: EditorSaveWorkflow | undefined;
@@ -348,8 +393,25 @@ export async function createClassicEditor(
     validateCallbacks(options);
     validateClassicSaveOptions(options.save);
     if (OPTIONAL_CLASSIC_FEATURES) validateClassicSourceOptions(options.source);
+    const baseHref =
+        options.baseHref === undefined
+            ? undefined
+            : new URL(options.baseHref, host.ownerDocument.baseURI).href;
+    if (baseHref !== undefined && !/^https?:/u.test(baseHref))
+        throw new TypeError('baseHref must use HTTP or HTTPS.');
     const previewOptions = OPTIONAL_CLASSIC_FEATURES
-        ? readClassicPreviewOptions(options.preview)
+        ? readClassicPreviewOptions(
+              options.preview === false || options.preview === undefined
+                  ? options.preview
+                  : {
+                        ...(baseHref === undefined
+                            ? {}
+                            : { baseUrl: baseHref }),
+                        ...(typeof options.preview === 'object'
+                            ? options.preview
+                            : {}),
+                    },
+          )
         : undefined;
     if (options.preset === undefined) {
         throw new TypeError('Classic editor requires a CMS preset.');
@@ -428,6 +490,14 @@ export async function createClassicEditor(
         options.contentStyles,
         options.cspNonce,
     );
+    const canvas =
+        options.canvas === undefined
+            ? undefined
+            : createClassicCanvas(
+                  dom.visual,
+                  dom.visualContent,
+                  options.canvas,
+              );
     const previousHidden = host.hidden;
     const textarea = isTextArea(host) ? host : undefined;
     const originalTextareaValue = textarea?.value;
@@ -652,6 +722,22 @@ export async function createClassicEditor(
         },
         element: dom.root,
         host,
+        get statusElement() {
+            assertAlive();
+            if (ui === undefined) throw new Error('Editor UI is not initialized.');
+            return ui.hostStatusElement;
+        },
+        get canvasPreset() {
+            return canvas?.preset;
+        },
+        setCanvasPreset(id: string) {
+            assertAlive();
+            if (!canvas)
+                throw new TypeError(
+                    'Canvas presets are not enabled for this instance.',
+                );
+            canvas.select(id);
+        },
         get contentStylePreset() {
             return contentStylePreset;
         },
@@ -846,7 +932,31 @@ export async function createClassicEditor(
                     popup.close();
                     return;
                 }
+                const previewCanvas =
+                    previewOptions.canvas ?? options.canvas ?? {};
+                const widths = resolveClassicCanvasPresets(previewCanvas).map(
+                    (preset) => ({
+                        id: preset.id,
+                        width: preset.width,
+                        label: previewCanvas.presets?.some(
+                            (choice) =>
+                                typeof choice !== 'string' &&
+                                choice.id === preset.id,
+                        )
+                            ? preset.label
+                            : translation.translate(preset.label),
+                    }),
+                );
+                const desiredWidth =
+                    previewOptions.canvas?.initialPreset ??
+                    canvas?.preset ??
+                    previewCanvas.initialPreset;
                 previewWindow = module.createClassicPreviewWindow({
+                    widths,
+                    initialWidthId:
+                        widths.find((width) => width.id === desiredWidth)?.id ??
+                        widths[0]!.id,
+                    widthPickerLabel: translation.translate('Preview width'),
                     editor: requireEditor(),
                     popup,
                     ...(previewOptions.windowFeatures === undefined
@@ -1196,6 +1306,7 @@ export async function createClassicEditor(
             disposePasteDiagnostics = undefined;
             disposeEditingFeedback?.();
             disposeEditingFeedback = undefined;
+            canvas?.destroy();
             disposeModeChrome?.();
             disposeModeChrome = undefined;
             disposeProjectionChrome?.();
@@ -1255,6 +1366,7 @@ export async function createClassicEditor(
                 (editor) =>
                     createWysiwygEditingEngine({
                         activateOnFocus: true,
+                        ...(baseHref === undefined ? {} : { baseHref }),
                         ariaLabel,
                         editor,
                         element: dom.visualContent,
@@ -1355,6 +1467,7 @@ export async function createClassicEditor(
         updateHost(coreEditor.getData());
         options.onReady?.(publicValue);
         initialized = true;
+        dom.root.dataset.soeditorReady = 'true';
         return publicValue;
     } catch (error: unknown) {
         const callbackError = reportError(error);
@@ -1432,7 +1545,10 @@ export async function createClassicEditor(
         const statusBar = ui.statusElement.closest<HTMLElement>(
             '.soeditor-ui__status-bar',
         );
-        if (statusBar !== null) dom.surfaces.after(statusBar);
+        if (statusBar !== null) {
+            dom.surfaces.after(statusBar);
+            canvas?.mount(statusBar, ui.translate);
+        }
         if (OPTIONAL_CLASSIC_FEATURES) {
             disposeDialogWindows = attachLazyClassicDialogWindows(
                 dom.root,

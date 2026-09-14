@@ -2036,6 +2036,39 @@ test('completes image properties by double click in WYSIWYG', async ({
     await expect(surface.locator('img')).toHaveAttribute('alt', 'Before');
 });
 
+test('removes the whole image figure from dialog and keyboard actions', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    const source =
+        '<p>Before</p><figure data-soeditor-media="image"><a href="/photo"><img src="/before.png" alt="Before"></a><figcaption>Caption</figcaption></figure><p>After</p>';
+    const data = async (): Promise<string> =>
+        page.evaluate(() => {
+            const fixture: unknown = Reflect.get(
+                globalThis,
+                '__wysiwygFixture',
+            );
+            const getData = Reflect.get(fixture as object, 'getData');
+            return Reflect.apply(getData, fixture, []) as string;
+        });
+
+    await setFixtureData(page, source);
+    await surface.locator('img').dblclick();
+    await page
+        .getByRole('dialog', { name: 'Image properties' })
+        .getByRole('button', { name: 'Remove image' })
+        .click();
+    await expect(surface.locator('figure')).toHaveCount(0);
+    await expect.poll(data).toBe('<p>Before</p><p>After</p>');
+
+    await page.keyboard.press('ControlOrMeta+z');
+    await expect(surface.locator('figure img')).toBeVisible();
+    await surface.locator('img').click();
+    await page.keyboard.press('Delete');
+    await expect(surface.locator('figure')).toHaveCount(0);
+    await expect.poll(data).toBe('<p>Before</p><p>After</p>');
+});
+
 test('pastes rich semantic content inside a cell as one history step', async ({
     page,
 }) => {

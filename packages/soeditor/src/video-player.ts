@@ -1,3 +1,4 @@
+import playerStyles from './video-player.css?inline';
 import type { PreviewMediaPlayer } from '@soeditor/preview/media';
 
 type Translate = (en: string, zh: string) => string;
@@ -11,25 +12,33 @@ export function createVideoPlayer(
     watchLabel = t('Open original video', '打开原视频'),
 ): PreviewMediaPlayer {
     const element = document.createElement('div');
-    element.style.cssText =
-        'display:grid;grid-template-rows:minmax(0,1fr) auto;height:100%;min-height:0;background:#101827;color:#fff';
+    element.className = 'soeditor-video-player';
+    const style = document.createElement('style');
+    const nonce =
+        document.querySelector<HTMLStyleElement>('style[nonce]')?.nonce;
+    if (nonce !== undefined) style.nonce = nonce;
+    style.textContent = playerStyles;
+    element.append(style);
     const slot = document.createElement('div');
-    slot.style.cssText = 'min-height:0;overflow:hidden';
+    slot.className = 'soeditor-video-player__slot';
     const actions = document.createElement('div');
-    actions.style.cssText =
-        'padding:4px 8px;font:12px/1.4 system-ui,sans-serif;background:#f6f8fa;color:#172033';
+    actions.className = 'soeditor-video-player__actions';
     const status = document.createElement('div');
     status.setAttribute('role', 'status');
     const retry = document.createElement('button');
     retry.type = 'button';
+    retry.className = 'soeditor-ui__dialog-action';
     retry.textContent = t('Reload video', '重新加载视频');
     const link = document.createElement('a');
     link.href = watchUrl;
     link.target = '_blank';
     link.rel = 'noopener noreferrer';
     link.textContent = watchLabel;
-    link.style.marginLeft = '12px';
-    actions.append(status, retry, link);
+    link.className = 'soeditor-ui__dialog-action';
+    const controls = document.createElement('div');
+    controls.className = 'soeditor-video-player__controls';
+    controls.append(retry, link);
+    actions.append(status, controls);
     element.append(slot, actions);
     let player: HTMLIFrameElement | HTMLVideoElement | undefined;
     let timeout: ReturnType<typeof setTimeout> | undefined;

@@ -29,7 +29,7 @@ test('edits exact canonical Markdown in a dedicated CodeMirror surface', async (
         '# Changed\n\nExact *Markdown* source.',
     );
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
-        'Markdown · Unsaved',
+        'Markdown · Modified',
     );
 });
 

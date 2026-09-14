@@ -437,6 +437,14 @@ export function attachClassicImageContext(
         const element: unknown = Reflect.get(detail, 'element');
         const update: unknown = Reflect.get(detail, 'update');
         const remove: unknown = Reflect.get(detail, 'remove');
+        const source: unknown = Reflect.get(detail, 'source');
+        const sourceValue = (name: string, fallback: string): string => {
+            const value: unknown =
+                typeof source === 'object' && source !== null
+                    ? Reflect.get(source, name)
+                    : undefined;
+            return typeof value === 'string' ? value : fallback;
+        };
         if (
             !(element instanceof HTMLImageElement) ||
             !visual.contains(element) ||
@@ -501,7 +509,7 @@ export function attachClassicImageContext(
                 'src',
                 'Image URL',
                 'url',
-                element.getAttribute('src') ?? '',
+                sourceValue('src', element.getAttribute('src') ?? ''),
                 undefined,
             ],
             [
@@ -583,7 +591,7 @@ export function attachClassicImageContext(
 
         const originalWidth = Number(width.value);
         const originalHeight = Number(height.value);
-        const ratio =
+        let ratio =
             originalWidth > 0 && originalHeight > 0
                 ? originalWidth / originalHeight
                 : undefined;
@@ -618,7 +626,7 @@ export function attachClassicImageContext(
             'link',
             'Link URL',
             'url',
-            link?.getAttribute('href') ?? '',
+            sourceValue('link', link?.getAttribute('href') ?? ''),
             linkGroup,
             { wide: true },
         );
@@ -671,7 +679,7 @@ export function attachClassicImageContext(
             [
                 'srcset',
                 'Responsive sources',
-                element.getAttribute('srcset') ?? '',
+                sourceValue('srcset', element.getAttribute('srcset') ?? ''),
             ],
             ['sizes', 'Responsive sizes', element.getAttribute('sizes') ?? ''],
         ] as const) {
@@ -680,7 +688,126 @@ export function attachClassicImageContext(
             });
         }
         advanced.append(advancedSummary, advancedFields);
+        const previewPanel = document.createElement('div');
+        previewPanel.className = 'soeditor-classic__image-preview-panel';
+        const previewImage = document.createElement('img');
+        previewImage.alt = '';
+        const information = document.createElement('span');
+        information.setAttribute('role', 'status');
+        const originalButton = document.createElement('button');
+        originalButton.type = 'button';
+        originalButton.className = 'soeditor-ui__button';
+        originalButton.textContent = ui.translate('Restore original size');
+        originalButton.disabled = true;
+        const altButton = document.createElement('button');
+        altButton.type = 'button';
+        altButton.className = 'soeditor-ui__button';
+        altButton.textContent = ui.translate(
+            'Use filename as alternative text',
+        );
+        const sourceInput = controls.get('src');
+        let originalSize: { width: number; height: number } | undefined;
+        let requestVersion = 0;
+        let headRequest: AbortController | undefined;
+        const refreshPreview = (): void => {
+            const version = ++requestVersion;
+            headRequest?.abort();
+            originalSize = undefined;
+            originalButton.disabled = true;
+            information.textContent = ui.translate(
+                'Image information unavailable',
+            );
+            let url: URL;
+            try {
+                url = new URL(
+                    sourceInput?.value ?? '',
+                    element.src || document.baseURI,
+                );
+            } catch {
+                previewImage.removeAttribute('src');
+                return;
+            }
+            if (!['http:', 'https:', 'blob:', 'data:'].includes(url.protocol)) {
+                previewImage.removeAttribute('src');
+                return;
+            }
+            let sizeLabel = ui.translate('File size unavailable');
+            const renderInformation = (): void => {
+                if (version !== requestVersion || !originalSize) return;
+                information.textContent = `${ui.translate('Original size')}: ${String(originalSize.width)} × ${String(originalSize.height)} · ${sizeLabel}`;
+            };
+            previewImage.onload = () => {
+                if (version !== requestVersion) return;
+                originalSize = {
+                    width: previewImage.naturalWidth,
+                    height: previewImage.naturalHeight,
+                };
+                originalButton.disabled =
+                    !originalSize.width || !originalSize.height;
+                renderInformation();
+            };
+            previewImage.onerror = () => {
+                originalButton.disabled = true;
+                information.textContent = ui.translate(
+                    'Image information unavailable',
+                );
+            };
+            previewImage.src = url.href;
+            if (
+                url.origin === document.location.origin &&
+                /^https?:$/.test(url.protocol)
+            ) {
+                headRequest = new AbortController();
+                void fetch(url.href, {
+                    method: 'HEAD',
+                    signal: headRequest.signal,
+                })
+                    .then((response) => {
+                        if (version !== requestVersion || !response.ok) return;
+                        const bytes = Number(
+                            response.headers.get('Content-Length'),
+                        );
+                        if (bytes > 0)
+                            sizeLabel = `${(bytes / 1024).toFixed(1)} KiB`;
+                        renderInformation();
+                    })
+                    .catch(() => {
+                        /* Preview and editing remain available without metadata. */
+                    });
+            }
+        };
+        originalButton.addEventListener('click', () => {
+            if (!originalSize) return;
+            width.value = String(originalSize.width);
+            height.value = String(originalSize.height);
+            ratio = originalSize.width / originalSize.height;
+        });
+        altButton.addEventListener('click', () => {
+            const alt = controls.get('alt');
+            if (!alt) return;
+            try {
+                const url = new URL(sourceInput?.value ?? '', document.baseURI);
+                alt.value = decodeURIComponent(
+                    url.pathname.split('/').pop() ?? '',
+                ).replace(/\.[^.]+$/, '');
+            } catch {
+                /* Leave authored text intact for malformed URLs. */
+            }
+        });
+        sourceInput?.addEventListener('change', () => {
+            controls.get('srcset')!.value = '';
+            controls.get('sizes')!.value = '';
+            refreshPreview();
+        });
+        previewPanel.append(
+            previewImage,
+            information,
+            originalButton,
+            altButton,
+        );
+        contentGroup.prepend(previewPanel);
         body.append(contentGroup, layoutGroup, linkGroup, advanced);
+        refreshPreview();
         const dialog = ui.dialogs.open({
             title: 'Image properties',
             content: body,
@@ -713,6 +840,14 @@ export function attachClassicImageContext(
                 },
             ],
         });
+        dialog.element.addEventListener(
+            'close',
+            () => {
+                ++requestVersion;
+                headRequest?.abort();
+            },
+            { once: true },
+        );
         dialog.element.classList.add('soeditor-classic__image-dialog');
         controls.get('src')?.focus();
     };

@@ -1,5 +1,3 @@
-import { createPreviewMedia } from './classic-preview-media.js';
-import { previewMediaServiceToken } from './media-service.js';
 import type { Editor } from '@soeditor/core';
 import {
     isCompleteHtmlDocument,
@@ -11,6 +9,13 @@ import { renderPreviewDocument } from './renderer.js';
 let previewWindowSequence = 0;
 
 export interface ClassicPreviewWindowOptions {
+    readonly widths?: readonly {
+        readonly id: string;
+        readonly label: string;
+        readonly width: string;
+    }[];
+    readonly initialWidthId?: string;
+    readonly widthPickerLabel?: string;
     readonly editor: Editor;
     readonly features?: string;
     readonly getTemplates: () => readonly ClassicPreviewWindowTemplate[];
@@ -100,7 +105,7 @@ export function createClassicPreviewTemplates(
             }),
             decorateWysiwygTables: true,
             id: 'email',
-            label: translate('Email newsletter'),
+            label: translate('Email newsletter · 600px'),
         },
         {
             configuration: configuration({
@@ -113,7 +118,7 @@ export function createClassicPreviewTemplates(
             }),
             decorateWysiwygTables: true,
             id: 'word',
-            label: translate('Word document'),
+            label: translate('Word · A4 210 × 297mm'),
         },
     ];
     for (const template of options.templates ?? []) {
@@ -137,9 +142,8 @@ export function createClassicPreviewWindow(
     let templateSelect: HTMLSelectElement | undefined;
     let activeTemplateId = options.initialTemplateId;
     let destroyed = false;
-    let mediaController: ReturnType<typeof createPreviewMedia> | undefined;
     let rendered = '';
-    let disposeFrame = (): void => {};
+    let activeWidthId = options.initialWidthId ?? options.widths?.[0]?.id;
 
     const refresh = (): void => {
         if (destroyed || popup === null || popup.closed) return;
@@ -163,27 +167,43 @@ export function createClassicPreviewWindow(
                         refresh();
                     },
                 );
-                disposeFrame();
                 iframe = frame.iframe;
-                const articleFrame = iframe;
-                const media = options.editor.services.tryGet(
-                    previewMediaServiceToken,
-                );
-                mediaController?.destroy();
-                mediaController = undefined;
-                if (media !== undefined) {
-                    articleFrame.setAttribute('sandbox', 'allow-same-origin');
-                    mediaController = createPreviewMedia(articleFrame, media);
-                }
-                const loaded = (): void => mediaController?.refresh();
-                articleFrame.addEventListener('load', loaded);
-                disposeFrame = () =>
-                    articleFrame.removeEventListener('load', loaded);
                 templateSelect = frame.select;
+                if (options.widths?.length) {
+                    const widthLabel = popup.document.createElement('label');
+                    widthLabel.textContent =
+                        options.widthPickerLabel ?? 'Preview width';
+                    const widthSelect = popup.document.createElement('select');
+                    widthSelect.setAttribute(
+                        'aria-label',
+                        widthLabel.textContent,
+                    );
+                    widthSelect.style.cssText = frame.select.style.cssText;
+                    for (const width of options.widths) {
+                        const choice = popup.document.createElement('option');
+                        choice.value = width.id;
+                        choice.textContent = width.label;
+                        widthSelect.append(choice);
+                    }
+                    widthSelect.value = activeWidthId ?? '';
+                    widthSelect.addEventListener('change', () => {
+                        activeWidthId = widthSelect.value;
+                        refresh();
+                    });
+                    widthLabel.append(' ', widthSelect);
+                    frame.select.parentElement?.parentElement?.append(
+                        widthLabel,
+                    );
+                }
             }
             if (templateSelect !== undefined) {
                 templateSelect.value = activeTemplateId;
             }
+            const width = options.widths?.find(
+                (value) => value.id === activeWidthId,
+            );
+            iframe.style.width = width?.width ?? '100%';
+            iframe.style.marginInline = 'auto';
             const html = renderPreviewDocument(
                 decorateWysiwygTables(
                     options.editor.getData(),
@@ -192,10 +212,11 @@ export function createClassicPreviewWindow(
                 ),
                 configuration,
                 options.owner,
+                true,
             );
             if (html !== rendered || iframe.getAttribute('srcdoc') === null) {
                 rendered = html;
-                iframe.srcdoc = mediaController?.prepare(html) ?? html;
+                iframe.srcdoc = html;
             }
         } catch (error: unknown) {
             options.reportError(error);
@@ -232,8 +253,6 @@ export function createClassicPreviewWindow(
     const destroy = (): void => {
         if (destroyed) return;
         destroyed = true;
-        mediaController?.destroy();
-        disposeFrame();
         disposeDocumentChange();
         disposeEditorDestroy();
         try {
@@ -289,10 +308,10 @@ function createPreviewFrame(
     document.title = title;
     document.documentElement.style.cssText = 'height:100%;margin:0';
     document.body.style.cssText =
-        'display:grid;grid-template-rows:auto minmax(0,1fr);height:100%;margin:0;overflow:hidden';
+        'display:grid;grid-template-rows:auto minmax(0,1fr);grid-template-columns:minmax(0,1fr);height:100%;margin:0;overflow:auto';
     const toolbar = document.createElement('div');
     toolbar.style.cssText =
-        'align-items:center;background:#f6f8fa;border-bottom:1px solid #d0d7de;display:flex;font:14px/1.4 system-ui,sans-serif;gap:8px;padding:8px 12px';
+        'align-items:center;background:#f6f8fa;border-bottom:1px solid #d0d7de;display:flex;flex-wrap:wrap;font:14px/1.4 system-ui,sans-serif;gap:8px;padding:8px 12px';
     const label = document.createElement('label');
     label.textContent = pickerLabel;
     const select = document.createElement('select');
@@ -311,8 +330,14 @@ function createPreviewFrame(
     toolbar.append(label);
     const iframe = document.createElement('iframe');
     iframe.title = title;
-    iframe.referrerPolicy = 'no-referrer';
-    iframe.setAttribute('sandbox', '');
+    iframe.referrerPolicy = 'strict-origin-when-cross-origin';
+    // Article scripts remain blocked by renderPreviewDocument's CSP. These
+    // capabilities allow the trusted cross-origin video frames to work natively.
+    iframe.setAttribute(
+        'sandbox',
+        'allow-scripts allow-same-origin allow-presentation',
+    );
+    iframe.allow = 'fullscreen; encrypted-media; picture-in-picture';
     iframe.style.cssText = 'border:0;display:block;height:100%;width:100%';
     document.body.append(toolbar, iframe);
     return { iframe, select };

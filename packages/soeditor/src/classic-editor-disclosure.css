@@ -1,0 +1,59 @@
+.soeditor-disclosure {
+    box-sizing: border-box;
+    min-width: 0;
+    position: relative;
+    width: 100%;
+}
+
+.soeditor-disclosure__summary {
+    border: 1px solid var(--soeditor-border, #d9dee4);
+    border-radius: var(--soeditor-radius, 0.35rem);
+    cursor: pointer;
+    margin-block-end: 0.5rem;
+    padding: 0.65rem;
+}
+
+.soeditor-disclosure__summary:focus-visible {
+    outline: 2px solid var(--soeditor-accent, #0f766e);
+    outline-offset: 2px;
+}
+
+.soeditor-disclosure--editor-ready[open] > .soeditor-disclosure__summary {
+    display: none;
+}
+
+.soeditor-disclosure__collapse {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: var(--soeditor-radius, 0.25rem);
+    color: var(--soeditor-text, #24292f);
+    cursor: pointer;
+    display: inline-flex;
+    font-size: 1rem;
+    height: var(--soeditor-control-size, 2rem);
+    inset-block-start: 1px;
+    inset-inline-start: 1px;
+    justify-content: center;
+    padding: 0;
+    position: absolute;
+    width: var(--soeditor-control-size, 2rem);
+    z-index: 12;
+}
+
+.soeditor-disclosure__collapse:hover {
+    background: color-mix(
+        in srgb,
+        var(--soeditor-text, #24292f) 8%,
+        transparent
+    );
+}
+
+.soeditor-disclosure__collapse:focus-visible {
+    outline: 2px solid var(--soeditor-accent, #0f766e);
+    outline-offset: -2px;
+}
+
+.soeditor-disclosure--editor-ready .soeditor-ui__toolbar {
+    padding-inline-start: calc(var(--soeditor-control-size, 2rem) + 0.125rem);
+}

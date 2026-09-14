@@ -1,3 +1,4 @@
+import { BaseHrefProjection } from './base-href.js';
 import { atomicViewServiceToken, type AtomicView } from './atomic-view.js';
 import { readFormatStates } from './format-state.js';
 import {
@@ -42,6 +43,7 @@ import {
 } from '@soeditor/projections';
 
 export interface WysiwygEditingEngineOptions {
+    readonly baseHref?: string;
     readonly activateOnFocus?: boolean;
     readonly ariaLabel?: string;
     readonly editor: Editor;
@@ -282,7 +284,13 @@ export class WysiwygEditingEngine implements EditingEngine {
     #tableDragAnchor: HTMLTableCellElement | undefined;
     #tableDragMoved = false;
 
+    readonly #baseHref: BaseHrefProjection;
+
     constructor(options: WysiwygEditingEngineOptions) {
+        this.#baseHref = new BaseHrefProjection(
+            options.baseHref,
+            options.element.ownerDocument,
+        );
         this.editor = options.editor;
         this.element = options.element;
         this.#document = options.element.ownerDocument;
@@ -756,6 +764,7 @@ export class WysiwygEditingEngine implements EditingEngine {
 
     readonly #handleInput = (event: Event): void => {
         this.#finishNativeInput();
+        removeEmptyImageFigures(this.element);
         const isComposing =
             'isComposing' in event && event.isComposing === true;
         const historyGroup =
@@ -1115,18 +1124,68 @@ export class WysiwygEditingEngine implements EditingEngine {
                 bubbles: true,
                 detail: Object.freeze({
                     element: image,
+                    source: Object.freeze({
+                        src: this.#baseHref.source(
+                            image,
+                            'src',
+                            image.getAttribute('src') ?? '',
+                        ),
+                        srcset: this.#baseHref.source(
+                            image,
+                            'srcset',
+                            image.getAttribute('srcset') ?? '',
+                        ),
+                        link:
+                            image.parentElement?.tagName === 'A'
+                                ? this.#baseHref.source(
+                                      image.parentElement,
+                                      'href',
+                                      image.parentElement.getAttribute(
+                                          'href',
+                                      ) ?? '',
+                                  )
+                                : '',
+                    }),
                     ['block']: this.#paragraphBoundary(image),
                     ['insertParagraph']: this.#paragraphAction(image),
                     remove: () => {
-                        image.remove();
-                        this.#selectedElement = undefined;
-                        this.#commit();
+                        this.#removeImage(image);
                     },
                     update: (values: unknown) =>
                         this.#updateImage(image, values),
                 }),
             }),
         );
+    }
+
+    #removeImage(image: HTMLImageElement): void {
+        const figure = removableImageFigure(image);
+        if (figure !== undefined) {
+            figure.remove();
+        } else {
+            const link =
+                image.parentElement?.tagName === 'A'
+                    ? image.parentElement
+                    : undefined;
+            const containingFigure = image.closest('figure');
+            image.remove();
+            if (
+                link !== undefined &&
+                link.children.length === 0 &&
+                (link.textContent ?? '').trim().length === 0
+            ) {
+                link.remove();
+            }
+            if (
+                containingFigure !== null &&
+                containingFigure.children.length === 0 &&
+                (containingFigure.textContent ?? '').trim().length === 0
+            ) {
+                containingFigure.remove();
+            }
+        }
+        this.#selectedElement = undefined;
+        this.#commit();
     }
 
     readonly #handleSelectionChange = (): void => this.#captureRange();
@@ -1572,6 +1631,7 @@ export class WysiwygEditingEngine implements EditingEngine {
             );
             atomic.element.dataset.soeditorElement = node.tagName;
             this.#atomicViews.set(atomic.element, { node, type: atomic.type });
+            this.#baseHref.applyTree(atomic.element);
             return atomic.element;
         }
         if (
@@ -1593,6 +1653,7 @@ export class WysiwygEditingEngine implements EditingEngine {
         if (unsafe.length > 0) {
             this.#unsafeAttributes.set(element, Object.freeze(unsafe));
         }
+        this.#baseHref.apply(element);
         if (!voidTags.has(node.tagName)) {
             element.append(
                 ...node.children.map((child) => this.#renderNode(child)),
@@ -1785,13 +1846,23 @@ export class WysiwygEditingEngine implements EditingEngine {
                     ) &&
                     !(projected !== undefined && name === 'style'),
             )
-            .map(({ name, value }) => ({ name, value }));
+            .map(({ name, value }) => ({
+                name,
+                value: this.#baseHref.source(node, name, value),
+            }));
         if (projected !== undefined) {
             if (projected.className !== null) {
                 attributes.push({ name: 'class', value: projected.className });
             }
             if (projected.style !== null) {
-                attributes.push({ name: 'style', value: projected.style });
+                attributes.push({
+                    name: 'style',
+                    value: this.#baseHref.source(
+                        node,
+                        'style',
+                        projected.style,
+                    ),
+                });
             }
         } else if (node.hasAttribute('class')) {
             const value = node.className
@@ -1848,6 +1919,7 @@ export class WysiwygEditingEngine implements EditingEngine {
             );
         } finally {
             this.#pendingSource = undefined;
+            this.#baseHref.applyTree(this.element);
         }
     }
 
@@ -2773,7 +2845,7 @@ export class WysiwygEditingEngine implements EditingEngine {
             return undefined;
         }
         return {
-            href,
+            href: this.#baseHref.source(link, 'href', href),
             ...(link.hasAttribute('target')
                 ? { target: link.getAttribute('target') ?? '' }
                 : {}),
@@ -3091,6 +3163,17 @@ export class WysiwygEditingEngine implements EditingEngine {
             const heightChanged =
                 value.height !== undefined &&
                 String(value.height) !== String(originalHeight ?? '');
+            if (
+                source !== undefined &&
+                source !==
+                    this.#baseHref.source(
+                        image,
+                        'src',
+                        image.getAttribute('src') ?? '',
+                    )
+            ) {
+                image.removeAttribute('data-asset-id');
+            }
             setImageAttribute(image, 'src', source, false);
             setImageAttribute(image, 'alt', readImageString(value.alt), true);
             setImageAttribute(
@@ -3283,6 +3366,7 @@ export class WysiwygEditingEngine implements EditingEngine {
                 )
                     break;
                 clone.removeAttribute('id');
+                this.#baseHref.copy(original, clone);
                 const unsafe = this.#unsafeAttributes.get(original);
                 if (unsafe) this.#unsafeAttributes.set(clone, unsafe);
                 clone = clone.firstChild;
@@ -3862,6 +3946,50 @@ function rangeAtEnd(document: Document, element: Element): Range {
     range.selectNodeContents(element);
     range.collapse(false);
     return range;
+}
+
+function removableImageFigure(
+    image: HTMLImageElement,
+): HTMLElement | undefined {
+    const figure = image.closest<HTMLElement>('figure');
+    if (figure === null || figure.querySelectorAll('img').length !== 1) {
+        return undefined;
+    }
+    const parent = image.parentElement;
+    const directImage = parent === figure;
+    const linkedImage =
+        parent?.tagName === 'A' &&
+        parent.parentElement === figure &&
+        parent.children.length === 1 &&
+        parent.firstElementChild === image &&
+        (parent.textContent ?? '').trim().length === 0;
+    if (!directImage && !linkedImage) return undefined;
+    const media = linkedImage ? parent : image;
+    return Array.from(figure.children).every(
+        (child) => child === media || child.tagName === 'FIGCAPTION',
+    )
+        ? figure
+        : undefined;
+}
+
+function removeEmptyImageFigures(root: HTMLElement): void {
+    for (const figure of Array.from(
+        root.querySelectorAll<HTMLElement>(
+            'figure[data-soeditor-media="image"]',
+        ),
+    )) {
+        if (figure.querySelector('img') === null) figure.remove();
+    }
+    for (const figure of Array.from(
+        root.querySelectorAll<HTMLElement>('figure'),
+    )) {
+        if (
+            figure.children.length === 0 &&
+            (figure.textContent ?? '').trim().length === 0
+        ) {
+            figure.remove();
+        }
+    }
 }
 
 function addClassTokens(element: Element, value: string | null): void {

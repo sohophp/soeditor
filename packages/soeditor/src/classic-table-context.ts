@@ -140,7 +140,7 @@ export function attachClassicTableContext(
             activeRange,
         );
         ui.setStatus(
-            `${ui.translate(capitalizeMode(editor.state.mode))} · ${tableScopeLabel(ui, selectionKind, activeRange)} · ${ui.translate(editor.state.dirty ? 'Unsaved' : 'Saved')}`,
+            `${ui.translate(capitalizeMode(editor.state.mode))} · ${tableScopeLabel(ui, selectionKind, activeRange)} · ${ui.translate(editor.state.dirty ? 'Modified' : 'Unmodified')}`,
         );
         const isSingleCell = selectionKind === 'caret';
         if (captionButton !== undefined) captionButton.hidden = !isSingleCell;

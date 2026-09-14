@@ -22,6 +22,7 @@ export function renderPreviewDocument(
     source: string,
     configuration: NormalizedPreviewConfiguration,
     view: Window,
+    nativeVideoFrames = false,
 ): string {
     const markup = isCompleteHtmlDocument(source)
         ? source
@@ -35,7 +36,12 @@ export function renderPreviewDocument(
     removeSourcePolicies(document);
     const csp = document.createElement('meta');
     csp.httpEquiv = 'Content-Security-Policy';
-    csp.content = PREVIEW_CSP;
+    csp.content = nativeVideoFrames
+        ? PREVIEW_CSP.replace(
+              "frame-src 'none'",
+              'frame-src https://www.youtube.com/embed/ https://www.youtube-nocookie.com/embed/',
+          )
+        : PREVIEW_CSP;
     document.head.prepend(csp);
 
     if (configuration.baseUrl !== undefined) {

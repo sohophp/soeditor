@@ -1,0 +1,158 @@
+.soeditor-video-dialog {
+    width: min(44rem, calc(100vw - 2rem));
+    max-height: calc(100dvh - 2rem);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.soeditor-video-dialog *,
+.soeditor-video-dialog *::before,
+.soeditor-video-dialog *::after {
+    box-sizing: border-box;
+}
+
+.soeditor-video-dialog .soeditor-ui__dialog-body {
+    min-height: 0;
+    overflow: auto;
+    padding: 1rem;
+}
+
+.soeditor-video-form {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+    min-width: 0;
+    margin: 0;
+}
+
+.soeditor-video-field {
+    display: grid;
+    align-content: start;
+    gap: 0.375rem 0.5rem;
+    min-width: 0;
+    margin: 0;
+}
+
+.soeditor-video-field > span {
+    font-weight: 600;
+}
+
+.soeditor-video-field > span,
+.soeditor-video-field > small,
+.soeditor-video-field[data-field='src'],
+.soeditor-video-field[data-field='title'],
+.soeditor-video-field[data-field='poster'],
+.soeditor-video-field[data-field='subtitle'],
+.soeditor-video-more,
+.soeditor-video-error,
+.soeditor-video-status {
+    grid-column: 1 / -1;
+}
+
+.soeditor-video-field--picker {
+    grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.soeditor-video-field--picker > input,
+.soeditor-video-picker {
+    grid-row: 2;
+}
+
+.soeditor-video-picker {
+    grid-column: 2;
+    white-space: nowrap;
+    align-self: stretch;
+}
+
+.soeditor-video-field input,
+.soeditor-video-field select {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.375rem;
+    padding: 0.375rem 0.625rem;
+    border: 1px solid var(--soeditor-border, #d0d7de);
+    border-radius: var(--soeditor-radius, 0.375rem);
+    background: var(--soeditor-bg, #fff);
+    color: inherit;
+    font: inherit;
+}
+
+.soeditor-video-field :is(input, select):focus-visible,
+.soeditor-video-dialog button:focus-visible,
+.soeditor-video-more > summary:focus-visible {
+    outline: 2px solid var(--soeditor-focus-ring, #0969da);
+    outline-offset: 2px;
+}
+
+.soeditor-video-more {
+    border-top: 1px solid var(--soeditor-border, #d0d7de);
+    padding-top: 0.75rem;
+}
+
+.soeditor-video-more > summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+
+.soeditor-video-options {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.75rem 1rem;
+    min-width: 0;
+    padding: 0.75rem 0 0;
+    margin: 0;
+    border: 0;
+}
+
+.soeditor-video-options > legend {
+    float: none;
+    width: auto;
+    padding: 0.5rem 0 0;
+    margin: 0;
+    color: var(--soeditor-muted, #59636e);
+    font: inherit;
+}
+
+.soeditor-video-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: 2rem;
+    margin: 0;
+}
+
+.soeditor-video-toggle input {
+    margin: 0;
+}
+
+.soeditor-video-preview {
+    justify-self: start;
+}
+
+.soeditor-video-error,
+.soeditor-video-status {
+    margin: 0;
+    overflow-wrap: anywhere;
+}
+
+.soeditor-video-error {
+    color: var(--soeditor-danger, #b42318);
+}
+
+.soeditor-video-error:empty,
+.soeditor-video-status:empty {
+    display: none;
+}
+
+.soeditor-video-field small,
+.soeditor-video-status {
+    color: var(--soeditor-muted, #59636e);
+    font-size: 0.75rem;
+}
+
+@media (max-width: 36rem) {
+    .soeditor-video-form,
+    .soeditor-video-options {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

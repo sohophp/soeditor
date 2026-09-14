@@ -39,6 +39,23 @@ export function attachClassicDialogWindows(
                 '調整對話框大小',
             ),
         );
+        const icon = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'svg',
+        );
+        icon.setAttribute('viewBox', '0 0 24 24');
+        icon.setAttribute('aria-hidden', 'true');
+        icon.setAttribute('fill', 'none');
+        icon.setAttribute('stroke', 'currentColor');
+        icon.setAttribute('stroke-width', '1.75');
+        const path = document.createElementNS(
+            'http://www.w3.org/2000/svg',
+            'path',
+        );
+        path.setAttribute('d', 'M9 3H3v6M3 3l7 7m5 11h6v-6m0 6-7-7');
+        icon.append(path);
+        resizeHandle.append(icon);
+        resizeHandle.title = resizeHandle.getAttribute('aria-label') ?? '';
         const previousTitle = title.getAttribute('title');
         const previousCursor = title.style.cursor;
         const previousTouchAction = title.style.touchAction;
@@ -175,6 +192,10 @@ function attachDialogInteractions(
         dialog.style.top = `${String(top)}px`;
         dialog.style.width = `${String(width)}px`;
         dialog.style.height = `${String(height)}px`;
+        dialog.style.blockSize = `${String(height)}px`;
+        dialog.style.inlineSize = `${String(width)}px`;
+        dialog.style.maxBlockSize = `${String(maximumHeight)}px`;
+        dialog.style.minInlineSize = `${String(Math.min(MINIMUM_WIDTH, maximumWidth))}px`;
     };
     const current = (): DialogGeometry => {
         const rectangle = dialog.getBoundingClientRect();

@@ -46,6 +46,10 @@
             "types": "./dist/cms-optional.d.ts",
             "import": "./dist/cms-optional.js"
         },
+        "./cms/disclosure": {
+            "types": "./dist/classic-editor-disclosure.d.ts",
+            "import": "./dist/classic-editor-disclosure.js"
+        },
         "./styles.css": "./dist/styles.css",
         "./content.css": "./dist/content.css",
         "./cms/styles.css": "./dist/cms-styles.css",

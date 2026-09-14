@@ -629,33 +629,31 @@ test('CMS video: default tools stay lazy, support opt-out and retry failed impor
     ).toBeVisible();
 });
 
-test('whole article preview plays approved YouTube separately from inert article HTML', async ({
+test('article preview renders original YouTube HTML without injected controls and blocks article scripts', async ({
     page,
     context,
 }) => {
-    await context.route(
-        'https://www.youtube-nocookie.com/**',
-        async (route) => {
-            expect((await route.request().allHeaders())['referer']).toBe(
-                new URL(page.url()).origin + '/',
-            );
-            return route.fulfill({
-                contentType: 'text/html',
-                body: '<button onclick="this.textContent=\'Playing\'">Play video</button>',
-            });
-        },
+    await context.route('https://www.youtube.com/embed/**', (route) =>
+        route.fulfill({
+            contentType: 'text/html',
+            body: '<button onclick="this.textContent=\'Playing\'">Play video</button>',
+        }),
     );
     const html =
-        '<p>Article video</p><iframe title="Article player" width="560" height="315" src="https://www.youtube.com/embed/abcdefghijk"></iframe><div style="height:1500px">After video</div><script>parent.document.body.dataset.articleExecuted="yes"</script><img src="/missing-preview-image" onerror="parent.document.body.dataset.articleExecuted=\'yes\'"><iframe src="https://www.youtube.com/embed/abcdefghijk" srcdoc="<script>parent.parent.document.body.dataset.articleExecuted=\'yes\'</script>"></iframe>';
+        '<p>Article video</p><iframe title="Article player" width="560" height="315" src="https://www.youtube.com/embed/abcdefghijk"></iframe><script>parent.document.body.dataset.articleExecuted="yes"</script><img src="/missing-preview-image" onerror="parent.document.body.dataset.articleExecuted=\'yes\'"><iframe srcdoc="<script>parent.parent.document.body.dataset.articleExecuted=\'yes\'</script>"></iframe>';
     await setContent(page, html);
     const canonical = await content(page);
-    const popupPromise = context.waitForEvent('page');
+    const pending = context.waitForEvent('page');
     await page.locator('[data-toolbar-item="popupPreview"]').click();
-    const popup = await popupPromise;
-    const article = popup.locator('body > iframe');
-    const player = popup.locator('[data-preview-media] iframe');
-    await expect(article).toHaveAttribute('sandbox', 'allow-same-origin');
-    await expect(player).toHaveCount(1);
+    const popup = await pending;
+    const article = popup.locator('body > iframe').contentFrame();
+    const player = article.locator('iframe[title="Article player"]');
+    await expect(player).toHaveAttribute(
+        'src',
+        'https://www.youtube.com/embed/abcdefghijk',
+    );
+    await expect(player).toHaveAttribute('width', '560');
+    await expect(player).toHaveAttribute('height', '315');
     await player
         .contentFrame()
         .getByRole('button', { name: 'Play video' })
@@ -663,248 +661,58 @@ test('whole article preview plays approved YouTube separately from inert article
     await expect(
         player.contentFrame().getByRole('button', { name: 'Playing' }),
     ).toBeVisible();
-    const geometry = () =>
-        popup.evaluate(() => {
-            const frame =
-                document.querySelector<HTMLIFrameElement>('body > iframe')!;
-            const sourceElement =
-                frame.contentDocument?.querySelector('iframe');
-            if (sourceElement == null) return false;
-            const source = sourceElement.getBoundingClientRect();
-            const player = document
-                .querySelector('[data-preview-player]')!
-                .getBoundingClientRect();
-            return (
-                Math.abs(
-                    player.top - source.top - frame.getBoundingClientRect().top,
-                ) < 2 && Math.abs(player.width - source.width) < 2
-            );
-        });
-    await expect.poll(geometry).toBe(true);
-    await article.evaluate((frame: HTMLIFrameElement) =>
-        frame.contentWindow!.scrollTo(0, 180),
-    );
-    await expect.poll(geometry).toBe(true);
+    await expect(
+        popup.locator(
+            '[data-preview-media], [data-preview-player], .soeditor-video-player',
+        ),
+    ).toHaveCount(0);
+    await expect(
+        article.locator('.soeditor-video-player, [data-preview-media-id]'),
+    ).toHaveCount(0);
     await expect(popup.locator('body')).not.toHaveAttribute(
         'data-article-executed',
         'yes',
     );
-    await popup.getByRole('combobox').selectOption('word');
-    await expect(player).toHaveCount(1);
-    await expect.poll(geometry).toBe(true);
     expect(await content(page)).toBe(canonical);
+    await popup.getByLabel('Preview template').selectOption('word');
+    await expect(player).toHaveAttribute('width', '560');
     await setContent(page, '<p>Video removed</p>');
+    await expect(article.getByText('Video removed')).toBeVisible();
     await expect(player).toHaveCount(0);
     await popup.close();
 });
 
-test('article preview loads visible media only and retains players through text edits and templates', async ({
+test('article preview preserves native video controls and dimensions without a replacement player', async ({
     page,
     context,
 }) => {
-    let requests = 0;
-    await context.route('https://www.youtube-nocookie.com/**', (route) => {
-        ++requests;
-        return route.fulfill({
-            contentType: 'text/html',
-            body: '<button onclick="this.textContent=\'Playing\'">Play video</button>',
-        });
-    });
-    const movie =
-        '<iframe title="First movie" width="560" height="315" src="https://www.youtube.com/embed/abcdefghijk"></iframe>';
-    const rest =
-        '<div style="height:1800px">Long article</div><iframe title="Later movie" width="560" height="315" src="https://www.youtube.com/embed/lmnopqrstuv"></iframe>';
-    await setContent(page, '<p>Original title</p>' + movie + rest);
-    const pending = context.waitForEvent('page');
-    await page.locator('[data-toolbar-item="popupPreview"]').click();
-    const popup = await pending;
-    const first = popup.locator('[data-preview-player]').first();
-    await first
-        .locator('iframe')
-        .contentFrame()
-        .getByRole('button', { name: 'Play video' })
-        .click();
-    expect(requests).toBe(1);
-    const original = await first.locator('iframe').elementHandle();
-    const article = popup.locator('body > iframe');
-    await article.evaluate((frame: HTMLIFrameElement) =>
-        frame.contentWindow!.scrollTo(0, 120),
-    );
-    await setContent(page, '<p>Changed title</p>' + movie + rest);
-    await expect(
-        article.contentFrame().getByText('Changed title'),
-    ).toBeVisible();
-    await expect(
-        first
-            .locator('iframe')
-            .contentFrame()
-            .getByRole('button', { name: 'Playing' }),
-    ).toBeVisible();
-    expect(await original!.evaluate((node) => node.isConnected)).toBe(true);
-    expect(requests).toBe(1);
-    await expect
-        .poll(() =>
-            article.evaluate(
-                (frame: HTMLIFrameElement) => frame.contentWindow!.scrollY,
-            ),
-        )
-        .toBe(120);
-    await popup.getByRole('combobox').selectOption('word');
-    await expect(
-        first
-            .locator('iframe')
-            .contentFrame()
-            .getByRole('button', { name: 'Playing' }),
-    ).toBeVisible();
-    expect(requests).toBe(1);
-    await article.evaluate((frame: HTMLIFrameElement) =>
-        frame.contentWindow!.scrollTo(0, 2200),
-    );
-    await expect(popup.locator('[data-preview-media] iframe')).toHaveCount(2);
-    await expect.poll(() => requests).toBe(2);
-    await setContent(page, '<p>Removed first movie</p>' + rest);
-    await expect
-        .poll(() => original!.evaluate((node) => node.isConnected))
-        .toBe(false);
-    await popup.close();
-});
-
-test('article video preview supports collapsed content, portrait, narrow layouts, zoom and wheel scrolling', async ({
-    page,
-    context,
-}) => {
-    let requests = 0;
-    await context.route('https://www.youtube-nocookie.com/**', (route) => {
-        ++requests;
-        return route.fulfill({
-            contentType: 'text/html',
-            body: '<button>Play video</button>',
-        });
-    });
     await setContent(
         page,
-        '<details><summary>Optional movie</summary><iframe title="Portrait" style="display:block;width:240px;max-width:100%;height:430px;margin:auto" src="https://www.youtube.com/embed/abcdefghijk"></iframe></details><div style="height:1800px">After</div>',
+        '<video src="/demo-video.webm" width="320" height="180" controls muted loop></video>',
     );
     const pending = context.waitForEvent('page');
     await page.locator('[data-toolbar-item="popupPreview"]').click();
     const popup = await pending;
-    await popup.setViewportSize({ width: 375, height: 640 });
-    const article = popup.locator('body > iframe');
-    await expect(article.contentFrame().locator('details')).toHaveCount(1);
-    await expect(popup.locator('[data-preview-player]')).toHaveCount(1);
-    expect(requests).toBe(0);
-    await article.contentFrame().locator('summary').click();
-    const player = popup.locator('[data-preview-media] iframe');
-    await expect(player).toHaveCount(1);
-    const geometry = () =>
-        popup.evaluate(() => {
-            const frame =
-                document.querySelector<HTMLIFrameElement>('body > iframe')!;
-            const source = frame
-                .contentDocument!.querySelector('iframe')!
-                .getBoundingClientRect();
-            const target = document
-                .querySelector('[data-preview-player]')!
-                .getBoundingClientRect();
-            const bounds = frame.getBoundingClientRect();
-            const scale = bounds.width / frame.offsetWidth;
-            return (
-                Math.abs(target.top - (source.top * scale + bounds.top)) < 2 &&
-                Math.abs(target.width - source.width * scale) < 2
-            );
-        });
-    await expect.poll(geometry).toBe(true);
-    const bounds = await player.boundingBox();
-    expect(bounds!.width).toBeLessThan(375);
-    expect(bounds!.height).toBeGreaterThan(bounds!.width);
-    await popup.mouse.move(
-        bounds!.x + bounds!.width / 2,
-        bounds!.y + bounds!.height / 2,
-    );
-    await popup.mouse.wheel(0, 160);
+    const video = popup
+        .locator('body > iframe')
+        .contentFrame()
+        .locator('video');
+    await expect(video).toHaveAttribute('width', '320');
+    await expect(video).toHaveAttribute('height', '180');
+    await expect(video).toHaveAttribute('controls', '');
+    await expect(video).toHaveAttribute('loop', '');
     await expect
-        .poll(() =>
-            article.evaluate(
-                (frame: HTMLIFrameElement) => frame.contentWindow!.scrollY,
-            ),
-        )
-        .toBeGreaterThan(0);
-    await expect.poll(geometry).toBe(true);
-    await popup.evaluate(() => {
-        document.body.style.zoom = '1.25';
-    });
-    await expect.poll(geometry).toBe(true);
-    await article.evaluate((frame: HTMLIFrameElement) =>
-        frame.contentWindow!.scrollTo(0, 0),
-    );
-    await expect.poll(geometry).toBe(true);
-    // Use physical viewport coordinates: frame-locator clicks do not account for
-    // the parent document's CSS zoom consistently across automation backends.
-    const target = await popup.evaluate(() => {
-        const frame =
-            document.querySelector<HTMLIFrameElement>('body > iframe')!;
-        const bounds = frame.getBoundingClientRect();
-        const scale = bounds.width / frame.offsetWidth;
-        const summary = frame
-            .contentDocument!.querySelector('summary')!
-            .getBoundingClientRect();
-        return {
-            x: bounds.left + (summary.left + summary.width / 2) * scale,
-            y: bounds.top + (summary.top + summary.height / 2) * scale,
-        };
-    });
-    await popup.mouse.click(target.x, target.y);
-
-    await expect(popup.locator('[data-preview-player]')).toBeHidden();
-    expect(requests).toBe(1);
-    await popup.close();
-});
-
-test('native article video survives text refresh and shares retry and original-video controls', async ({
-    page,
-    context,
-}) => {
-    // Page-level interception stalls popup media requests in Chromium's automation
-    // backend. This native-only case exercises the real local video response.
-    await page.unrouteAll();
-    const movie =
-        '<video title="Local movie" src="/demo-video.webm" controls muted loop style="width:320px;height:240px"></video>';
-    await setContent(page, '<p>Before</p>' + movie);
-    const pending = context.waitForEvent('page');
-    await page.locator('[data-toolbar-item="popupPreview"]').click();
-    const popup = await pending;
-    const video = popup.locator('[data-preview-media] video');
-    await popup.bringToFront();
-    await expect
-        .poll(() =>
-            video.evaluate((node: HTMLVideoElement) => ({
-                ready: node.readyState,
-                muted: node.muted,
-                error: node.error?.message,
-            })),
-        )
-        .toMatchObject({ ready: 4, muted: true });
+        .poll(() => video.evaluate((node: HTMLVideoElement) => node.readyState))
+        .toBe(4);
     await video.evaluate((node: HTMLVideoElement) => node.play());
     await expect
         .poll(() =>
             video.evaluate((node: HTMLVideoElement) => node.currentTime),
         )
         .toBeGreaterThan(0);
-    const original = await video.elementHandle();
-    await setContent(page, '<p>After</p>' + movie);
     await expect(
-        popup.locator('body > iframe').contentFrame().getByText('After'),
-    ).toBeVisible();
-    expect(await original!.evaluate((node) => node.isConnected)).toBe(true);
-    expect(await video.evaluate((node: HTMLVideoElement) => node.paused)).toBe(
-        false,
-    );
-    await expect(
-        popup.getByRole('link', { name: 'Open original video' }),
-    ).toHaveAttribute('href', /demo-video.webm$/);
-    await popup.getByRole('button', { name: 'Reload video' }).click();
-    expect(await original!.evaluate((node) => node.isConnected)).toBe(false);
-    await expect(video).toHaveCount(1);
+        popup.getByRole('button', { name: 'Reload video' }),
+    ).toHaveCount(0);
     await popup.close();
 });
 
@@ -932,43 +740,54 @@ test('video properties keeps advanced native controls collapsed and switches app
     expect(await content(page)).toContain('/demo-video.vtt');
 });
 
-test('whole article preview exposes keyboard-operable recovery after a player request fails', async ({
-    page,
-    context,
-}) => {
-    let requests = 0;
-    await context.route('https://www.youtube-nocookie.com/**', (route) => {
-        ++requests;
-        return requests === 1
-            ? route.abort()
-            : route.fulfill({
-                  contentType: 'text/html',
-                  body: '<button>Play video</button>',
-              });
-    });
-    await setContent(
+for (const viewport of [
+    { width: 1280, height: 800 },
+    { width: 390, height: 700 },
+]) {
+    test(`video dialog stays within ${viewport.width}px viewport with advanced options`, async ({
         page,
-        '<iframe width="560" height="315" src="https://www.youtube.com/embed/abcdefghijk"></iframe>',
-    );
-    const pending = context.waitForEvent('page');
-    await page.locator('[data-toolbar-item="popupPreview"]').click();
-    const popup = await pending;
-    const box = popup.locator('[data-preview-player]');
-    await expect(box.getByRole('status')).toContainText(/reload|load/i);
-    await expect(
-        box.getByRole('link', { name: 'Watch on YouTube' }),
-    ).toHaveAttribute('href', 'https://www.youtube.com/watch?v=abcdefghijk');
-    const first = await box.locator('iframe').elementHandle();
-    const retry = box.getByRole('button', { name: 'Reload video' });
-    await retry.focus();
-    await popup.keyboard.press('Enter');
-    await expect(
-        box
-            .locator('iframe')
-            .contentFrame()
-            .getByRole('button', { name: 'Play video' }),
-    ).toBeVisible();
-    expect(await first!.evaluate((node) => node.isConnected)).toBe(false);
-    expect(requests).toBe(2);
-    await popup.close();
-});
+    }) => {
+        await page.setViewportSize(viewport);
+        const before = await content(page);
+        const dialog = await openVideo(page);
+        await dialog.locator('summary').click();
+        await expect(dialog.locator('.soeditor-video-options')).toBeVisible();
+        await expect
+            .poll(async () =>
+                dialog.evaluate((element) => {
+                    const bounds = element.getBoundingClientRect();
+                    return (
+                        bounds.left >= 0 &&
+                        bounds.right <= innerWidth &&
+                        bounds.top >= 0 &&
+                        bounds.bottom <= innerHeight
+                    );
+                }),
+            )
+            .toBe(true);
+        const bounds = await dialog.boundingBox();
+        expect(bounds!.width).toBeGreaterThan(viewport.width > 600 ? 600 : 300);
+        expect(
+            await dialog
+                .locator('input:not([type="checkbox"]), select')
+                .evaluateAll((fields) =>
+                    fields.every((field) => {
+                        const rect = field.getBoundingClientRect();
+                        const parent =
+                            field.parentElement!.getBoundingClientRect();
+                        return (
+                            rect.left >= parent.left - 1 &&
+                            rect.right <= parent.right + 1
+                        );
+                    }),
+                ),
+        ).toBe(true);
+        const actions = dialog.locator('.soeditor-ui__dialog-actions');
+        const footer = await actions.boundingBox();
+        expect(footer!.y + footer!.height).toBeLessThanOrEqual(viewport.height);
+        await dialog
+            .getByRole('button', { name: 'Cancel', exact: true })
+            .click();
+        expect(await content(page)).toBe(before);
+    });
+}

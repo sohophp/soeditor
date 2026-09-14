@@ -82,6 +82,8 @@ export function createEditorUiWithTranslations(
     primaryStatus.className = 'soeditor-ui__status';
     const contributedStatus = document.createElement('span');
     contributedStatus.className = 'soeditor-ui__status-items';
+    const hostStatus = document.createElement('div');
+    hostStatus.className = 'soeditor-ui__host-status';
     const documentStatus = document.createElement('span');
     documentStatus.className = 'soeditor-ui__document-status';
     documentStatus.hidden = options.documentStatus !== true;
@@ -103,6 +105,7 @@ export function createEditorUiWithTranslations(
         elementPath.element,
         documentStatus,
         contributedStatus,
+        hostStatus,
     );
     const panelLayer = document.createElement('div');
     panelLayer.className = 'soeditor-ui__panels';
@@ -198,6 +201,7 @@ export function createEditorUiWithTranslations(
         locale: translation.locale,
         notifications: overlays.notifications,
         panels: panelService.panels,
+        hostStatusElement: hostStatus,
         statusElement: primaryStatus,
         toolbarElement: toolbar,
         get toolbarExpanded() {
@@ -910,7 +914,7 @@ export function createEditorUiWithTranslations(
         primaryStatus.textContent =
             manualStatus ??
             `${translation.translate(capitalize(options.editor.state.mode))} · ${translation.translate(
-                options.editor.state.dirty ? 'Unsaved' : 'Saved',
+                options.editor.state.dirty ? 'Modified' : 'Unmodified',
             )}`;
         if (options.documentStatus === true) {
             elementPath.update();

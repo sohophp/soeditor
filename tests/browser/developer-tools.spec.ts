@@ -251,7 +251,7 @@ test('cleans up idempotently and makes retained developer services terminal', as
     });
     await expect(page.locator('[data-toolbar-item="problems"]')).toBeDisabled();
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
-        'Visual · Saved',
+        'Visual · Unmodified',
     );
 });
 

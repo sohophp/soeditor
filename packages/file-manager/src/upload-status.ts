@@ -84,11 +84,16 @@ export function createUploadStatus(
                 record.status === 'failed' &&
                 !editor.commands.canExecute('image.upload.retry');
             row.element.setAttribute('data-upload-state', record.status);
-            const text = `${record.name}: ${ui.translate(messages[record.status])}${record.error ? ` — ${record.error}` : ''}`;
+            const processing =
+                record.status === 'pending' &&
+                record.total !== undefined &&
+                record.total > 0 &&
+                record.loaded >= record.total;
+            const text = `${record.name}: ${ui.translate(processing ? 'Processing image' : messages[record.status])}${record.error ? ` — ${record.error}` : ''}`;
             if (row.message.textContent !== text)
                 row.message.textContent = text;
             row.progress.hidden = record.status !== 'pending';
-            if (record.total && record.total > 0) {
+            if (!processing && record.total && record.total > 0) {
                 row.progress.max = record.total;
                 row.progress.value = record.loaded;
             } else row.progress.removeAttribute('value');

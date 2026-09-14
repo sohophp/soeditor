@@ -187,7 +187,7 @@ class DomDeveloperToolsEngine implements DeveloperToolsEngineHandle {
             return;
         }
         const mode = capitalize(this.#editor.state.mode);
-        const dirty = this.#editor.state.dirty ? 'Unsaved' : 'Saved';
+        const dirty = this.#editor.state.dirty ? 'Modified' : 'Unmodified';
         const path =
             this.#editor.state.mode === 'visual'
                 ? this.#inspector?.path.join(' > ')

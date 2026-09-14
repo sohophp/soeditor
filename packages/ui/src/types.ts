@@ -198,6 +198,8 @@ export interface EditorUi {
     readonly locale: string;
     readonly notifications: NotificationService;
     readonly panels: PanelService;
+    /** Persistent host-owned status content displayed in the editor status bar. */
+    readonly hostStatusElement: HTMLElement;
     readonly statusElement: HTMLElement;
     readonly toolbarElement: HTMLElement;
     readonly toolbarExpanded: boolean;

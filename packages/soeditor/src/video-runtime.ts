@@ -1,3 +1,4 @@
+import videoDialogStyles from './video-dialog.css?inline';
 import { createVideoPlayer, createYoutubePlayer } from './video-player.js';
 import type { Editor } from '@soeditor/core';
 import { visualEditingServiceToken } from '@soeditor/engine';
@@ -226,13 +227,13 @@ export function createVideoRuntime(
             const initial = readVideo(original);
             const initialContent = editor.getData();
             const form = document.createElement('form');
-            form.style.cssText = 'display:grid;gap:12px;min-width:0';
+            form.className = 'soeditor-video-form';
             form.addEventListener('submit', (event) => {
                 event.preventDefault();
             });
             const error = document.createElement('p');
             error.setAttribute('role', 'alert');
-            error.style.color = 'var(--soeditor-ui-danger,#b42318)';
+            error.className = 'soeditor-video-error';
             const inputs = new Map<
                 string,
                 HTMLInputElement | HTMLSelectElement
@@ -244,16 +245,17 @@ export function createVideoRuntime(
                 choices?: readonly string[],
             ): HTMLInputElement | HTMLSelectElement => {
                 const label = document.createElement('label');
-                label.style.cssText = 'display:grid;gap:4px';
-                label.append(document.createTextNode(t(en, zh)));
+                label.className = 'soeditor-video-field';
+                label.dataset.field = key;
+                const caption = document.createElement('span');
+                caption.textContent = t(en, zh);
+                label.append(caption);
                 const input =
                     choices === undefined
                         ? document.createElement('input')
                         : document.createElement('select');
                 input.setAttribute('aria-label', t(en, zh));
                 input.name = key;
-                input.style.cssText =
-                    'box-sizing:border-box;max-width:100%;width:100%;padding:7px;border:1px solid #b9c2d5;border-radius:4px;background:transparent;color:inherit';
                 if (choices !== undefined)
                     for (const value of choices ?? []) {
                         const option = document.createElement('option');
@@ -302,8 +304,7 @@ export function createVideoRuntime(
                 'right',
             ]);
             const native = document.createElement('fieldset');
-            native.style.cssText =
-                'display:grid;gap:8px;border:1px solid #b9c2d5';
+            native.className = 'soeditor-video-options';
             const legend = document.createElement('legend');
             legend.textContent = t('Video file options', '视频文件选项');
             native.append(legend);
@@ -317,6 +318,7 @@ export function createVideoRuntime(
                 const input = document.createElement('input');
                 input.type = 'checkbox';
                 input.checked = initial[key];
+                label.className = 'soeditor-video-toggle';
                 flags.set(key, input);
                 label.append(input, document.createTextNode(t(en, zh)));
                 native.append(label);
@@ -336,6 +338,7 @@ export function createVideoRuntime(
                 if (input.parentElement !== null)
                     native.append(input.parentElement);
             const more = document.createElement('details');
+            more.className = 'soeditor-video-more';
             const summary = document.createElement('summary');
             summary.textContent = t('More settings', '更多设置');
             summary.style.cursor = 'pointer';
@@ -353,6 +356,11 @@ export function createVideoRuntime(
                 if (picker === undefined) return;
                 const button = document.createElement('button');
                 button.type = 'button';
+                button.className =
+                    'soeditor-ui__dialog-action soeditor-video-picker';
+                input.parentElement?.classList.add(
+                    'soeditor-video-field--picker',
+                );
                 button.textContent = t(en, zh);
                 input.parentElement?.append(button);
                 button.addEventListener('click', () => {
@@ -422,7 +430,7 @@ export function createVideoRuntime(
             refresh();
             const metadataStatus = document.createElement('p');
             metadataStatus.setAttribute('role', 'status');
-            metadataStatus.style.cssText = 'margin:0;font-size:12px';
+            metadataStatus.className = 'soeditor-video-status';
             source.parentElement?.after(metadataStatus);
             const disposeMetadata = attachYoutubeMetadata(
                 source,
@@ -470,6 +478,8 @@ export function createVideoRuntime(
             };
             const previewButton = document.createElement('button');
             previewButton.type = 'button';
+            previewButton.className =
+                'soeditor-ui__dialog-action soeditor-video-preview';
             previewButton.textContent = t('Preview video', '预览视频');
             previewButton.addEventListener('click', () => {
                 attempt(() => {
@@ -544,6 +554,18 @@ export function createVideoRuntime(
                     },
                 ],
             });
+            handle.element.classList.add('soeditor-video-dialog');
+            const style = document.createElement('style');
+            const visual = ui.element
+                .closest('.soeditor-classic')
+                ?.querySelector('.soeditor-classic__visual');
+            const nonce =
+                visual?.shadowRoot?.querySelector<HTMLStyleElement>(
+                    'style[nonce]',
+                )?.nonce;
+            if (nonce !== undefined) style.nonce = nonce;
+            style.textContent = videoDialogStyles;
+            handle.element.append(style);
             editing = handle;
             trackHandle(handle);
             handle.element.addEventListener(

@@ -31,6 +31,7 @@ export default defineConfig({
         lib: {
             entry: {
                 'cms-optional': 'src/cms-optional.ts',
+                'classic-editor-disclosure': 'src/classic-editor-disclosure.ts',
                 index: 'src/index.ts',
                 video: 'src/video.ts',
                 styles: 'src/styles.css',

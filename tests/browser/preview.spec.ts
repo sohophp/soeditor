@@ -17,7 +17,7 @@ test('renders configured fragment preview in an isolated iframe', async ({
     await expect(page.locator('[data-testid="editor"]')).toBeHidden();
     await expect(page.locator('[data-testid="source-editor"]')).toBeHidden();
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
-        'Preview · Saved',
+        'Preview · Unmodified',
     );
 
     const iframe = page.locator(`${preview} iframe`);
@@ -111,15 +111,15 @@ test('previews complete documents without nesting them in the fragment template'
 test('returns to the mode that opened preview', async ({ page }) => {
     await page.locator('[data-toolbar-item="source"]').click();
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
-        'Source · Saved',
+        'Source · Unmodified',
     );
     await page.locator(previewButton).click();
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
-        'Preview · Saved',
+        'Preview · Unmodified',
     );
     await page.locator(previewButton).click();
     await expect(page.locator('.soeditor-ui__status')).toHaveText(
-        'Source · Saved',
+        'Source · Unmodified',
     );
     await expect(page.locator('[data-testid="source-editor"]')).toBeVisible();
 });

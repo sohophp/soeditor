@@ -398,7 +398,9 @@ export class UploadPlugin extends Plugin {
                 ...(result.assetId === undefined
                     ? {}
                     : { assetId: result.assetId }),
-                alt: result.alt ?? result.name ?? upload.name,
+                ...(upload.mode === 'replace'
+                    ? {}
+                    : { alt: result.alt ?? result.name ?? upload.name }),
                 ...(result.height === undefined
                     ? {}
                     : { height: result.height }),
