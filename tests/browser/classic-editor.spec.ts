@@ -1054,6 +1054,17 @@ test('replaces a native WYSIWYG selection and edits images on double click', asy
     await expect(dialog.locator('fieldset')).toHaveCount(3);
     await expect(dialog.getByLabel('Image title')).toBeVisible();
     await expect(dialog.getByLabel('Visible caption')).toBeVisible();
+    await expect(
+        dialog.getByRole('button', { name: 'Restore original size' }),
+    ).toHaveText('');
+    await expect(
+        dialog.getByRole('button', {
+            name: 'Use image filename',
+        }),
+    ).toHaveText('');
+    await expect(
+        dialog.locator('.soeditor-classic__image-preview-stage img'),
+    ).toBeVisible();
     await expect(dialog.getByLabel('Responsive CSS classes')).toBeHidden();
     await dialog.getByText('Responsive image settings').click();
     await expect(dialog.getByLabel('Responsive CSS classes')).toBeVisible();

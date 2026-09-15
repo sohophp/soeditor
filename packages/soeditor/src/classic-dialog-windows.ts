@@ -43,16 +43,17 @@ export function attachClassicDialogWindows(
             'http://www.w3.org/2000/svg',
             'svg',
         );
-        icon.setAttribute('viewBox', '0 0 24 24');
+        icon.setAttribute('viewBox', '0 0 16 16');
         icon.setAttribute('aria-hidden', 'true');
         icon.setAttribute('fill', 'none');
         icon.setAttribute('stroke', 'currentColor');
-        icon.setAttribute('stroke-width', '1.75');
+        icon.setAttribute('stroke-width', '1');
+        icon.setAttribute('stroke-linecap', 'round');
         const path = document.createElementNS(
             'http://www.w3.org/2000/svg',
             'path',
         );
-        path.setAttribute('d', 'M9 3H3v6M3 3l7 7m5 11h6v-6m0 6-7-7');
+        path.setAttribute('d', 'M15.5 7.5l-8 8m8-4.5L11 15.5m4.5-1.5L14 15.5');
         icon.append(path);
         resizeHandle.append(icon);
         resizeHandle.title = resizeHandle.getAttribute('aria-label') ?? '';

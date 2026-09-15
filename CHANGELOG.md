@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Redesign the image-properties preview as a responsive preview card and replace the verbose original-size and filename-to-alt actions with quiet, accessible icon controls.
+- Match the dialog resize grip to the familiar three-line Chrome textarea resize indicator while retaining its larger accessible pointer target and keyboard behavior.
+
 ## 1.1.0 — CMS WYSIWYG + Source
 
 - Add the lightweight CMS Classic Editor with textarea binding, canonical HTML preservation, inert unknown/unsafe content, form submit/reset, dirty state and safe teardown.

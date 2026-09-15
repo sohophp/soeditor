@@ -76,6 +76,15 @@ const drawings: Readonly<Record<string, IconDrawing>> = Object.freeze({
         paths: ['M2 4h20v16H2Zm8 13h4v-5h3l-5-5-5 5h3Z'],
         variant: 'solid',
     },
+    'image.size.original': {
+        paths: ['M3 9V3h6M15 3h6v6M21 15v6h-6M9 21H3v-6', 'M8 8h8v8H8Z'],
+    },
+    'image.alt.filename': {
+        paths: [
+            'M4 3h10l6 6v12H4Z',
+            'M14 3v6h6M7 17l2.2-6h1.6l2.2 6M7.8 15h4.4M15 12h2M15 15h2',
+        ],
+    },
     'blockquote.toggle': {
         paths: [
             'M5 6h6v6H7v5H4v-7a4 4 0 0 1 4-4',

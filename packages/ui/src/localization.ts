@@ -128,6 +128,7 @@ const messages: readonly (readonly [string, string, string])[] = [
         '使用图片名作为替代文本',
         '使用圖片名作為替代文字',
     ],
+    ['Use image filename', '使用图片文件名', '使用圖片檔名'],
     ['Image information unavailable', '无法读取图片信息', '無法讀取圖片資訊'],
     ['File size unavailable', '文件大小未知', '檔案大小未知'],
     ['Uploading', '正在上传', '正在上傳'],

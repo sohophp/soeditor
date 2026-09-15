@@ -690,21 +690,37 @@ export function attachClassicImageContext(
         advanced.append(advancedSummary, advancedFields);
         const previewPanel = document.createElement('div');
         previewPanel.className = 'soeditor-classic__image-preview-panel';
+        const previewStage = document.createElement('div');
+        previewStage.className = 'soeditor-classic__image-preview-stage';
         const previewImage = document.createElement('img');
         previewImage.alt = '';
+        const previewDetails = document.createElement('div');
+        previewDetails.className = 'soeditor-classic__image-preview-details';
         const information = document.createElement('span');
+        information.className = 'soeditor-classic__image-preview-information';
         information.setAttribute('role', 'status');
+        const previewActions = document.createElement('div');
+        previewActions.className = 'soeditor-classic__image-preview-actions';
         const originalButton = document.createElement('button');
         originalButton.type = 'button';
-        originalButton.className = 'soeditor-ui__button';
-        originalButton.textContent = ui.translate('Restore original size');
+        originalButton.className =
+            'soeditor-ui__button soeditor-classic__image-preview-action';
+        const originalLabel = ui.translate('Restore original size');
+        originalButton.title = originalLabel;
+        originalButton.setAttribute('aria-label', originalLabel);
+        ui.setIcon(originalButton, 'image.size.original', originalLabel);
         originalButton.disabled = true;
         const altButton = document.createElement('button');
         altButton.type = 'button';
-        altButton.className = 'soeditor-ui__button';
-        altButton.textContent = ui.translate(
-            'Use filename as alternative text',
+        altButton.className =
+            'soeditor-ui__button soeditor-classic__image-preview-action';
+        const altLabel = ui.translate('Use filename as alternative text');
+        altButton.title = altLabel;
+        altButton.setAttribute(
+            'aria-label',
+            ui.translate('Use image filename'),
         );
+        ui.setIcon(altButton, 'image.alt.filename', altLabel);
         const sourceInput = controls.get('src');
         let originalSize: { width: number; height: number } | undefined;
         let requestVersion = 0;
@@ -799,12 +815,10 @@ export function attachClassicImageContext(
             controls.get('sizes')!.value = '';
             refreshPreview();
         });
-        previewPanel.append(
-            previewImage,
-            information,
-            originalButton,
-            altButton,
-        );
+        previewStage.append(previewImage);
+        previewActions.append(originalButton, altButton);
+        previewDetails.append(previewActions, information);
+        previewPanel.append(previewStage, previewDetails);
         contentGroup.prepend(previewPanel);
         body.append(contentGroup, layoutGroup, linkGroup, advanced);
         refreshPreview();

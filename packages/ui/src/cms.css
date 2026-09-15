@@ -513,8 +513,10 @@
 
 .soeditor-ui__dialog-resize-handle svg {
     display: block;
-    inline-size: 100%;
-    block-size: 100%;
+    block-size: 1rem;
+    inline-size: 1rem;
+    margin-block-start: auto;
+    margin-inline-start: auto;
 }
 
 .soeditor-ui__dialog:has(.soeditor-ui__dialog-resize-handle)
@@ -524,7 +526,6 @@
 
 .soeditor-ui__dialog-resize-handle:hover {
     color: var(--soeditor-text);
-    background: var(--soeditor-surface-alt, #f1f5f9);
 }
 
 .soeditor-ui__dialog-resize-handle:focus-visible {
