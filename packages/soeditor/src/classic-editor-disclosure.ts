@@ -30,6 +30,8 @@ const disclosures = new WeakMap<HTMLElement, ClassicEditorDisclosure>();
 
 /**
  * Adds a lightweight, native disclosure around one CMS body field.
+ * Use one container per language/editor for independent expansion. Passing
+ * multiple hosts explicitly groups them under one control for compatibility.
  *
  * This entry has no editor-runtime imports. A host can register the contained
  * textarea normally and defer editor creation until the disclosure is opened.
@@ -63,63 +65,16 @@ export function createClassicEditorDisclosure(
     container.append(element);
 
     let destroyed = false;
-    let observer: MutationObserver | undefined;
-    let collapseButton: HTMLButtonElement | undefined;
-    const connectEditor = (): boolean => {
-        const editor = element.querySelector<HTMLElement>(
-            '.soeditor-classic[data-soeditor-ready="true"]',
-        );
-        const toolbar = editor?.querySelector<HTMLElement>(
-            '.soeditor-ui__toolbar',
-        );
-        if (editor === null || toolbar === null || toolbar === undefined)
-            return false;
-        collapseButton = document.createElement('button');
-        collapseButton.type = 'button';
-        collapseButton.className =
-            'soeditor-ui__button soeditor-disclosure__collapse';
-        collapseButton.dataset.soeditorDisclosureCollapse = 'true';
-        collapseButton.setAttribute('aria-label', options.labels.collapse);
-        collapseButton.title = options.labels.collapse;
-        collapseButton.textContent = '▴';
-        collapseButton.addEventListener('click', () => {
-            element.open = false;
-            summary.focus();
-        });
-        editor.before(collapseButton);
-        element.classList.add('soeditor-disclosure--editor-ready');
-        observer?.disconnect();
-        observer = undefined;
-        return true;
-    };
-    const watchForEditor = (): void => {
-        if (destroyed || !element.open || collapseButton !== undefined) return;
-        if (connectEditor() || observer !== undefined) return;
-        observer = new MutationObserver(() => {
-            if (!container.isConnected) {
-                observer?.disconnect();
-                observer = undefined;
-                return;
-            }
-            connectEditor();
-        });
-        observer.observe(document.documentElement, {
-            attributes: true,
-            attributeFilter: ['data-soeditor-ready'],
-            childList: true,
-            subtree: true,
-        });
-    };
     const refresh = (): void => {
         if (destroyed) return;
         const present =
             options.hasContent?.() ??
             options.editors.some((editor) => editor.value.trim() !== '');
-        summary.textContent = `${options.labels.edit} · ${present ? options.labels.hasContent : options.labels.empty}`;
+        summary.textContent = `${element.open ? options.labels.collapse : options.labels.edit} · ${present ? options.labels.hasContent : options.labels.empty}`;
         element.dataset.contentState = present ? 'present' : 'empty';
     };
     const onToggle = (): void => {
-        watchForEditor();
+        refresh();
         element.dispatchEvent(
             new CustomEvent('soeditor:disclosure-change', {
                 bubbles: true,
@@ -128,6 +83,8 @@ export function createClassicEditorDisclosure(
         );
     };
     element.addEventListener('toggle', onToggle);
+    element.addEventListener('input', refresh);
+    element.addEventListener('change', refresh);
 
     const api: ClassicEditorDisclosure = {
         element,
@@ -135,10 +92,12 @@ export function createClassicEditorDisclosure(
         destroy: () => {
             if (destroyed) return;
             destroyed = true;
-            observer?.disconnect();
-            collapseButton?.remove();
             element.removeEventListener('toggle', onToggle);
-            element.replaceWith(...options.content);
+            element.removeEventListener('input', refresh);
+            element.removeEventListener('change', refresh);
+            // Preserve nodes mounted asynchronously alongside the textarea too.
+            summary.remove();
+            element.replaceWith(...Array.from(element.childNodes));
             disclosures.delete(container);
         },
         expand: () => {
@@ -148,6 +107,5 @@ export function createClassicEditorDisclosure(
     };
     disclosures.set(container, api);
     refresh();
-    watchForEditor();
     return api;
 }
