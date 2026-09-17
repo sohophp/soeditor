@@ -5963,6 +5963,18 @@ test('canvas presets are isolated per instance and never enter saved HTML', asyn
     const second = page.locator('#canvas-two-editor');
     await expect(first.getByLabel('Editing size')).toHaveValue('email');
     await expect(second.getByLabel('Editing size')).toHaveValue('compact');
+    await second.getByLabel('Editing size').selectOption('webpage');
+    expect(
+        await second
+            .locator('.soeditor-wysiwyg-content')
+            .evaluate((element) => element.style.padding),
+    ).toBe('1rem');
+    expect(
+        await second
+            .locator('.soeditor-wysiwyg-content > :first-child')
+            .evaluate((element) => getComputedStyle(element).marginBlockStart),
+    ).toBe('0px');
+    await second.getByLabel('Editing size').selectOption('compact');
     expect(
         await first
             .locator('.soeditor-wysiwyg-content')

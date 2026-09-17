@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reduce the responsive webpage editing canvas padding from 24px to 1rem and remove the first top-level block's extra browser margin while retaining the existing device and document preset spacing.
+
 ## 1.1.0
 
 - Add the standalone `@soeditor/editor/content.css` frontend image alignment stylesheet.

@@ -121,7 +121,7 @@ export function resolveClassicCanvasPresets(
             id: 'webpage',
             label: 'Responsive · 100%',
             width: '100%',
-            padding: '24px',
+            padding: '1rem',
         },
         mobile: {
             id: 'mobile',

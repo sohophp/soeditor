@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reduce the responsive webpage editing canvas padding from 24px to 1rem and remove the first top-level block's extra browser margin while retaining the existing device and document preset spacing.
+
 - 重构 CMS disclosure 为始终可见的原生 summary 控制条，移除全局就绪观察器及工具栏定位耦合；支持宿主按语言独立创建，销毁折叠包装时保留异步挂载节点。
 
 - Redesign the image-properties preview as a responsive preview card and replace the verbose original-size and filename-to-alt actions with quiet, accessible icon controls.

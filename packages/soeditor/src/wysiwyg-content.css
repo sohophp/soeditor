@@ -5,7 +5,7 @@
     min-height: 100%;
 }
 
-/* Editing isolation only. Browser content styles intentionally add nothing. */
+/* Editing isolation with only edge-spacing normalization. */
 .soeditor-wysiwyg-content {
     all: initial;
     box-sizing: border-box;
@@ -13,6 +13,10 @@
     min-height: 100%;
     padding: 1rem;
     position: relative;
+}
+
+.soeditor-wysiwyg-content > :first-child {
+    margin-block-start: 0;
 }
 
 .soeditor-wysiwyg-content[data-soeditor-content-style='minimal'] {
