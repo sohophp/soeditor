@@ -87,7 +87,6 @@ export const cmsRuntimePreset = createPreset(
         '|',
         'link',
         'unlink',
-        'link-internal',
         'image-actions',
         'table',
         'horizontalRule',

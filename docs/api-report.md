@@ -164,7 +164,7 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`423daa45cbd7028cfe26dc262786c5a6c17ac2fc563ecc44b099e58a11b8b877`
+`c5db33ceabc71a252b9c21c8348681ff4a530ae07c8591ccb258f327bc94fee8`
 
 ### .
 
@@ -439,7 +439,7 @@ Declaration SHA-256:
 | `LinkedCommentThread`                                 | type       | stable         | `f027e8bff715ee00` |
 | `LinkOptions`                                         | type       | stable         | `3576c1349e0afedd` |
 | `LinkPlugin`                                          | type/value | stable         | `dd7d8847520848c7` |
-| `LinkTargetProvider`                                  | type       | experimental   | `d8fe429d5796c102` |
+| `LinkTargetProvider`                                  | type       | experimental   | `f3f2cad67767c808` |
 | `linkTargetProviderServiceToken`                      | value      | experimental   | `a6cf749896d8996f` |
 | `LinkTargetSelection`                                 | type       | experimental   | `39241bd6768f8287` |
 | `ListPropertiesPlugin`                                | type/value | experimental   | `0e98cafb9856f3a4` |
@@ -792,7 +792,7 @@ Declaration SHA-256:
 ### ./cms/disclosure
 
 Declaration SHA-256:
-`aa0e87a3450bb68a7055e444de5a23f87e14b89c9fe1ca24fd2429cb38466193`
+`1124059edbbf8b5bd4cf616454dfccd7a0dba668e6c9b17baab333e9d31e8d41`
 
 | Export                                 | Kind  | Classification | Signature SHA-256  |
 | -------------------------------------- | ----- | -------------- | ------------------ |
@@ -1159,7 +1159,7 @@ Declaration SHA-256:
 | `fileManagerServiceToken`                             | value      | stable         | `703a046ce0f7382b` |
 | `ImageUploadOptions`                                  | type       | experimental   | `07df16dd826c7def` |
 | `KeyboardShortcutDefinition`                          | type       | stable         | `012f4a9c31738402` |
-| `LinkTargetProvider`                                  | type       | experimental   | `d8fe429d5796c102` |
+| `LinkTargetProvider`                                  | type       | experimental   | `f3f2cad67767c808` |
 | `linkTargetProviderServiceToken`                      | value      | experimental   | `a6cf749896d8996f` |
 | `LinkTargetSelection`                                 | type       | experimental   | `39241bd6768f8287` |
 | `mapEditingPoint`                                     | value      | experimental   | `eed194b5c17e8ab8` |
@@ -1506,7 +1506,7 @@ Declaration SHA-256:
 ## @soeditor/rich-text
 
 Declaration tree SHA-256:
-`fb4e7c0708c583c0c2fa35822d566cb170f3d08d45259be30da4c93673adeaa0`
+`0df3ca1b602bd5f180ba7711dfb17876cfd66b75ea95cd5e4e20dc366e07d8b2`
 
 ### .
 
@@ -1550,7 +1550,7 @@ Declaration SHA-256:
 | `ItalicPlugin`                    | type/value | stable         | `92b847fbca4c3091` |
 | `LinkOptions`                     | type       | stable         | `3576c1349e0afedd` |
 | `LinkPlugin`                      | type/value | stable         | `dd7d8847520848c7` |
-| `LinkTargetProvider`              | type       | experimental   | `d8fe429d5796c102` |
+| `LinkTargetProvider`              | type       | experimental   | `f3f2cad67767c808` |
 | `linkTargetProviderServiceToken`  | value      | experimental   | `a6cf749896d8996f` |
 | `LinkTargetSelection`             | type       | experimental   | `39241bd6768f8287` |
 | `ListPropertiesPlugin`            | type/value | experimental   | `0e98cafb9856f3a4` |
@@ -1645,7 +1645,7 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`7c769ef0bfd5605737d1554efcbbe2f0bfe72a87c43db40dfc85fc426cecb529`
+`291418135c7b827176683e7f217192f0949f5a8c19e0b7b4c05c561148ba5017`
 
 ### .
 

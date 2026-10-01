@@ -588,12 +588,56 @@
 }
 
 .soeditor-ui__link-dialog {
-    width: min(36rem, calc(100vw - 2rem));
+    width: min(820px, calc(100dvw - 2rem));
+    block-size: min(48rem, calc(100dvh - 1rem));
+}
+
+.soeditor-ui__link-dialog .soeditor-ui__dialog-title {
+    padding: 0.55rem 0.8rem;
 }
 
 .soeditor-ui__link-dialog .soeditor-ui__dialog-body {
-    max-height: min(34rem, calc(100vh - 9rem));
-    overflow: auto;
+    overflow: hidden;
+    padding: 0.65rem 1rem;
+}
+
+.soeditor-ui__link-dialog .soeditor-ui__dialog-actions {
+    padding: 0.65rem 1rem;
+}
+
+.soeditor-ui__link-dialog .soeditor-ui__field,
+.soeditor-ui__link-dialog input,
+.soeditor-ui__link-dialog select {
+    box-sizing: border-box;
+    min-inline-size: 0;
+}
+
+.soeditor-ui__link-dialog label {
+    margin: 0;
+    padding: 0;
+}
+
+.soeditor-ui__link-dialog .soeditor-ui__field {
+    gap: 0.35rem;
+    padding: 0;
+    margin-block-end: 0.85rem;
+}
+
+.soeditor-ui__link-dialog input,
+.soeditor-ui__link-dialog select {
+    inline-size: 100%;
+    min-block-size: 2.5rem;
+}
+
+.soeditor-ui__link-essentials:not([hidden]) {
+    display: flex;
+    flex-direction: column;
+    block-size: 100%;
+    min-block-size: 0;
+}
+
+.soeditor-ui__link-essentials > .soeditor-ui__field {
+    flex: 0 0 auto;
 }
 
 .soeditor-ui__link-essentials > .soeditor-ui__field:last-child,
@@ -601,23 +645,197 @@
     margin-block-end: 0;
 }
 
-.soeditor-ui__link-advanced {
-    border-block-start: 1px solid var(--soeditor-border);
-    margin-block-start: 0.85rem;
-    padding-block-start: 0.15rem;
+.soeditor-ui__link-url-control {
+    align-items: stretch;
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    display: flex;
+    min-inline-size: 0;
+    overflow: hidden;
+    flex: 0 0 auto;
 }
 
-.soeditor-ui__link-advanced > summary {
+.soeditor-ui__link-url-control:focus-within {
+    outline: 2px solid var(--soeditor-focus-ring);
+    outline-offset: 0;
+}
+
+.soeditor-ui__link-dialog .soeditor-ui__link-url-control > input {
+    border: 0;
+    border-radius: 0;
+    flex: 1 1 auto;
+    inline-size: 0;
+    min-inline-size: 0;
+    outline: 0;
+}
+
+.soeditor-ui__link-dialog .soeditor-ui__link-file {
+    align-items: center;
+    appearance: none;
+    background: var(--soeditor-panel-bg);
+    border: 0;
+    border-inline-start: 1px solid var(--soeditor-border);
+    border-radius: 0;
+    box-shadow: none;
+    color: var(--soeditor-text);
+    cursor: pointer;
+    display: inline-flex;
+    flex: 0 0 2.5rem;
+    font: inherit;
+    justify-content: center;
+    padding: 0;
+}
+
+.soeditor-ui__link-file:hover:not(:disabled),
+.soeditor-ui__link-file:focus-visible {
+    background: color-mix(
+        in srgb,
+        var(--soeditor-accent) 10%,
+        var(--soeditor-bg)
+    );
+    color: var(--soeditor-accent);
+}
+
+.soeditor-ui__link-file:focus-visible {
+    outline: 2px solid var(--soeditor-focus-ring);
+    outline-offset: -2px;
+}
+
+.soeditor-ui__link-file:disabled {
+    cursor: wait;
+    opacity: 0.6;
+}
+
+.soeditor-ui__link-url-field {
+    position: relative;
+}
+
+.soeditor-ui__link-url-field--suggestions {
+    display: flex;
+    flex-direction: column;
+    min-block-size: 0;
+}
+
+.soeditor-ui__link-essentials > .soeditor-ui__link-url-field--suggestions {
+    flex: 1 1 auto;
+}
+
+.soeditor-ui__link-dialog .soeditor-ui__link-suggestions:not([hidden]) {
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    box-shadow: none;
+    display: block;
+    flex: 1 1 auto;
+    min-block-size: 0;
+    margin-block-start: 0.15rem;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.soeditor-ui__link-dialog .soeditor-ui__link-suggestion {
+    align-items: flex-start;
+    appearance: none;
+    color: var(--soeditor-text);
+    background: var(--soeditor-bg);
+    border: 0;
+    border-radius: 0;
+    box-sizing: border-box;
+    box-shadow: none;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    font: inherit;
+    font-size: 0.875rem;
+    inline-size: 100%;
+    line-height: 1.35;
+    min-block-size: 2.5em;
+    padding: 0.3em 0.65em;
+    text-align: start;
+    white-space: normal;
+}
+
+.soeditor-ui__link-suggestion + .soeditor-ui__link-suggestion {
+    border-block-start: 1px solid var(--soeditor-border);
+}
+
+.soeditor-ui__link-suggestion-title,
+.soeditor-ui__link-suggestion-url {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+}
+
+.soeditor-ui__link-suggestion-url {
+    color: var(--soeditor-muted);
+    font-size: 0.8em;
+}
+
+.soeditor-ui__link-dialog .soeditor-ui__link-suggestion:hover,
+.soeditor-ui__link-dialog .soeditor-ui__link-suggestion.is-active {
+    background: var(--soeditor-panel-bg);
+}
+
+.soeditor-ui__link-dialog .soeditor-ui__link-suggestion:focus-visible {
+    outline: 2px solid var(--soeditor-focus-ring);
+    outline-offset: -2px;
+}
+
+.soeditor-ui__link-file-icon,
+.soeditor-ui__link-file-icon svg {
+    block-size: 1rem;
+    display: inline-flex;
+    inline-size: 1rem;
+}
+
+.soeditor-ui__link-dialog-form {
+    display: flex;
+    flex-direction: column;
+    block-size: 100%;
+    min-block-size: 0;
+}
+
+.soeditor-ui__link-tabs {
+    display: flex;
+    flex: 0 0 auto;
+    border-block-end: 1px solid var(--soeditor-border);
+    margin-block-end: 0.75rem;
+}
+
+.soeditor-ui__link-tabs > button {
+    appearance: none;
+    background: transparent;
+    border: 0;
+    border-block-end: 2px solid transparent;
+    border-radius: 0;
     color: var(--soeditor-muted);
     cursor: pointer;
+    font: inherit;
     font-size: 0.875rem;
     font-weight: 600;
-    padding-block: 0.65rem 0.5rem;
-    user-select: none;
+    padding: 0.5rem 0.75rem;
 }
 
-.soeditor-ui__link-advanced > summary:hover {
+.soeditor-ui__link-tabs > button[aria-selected='true'] {
+    border-block-end-color: var(--soeditor-accent);
+    color: var(--soeditor-accent);
+}
+
+.soeditor-ui__link-tabs > button:hover {
     color: var(--soeditor-text);
+}
+
+.soeditor-ui__link-tabs > button:focus-visible {
+    outline: 2px solid var(--soeditor-focus-ring);
+    outline-offset: -2px;
+}
+
+.soeditor-ui__link-panels {
+    flex: 1 1 auto;
+    min-block-size: 0;
+    overflow: auto;
+    padding: 2px;
+    scrollbar-gutter: stable;
 }
 
 .soeditor-ui__link-advanced-fields {
@@ -636,12 +854,17 @@
     margin-block-end: 0;
 }
 
+.soeditor-ui__link-dialog .soeditor-ui__link-attribute-row > button,
+.soeditor-ui__link-dialog .soeditor-ui__link-rel-custom > button {
+    min-block-size: 2.5rem;
+}
+
 .soeditor-ui__link-target-controls,
 .soeditor-ui__link-rel-custom {
     align-items: start;
     display: grid;
-    gap: 0.4rem;
-    grid-template-columns: minmax(10rem, 0.9fr) minmax(12rem, 1.1fr);
+    gap: 0.65rem;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
 }
 
 .soeditor-ui__link-rel-choices {
@@ -682,7 +905,8 @@
 
 @media (max-width: 34rem) {
     .soeditor-ui__link-target-controls,
-    .soeditor-ui__link-attribute-row {
+    .soeditor-ui__link-attribute-row,
+    .soeditor-ui__link-rel-custom {
         grid-template-columns: 1fr;
     }
 }

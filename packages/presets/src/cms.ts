@@ -94,8 +94,6 @@ export const cmsPreset = createPreset(
         '|',
         'link',
         'unlink',
-        'link-internal',
-        'file-link',
         'image-actions',
         'table',
         'horizontalRule',

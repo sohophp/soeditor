@@ -3,6 +3,7 @@ import htmlPlugin from 'prettier/plugins/html';
 
 import type { HtmlFormattingOptions } from './formatting.js';
 import { keepTagClosingBracketsInline } from './formatting-output.js';
+import { preserveFormattedContent } from './formatting-preservation.js';
 import { hasHtmlParserErrors } from './formatting-validation.js';
 
 interface FormattingWorkerRequest {
@@ -39,16 +40,20 @@ Reflect.apply(addEventListenerValue, globalThis, [
         void format(request.source, {
             parser: 'html',
             plugins: [htmlPlugin],
+            embeddedLanguageFormatting: 'off',
             ...request.options,
-        }).then(
-            (result) => {
+        })
+            .then((result) => {
                 postResponse({
                     id: request.id,
-                    result: keepTagClosingBracketsInline(result),
+                    result: preserveFormattedContent(
+                        request.source,
+                        keepTagClosingBracketsInline(result),
+                    ),
                     type: 'success',
                 });
-            },
-            (error: unknown) => {
+            })
+            .catch((error: unknown) => {
                 postResponse({
                     id: request.id,
                     message:
@@ -56,8 +61,7 @@ Reflect.apply(addEventListenerValue, globalThis, [
                     reason: 'formatter',
                     type: 'failure',
                 });
-            },
-        );
+            });
     },
 ]);
 

@@ -22,6 +22,12 @@ export default defineConfig({
             testMatch: ['classic-editor.spec.ts'],
             grep: /image drag preserves|image resize cancels|image alignment renders|element path follows|counts semantic body|declared Classic toolbar|type-around/u,
         },
+        {
+            name: `${browserName}-paste`,
+            use: { browserName },
+            testMatch: ['classic-editor.spec.ts'],
+            grep: /pastes a web selection wrapped as an HTML document|accepts native browser clipboard content/u,
+        },
     ]),
     use: {
         baseURL: 'http://127.0.0.1:4173',

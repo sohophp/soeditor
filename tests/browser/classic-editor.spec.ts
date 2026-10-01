@@ -2879,6 +2879,7 @@ test('prefills selected link text and edits or removes a clicked link', async ({
         'Linked article',
     );
     await expect(dialog.getByLabel('Link URL')).toHaveValue('/articles/first');
+    await dialog.getByRole('tab', { name: 'Advanced settings' }).click();
     await expect(
         dialog
             .getByLabel('Added attributes')
@@ -2908,6 +2909,7 @@ test('prefills selected link text and edits or removes a clicked link', async ({
     await expect(dialog.getByLabel('Attribute value')).toHaveValue(
         'article-42',
     );
+    await dialog.getByRole('tab', { name: 'Basic settings' }).click();
     await dialog.getByLabel('Link URL').fill('/articles/updated');
     await dialog.getByRole('button', { name: 'Update link' }).click();
     projectedLink = visual.locator('a[href="/articles/updated"]');
@@ -3766,6 +3768,113 @@ test('classifies and cleans external paste/drop while retaining internal clipboa
     );
 });
 
+test('pastes a web selection wrapped as an HTML document', async ({
+    browserName,
+    page,
+}) => {
+    const clipboardHtml =
+        '<html><body><p>Outside</p><!--StartFragment-->' +
+        '<h2>What is OLED?</h2><p onclick="run()">Article text</p>' +
+        '<table><tbody><tr><td>OLED</td></tr></tbody></table>' +
+        '<!--EndFragment--><p>Outside</p></body></html>';
+    if (browserName === 'firefox') {
+        const copied = await page.evaluate((html) => {
+            const carrier = document.createElement('span');
+            carrier.textContent = 'Clipboard carrier';
+            document.body.append(carrier);
+            const range = document.createRange();
+            range.selectNodeContents(carrier);
+            const selection = window.getSelection();
+            selection?.removeAllRanges();
+            selection?.addRange(range);
+            document.addEventListener(
+                'copy',
+                (event) => {
+                    event.clipboardData?.setData('text/html', html);
+                    event.clipboardData?.setData(
+                        'text/plain',
+                        'What is OLED?\nArticle text\nOLED',
+                    );
+                    event.preventDefault();
+                },
+                { once: true },
+            );
+            const success = document.execCommand('copy');
+            carrier.remove();
+            return success;
+        }, clipboardHtml);
+        expect(copied).toBe(true);
+        await page.evaluate(() =>
+            globalThis.__classicDemo.editor.setData('<p>Existing</p>'),
+        );
+        await page.locator('.soeditor-classic__visual p').click();
+        await page.keyboard.press('End');
+        await page.keyboard.press('ControlOrMeta+V');
+    } else {
+        await page.evaluate((html) => {
+            const harness = globalThis.__classicDemo;
+            harness.editor.setData('<p>Existing</p>');
+            harness.select({
+                anchor: { block: 0, offset: 8 },
+                focus: { block: 0, offset: 8 },
+            });
+            const transfer = new DataTransfer();
+            transfer.setData('text/html', html);
+            transfer.setData('text/plain', 'What is OLED?\nArticle text\nOLED');
+            document
+                .querySelector<HTMLElement>('.soeditor-classic__visual')
+                ?.shadowRoot?.querySelector<HTMLElement>(
+                    '.soeditor-wysiwyg-content',
+                )
+                ?.dispatchEvent(
+                    new ClipboardEvent('paste', {
+                        bubbles: true,
+                        cancelable: true,
+                        clipboardData: transfer,
+                    }),
+                );
+        }, clipboardHtml);
+    }
+    const result = await page.evaluate(() => {
+        const harness = globalThis.__classicDemo;
+        return {
+            data: harness.getData(),
+            diagnostics: harness.pasteDiagnostics(),
+        };
+    });
+    expect(result.data).toContain('<h2>What is OLED?</h2>');
+    expect(result.data).toContain('<table>');
+    expect(result.data).not.toMatch(/Outside|onclick/u);
+    expect(result.diagnostics).not.toContain('processor-failed');
+});
+
+test('accepts native browser clipboard content with plain-text fallback', async ({
+    page,
+}) => {
+    const copied = await page.evaluate(() => {
+        const carrier = document.createElement('div');
+        carrier.innerHTML =
+            '<h2>Browser clipboard title</h2><p>Browser clipboard body</p>';
+        document.body.append(carrier);
+        const range = document.createRange();
+        range.selectNodeContents(carrier);
+        const selection = window.getSelection();
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        const success = document.execCommand('copy');
+        carrier.remove();
+        globalThis.__classicDemo.editor.setData('<p>Existing</p>');
+        return success;
+    });
+    expect(copied).toBe(true);
+    await page.locator('.soeditor-classic__visual p').click();
+    await page.keyboard.press('End');
+    await page.keyboard.press('ControlOrMeta+V');
+    const data = await page.evaluate(() => globalThis.__classicDemo.getData());
+    expect(data).toContain('Browser clipboard title');
+    expect(data).toContain('Browser clipboard body');
+});
+
 test('uploads images with temporary previews, retry, cancellation, and unsafe-result rejection', async ({
     page,
 }) => {
@@ -4352,6 +4461,10 @@ test('keeps the latest view and data while Source loads and never attaches after
         'aria-busy',
         'true',
     );
+    await expect(page.locator('.soeditor-ui__status')).toHaveText(
+        'Loading HTML Source…',
+    );
+    await expect(page.locator('.soeditor-ui__notification')).toHaveCount(0);
     await page.evaluate(() => {
         const editor = globalThis.__classicDemo.editor;
         editor.setData('<p>Changed during loading</p>');
@@ -4362,6 +4475,9 @@ test('keeps the latest view and data while Source loads and never attaches after
     await expect(page.locator('.soeditor-classic')).toHaveAttribute(
         'data-soeditor-source-state',
         'ready',
+    );
+    await expect(page.locator('.soeditor-ui__status')).not.toHaveText(
+        'Loading HTML Source…',
     );
     await expect(
         page.locator('[data-workspace-view="wysiwyg"]'),
@@ -5815,8 +5931,6 @@ test('keeps the declared Classic toolbar controls present and localized', async 
         'blockquote',
         'link',
         'unlink',
-        'link-internal',
-        'file-link',
         'image-actions',
         'table',
         'horizontalRule',
@@ -6362,4 +6476,96 @@ test('image properties use canonical URLs when baseHref projects absolute resour
     expect(html).toContain('href="guide.html"');
     expect(html).toContain('srcset="small.png 320w, large.png 640w"');
     expect(html).not.toContain('assets.example');
+});
+
+test('internal link suggestions keep dialog and typing stable across async updates', async ({
+    page,
+}) => {
+    await page.evaluate(() => {
+        globalThis.__classicDemo.editor.setData('<p>Link text</p>');
+        globalThis.__classicDemo.select({
+            anchor: { block: 0, offset: 0 },
+            focus: { block: 0, offset: 9 },
+        });
+        globalThis.__classicDemo.editor.editor.services.replace(
+            'soeditor.link-target-provider',
+            {
+                select: async () => null,
+                searchInternal: async (query: string) => {
+                    await new Promise((resolve) => setTimeout(resolve, 120));
+                    return query === '/none'
+                        ? []
+                        : Array.from(
+                              { length: query === '/' ? 8 : 1 },
+                              (_, index) => ({
+                                  href: `${query === '/' ? '' : query}/page-${index}`,
+                                  title: `Page ${index}`,
+                              }),
+                          );
+                },
+            },
+        );
+    });
+    await page.locator('[data-toolbar-item="link"]').click();
+    const dialog = page.getByRole('dialog', { name: 'Link', exact: true });
+    const href = dialog.getByLabel('Link URL');
+    const list = dialog.getByRole('listbox');
+    const geometry = async () => ({
+        dialog: await dialog.boundingBox(),
+        href: await href.boundingBox(),
+    });
+    const baseline = await geometry();
+    for (const query of ['/', '/award', '/none']) {
+        await href.fill(query);
+        if (query === '/none') {
+            await page.waitForTimeout(400);
+            await expect(list).toBeHidden();
+        } else
+            await expect(list.getByRole('option')).toHaveCount(
+                query === '/' ? 8 : 1,
+            );
+        expect(await geometry()).toEqual(baseline);
+        await expect(href).toBeFocused();
+        await expect(href).toHaveValue(query);
+    }
+    await href.fill('/');
+    await expect(list.getByRole('option')).toHaveCount(8);
+    await href.press('ArrowDown');
+    await href.fill('/awards');
+    await expect(list).toBeVisible();
+    await expect(list.getByRole('option').first()).toBeDisabled();
+    await expect(href).not.toHaveAttribute('aria-activedescendant');
+    await expect(list.getByRole('option', { selected: true })).toHaveCount(0);
+    await expect(list.getByRole('option')).toHaveCount(1);
+    await href.fill('/');
+    await href.pressSequentially('awards', { delay: 80 });
+    await expect(list.getByRole('option')).toHaveCount(1);
+    await expect(href).toHaveValue('/awards');
+    expect(
+        await href.evaluate((input: HTMLInputElement) => [
+            input.selectionStart,
+            input.selectionEnd,
+        ]),
+    ).toEqual([7, 7]);
+    expect(await geometry()).toEqual(baseline);
+    await href.fill('/award');
+    await expect(list.getByRole('option')).toContainText(['/award/page-0']);
+    await href.press('ArrowDown');
+    await href.press('Enter');
+    await expect(href).toHaveValue('/award/page-0');
+    await expect(href).toBeFocused();
+    expect(await geometry()).toEqual(baseline);
+    await href.fill('/late');
+    await page.waitForTimeout(230);
+    await dialog.getByLabel('Displayed text').focus();
+    await page.waitForTimeout(200);
+    await expect(list).toBeHidden();
+    await href.focus();
+    await href.dispatchEvent('compositionstart');
+    await href.fill('/composition');
+    await page.waitForTimeout(400);
+    await expect(list).toBeHidden();
+    await href.dispatchEvent('compositionend');
+    await expect(list.getByRole('option')).toHaveCount(1);
+    expect(await geometry()).toEqual(baseline);
 });

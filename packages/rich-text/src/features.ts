@@ -504,8 +504,18 @@ export type LinkOptions = VisualLinkAttributes;
 
 export type LinkTargetSelection = LinkOptions;
 
+/** A public, site-relative URL offered by a host's on-demand page search. */
+export interface LinkTargetSuggestion {
+    readonly href: string;
+    readonly title: string;
+}
+
 export interface LinkTargetProvider {
     select(kind: 'file' | 'internal'): PromiseLike<LinkTargetSelection | null>;
+    /** Optional, bounded suggestions requested only after a relative URL starts with '/'. */
+    searchInternal?(
+        query: string,
+    ): PromiseLike<readonly LinkTargetSuggestion[]>;
 }
 
 export const linkTargetProviderServiceToken =

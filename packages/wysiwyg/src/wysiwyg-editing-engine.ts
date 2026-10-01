@@ -258,6 +258,10 @@ export class WysiwygEditingEngine implements EditingEngine {
         { readonly node: HtmlElement; readonly type: string }
     >();
     #serializedBlocks = new WeakMap<Node, string>();
+    readonly #pastedSource = new WeakMap<
+        Node,
+        { canonical: string; source: string }
+    >();
     #serializedNodes = new WeakMap<Node, HtmlChildNode>();
     #activeCell: HTMLTableCellElement | undefined;
     #compositionGroup: string | undefined;
@@ -699,6 +703,17 @@ export class WysiwygEditingEngine implements EditingEngine {
         if (event.inputType === 'historyRedo') {
             event.preventDefault();
             this.#executeHistory('editor.redo');
+            return;
+        }
+        if (
+            (event.inputType === 'deleteContentBackward' ||
+                event.inputType === 'deleteContentForward') &&
+            this.#isEmptyEditablePlaceholder() &&
+            this.editor.getData() !== ''
+        ) {
+            event.preventDefault();
+            this.#resetInputHistory();
+            this.#commit();
             return;
         }
         if (
@@ -1561,15 +1576,18 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.#tableDragMoved = false;
         this.#preservedNodes.clear();
         this.#preservedSequence = 0;
-        this.element.replaceChildren(
-            ...parsed.document.children.map((node) => this.#renderNode(node)),
-        );
+        const rendered = parsed.document.children.map((source) => ({
+            source,
+            node: this.#renderNode(source),
+        }));
+        this.element.replaceChildren(...rendered.map(({ node }) => node));
         if (this.element.childNodes.length === 0) {
             const paragraph = this.#document.createElement('p');
             paragraph.append(this.#document.createElement('br'));
             this.element.append(paragraph);
         }
         this.#decorateTables();
+        this.#rememberSource(rendered, source);
         if (bookmark !== undefined) this.#restoreBookmark(bookmark);
         this.#updateEditableState();
         // Rendering replaces and decorates the projection DOM deliberately.
@@ -1660,6 +1678,27 @@ export class WysiwygEditingEngine implements EditingEngine {
             );
         }
         return element;
+    }
+
+    #rememberSource(
+        nodes: readonly { source: HtmlChildNode; node: Node }[],
+        html: string,
+    ): void {
+        for (const { source, node } of nodes) {
+            if (node.parentNode !== this.element || source.source === undefined)
+                continue;
+            const converted = this.#serializeNode(node);
+            this.#pastedSource.set(node, {
+                canonical: serializeHtmlFragment({
+                    children: converted === undefined ? [] : [converted],
+                    type: 'document-fragment',
+                }),
+                source: html.slice(
+                    source.source.start.offset,
+                    source.source.end.offset,
+                ),
+            });
+        }
     }
 
     #preserveNode(node: HtmlChildNode): Comment {
@@ -1774,10 +1813,13 @@ export class WysiwygEditingEngine implements EditingEngine {
             const cached = this.#serializedBlocks.get(node);
             if (cached !== undefined) return cached;
             const converted = this.#serializeNode(node, true);
-            const source = serializeHtmlFragment({
+            const canonical = serializeHtmlFragment({
                 children: converted === undefined ? [] : [converted],
                 type: 'document-fragment',
             });
+            const pasted = this.#pastedSource.get(node);
+            const source =
+                pasted?.canonical === canonical ? pasted.source : canonical;
             this.#serializedBlocks.set(node, source);
             return source;
         }).join('');
@@ -1898,7 +1940,9 @@ export class WysiwygEditingEngine implements EditingEngine {
 
     #commit(historyGroup?: string): void {
         if (!this.#canEdit()) return;
-        const source = this.#serialize();
+        const source = this.#isEmptyEditablePlaceholder()
+            ? ''
+            : this.#serialize();
         if (source === this.editor.getData()) return;
         this.#pendingSource = source;
         try {
@@ -1921,6 +1965,25 @@ export class WysiwygEditingEngine implements EditingEngine {
             this.#pendingSource = undefined;
             this.#baseHref.applyTree(this.element);
         }
+    }
+
+    #isEmptyEditablePlaceholder(): boolean {
+        if (this.element.childNodes.length !== 1) return false;
+        const onlyChild = this.element.firstChild;
+        if (!(onlyChild instanceof Element)) return false;
+        if (onlyChild.localName === 'br') {
+            return onlyChild.attributes.length === 0;
+        }
+        if (onlyChild.localName !== 'p' || onlyChild.attributes.length !== 0) {
+            return false;
+        }
+        const paragraphChild = onlyChild.firstChild;
+        return (
+            onlyChild.childNodes.length === 1 &&
+            paragraphChild instanceof Element &&
+            paragraphChild.localName === 'br' &&
+            paragraphChild.attributes.length === 0
+        );
     }
 
     #handleDocumentChange(source: string): void {
@@ -2208,6 +2271,20 @@ export class WysiwygEditingEngine implements EditingEngine {
             marker.closest<HTMLElement>(blockSelector) ?? marker.parentElement;
         marker.replaceWith(text);
         if (cleanupRoot !== null) {
+            if (cleanupRoot.matches('h1,h2,h3,h4,h5,h6,p')) {
+                cleanupRoot.removeAttribute('style');
+                const preserved = this.#unsafeAttributes.get(cleanupRoot);
+                if (preserved !== undefined) {
+                    this.#unsafeAttributes.set(
+                        cleanupRoot,
+                        Object.freeze(
+                            preserved.filter(
+                                (attribute) => attribute.name !== 'style',
+                            ),
+                        ),
+                    );
+                }
+            }
             const emptyFormatting = Array.from(
                 cleanupRoot.querySelectorAll(
                     'b,strong,i,em,u,s,strike,sub,sup,font,span',
@@ -2882,9 +2959,11 @@ export class WysiwygEditingEngine implements EditingEngine {
         if (options?.placement === 'selection-start') range.collapse(true);
         const parsed = parseHtmlFragment(html);
         const fragment = this.#document.createDocumentFragment();
-        fragment.append(
-            ...parsed.document.children.map((node) => this.#renderNode(node)),
-        );
+        const inserted = parsed.document.children.map((source) => ({
+            source,
+            node: this.#renderNode(source),
+        }));
+        fragment.append(...inserted.map(({ node }) => node));
         const blockInsertion = Array.from(fragment.childNodes).some(
             (node) => node instanceof Element && isBlockInsertion(node),
         );
@@ -2903,6 +2982,7 @@ export class WysiwygEditingEngine implements EditingEngine {
                 range.insertNode(fragment);
             }
             this.#decorateTables();
+            this.#rememberSource(inserted, html);
             const next = this.#document.createRange();
             if (lastInserted !== null && lastInserted.isConnected) {
                 next.setStartAfter(lastInserted);

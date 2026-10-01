@@ -2,7 +2,23 @@
 
 ## Unreleased
 
+- Clear the selected heading or paragraph's inline style when removing formatting, including inert preserved styles, while retaining its block tag and metadata.
+
+- Allow semantic external paste to discard all inline styles with `cms.paste.retainAlignment: false`, without changing Source text paste or explicit preservation policies.
+
+- Preserve external paste source, authored table alignment, classes, safe CSS, and unchanged visual blocks without reserializing them when another block is edited.
+
+- Omit neutral browser clipboard `text-align: start` during default semantic paste cleanup while preserving authored overrides and explicit preservation policies. Keep literal whitespace in nested code blocks. Format source without rewriting text, attribute quoting, entities or embedded data; minify directly from source offsets rather than reserializing HTML.
+
+- Use the Link dialog's remaining panel height for internal-page suggestions, align fields across tabs and cap the dialog width independently of the host font size.
+
+- Replace the Link dialog's expanding advanced settings with keyboard-accessible Basic settings / Advanced settings tabs that retain values and share a stable dialog size.
+
+- Keep internal-link suggestions and URL input geometry stable during asynchronous searches, disable stale results until refresh, and scroll keyboard choices within the list. Fit the reserved list space to short viewports and enlarged text.
+
 - Reduce the responsive webpage editing canvas padding from 24px to 1rem and remove the first top-level block's extra browser margin while retaining the existing device and document preset spacing.
+
+- Show HTML Source lazy-loading progress in the status bar and restore the normal editor status as soon as loading finishes.
 
 ## 1.1.0
 

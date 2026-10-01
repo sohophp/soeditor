@@ -2,6 +2,7 @@ import { mountToolbarDrawer, destroyToolbarItems } from './toolbar-mount.js';
 import { showFormatState } from './format-state.js';
 import { blockFormatMenu } from './block-format-menu.js';
 import { SOURCE_TOOLBAR } from './source-toolbar.js';
+import type { LinkTargetProvider } from './link-attributes.js';
 import type { Editor } from '@soeditor/core';
 
 import type {
@@ -355,6 +356,8 @@ const headingMenu: ToolbarItemFactory = ({ document, editor, ui }) => {
     };
 };
 
+let nextLinkUrlId = 0;
+
 const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
     const button = document.createElement('button');
     button.type = 'button';
@@ -402,14 +405,21 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
             false,
             selectedText,
         );
-        const href = field(
-            document,
-            essentials,
-            'Link URL',
-            'text',
-            true,
-            typeof values.href === 'string' ? values.href : '',
-        );
+        const hrefField = document.createElement('div');
+        hrefField.className = 'soeditor-ui__field soeditor-ui__link-url-field';
+        const hrefCaption = document.createElement('label');
+        hrefCaption.textContent = 'Link URL';
+        const href = document.createElement('input');
+        href.id = `soeditor-link-url-${++nextLinkUrlId}`;
+        hrefCaption.htmlFor = href.id;
+        href.type = 'text';
+        href.required = true;
+        href.value = typeof values.href === 'string' ? values.href : '';
+        const hrefControl = document.createElement('div');
+        hrefControl.className = 'soeditor-ui__link-url-control';
+        hrefControl.append(href);
+        hrefField.append(hrefCaption, hrefControl);
+        essentials.append(hrefField);
         displayed.autocomplete = 'off';
         displayed.placeholder = 'Text shown to readers';
         href.setAttribute('autocomplete', 'url');
@@ -417,16 +427,6 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
         href.placeholder = 'https://example.com/page';
         href.spellcheck = false;
 
-        const advanced = document.createElement('details');
-        advanced.className = 'soeditor-ui__link-advanced';
-        advanced.open =
-            ['title', 'target', 'rel'].some(
-                (name) =>
-                    typeof values[name] === 'string' &&
-                    values[name].trim().length > 0,
-            ) || readInspectedCustomAttributes(values).length > 0;
-        const advancedSummary = document.createElement('summary');
-        advancedSummary.textContent = 'Advanced settings';
         const advancedFields = document.createElement('div');
         advancedFields.className = 'soeditor-ui__link-advanced-fields';
         const title = field(
@@ -439,6 +439,22 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
         );
         title.autocomplete = 'off';
         title.placeholder = 'Optional tooltip';
+        const disposeTargetControls = attributeTools.attachLinkTargetControls({
+            document,
+            container: hrefField,
+            fileButtonContainer: hrefControl,
+            href,
+            title,
+            displayed,
+            selectedText,
+            provider: editor.services.tryGet<LinkTargetProvider>(
+                'soeditor.link-target-provider',
+            ),
+            translate: (message: string) => ui.translate(message),
+            report: (error: unknown) => reportError(ui, error),
+            fileIcon: (element: HTMLElement) =>
+                ui.setIcon(element, 'link.file.browse', 'Files'),
+        });
         const target = linkTargetField(
             document,
             advancedFields,
@@ -456,8 +472,61 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
             attributeSuggestions,
             ui.translate,
         );
-        advanced.append(advancedSummary, advancedFields);
-        body.append(essentials, advanced);
+        const tabs = document.createElement('div');
+        tabs.className = 'soeditor-ui__link-tabs';
+        tabs.setAttribute('role', 'tablist');
+        tabs.setAttribute('aria-label', ui.translate('Link'));
+        const panels = document.createElement('div');
+        panels.className = 'soeditor-ui__link-panels';
+        const sections = [essentials, advancedFields];
+        const tabButtons = sections.map((panel, index) => {
+            const tab = document.createElement('button');
+            tab.type = 'button';
+            tab.textContent =
+                index === 0 ? 'Basic settings' : 'Advanced settings';
+            tab.id = `${href.id}-tab-${index}`;
+            tab.setAttribute('role', 'tab');
+            panel.id = `${href.id}-panel-${index}`;
+            panel.setAttribute('role', 'tabpanel');
+            panel.setAttribute('aria-labelledby', tab.id);
+            tab.setAttribute('aria-controls', panel.id);
+            tabs.append(tab);
+            panels.append(panel);
+            return tab;
+        });
+        const selectTab = (index: number, focus = false): void => {
+            tabButtons.forEach((tab, candidate) => {
+                const selected = candidate === index;
+                tab.setAttribute('aria-selected', String(selected));
+                tab.tabIndex = selected ? 0 : -1;
+            });
+            sections.forEach((panel, candidate) => {
+                panel.hidden = candidate !== index;
+            });
+            if (focus) tabButtons[index]?.focus();
+        };
+        tabButtons.forEach((tab, index) => {
+            tab.addEventListener('click', () => selectTab(index));
+            tab.addEventListener('keydown', (event) => {
+                const next =
+                    event.key === 'Home'
+                        ? 0
+                        : event.key === 'End'
+                          ? 1
+                          : event.key === 'ArrowLeft' ||
+                              event.key === 'ArrowRight'
+                            ? 1 - index
+                            : undefined;
+                if (next === undefined) return;
+                event.preventDefault();
+                selectTab(next, true);
+            });
+        });
+        // Reveal invalid fields before native validation tries to focus them.
+        href.addEventListener('invalid', () => selectTab(0));
+        advancedFields.addEventListener('invalid', () => selectTab(1), true);
+        selectTab(0);
+        body.append(tabs, panels);
         const save = (): void => {
             href.value = href.value.trim();
             if (!href.reportValidity()) return;
@@ -508,6 +577,7 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
             ],
         });
         handle.element.classList.add('soeditor-ui__link-dialog');
+        handle.element.addEventListener('close', disposeTargetControls);
         body.addEventListener('keydown', (event) => {
             const view = document.defaultView;
             const fromInput =

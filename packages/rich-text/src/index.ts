@@ -30,6 +30,7 @@ export type {
     LinkOptions,
     LinkTargetProvider,
     LinkTargetSelection,
+    LinkTargetSuggestion,
     SemanticStyleAttribute,
     SemanticStyleDefinition,
     TextAlignment,

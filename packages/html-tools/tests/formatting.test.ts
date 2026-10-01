@@ -11,6 +11,63 @@ import {
 } from '../src/index.js';
 
 describe('HTML formatting', () => {
+    it('formats complete documents without treating body text inside an attribute as document markup', async () => {
+        const service = createHtmlFormattingService();
+        const fragment =
+            '<p title="literal <body> example">Keep &amp; retain</p>';
+        expect(await service.format(fragment)).toContain(fragment);
+        expect(await service.minify(fragment)).toBe(fragment);
+        const document =
+            '<!--CMS:page-->\n<!doctype html>\n<html lang="en"><head><title>A &amp; B</title></head><body><main><p>Content</p></main></body></html>';
+        const formatted = await service.format(document);
+        expect(formatted).toContain('<!doctype html>');
+        expect(formatted).toContain('<title>A &amp; B</title>');
+        expect(await service.minify(formatted)).toBe(
+            '<!--CMS:page--><!doctype html><html lang="en"><head><title>A &amp; B</title></head><body><main><p>Content</p></main></body></html>',
+        );
+    });
+
+    it('formats indentation without rewriting literal text, attribute quoting or embedded data', async () => {
+        const service = createHtmlFormattingService();
+        const paragraph =
+            "<p title='A  B &amp; C' data-value='{{ item }}'>A  B&nbsp;&#32;C</p>";
+        const script =
+            '<script>const result=  "keep";\n// keep indentation\n</script>';
+        const style = '<style>.cms { color:red; --value: "a  b"; }</style>';
+        const pre = '<pre data-id=code>  x\n\ty  </pre>';
+        const source = `<main>${paragraph}${script}${style}${pre}</main>`;
+        const formatted = await service.format(source);
+        expect(formatted).toContain('\n  <p');
+        for (const preserved of [paragraph, script, style, pre])
+            expect(formatted).toContain(preserved);
+        expect(await service.format(formatted)).toBe(formatted);
+    });
+
+    it('minifies source indentation and tag spacing without reserializing attributes or entities', async () => {
+        const service = createHtmlFormattingService();
+        const source =
+            "<DIV\n CLASS='a  b'\n data-id=one>\n  <P title='A &amp; B'>A&nbsp;  B <em> C </em></P>\n  <!--CMS:block\n  > marker-->\n  <pre>  x\n  y</pre>\n</DIV>";
+        const expected =
+            "<DIV CLASS='a  b' data-id=one><P title='A &amp; B'>A&nbsp;  B <em> C </em></P><!--CMS:block\n  > marker--><pre>  x\n  y</pre></DIV>";
+        expect(await service.minify(source)).toBe(expected);
+        expect(await service.minify(expected)).toBe(expected);
+    });
+
+    it('preserves authored whitespace rules, inline boundaries and encoded spaces in both operations', async () => {
+        const service = createHtmlFormattingService();
+        const literal =
+            '<div style="white-space: pre-wrap">  A\n    <b>B</b>  C</div>';
+        const inline =
+            '<p><code> A\n B </code><span>C</span> <span>D</span>&#32;</p>';
+        for (const operation of ['format', 'minify'] as const) {
+            const result = await service[operation](
+                `<main>${literal}${inline}</main>`,
+            );
+            expect(result).toContain(literal);
+            expect(result).toContain(inline);
+        }
+    });
+
     it('formats canonical HTML through an asynchronous command transaction', async () => {
         const editor = await Editor.create({
             data: '<main><h1>Title</h1><p>Text</p></main>',
@@ -72,7 +129,7 @@ describe('HTML formatting', () => {
         );
 
         expect(formatted).toContain('<!-- CMS <marker\n  > retained -->');
-        expect(formatted).toContain('alpha < beta\n    > gamma');
+        expect(formatted).toContain('alpha < beta\n  > gamma');
     });
 
     it('preserves custom elements, comments, templates, and unsafe source data', async () => {
@@ -133,7 +190,7 @@ describe('HTML formatting', () => {
         const minified = await editor.execute('document.minify');
 
         expect(minified).toBe(
-            '<!DOCTYPE html><html lang="en"><head><title>Page</title></head><body><main><p>Text</p></main></body></html>',
+            '<!doctype html><html lang="en"><head><title>Page</title></head><body><main><p>Text</p></main></body></html>',
         );
     });
 

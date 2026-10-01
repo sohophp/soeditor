@@ -3,19 +3,12 @@ import {
     EditorDestroyedError,
     Plugin,
 } from '@soeditor/core';
-import {
-    parseHtmlDocument,
-    parseHtmlFragment,
-    serializeHtmlDocument,
-    serializeHtmlFragment,
-    type HtmlChildNode,
-    type HtmlDocument,
-    type HtmlDocumentChildNode,
-    type HtmlDocumentFragment,
-    type HtmlElement,
-} from '@soeditor/html';
 import HtmlFormattingWorker from './formatting-worker.ts?worker&inline';
 import { keepTagClosingBracketsInline } from './formatting-output.js';
+import {
+    compactHtmlSource,
+    preserveFormattedContent,
+} from './formatting-preservation.js';
 import { hasHtmlParserErrors } from './formatting-validation.js';
 
 import { DiagnosticsPlugin, diagnosticsServiceToken } from './diagnostics.js';
@@ -83,7 +76,7 @@ export function createHtmlFormattingService(): HtmlFormattingService {
             assertFormattingSourceSize(source);
             if (hasHtmlParserErrors(source))
                 throw new InvalidHtmlFormattingSourceError();
-            return minifyHtml(source);
+            return compactHtmlSource(source);
         },
     });
 }
@@ -192,7 +185,7 @@ export class HtmlFormattingPlugin extends Plugin {
             throw new EditorDestroyedError();
         }
         assertFormattingSourceSize(source);
-        return minifyHtml(source);
+        return compactHtmlSource(source);
     }
 }
 
@@ -224,12 +217,16 @@ async function formatHtmlOnMainThread(
         import('prettier/standalone'),
         import('prettier/plugins/html'),
     ]);
-    return keepTagClosingBracketsInline(
-        await format(source, {
-            parser: 'html',
-            plugins: [htmlPlugin],
-            ...options,
-        }),
+    return preserveFormattedContent(
+        source,
+        keepTagClosingBracketsInline(
+            await format(source, {
+                parser: 'html',
+                plugins: [htmlPlugin],
+                embeddedLanguageFormatting: 'off',
+                ...options,
+            }),
+        ),
     );
 }
 
@@ -363,155 +360,6 @@ function readFormattingWorkerResponse(
         reason,
         type,
     };
-}
-
-const blockElements = new Set([
-    'address',
-    'article',
-    'aside',
-    'blockquote',
-    'body',
-    'caption',
-    'dd',
-    'details',
-    'dialog',
-    'div',
-    'dl',
-    'dt',
-    'fieldset',
-    'figcaption',
-    'figure',
-    'footer',
-    'form',
-    'h1',
-    'h2',
-    'h3',
-    'h4',
-    'h5',
-    'h6',
-    'header',
-    'hgroup',
-    'hr',
-    'html',
-    'li',
-    'main',
-    'menu',
-    'nav',
-    'ol',
-    'p',
-    'pre',
-    'section',
-    'summary',
-    'table',
-    'tbody',
-    'td',
-    'tfoot',
-    'th',
-    'thead',
-    'tr',
-    'ul',
-]);
-
-const structuralContainers = new Set([
-    'html',
-    'head',
-    'table',
-    'tbody',
-    'tfoot',
-    'thead',
-    'tr',
-]);
-
-/**
- * Produces compact semantic HTML without altering inline whitespace. Only
- * indentation-only nodes between block structures are discarded; comments,
- * custom elements, executable source data, and text inside preformatted
- * elements remain intact.
- */
-function minifyHtml(source: string): string {
-    if (/^\s*(?:<!doctype\s|<html(?:\s|>))/iu.test(source)) {
-        const parsed = parseHtmlDocument(source);
-        const compact: HtmlDocument = Object.freeze({
-            type: 'document',
-            children: compactDocumentChildren(parsed.document.children),
-        });
-        return serializeHtmlDocument(compact);
-    }
-    const parsed = parseHtmlFragment(source);
-    const compact: HtmlDocumentFragment = Object.freeze({
-        type: 'document-fragment',
-        children: compactChildren(parsed.document.children),
-    });
-    return serializeHtmlFragment(compact);
-}
-
-function compactDocumentChildren(
-    children: readonly HtmlDocumentChildNode[],
-): readonly HtmlDocumentChildNode[] {
-    return Object.freeze(
-        children
-            .map((child): HtmlDocumentChildNode =>
-                child.type === 'element' ? compactElement(child) : child,
-            )
-            .filter(
-                (child) =>
-                    child.type !== 'text' ||
-                    !/^\s+$/u.test(child.value) ||
-                    !/[\r\n]/u.test(child.value),
-            ),
-    );
-}
-
-function compactChildren(
-    children: readonly HtmlChildNode[],
-    parentTag?: string,
-): readonly HtmlChildNode[] {
-    const compacted = children
-        .map((child): HtmlChildNode =>
-            child.type === 'element' ? compactElement(child) : child,
-        )
-        .filter((child, index, all) => {
-            if (
-                child.type !== 'text' ||
-                !/^\s+$/u.test(child.value) ||
-                !/[\r\n]/u.test(child.value)
-            ) {
-                return true;
-            }
-            const previous = all[index - 1];
-            const next = all[index + 1];
-            if (
-                parentTag !== undefined &&
-                structuralContainers.has(parentTag)
-            ) {
-                return false;
-            }
-            return !(
-                (isBlockElement(previous) && isBlockElement(next)) ||
-                (previous === undefined && isBlockElement(next)) ||
-                (isBlockElement(previous) && next === undefined)
-            );
-        });
-    return Object.freeze(compacted);
-}
-
-function compactElement(element: HtmlElement): HtmlElement {
-    if (
-        element.tagName === 'pre' ||
-        element.tagName === 'textarea' ||
-        element.tagName === 'script' ||
-        element.tagName === 'style'
-    ) {
-        return element;
-    }
-    return Object.freeze({
-        ...element,
-        children: compactChildren(element.children, element.tagName),
-    });
-}
-
-function isBlockElement(node: HtmlChildNode | undefined): boolean {
-    return node?.type === 'element' && blockElements.has(node.tagName);
 }
 
 function readOptions(

@@ -724,7 +724,8 @@ export async function createClassicEditor(
         host,
         get statusElement() {
             assertAlive();
-            if (ui === undefined) throw new Error('Editor UI is not initialized.');
+            if (ui === undefined)
+                throw new Error('Editor UI is not initialized.');
             return ui.hostStatusElement;
         },
         get canvasPreset() {
@@ -1004,10 +1005,7 @@ export async function createClassicEditor(
         visualChangedWhileSourceLoads = false;
         dom.root.dataset.soeditorSourceState = 'loading';
         dom.root.setAttribute('aria-busy', 'true');
-        ui?.notifications.show({
-            message: ui.translate('Loading HTML Source…'),
-            severity: 'info',
-        });
+        ui?.setStatus(ui.translate('Loading HTML Source…'));
         const load =
             sourceAttempts++ === 0
                 ? import('@soeditor/source')
@@ -1089,6 +1087,7 @@ export async function createClassicEditor(
                 throw error;
             })
             .finally(() => {
+                ui?.setStatus();
                 dom.root.removeAttribute('aria-busy');
             });
         return sourceLoading;

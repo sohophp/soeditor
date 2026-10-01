@@ -805,6 +805,45 @@ test('uses native Enter, Shift+Enter, Backspace, and Delete paragraph behavior',
     await expect(surface.locator('p')).toContainText('Bravo');
 });
 
+test('deleting the final character clears native empty placeholders', async ({ page }) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    const getData = () =>
+        page.evaluate(() => {
+            const fixture: unknown = Reflect.get(globalThis, '__wysiwygFixture');
+            if (typeof fixture !== 'object' || fixture === null) {
+                throw new Error('Missing WYSIWYG fixture.');
+            }
+            const read = Reflect.get(fixture, 'getData');
+            if (typeof read !== 'function') {
+                throw new Error('Missing WYSIWYG fixture getData().');
+            }
+            return String(Reflect.apply(read, fixture, []));
+        });
+
+    await setFixtureData(page, '');
+    await surface.click();
+    await page.keyboard.type('a');
+    await page.keyboard.press('Backspace');
+    await expect.poll(getData).toBe('');
+    await page.keyboard.press('Delete');
+    await expect.poll(getData).toBe('');
+
+    await setFixtureData(page, '<br />');
+    await surface.click();
+    await page.keyboard.press('Backspace');
+    await expect.poll(getData).toBe('');
+
+    await setFixtureData(page, '<p>a</p>');
+    await clickTextBoundary(page, surface.locator('p'), 1);
+    await page.keyboard.press('Backspace');
+    await expect.poll(getData).toBe('');
+
+    await setFixtureData(page, '<p id="keep">a</p>');
+    await clickTextBoundary(page, surface.locator('#keep'), 1);
+    await page.keyboard.press('Backspace');
+    await expect.poll(getData).toContain('id="keep"');
+});
+
 test('preserves emoji, combining text, Chinese composition, and RTL input', async ({
     page,
 }) => {
@@ -1332,7 +1371,8 @@ test('creates, edits, and removes a selected-text link without losing its range'
     await page.mouse.click(linkPoint.x, linkPoint.y);
     await page.getByRole('button', { name: 'Edit link' }).click();
     dialog = page.getByRole('dialog', { name: 'Edit link' });
-    await expect(dialog.locator('details')).toHaveAttribute('open', '');
+    await expect(dialog.getByRole('tab', { name: 'Basic settings' })).toHaveAttribute('aria-selected', 'true');
+    await dialog.getByRole('tab', { name: 'Advanced settings' }).click();
     await expect(
         dialog.getByRole('button', { name: 'Remove link' }),
     ).toHaveClass(/is-danger/u);
@@ -1354,6 +1394,7 @@ test('creates, edits, and removes a selected-text link without losing its range'
     ).toHaveCount(2);
     await dialog.getByLabel('Added attributes').selectOption('data-cms-id');
     await dialog.getByRole('button', { name: 'Remove attribute' }).click();
+    await dialog.getByRole('tab', { name: 'Basic settings' }).click();
     await dialog.getByLabel('Link URL').fill('/updated');
     await dialog.getByRole('button', { name: 'Update link' }).click();
     await expect(link).toHaveAttribute('href', '/updated');

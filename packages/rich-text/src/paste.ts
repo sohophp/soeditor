@@ -6,6 +6,7 @@ import {
     type PasteProcessorResult,
 } from '@soeditor/engine';
 import {
+    parseHtmlDocument,
     parseHtmlFragment,
     serializeHtmlFragment,
     type HtmlAttribute,
@@ -93,12 +94,18 @@ export class CmsPastePlugin extends Plugin {
             false,
             'cms.paste.retainStyles',
         );
+        const retainAlignment = readBoolean(
+            this.editor.config.get<unknown>('cms.paste.retainAlignment'),
+            true,
+            'cms.paste.retainAlignment',
+        );
         this.#dispose = this.editor.services
             .get(pastePipelineServiceToken)
             .register({
                 id: 'soeditor.cms.external-html',
                 priority: 0,
-                process: (context) => processCmsPaste(context, retainStyles),
+                process: (context) =>
+                    processCmsPaste(context, retainStyles, retainAlignment),
             });
     }
 
@@ -194,6 +201,7 @@ function readCleanupProfile(value: unknown): HtmlCleanupProfile {
 export function processCmsPaste(
     context: PasteProcessorContext,
     retainStyles = false,
+    retainAlignment = true,
 ): PasteProcessorResult | undefined {
     const policy = context.policy;
     if (context.classification === 'internal') return undefined;
@@ -210,23 +218,27 @@ export function processCmsPaste(
     if (context.html.length === 0) {
         return Object.freeze({ html: '', policy, text: context.text });
     }
-    if (/<!doctype\s|<\/?(?:html|head|body)(?:\s|>)/iu.test(context.html)) {
-        throw new Error(
-            'Complete HTML documents are not valid paste fragments.',
-        );
+    const children = readExternalPasteChildren(context.html);
+    if (policy === 'preserve') {
+        return Object.freeze({
+            html: preservePasteSource(context.html, children),
+            policy,
+            text: context.text,
+        });
     }
-    const parsed = parseHtmlFragment(context.html).document;
-    const cleanedChildren = parsed.children.flatMap((node) =>
+    let cleanedChildren = children.flatMap((node) =>
         cleanNode(node, policy, retainStyles),
     );
-    const children =
+    if (!retainStyles && !retainAlignment)
+        cleanedChildren = cleanedChildren.map(withoutPresentationStyles);
+    const normalizedChildren =
         policy === 'semantic'
             ? normalizeSemanticWhitespace(cleanedChildren, '#root')
             : cleanedChildren;
     return Object.freeze({
         html: serializeHtmlFragment(
             Object.freeze({
-                children: Object.freeze(children),
+                children: Object.freeze(normalizedChildren),
                 type: 'document-fragment',
             }),
         ),
@@ -235,22 +247,148 @@ export function processCmsPaste(
     });
 }
 
+function withoutPresentationStyles(node: HtmlChildNode): HtmlChildNode {
+    if (node.type !== 'element') return node;
+    return Object.freeze({
+        ...node,
+        attributes: Object.freeze(
+            node.attributes.filter((attribute) => attribute.name !== 'style'),
+        ),
+        children: Object.freeze(node.children.map(withoutPresentationStyles)),
+    });
+}
+
+function preservePasteSource(
+    html: string,
+    children: readonly HtmlChildNode[],
+): string {
+    // Clipboard document shells are transport, not part of the selected fragment.
+    const start = /<!--\s*StartFragment\s*-->/iu.exec(html);
+    const end = /<!--\s*EndFragment\s*-->/iu.exec(html);
+    if (start !== null && end !== null) {
+        html = html.slice(start.index + start[0].length, end.index);
+        children = parseHtmlFragment(html).document.children;
+    } else if (/<!doctype\s|<\/?(?:html|head|body)(?:\s|>)/iu.test(html)) {
+        const first = children[0]?.source?.start.offset;
+        const last = children.at(-1)?.source?.end.offset;
+        html =
+            first === undefined || last === undefined
+                ? ''
+                : html.slice(first, last);
+        children = parseHtmlFragment(html).document.children;
+    }
+    const edits: { start: number; end: number; value: string }[] = [];
+    const visit = (nodes: readonly HtmlChildNode[]): void => {
+        for (const node of nodes) {
+            if (node.type !== 'element') continue;
+            if (REMOVED_ELEMENTS.has(node.tagName)) {
+                if (node.source)
+                    edits.push({
+                        start: node.source.start.offset,
+                        end: node.source.end.offset,
+                        value: '',
+                    });
+                continue;
+            }
+            const attributes = cleanAttributes(
+                node.tagName,
+                node.attributes,
+                'preserve',
+                true,
+                true,
+            );
+            for (const attribute of node.attributes) {
+                const retained = attributes.find(
+                    (candidate) => candidate.name === attribute.name,
+                );
+                if (!retained && attribute.source) {
+                    let start = attribute.source.start.offset;
+                    while (
+                        start > 0 &&
+                        /[\t\n\r ]/u.test(html[start - 1] ?? '')
+                    )
+                        start--;
+                    edits.push({
+                        start,
+                        end: attribute.source.end.offset,
+                        value: '',
+                    });
+                }
+            }
+            visit(node.children);
+        }
+    };
+    visit(children);
+    for (const edit of edits.sort((a, b) => b.start - a.start))
+        html = html.slice(0, edit.start) + edit.value + html.slice(edit.end);
+    return html;
+}
+
+function readExternalPasteChildren(html: string): readonly HtmlChildNode[] {
+    const start = /<!--\s*StartFragment\s*-->/iu.exec(html);
+    const end = /<!--\s*EndFragment\s*-->/iu.exec(html);
+    if (start !== null || end !== null) {
+        if (
+            start === null ||
+            end === null ||
+            end.index < start.index + start[0].length
+        ) {
+            throw new Error('Invalid HTML clipboard fragment markers.');
+        }
+        return parseHtmlFragment(
+            html.slice(start.index + start[0].length, end.index),
+        ).document.children;
+    }
+    if (/<!doctype\s|<\/?(?:html|head|body)(?:\s|>)/iu.test(html)) {
+        const document = parseHtmlDocument(html).document;
+        const htmlElement = document.children.find(
+            (node) => node.type === 'element' && node.tagName === 'html',
+        );
+        if (htmlElement?.type !== 'element') {
+            throw new Error('Complete HTML documents require a body to paste.');
+        }
+        const body = htmlElement.children.find(
+            (node) => node.type === 'element' && node.tagName === 'body',
+        );
+        if (body?.type === 'element') return body.children;
+        throw new Error('Complete HTML documents require a body to paste.');
+    }
+    return parseHtmlFragment(html).document.children;
+}
+
 function cleanNode(
     node: HtmlChildNode,
     policy: 'preserve' | 'semantic',
     retainStyles: boolean,
+    inheritedAlignment?: string,
+    literalWhitespace = false,
 ): readonly HtmlChildNode[] {
     if (node.type === 'text') return [Object.freeze({ ...node })];
     if (node.type === 'comment') {
         return policy === 'preserve' ? [Object.freeze({ ...node })] : [];
     }
-    const tagName = semanticTag(node.tagName);
+    const tagName =
+        policy === 'semantic' ? semanticTag(node.tagName) : node.tagName;
     if (REMOVED_ELEMENTS.has(tagName)) return [];
+    const preserveWhitespace =
+        literalWhitespace || tagName === 'pre' || tagName === 'code';
+    const alignment =
+        node.attributes
+            .filter((attribute) => attribute.name === 'style')
+            .flatMap((attribute) =>
+                Array.from(
+                    attribute.value.matchAll(
+                        /(?:^|;)\s*text-align\s*:\s*([a-z]+)/giu,
+                    ),
+                    (match) => match[1]?.toLowerCase(),
+                ),
+            )
+            .at(-1) ?? inheritedAlignment;
     const cleanedChildren = node.children.flatMap((child) =>
-        cleanNode(child, policy, retainStyles),
+        cleanNode(child, policy, retainStyles, alignment, preserveWhitespace),
     );
     const children =
-        policy === 'semantic' && tagName !== 'pre' && tagName !== 'code'
+        policy === 'semantic' && !preserveWhitespace
             ? normalizeSemanticWhitespace(cleanedChildren, tagName)
             : cleanedChildren;
     if (
@@ -264,6 +402,7 @@ function cleanNode(
         node.attributes,
         policy,
         retainStyles,
+        inheritedAlignment !== undefined && inheritedAlignment !== 'start',
     );
     if (
         policy === 'semantic' &&
@@ -334,6 +473,7 @@ function cleanAttributes(
     attributes: readonly HtmlAttribute[],
     policy: 'preserve' | 'semantic',
     retainStyles: boolean,
+    retainDefaultAlignment: boolean,
 ): readonly HtmlAttribute[] {
     const cleaned: HtmlAttribute[] = [];
     for (const attribute of attributes) {
@@ -350,19 +490,18 @@ function cleanAttributes(
             if (!isSafeExternalUrl(attribute.value, name === 'src')) continue;
         }
         if (name === 'style') {
-            const style = cleanStyle(attribute.value, retainStyles);
+            const style = cleanStyle(
+                attribute.value,
+                retainStyles,
+                policy,
+                retainDefaultAlignment,
+            );
             if (style.length > 0) cleaned.push({ name, value: style });
             continue;
         }
         if (name === 'class') {
             if (policy === 'preserve') {
-                const value = attribute.value
-                    .split(/\s+/u)
-                    .filter(
-                        (token) => token.length > 0 && !/^mso/iu.test(token),
-                    )
-                    .join(' ');
-                if (value.length > 0) cleaned.push({ name, value });
+                cleaned.push({ name, value: attribute.value });
             }
             continue;
         }
@@ -419,7 +558,23 @@ function isSemanticAttribute(
     return false;
 }
 
-function cleanStyle(value: string, retainStyles: boolean): string {
+function cleanStyle(
+    value: string,
+    retainStyles: boolean,
+    policy: 'preserve' | 'semantic',
+    retainDefaultAlignment: boolean,
+): string {
+    if (policy === 'preserve') {
+        // Keep authored declarations and their spelling, rather than applying
+        // the semantic presentation allowlist to a preservation request.
+        return /url\s*\(|expression\s*\(|javascript:|\/\*|\\/iu.test(value) ||
+            Array.from(value).some((character) => {
+                const code = character.charCodeAt(0);
+                return code < 32 && code !== 9 && code !== 10 && code !== 13;
+            })
+            ? ''
+            : value;
+    }
     const allowed = retainStyles
         ? new Set([
               'background-color',
@@ -438,6 +593,17 @@ function cleanStyle(value: string, retainStyles: boolean): string {
         if (separator < 1) continue;
         const name = declaration.slice(0, separator).trim().toLowerCase();
         const candidate = declaration.slice(separator + 1).trim();
+        // Native web clipboards materialize the default logical alignment.
+        // Do not turn that presentation default into saved paragraph styles.
+        // Explicit preservation/style-retention policies keep authored values.
+        if (
+            policy === 'semantic' &&
+            !retainStyles &&
+            !retainDefaultAlignment &&
+            name === 'text-align' &&
+            /^start$/iu.test(candidate)
+        )
+            continue;
         if (
             allowed.has(name) &&
             candidate.length > 0 &&
