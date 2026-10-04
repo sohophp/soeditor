@@ -229,6 +229,8 @@ export interface EditorUi {
 
 /** Options used to attach a reusable UI to one host. */
 export interface CreateEditorUiOptions {
+    /** Optional host bridge; the UI never imports a concrete editing engine. */
+    readonly readElementPath?: () => readonly EditorUiElementPathEntry[];
     /** Host bridge to the active engine; called at most once per UI refresh. */
     readonly readFormatStates?: () => Readonly<
         Record<string, EditorUiFormatState>
@@ -246,6 +248,14 @@ export interface CreateEditorUiOptions {
     readonly toolbarLayout?: ToolbarLayoutOptions;
     /** Adds WYSIWYG element ancestry and text counts; Source hides DOM ancestry. */
     readonly documentStatus?: boolean;
+}
+
+export interface EditorUiElementPathEntry {
+    readonly id: string;
+    readonly tagName: string;
+    readonly selected: boolean;
+    readonly canUnwrap: boolean;
+    readonly unavailableReason?: string;
 }
 
 /** Per-editor UI contribution registry exposed to plugins. */

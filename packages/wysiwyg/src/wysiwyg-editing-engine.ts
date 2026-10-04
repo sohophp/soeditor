@@ -1,9 +1,11 @@
 import { BaseHrefProjection } from './base-href.js';
+import { ElementSelection } from './element-selection.js';
 import { atomicViewServiceToken, type AtomicView } from './atomic-view.js';
 import { readFormatStates } from './format-state.js';
 import {
     indentSelectedList,
     selectedListBlocks,
+    setSelectedListBlock,
     toggleSelectedList,
 } from './list-editing.js';
 import {
@@ -287,8 +289,10 @@ export class WysiwygEditingEngine implements EditingEngine {
     #tableSelection: NativeTableSelection | undefined;
     #tableDragAnchor: HTMLTableCellElement | undefined;
     #tableDragMoved = false;
+    #inputLists: HTMLElement[] = [];
 
     readonly #baseHref: BaseHrefProjection;
+    readonly #elementSelection: ElementSelection;
 
     constructor(options: WysiwygEditingEngineOptions) {
         this.#baseHref = new BaseHrefProjection(
@@ -310,6 +314,34 @@ export class WysiwygEditingEngine implements EditingEngine {
                 visualEditingServiceToken.id,
             );
         }
+        this.#elementSelection = new ElementSelection(
+            this.element,
+            (id) => {
+                if (this.editor.commands.canExecute('element.select'))
+                    this.editor.execute('element.select', id);
+            },
+            (element) => {
+                for (
+                    let current: HTMLElement | null = element;
+                    current && current !== this.element;
+                    current = current.parentElement
+                ) {
+                    if (
+                        this.#unsafeAttributes
+                            .get(current)
+                            ?.some(
+                                (attribute) =>
+                                    attribute.name.toLowerCase() ===
+                                        'contenteditable' &&
+                                    attribute.value.trim().toLowerCase() ===
+                                        'false',
+                            )
+                    )
+                        return true;
+                }
+                return false;
+            },
+        );
         this.#previousHidden = this.element.hidden;
         this.#previousAttributes = new Map(
             [
@@ -329,6 +361,12 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.#render(this.editor.getData());
 
         const service: VisualEditingService = {
+            getElementPath: () =>
+                this.#elementSelection.read(
+                    this.#range(),
+                    this.#canEdit(false) &&
+                        this.#compositionGroup === undefined,
+                ),
             adjustIndent: (delta) => this.#adjustIndent(delta),
             applyBlockAttributes: (attributes) =>
                 this.#applyBlockAttributes(attributes),
@@ -455,6 +493,7 @@ export class WysiwygEditingEngine implements EditingEngine {
             () => this.destroy(),
         );
         this.#disposeModeChange = this.editor.events.on('mode:change', () => {
+            this.#elementSelection.invalidate();
             if (this.#projectionActivity === undefined)
                 this.#updateEditableState();
         });
@@ -508,6 +547,54 @@ export class WysiwygEditingEngine implements EditingEngine {
                 },
             });
         }
+        this.editor.commands.register({
+            id: 'element.select',
+            canExecute: () =>
+                !this.#destroyed &&
+                !this.element.hidden &&
+                this.#compositionGroup === undefined,
+            execute: (_context, id) => {
+                const target = this.#elementSelection.resolve(id);
+                if (!target) return;
+                const range = this.#document.createRange();
+                range.selectNodeContents(target);
+                this.element.focus({ preventScroll: true });
+                this.#selectRange(range);
+                this.#elementSelection.select(target);
+            },
+        });
+        this.editor.commands.register({
+            id: 'element.unwrap',
+            canExecute: () => {
+                const target = this.#elementSelection.selected;
+                return (
+                    this.#canEdit(false) &&
+                    this.#compositionGroup === undefined &&
+                    target !== undefined &&
+                    this.#elementSelection.canUnwrap(target)
+                );
+            },
+            execute: () => {
+                const target = this.#elementSelection.selected;
+                if (!target || !this.#elementSelection.canUnwrap(target))
+                    return;
+                this.#mutate(() => {
+                    const range = this.#document.createRange();
+                    range.setStartBefore(target);
+                    range.collapse(true);
+                    const first = target.firstChild;
+                    const last = target.lastChild;
+                    unwrap(target);
+                    if (first && last) {
+                        range.setStartBefore(first);
+                        range.setEndAfter(last);
+                    }
+                    this.#elementSelection.invalidate();
+                    return range;
+                });
+                this.element.focus({ preventScroll: true });
+            },
+        });
         this.#updateEditableState();
     }
 
@@ -657,6 +744,7 @@ export class WysiwygEditingEngine implements EditingEngine {
             );
         }
         this.#mutationObserver?.disconnect();
+        this.#elementSelection.destroy();
         this.#serializedBlocks = new WeakMap();
         this.#serializedNodes = new WeakMap();
         this.#disposeProjection?.();
@@ -668,6 +756,8 @@ export class WysiwygEditingEngine implements EditingEngine {
         try {
             this.editor.commands.unregister('block.paragraph.before');
             this.editor.commands.unregister('block.paragraph.after');
+            this.editor.commands.unregister('element.select');
+            this.editor.commands.unregister('element.unwrap');
             if (
                 this.editor.services.tryGet(visualEditingServiceToken) ===
                 this.#service
@@ -686,6 +776,21 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     readonly #handleBeforeInput = (event: InputEvent): void => {
+        this.#elementSelection.clear();
+        const inputRange = this.#range();
+        this.#inputLists = inputRange
+            ? [
+                  ...new Set(
+                      [
+                          closestElement(inputRange.startContainer, 'ul,ol'),
+                          closestElement(inputRange.endContainer, 'ul,ol'),
+                      ].filter(
+                          (list): list is HTMLElement =>
+                              list !== undefined && this.element.contains(list),
+                      ),
+                  ),
+              ]
+            : [];
         // Ancestor capture listeners (including React's delegated input handler)
         // can trigger a mutation-observer checkpoint before our input listener.
         // Keep the browser edit intact until input commits it. A canceled
@@ -779,6 +884,53 @@ export class WysiwygEditingEngine implements EditingEngine {
 
     readonly #handleInput = (event: Event): void => {
         this.#finishNativeInput();
+        const range = this.#range();
+        const anchor = range
+            ? {
+                  start: range.startContainer,
+                  startOffset: range.startOffset,
+                  end: range.endContainer,
+                  endOffset: range.endOffset,
+              }
+            : undefined;
+        for (const list of this.#inputLists) {
+            if (!this.element.contains(list)) continue;
+            let item: HTMLLIElement | undefined;
+            for (const node of Array.from(list.childNodes)) {
+                if (node instanceof HTMLElement && node.tagName === 'LI') {
+                    item = undefined;
+                    continue;
+                }
+                if (
+                    node.nodeType === Node.COMMENT_NODE ||
+                    (node.nodeType === Node.TEXT_NODE &&
+                        (node.textContent ?? '').trim() === '')
+                )
+                    continue;
+                if (!item) {
+                    item = this.#document.createElement('li');
+                    list.insertBefore(item, node);
+                }
+                item.append(node);
+            }
+        }
+        this.#inputLists = [];
+        if (
+            range &&
+            anchor &&
+            anchor.start.isConnected &&
+            anchor.end.isConnected
+        ) {
+            range.setStart(
+                anchor.start,
+                Math.min(anchor.startOffset, nodeLength(anchor.start)),
+            );
+            range.setEnd(
+                anchor.end,
+                Math.min(anchor.endOffset, nodeLength(anchor.end)),
+            );
+            this.#selectRange(range);
+        }
         removeEmptyImageFigures(this.element);
         const isComposing =
             'isComposing' in event && event.isComposing === true;
@@ -996,6 +1148,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     };
 
     readonly #handlePointerDown = (event: PointerEvent): void => {
+        this.#elementSelection.clear();
         this.#resetInputHistory();
         this.#pendingMark = undefined;
         this.#pendingPreLineBreak = undefined;
@@ -1549,6 +1702,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     #render(source: string): void {
+        this.#elementSelection.resetProjection();
         this.#serializedBlocks = new WeakMap();
         this.#serializedNodes = new WeakMap();
         const parsed = parseHtmlFragment(source);
@@ -1677,6 +1831,7 @@ export class WysiwygEditingEngine implements EditingEngine {
                 ...node.children.map((child) => this.#renderNode(child)),
             );
         }
+        this.#elementSelection.registerEmpty(element);
         return element;
     }
 
@@ -1944,6 +2099,7 @@ export class WysiwygEditingEngine implements EditingEngine {
             ? ''
             : this.#serialize();
         if (source === this.editor.getData()) return;
+        this.#elementSelection.invalidate();
         this.#pendingSource = source;
         try {
             this.editor.update(
@@ -2033,7 +2189,10 @@ export class WysiwygEditingEngine implements EditingEngine {
             this.element.contentEditable = editable;
         if (this.element.getAttribute('aria-readonly') !== String(readonly))
             this.element.setAttribute('aria-readonly', String(readonly));
-        if (visible && this.element.hidden) this.element.hidden = false;
+        if (visible && this.element.hidden) {
+            this.element.hidden = false;
+            this.#elementSelection.refresh();
+        }
     }
 
     #canEdit(requireRange = true): boolean {
@@ -2205,9 +2364,15 @@ export class WysiwygEditingEngine implements EditingEngine {
     #removeFormat(): void {
         const range = this.#range();
         if (range === undefined || range.collapsed) return;
-        const blocks = this.#selectedBlocks().filter((block) =>
-            block.matches(blockSelector),
+        const selectedItems = selectedListBlocks(this.element, range).filter(
+            (item) => item.tagName === 'LI',
         );
+        const blocks =
+            selectedItems.length > 0
+                ? selectedItems
+                : this.#selectedBlocks().filter((block) =>
+                      block.matches(blockSelector),
+                  );
         if (blocks.length <= 1) {
             this.#mutateRange(range, (current) =>
                 this.#removeFormatInRange(current),
@@ -2251,8 +2416,15 @@ export class WysiwygEditingEngine implements EditingEngine {
     #removeFormatInRange(current: Range): Range {
         const marker = this.#document.createElement('span');
         marker.dataset.soeditorRemoveFormat = 'true';
-        marker.textContent = current.toString();
-        current.deleteContents();
+        const fragment = current.extractContents();
+        for (const element of Array.from(
+            fragment.querySelectorAll('b,strong,i,em,u,s,strike,sub,sup,font'),
+        ).reverse()) {
+            unwrap(element);
+        }
+        for (const element of Array.from(fragment.querySelectorAll('[style]')))
+            element.removeAttribute('style');
+        marker.append(fragment);
         current.insertNode(marker);
         let parent = marker.parentElement;
         while (
@@ -2266,12 +2438,13 @@ export class WysiwygEditingEngine implements EditingEngine {
             splitInlineAncestorAround(marker, parent);
             parent = marker.parentElement;
         }
-        const text = this.#document.createTextNode(marker.textContent ?? '');
+        const nodes = Array.from(marker.childNodes);
+        if (nodes.length === 0) nodes.push(this.#document.createTextNode(''));
         const cleanupRoot =
             marker.closest<HTMLElement>(blockSelector) ?? marker.parentElement;
-        marker.replaceWith(text);
+        marker.replaceWith(...nodes);
         if (cleanupRoot !== null) {
-            if (cleanupRoot.matches('h1,h2,h3,h4,h5,h6,p')) {
+            if (cleanupRoot.matches('h1,h2,h3,h4,h5,h6,p,li')) {
                 cleanupRoot.removeAttribute('style');
                 const preserved = this.#unsafeAttributes.get(cleanupRoot);
                 if (preserved !== undefined) {
@@ -2301,12 +2474,79 @@ export class WysiwygEditingEngine implements EditingEngine {
                 }
             }
         }
-        current.selectNodeContents(text);
+        current.setStartBefore(nodes[0]!);
+        current.setEndAfter(nodes.at(-1)!);
         return current;
     }
 
     #setBlock(tagName: VisualBlockTag): void {
+        const explicit = this.#elementSelection.selected;
+        if (
+            explicit &&
+            tagName === 'p' &&
+            explicit.matches('h1,h2,h3,h4,h5,h6,p,div,blockquote') &&
+            explicit.querySelector(nonTextualFlowBlockSelector)
+        ) {
+            this.#mutate(() => {
+                const replacements: Node[] = [];
+                let paragraph: HTMLParagraphElement | undefined;
+                for (const child of Array.from(explicit.childNodes)) {
+                    if (isFlowBlockNode(child)) {
+                        paragraph = undefined;
+                        replacements.push(child);
+                    } else {
+                        if (
+                            !paragraph &&
+                            (child.nodeType === Node.COMMENT_NODE ||
+                                (child.nodeType === Node.TEXT_NODE &&
+                                    (child.textContent ?? '').trim() === ''))
+                        ) {
+                            replacements.push(child);
+                            continue;
+                        }
+                        if (!paragraph) {
+                            paragraph = this.#document.createElement('p');
+                            replacements.push(paragraph);
+                        }
+                        paragraph.append(child);
+                    }
+                }
+                explicit.replaceWith(...replacements);
+                this.#elementSelection.invalidate();
+                const range = this.#document.createRange();
+                if (replacements[0] && replacements.at(-1)) {
+                    range.setStartBefore(replacements[0]);
+                    range.setEndAfter(replacements.at(-1)!);
+                }
+                return range;
+            });
+            return;
+        }
+        const listRange = this.#range();
         const blocks = this.#selectedFormatBlocks();
+        if (
+            listRange !== undefined &&
+            !blocks.some((block) => block.matches('blockquote')) &&
+            selectedListBlocks(this.element, listRange).some(
+                (block) => block.tagName === 'LI',
+            )
+        ) {
+            this.#mutate(() => {
+                const heading = closestElement(
+                    listRange.commonAncestorContainer,
+                    'h1,h2,h3,h4,h5,h6',
+                );
+                setSelectedListBlock(this.element, listRange, tagName);
+                if (
+                    heading &&
+                    this.element.contains(heading) &&
+                    tagName === 'p'
+                )
+                    unwrap(heading);
+                return listRange;
+            });
+            return;
+        }
         const editingSelection = this.#getSelection();
         const targetTagName = tagName.toUpperCase();
         if (blocks.length === 0) {
@@ -3479,7 +3719,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     #mutate(operation: () => Range | undefined): void {
-        if (!this.#canEdit()) return;
+        if (!this.#canEdit() || this.#compositionGroup !== undefined) return;
         this.#restoreRange();
         const range = operation();
         if (range !== undefined) this.#selectRange(range);
@@ -3506,10 +3746,29 @@ export class WysiwygEditingEngine implements EditingEngine {
     #selectedBlocks(): readonly HTMLElement[] {
         const range = this.#range();
         if (range === undefined) return [];
+        let top =
+            range.commonAncestorContainer instanceof HTMLElement
+                ? range.commonAncestorContainer
+                : range.commonAncestorContainer.parentElement;
+        while (
+            top &&
+            top !== this.element &&
+            top.parentElement !== this.element
+        )
+            top = top.parentElement;
+        if (top && top !== this.element) {
+            const candidates = top.matches('ol,ul')
+                ? Array.from(top.querySelectorAll<HTMLElement>('li'))
+                : [top];
+            return candidates.filter((block) => range.intersectsNode(block));
+        }
         return this.#blocks().filter((block) => range.intersectsNode(block));
     }
 
     #selectedFormatBlocks(): readonly HTMLElement[] {
+        const explicit = this.#elementSelection.selected;
+        if (explicit)
+            return explicit.matches(formatBlockSelector) ? [explicit] : [];
         const range = this.#range();
         if (range === undefined) return [];
         const blocks = range.collapsed

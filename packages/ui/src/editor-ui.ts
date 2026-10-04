@@ -87,18 +87,37 @@ export function createEditorUiWithTranslations(
     const documentStatus = document.createElement('span');
     documentStatus.className = 'soeditor-ui__document-status';
     documentStatus.hidden = options.documentStatus !== true;
-    const elementPath = createElementPath(document, () => {
-        if (options.editor.state.mode !== 'wysiwyg') return [];
-        const range = selectionTargets
-            .map((target) => selectionRangeForTarget(target, document))
-            .find(
-                (candidate) =>
-                    candidate !== undefined &&
-                    isEditingNode(candidate.startContainer, options.element) &&
-                    isEditingNode(candidate.endContainer, options.element),
-            );
-        return elementPathForRange(range);
-    });
+    const elementPath = createElementPath(
+        document,
+        () => {
+            if (options.editor.state.mode !== 'wysiwyg') return [];
+            const range = selectionTargets
+                .map((target) => selectionRangeForTarget(target, document))
+                .find(
+                    (candidate) =>
+                        candidate !== undefined &&
+                        isEditingNode(
+                            candidate.startContainer,
+                            options.element,
+                        ) &&
+                        isEditingNode(candidate.endContainer, options.element),
+                );
+            if (options.readElementPath) {
+                const entries = options.readElementPath();
+                if (range || entries.some((entry) => entry.selected))
+                    return entries;
+            }
+            return elementPathForRange(range);
+        },
+        {
+            select: (id) => {
+                if (options.editor.commands.canExecute('element.select'))
+                    options.editor.execute('element.select', id);
+            },
+            unwrap: () => options.editor.execute('element.unwrap'),
+            translate: (text) => translation.translate(text),
+        },
+    );
     elementPath.element.hidden = true;
     status.append(
         primaryStatus,
@@ -911,13 +930,13 @@ export function createEditorUiWithTranslations(
         selectionHighlightElements = [];
     }
     const renderStatus = (): void => {
+        elementPath.update();
         primaryStatus.textContent =
             manualStatus ??
             `${translation.translate(capitalize(options.editor.state.mode))} · ${translation.translate(
                 options.editor.state.dirty ? 'Modified' : 'Unmodified',
             )}`;
         if (options.documentStatus === true) {
-            elementPath.update();
             const source = options.editor.getData();
             // Selection and command refreshes do not change document counts.
             // Keep the cache local and compare content, not length or dirty state.

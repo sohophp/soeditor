@@ -125,11 +125,9 @@ const CLASSIC_TABLE_CONTEXT =
 const HIDDEN_CLASSIC_TOOLBAR_ITEMS = new Set([
     'pageBreak',
     'placeholder',
-    'redo',
     'source',
     'sourceFind',
     'specialCharacter',
-    'undo',
 ]);
 const CLASSIC_TRANSLATIONS: readonly EditorUiTranslationResource[] =
     OPTIONAL_CLASSIC_FEATURES
@@ -506,6 +504,7 @@ export async function createClassicEditor(
     let destroying: Promise<void> | undefined;
     let initialized = false;
     let latestSource = initialSource(host, options.data);
+    const initialEditorSource = latestSource;
     let animationFrame: number | undefined;
     let workspace: ClassicHost | undefined;
     let coreEditor: Editor | undefined;
@@ -1494,6 +1493,23 @@ export async function createClassicEditor(
     function attachClassicUi(editor: Editor): EditorUi {
         const registry = editor.services.get(uiRegistryServiceToken);
         const commandSurface = dom.visualContent;
+        editor.commands.register({
+            id: 'editor.reset',
+            label: 'Reset edits',
+            canExecute: () =>
+                !editor.state.readonly &&
+                editor.getData() !== initialEditorSource,
+            execute: () => {
+                if (
+                    document.defaultView?.confirm(
+                        translation.translate('Discard editor changes?'),
+                    ) !== true
+                )
+                    return false;
+                editor.setData(initialEditorSource);
+                return true;
+            },
+        });
         if (OPTIONAL_CLASSIC_FEATURES && editingModes.has('source')) {
             formattingService = attachClassicSourceFormatting(
                 editor,
@@ -1508,6 +1524,10 @@ export async function createClassicEditor(
             registerClassicShowBlocksTool(editor, registry, commandSurface);
         }
         ui = createCmsEditorUi({
+            readElementPath: () =>
+                editor.services
+                    .tryGet(visualEditingServiceToken)
+                    ?.getElementPath?.() ?? [],
             readFormatStates: () =>
                 editor.services
                     .tryGet(visualEditingServiceToken)

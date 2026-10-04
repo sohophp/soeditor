@@ -1,7 +1,14 @@
-/** Read-only, instance-owned element breadcrumb projection. */
+import type { EditorUiElementPathEntry } from './types.js';
+
+/** Frame-coalesced, instance-owned element breadcrumb projection. */
 export function createElementPath(
     document: Document,
-    read: () => readonly string[],
+    read: () => readonly string[] | readonly EditorUiElementPathEntry[],
+    actions?: {
+        select(id: string): void;
+        unwrap(): void;
+        translate(text: string): string;
+    },
 ) {
     const element = document.createElement('span');
     element.className = 'soeditor-ui__element-path';
@@ -14,11 +21,66 @@ export function createElementPath(
     const render = (): void => {
         frame = undefined;
         if (destroyed) return;
-        const text = read().join(' › ');
+        const items = read();
+        const text = JSON.stringify(items);
         if (text === previous) return;
         previous = text;
-        element.textContent = text;
-        element.hidden = text.length === 0;
+        if (items.every((item) => typeof item === 'string')) {
+            element.textContent = items.join(' › ');
+            element.hidden = items.length === 0;
+            return;
+        }
+        const active = document.activeElement;
+        const focusedId =
+            active instanceof HTMLElement && element.contains(active)
+                ? active.dataset.elementTarget
+                : undefined;
+        const content = document.createDocumentFragment();
+        element.hidden = items.length === 0;
+        for (const [index, item] of items.entries()) {
+            if (index > 0) content.append(document.createTextNode(' › '));
+            if (typeof item === 'string' || !actions) {
+                content.append(
+                    document.createTextNode(
+                        typeof item === 'string' ? item : item.tagName,
+                    ),
+                );
+                continue;
+            }
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.textContent = item.tagName;
+            button.dataset.elementTarget = item.id;
+            button.setAttribute('aria-pressed', String(item.selected));
+            button.addEventListener('click', () => actions.select(item.id));
+            content.append(button);
+        }
+        const selected = items.find(
+            (item): item is EditorUiElementPathEntry =>
+                typeof item !== 'string' && item.selected,
+        );
+        if (selected && actions) {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.dataset.elementAction = 'unwrap';
+            button.textContent = actions.translate('Remove outer tag');
+            button.disabled = !selected.canUnwrap;
+            if (selected.unavailableReason)
+                button.title = actions.translate(selected.unavailableReason);
+            button.addEventListener('click', actions.unwrap);
+            content.append(button);
+        }
+        element.replaceChildren(content);
+        if (focusedId) {
+            for (const button of Array.from(
+                element.querySelectorAll<HTMLButtonElement>(
+                    'button[data-element-target]',
+                ),
+            )) {
+                if (button.dataset.elementTarget === focusedId)
+                    button.focus({ preventScroll: true });
+            }
+        }
     };
     return {
         element,

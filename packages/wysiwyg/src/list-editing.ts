@@ -73,6 +73,7 @@ function transformList(
     list: HTMLElement,
     selected: Set<HTMLElement>,
     target: 'ol' | 'ul' | undefined,
+    unwrappedTag = 'div',
 ): void {
     const document = list.ownerDocument;
     const numbers = listNumbers(list);
@@ -87,13 +88,33 @@ function transformList(
         }
         const active = selected.has(node);
         if (active && target === undefined) {
-            const block = document.createElement('div');
+            const block = document.createElement(unwrappedTag);
             for (const attribute of Array.from(node.attributes)) {
                 if (attribute.name !== 'value')
                     block.setAttribute(attribute.name, attribute.value);
             }
-            block.append(...Array.from(node.childNodes));
-            fragment.append(block);
+            if (unwrappedTag === 'p' && node.querySelector('ul,ol,table')) {
+                let paragraph: HTMLElement | undefined = block;
+                for (const child of Array.from(node.childNodes)) {
+                    if (
+                        child instanceof HTMLElement &&
+                        child.matches(
+                            'ul,ol,table,div,p,blockquote,h1,h2,h3,h4,h5,h6',
+                        )
+                    ) {
+                        paragraph = undefined;
+                        fragment.append(child);
+                    } else {
+                        if (!paragraph)
+                            paragraph = document.createElement(unwrappedTag);
+                        if (!paragraph.parentNode) fragment.append(paragraph);
+                        paragraph.append(child);
+                    }
+                }
+            } else {
+                block.append(...Array.from(node.childNodes));
+                fragment.append(block);
+            }
             run = undefined;
         } else {
             const tag = active ? target! : list.tagName.toLowerCase();
@@ -120,6 +141,49 @@ function transformList(
         previousSelected = active;
     }
     list.replaceWith(fragment);
+}
+
+export function setSelectedListBlock(
+    root: HTMLElement,
+    range: Range,
+    tagName: string,
+): boolean {
+    const blocks = selectedListBlocks(root, range);
+    if (blocks.length === 0 || blocks.some((block) => block.tagName !== 'LI'))
+        return false;
+    const lists = new Map<HTMLElement, Set<HTMLElement>>();
+    for (const block of blocks) {
+        const list = block.parentElement;
+        if (!list?.matches('ol,ul')) continue;
+        const items = lists.get(list) ?? new Set<HTMLElement>();
+        items.add(block);
+        lists.set(list, items);
+    }
+    for (const [list, items] of lists) {
+        const emptyItems = Array.from(list.children).filter(
+            (item): item is HTMLElement =>
+                item instanceof HTMLElement &&
+                item.tagName === 'LI' &&
+                Array.from(item.childNodes).every(
+                    (node) =>
+                        (node.nodeType === Node.TEXT_NODE &&
+                            (node.textContent ?? '').trim() === '') ||
+                        (node instanceof HTMLElement && node.tagName === 'BR'),
+                ),
+        );
+        if (
+            !range.collapsed &&
+            Array.from(list.children).every(
+                (item) =>
+                    items.has(item as HTMLElement) ||
+                    emptyItems.includes(item as HTMLElement),
+            )
+        ) {
+            for (const item of emptyItems) items.add(item);
+        }
+        transformList(list, items, undefined, tagName);
+    }
+    return lists.size > 0;
 }
 
 export function toggleSelectedList(

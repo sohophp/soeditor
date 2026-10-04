@@ -80,7 +80,17 @@ export type VisualFormatState =
     | { readonly status: 'mixed' | 'unavailable' };
 
 /** Narrow, transaction-backed editing capabilities exposed to feature plugins. */
+export interface VisualElementPathEntry {
+    readonly id: string;
+    readonly tagName: string;
+    readonly selected: boolean;
+    readonly canUnwrap: boolean;
+    readonly unavailableReason?: string;
+}
+
 export interface VisualEditingService {
+    /** Instance-owned, versioned handles; never expose authoring DOM to UI. */
+    getElementPath?(): readonly VisualElementPathEntry[];
     canEdit(): boolean;
     getFormatStates?(): Readonly<
         Record<VisualFormatProperty, VisualFormatState>

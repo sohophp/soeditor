@@ -428,6 +428,54 @@
     white-space: nowrap;
 }
 
+.soeditor-ui__element-path button {
+    background: transparent;
+    border: 0;
+    color: inherit;
+    cursor: pointer;
+    font: inherit;
+    padding: 0.15rem 0.3rem;
+}
+
+.soeditor-ui__element-path button[aria-pressed='true'] {
+    background: var(--soeditor-accent);
+    color: var(--soeditor-bg);
+}
+
+.soeditor-ui__element-path button:disabled {
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+
+.soeditor-element-selection {
+    border: 1px dashed Highlight;
+    box-sizing: border-box;
+    pointer-events: none;
+    position: fixed;
+    z-index: 2;
+}
+
+.soeditor-element-selection span {
+    background: Highlight;
+    color: HighlightText;
+    font: 11px sans-serif;
+    inset-block-end: 100%;
+    inset-inline-end: 0;
+    padding: 0 3px;
+    position: absolute;
+}
+
+.soeditor-empty-element {
+    background: Highlight;
+    border: 0;
+    color: HighlightText;
+    cursor: pointer;
+    font: 11px sans-serif;
+    padding: 0 3px;
+    position: fixed;
+    z-index: 2;
+}
+
 .soeditor-ui__notification {
     background: var(--soeditor-bg);
     border: 1px solid var(--soeditor-border);
@@ -1169,6 +1217,7 @@
 
     .soeditor-ui__status-bar {
         align-items: flex-start;
+        block-size: auto;
         flex-direction: column;
         gap: 0.25rem;
     }
@@ -1176,6 +1225,10 @@
     .soeditor-ui__element-path,
     .soeditor-ui__document-status {
         max-width: 100%;
+    }
+    .soeditor-ui__element-path {
+        overflow-x: auto;
+        text-overflow: clip;
     }
 }
 

@@ -29,6 +29,7 @@ export type {
     EditorUi,
     EditorUiDirection,
     EditorUiFormatState,
+    EditorUiElementPathEntry,
     EditorUiFormatProperty,
     EditorUiIconResource,
     EditorUiTheme,

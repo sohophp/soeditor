@@ -1955,6 +1955,10 @@ export const defaultToolbarItems: ReadonlyMap<string, ToolbarItemFactory> =
     new Map([
         ['undo', commandButton('Undo', 'editor.undo')],
         ['redo', commandButton('Redo', 'editor.redo')],
+        [
+            'reset',
+            commandButton('Reset edits', 'editor.reset', [], 'Reset edits'),
+        ],
         ['heading', headingMenu],
         ['moreFormatting', moreFormattingMenu],
         ['bold', commandButton('Bold', 'format.bold', undefined, 'B')],

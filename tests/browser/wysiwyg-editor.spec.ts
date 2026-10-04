@@ -309,6 +309,226 @@ test.beforeEach(async ({ page }) => {
     await page.locator('body[data-ready="true"]').waitFor();
 });
 
+test('repairs a heading-owned list when changing list items to paragraphs', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<h3>Intro</h3><h1><ul><li>First</li><li>Second</li></ul></h1>',
+    );
+    await selectElementText(surface.locator('ul'));
+    const menu = page.locator('[data-toolbar-item="heading"]');
+    await menu.locator('summary').click();
+    await menu.getByRole('button', { name: 'Paragraph' }).click();
+    await expect(
+        surface.locator('h1 ul, ul:not(:has(li)), ul > :not(li)'),
+    ).toHaveCount(0);
+    await expect(surface.locator('p')).toHaveText(['First', 'Second']);
+});
+
+test('clear formatting preserves a malformed heading list without orphan text', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<h1><ul><li><strong>First</strong></li><li>Second</li></ul></h1>',
+    );
+    await selectElementText(surface.locator('ul'));
+    await clickFormattingItem(page, 'removeFormat');
+    await expect(surface.locator('h1 ul li')).toHaveText(['First', 'Second']);
+    await expect(surface.locator('strong')).toHaveCount(0);
+});
+
+test('Backspace never leaves text directly beneath a list', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<h1><ul><li>First</li><li>Second</li></ul></h1>',
+    );
+    await clickTextBoundary(page, surface.locator('li').first(), 0);
+    await page.keyboard.press('Backspace');
+    await expect(surface.locator('ul > :not(li)')).toHaveCount(0);
+});
+
+test('repairs bare list text without clearing unselected item content', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<ul>Orphan<li><strong>First</strong> rest</li></ul>',
+    );
+    await expect(surface.locator('ul > li')).toHaveText(['First rest']);
+    await selectTextByPointer(page, surface.locator('ul > li').last(), 0, 5);
+    await clickFormattingItem(page, 'removeFormat');
+    await expect(surface.locator('ul > li')).toHaveCount(1);
+    await expect(surface.locator('ul')).toContainText('First rest');
+});
+
+test('element path selects and unwraps an outer heading without changing its list', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    const source =
+        '<h1 id="outer"><ul><li><a href="/page">First</a></li><li><img src="/pixel.png" alt="Keep">Second</li></ul></h1><p>After</p>';
+    await setFixtureData(page, source);
+    await surface.locator('li').first().click();
+    const path = page.locator('.soeditor-ui__element-path');
+    const heading = path.getByRole('button', { name: 'h1', exact: true });
+    await expect(heading).toBeVisible();
+    await heading.click();
+    await expect(heading).toHaveAttribute('aria-pressed', 'true');
+    await expect(
+        path.getByRole('button', { name: 'li', exact: true }),
+    ).toBeVisible();
+    await expect(page.locator('.soeditor-element-selection')).toBeVisible();
+    await expect(
+        page.locator('[data-toolbar-item="heading"] summary'),
+    ).toContainText('Heading 1');
+    await path.getByRole('button', { name: 'Remove outer tag' }).click();
+    await expect(surface.locator('h1')).toHaveCount(0);
+    await expect(surface.locator('ul > li')).toHaveCount(2);
+    await expect(surface.locator('a')).toHaveAttribute('href', '/page');
+    await expect(surface.locator('img')).toHaveAttribute('alt', 'Keep');
+    await page.keyboard.press('Control+z');
+    await expect(surface.locator('h1 > ul')).toHaveCount(1);
+    await page.keyboard.press('Control+Shift+z');
+    await expect(surface.locator('h1')).toHaveCount(0);
+});
+
+test('element path paragraph conversion preserves structural children and surrounding text', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<h1>Before<ul><li>First</li><li>Second</li></ul>After</h1>',
+    );
+    await surface.locator('li').first().click();
+    await page
+        .locator('.soeditor-ui__element-path')
+        .getByRole('button', { name: 'h1', exact: true })
+        .click();
+    const menu = page.locator('[data-toolbar-item="heading"]');
+    await menu.locator('summary').click();
+    await menu.getByRole('button', { name: 'Paragraph', exact: true }).click();
+    await expect(surface.locator('h1, p ul')).toHaveCount(0);
+    await expect(surface.locator('ul li')).toHaveText(['First', 'Second']);
+    await expect(surface.locator('p')).toHaveText(['Before', 'After']);
+});
+
+test('element path refuses list and protected wrapper removal and invalidates stale handles', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<div data-cms-component="card"><ul><li>Keep</li></ul></div>',
+    );
+    await surface.locator('li').click();
+    const path = page.locator('.soeditor-ui__element-path');
+    await path.getByRole('button', { name: 'ul', exact: true }).click();
+    await expect(
+        path.getByRole('button', { name: 'Remove outer tag' }),
+    ).toBeDisabled();
+    await path.getByRole('button', { name: 'div', exact: true }).click();
+    await expect(
+        path.getByRole('button', { name: 'Remove outer tag' }),
+    ).toBeDisabled();
+    await setFixtureData(page, '<p>Replacement</p>');
+    await expect(page.locator('.soeditor-element-selection')).toBeHidden();
+    await expect(surface.locator('p')).toHaveText('Replacement');
+});
+
+test('element path supports empty headings, keyboard selection, readonly and composition guards', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(page, '<h1></h1><p>Keep</p>');
+    await page
+        .locator('.soeditor-empty-element')
+        .getByText('h1', { exact: true })
+        .click();
+    const path = page.locator('.soeditor-ui__element-path');
+    const heading = path.getByRole('button', { name: 'h1', exact: true });
+    await heading.focus();
+    await heading.press('Enter');
+    await expect(heading).toHaveAttribute('aria-pressed', 'true');
+    await expect(page.locator('.soeditor-element-selection')).toBeVisible();
+    await page.evaluate(() => {
+        const fixture: unknown = Reflect.get(globalThis, '__wysiwygFixture');
+        if (typeof fixture !== 'object' || fixture === null)
+            throw new Error('Missing fixture');
+        const setReadonly: unknown = Reflect.get(fixture, 'setReadonly');
+        if (typeof setReadonly === 'function')
+            Reflect.apply(setReadonly, fixture, [true]);
+    });
+    await expect(
+        path.getByRole('button', { name: 'Remove outer tag' }),
+    ).toBeDisabled();
+    await page.evaluate(() => {
+        const fixture: unknown = Reflect.get(globalThis, '__wysiwygFixture');
+        if (typeof fixture !== 'object' || fixture === null)
+            throw new Error('Missing fixture');
+        const setReadonly: unknown = Reflect.get(fixture, 'setReadonly');
+        if (typeof setReadonly === 'function')
+            Reflect.apply(setReadonly, fixture, [false]);
+    });
+    await surface
+        .locator('[contenteditable="true"]')
+        .dispatchEvent('compositionstart');
+    await heading.press('Space');
+    await expect(surface.locator('h1')).toHaveCount(1);
+    await surface
+        .locator('[contenteditable="true"]')
+        .dispatchEvent('compositionend');
+    await surface.locator('p').click();
+    await expect(page.locator('.soeditor-element-selection')).toBeHidden();
+});
+
+test('clear formatting retains links, images and nested list text', async ({
+    page,
+}) => {
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(
+        page,
+        '<ul><li><strong>First</strong> <a href="/keep">link</a><img src="/pixel.png" alt="Keep"></li><li><em>Second</em></li></ul>',
+    );
+    await selectElementText(surface.locator('ul'));
+    await clickFormattingItem(page, 'removeFormat');
+    await expect(surface.locator('strong, em')).toHaveCount(0);
+    await expect(surface.locator('li')).toHaveText(['First link', 'Second']);
+    await expect(surface.locator('a')).toHaveAttribute('href', '/keep');
+    await expect(surface.locator('img')).toHaveAttribute('alt', 'Keep');
+});
+
+test('element path remains operable in a narrow viewport and protects stored readonly markers', async ({
+    page,
+}) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    const surface = page.locator('.soeditor-classic__visual');
+    await setFixtureData(page, '<h1><ul><li>Keep</li></ul></h1>');
+    await surface.locator('li').click();
+    const path = page.locator('.soeditor-ui__element-path');
+    await path.getByRole('button', { name: 'h1', exact: true }).click();
+    await path.getByRole('button', { name: 'Remove outer tag' }).click();
+    await expect(surface.locator('h1')).toHaveCount(0);
+    await expect(surface.locator('ul li')).toHaveText(['Keep']);
+    await setFixtureData(
+        page,
+        '<div contenteditable="false"><p>Protected</p></div>',
+    );
+    await surface.locator('p').click();
+    await path.getByRole('button', { name: 'div', exact: true }).click();
+    await expect(
+        path.getByRole('button', { name: 'Remove outer tag' }),
+    ).toBeDisabled();
+});
+
 test('mounts WYSIWYG without enabling Developer Visual', async ({ page }) => {
     const editor = page.locator('.soeditor-classic');
     const surface = editor.locator('.soeditor-classic__visual');
@@ -805,11 +1025,16 @@ test('uses native Enter, Shift+Enter, Backspace, and Delete paragraph behavior',
     await expect(surface.locator('p')).toContainText('Bravo');
 });
 
-test('deleting the final character clears native empty placeholders', async ({ page }) => {
+test('deleting the final character clears native empty placeholders', async ({
+    page,
+}) => {
     const surface = page.locator('.soeditor-classic__visual');
     const getData = () =>
         page.evaluate(() => {
-            const fixture: unknown = Reflect.get(globalThis, '__wysiwygFixture');
+            const fixture: unknown = Reflect.get(
+                globalThis,
+                '__wysiwygFixture',
+            );
             if (typeof fixture !== 'object' || fixture === null) {
                 throw new Error('Missing WYSIWYG fixture.');
             }
@@ -1371,7 +1596,9 @@ test('creates, edits, and removes a selected-text link without losing its range'
     await page.mouse.click(linkPoint.x, linkPoint.y);
     await page.getByRole('button', { name: 'Edit link' }).click();
     dialog = page.getByRole('dialog', { name: 'Edit link' });
-    await expect(dialog.getByRole('tab', { name: 'Basic settings' })).toHaveAttribute('aria-selected', 'true');
+    await expect(
+        dialog.getByRole('tab', { name: 'Basic settings' }),
+    ).toHaveAttribute('aria-selected', 'true');
     await dialog.getByRole('tab', { name: 'Advanced settings' }).click();
     await expect(
         dialog.getByRole('button', { name: 'Remove link' }),

@@ -72,6 +72,7 @@ export type {
     StructuredNodeViewState,
 } from './structured-editing.js';
 export { visualEditingServiceToken } from './visual-editing-service.js';
+export type { VisualElementPathEntry } from './visual-editing-service.js';
 export type {
     VisualBlockTag,
     VisualEditingService,

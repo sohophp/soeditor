@@ -3052,6 +3052,37 @@ test('restores reset data and the exact caller host on idempotent destruction', 
     await expect(textarea).toHaveValue(initial);
 });
 
+test('reset edits restores the opening content and remains undoable', async ({
+    page,
+}) => {
+    const initial = await page.locator('#content').inputValue();
+    await page.evaluate(() => {
+        globalThis.__classicDemo.editor.setData('<p>Changed</p>');
+    });
+    await page.evaluate(() => {
+        window.confirm = () => false;
+    });
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.editor.execute('editor.reset'),
+    );
+    await expect(page.locator('#content')).toHaveValue('<p>Changed</p>');
+    await page.evaluate(() => {
+        window.confirm = () => true;
+    });
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.editor.execute('editor.reset'),
+    );
+    await expect(page.locator('#content')).toHaveValue(initial);
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.editor.execute('editor.undo'),
+    );
+    await expect(page.locator('#content')).toHaveValue('<p>Changed</p>');
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.editor.execute('editor.redo'),
+    );
+    await expect(page.locator('#content')).toHaveValue(initial);
+});
+
 test('bounds automatic growth for long CMS content', async ({ page }) => {
     await page.evaluate(() => {
         globalThis.__classicDemo.editor.setData(

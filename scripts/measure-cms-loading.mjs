@@ -394,7 +394,14 @@ try {
             gzip: gzipSync(data).length,
         });
     }
-    const verification = verifyCmsLoading({ artifacts, assets, chunks, runs });
+    let verification;
+    let verificationFailure;
+    try {
+        verification = verifyCmsLoading({ artifacts, assets, chunks, runs });
+    } catch (error) {
+        verificationFailure = error;
+        verification = { failed: String(error) };
+    }
     await mkdir(resolve(output, '..'), { recursive: true });
     await writeFile(
         output,
@@ -423,6 +430,7 @@ try {
         ) + '\n',
     );
     stdout.write(`CMS loading measurements written to ${output}\n`);
+    if (verificationFailure) throw verificationFailure;
 } finally {
     await browser.close();
     await new Promise((done) => server.httpServer.close(done));
