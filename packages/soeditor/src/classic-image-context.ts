@@ -4,6 +4,7 @@ export function attachClassicImageContext(
     ui: EditorUi,
     visual: HTMLElement,
     initialEvent?: Pick<Event, 'target' | 'type'>,
+    baseHref?: string,
 ): () => void {
     const document = visual.ownerDocument;
     const view = document.defaultView;
@@ -737,7 +738,7 @@ export function attachClassicImageContext(
             try {
                 url = new URL(
                     sourceInput?.value ?? '',
-                    element.src || document.baseURI,
+                    baseHref ?? document.baseURI,
                 );
             } catch {
                 previewImage.removeAttribute('src');

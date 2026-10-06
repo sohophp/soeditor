@@ -1587,7 +1587,7 @@ export async function createClassicEditor(
             ui,
             commandSurface,
         );
-        disposeImageContext = attachClassicImageContext(ui, commandSurface);
+        disposeImageContext = attachClassicImageContext(ui, commandSurface, baseHref);
         const blockUi = ui;
         disposeBlockParagraphContext = attachLazyBlockContext(
             ui,
@@ -2044,6 +2044,7 @@ function attachLazyBlockContext(
 function attachClassicImageContext(
     ui: EditorUi,
     visual: HTMLElement,
+    baseHref?: string,
 ): () => void {
     return attachLazyBlockContext(
         ui,
@@ -2052,7 +2053,7 @@ function attachClassicImageContext(
         () =>
             import('./classic-image-context.js').then(
                 (module) => (event: Pick<Event, 'target' | 'type'>) =>
-                    module.attachClassicImageContext(ui, visual, event),
+                    module.attachClassicImageContext(ui, visual, event, baseHref),
             ),
     );
 }
