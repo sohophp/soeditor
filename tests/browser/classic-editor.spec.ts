@@ -1512,6 +1512,9 @@ test('accepts typed and picked colors and persists a shared recent-color history
         '[data-toolbar-item="fontBackgroundColor"]',
     );
     await reloadedBackground.locator('summary').click();
+    await expect(
+        reloadedBackground.locator('.soeditor-ui__color-remove'),
+    ).toBeVisible();
     const removeFits = await reloadedBackground.evaluate((element) => {
         const panel = element.querySelector('.soeditor-ui__color-panel');
         const remove = element.querySelector('.soeditor-ui__color-remove');
