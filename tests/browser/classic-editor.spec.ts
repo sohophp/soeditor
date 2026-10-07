@@ -3755,7 +3755,11 @@ test('offers rich paste choices with cancellation, security and one-step history
                     );
                 if (!surface) throw new Error('Missing surface');
                 const range = document.createRange();
-                range.selectNodeContents(surface);
+                range.selectNodeContents(
+                    surface.lastElementChild?.localName === 'p'
+                        ? surface.lastElementChild
+                        : surface,
+                );
                 range.collapse(false);
                 const selection =
                     surface.getRootNode() instanceof ShadowRoot
@@ -3763,8 +3767,12 @@ test('offers rich paste choices with cancellation, security and one-step history
                               surface.getRootNode() as ShadowRoot
                           ).getSelection?.() ?? window.getSelection())
                         : window.getSelection();
-                selection?.removeAllRanges();
-                selection?.addRange(range);
+                selection?.setBaseAndExtent(
+                    range.startContainer,
+                    range.startOffset,
+                    range.endContainer,
+                    range.endOffset,
+                );
                 const transfer = new DataTransfer();
                 transfer.setData('text/html', html);
                 transfer.setData('text/plain', text);
@@ -3866,7 +3874,16 @@ test('offers rich paste choices with cancellation, security and one-step history
     await dialog
         .getByRole('button', { name: '僅保留文字', exact: true })
         .click();
-    await expect.poll(data).toContain('Word textWord text');
+    await expect
+        .poll(async () =>
+            page.evaluate(
+                (html) =>
+                    new DOMParser().parseFromString(html, 'text/html').body
+                        .textContent,
+                await data(),
+            ),
+        )
+        .toContain('Word textWord text');
     await paste('<p>Pending</p>');
     await expect(dialog).toBeVisible();
     await page.evaluate(() =>

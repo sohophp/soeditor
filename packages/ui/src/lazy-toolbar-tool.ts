@@ -74,7 +74,6 @@ export function lazyToolbarTool(
             event.preventDefault();
             if (pending || destroyed || !canExecute(editor, options.command))
                 return;
-            ui.restoreEditingSelection();
             const snapshot = editor.state.document;
             const mode = editor.state.mode;
             pending = true;
@@ -101,7 +100,7 @@ export function lazyToolbarTool(
                     instance.element.open = true;
                     const summary = instance.element.querySelector('summary');
                     if (menuArrow !== null) summary?.append(menuArrow);
-                    summary?.focus();
+                    if (event instanceof KeyboardEvent) summary?.focus();
                     instance.element.dispatchEvent(new Event('toggle'));
                     if (event instanceof KeyboardEvent)
                         summary?.dispatchEvent(
@@ -111,7 +110,6 @@ export function lazyToolbarTool(
                             }),
                         );
                 } else {
-                    instance.element.focus();
                     instance.element.click();
                 }
             } catch (error) {

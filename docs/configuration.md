@@ -445,3 +445,5 @@ their existing behavior. See [paste choices](paste-choice.zh-CN.md).
 ## First-use toolbar tools
 
 The ESM CMS entry loads link, color, image and table panels on first activation. Toolbar labels, availability and formatting state remain visible before loading. A failed import reports feedback and can be retried; destruction, readonly, mode changes or a changed document cancel pending activation. Keep all emitted JavaScript chunks when self-hosting. The global distribution keeps its existing standalone companion boundaries.
+
+Optional Classic dictionaries load for Chinese locales. Canvas preset code loads when `canvas` is configured or Preview first opens. English instances without a configured canvas avoid these resources.

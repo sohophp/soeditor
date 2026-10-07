@@ -220,3 +220,26 @@ export function resolveClassicCanvasPresets(
     }
     return [...presets.values()];
 }
+
+export function createCustomContentStyle(
+    root: ShadowRoot,
+    visual: HTMLElement,
+    css: string | undefined,
+    nonce: string | undefined,
+): HTMLStyleElement | undefined {
+    if (css === undefined) return undefined;
+    if (typeof css !== 'string')
+        throw new TypeError('Classic editor contentStyles must be a string.');
+    if (css.trim().length === 0) {
+        throw new TypeError('Classic editor contentStyles must not be empty.');
+    }
+    const values = new Uint32Array(4);
+    visual.ownerDocument.defaultView?.crypto.getRandomValues(values);
+    const scope = Array.from(values, (value) => value.toString(36)).join('-');
+    visual.dataset.soeditorContentScope = scope;
+    const style = visual.ownerDocument.createElement('style');
+    if (nonce !== undefined) style.nonce = nonce;
+    style.textContent = `@scope ([data-soeditor-content-scope="${scope}"]) { ${css} }`;
+    root.append(style);
+    return style;
+}

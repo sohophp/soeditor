@@ -2309,7 +2309,7 @@ test('removes the whole image figure from dialog and keyboard actions', async ({
 }) => {
     const surface = page.locator('.soeditor-classic__visual');
     const source =
-        '<p>Before</p><figure data-soeditor-media="image"><a href="/photo"><img src="/before.png" alt="Before"></a><figcaption>Caption</figcaption></figure><p>After</p>';
+        '<p>Before</p><figure data-soeditor-media="image"><a href="/photo"><img src="/demo-editor-cover.svg" alt="Before"></a><figcaption>Caption</figcaption></figure><p>After</p>';
     const data = async (): Promise<string> =>
         page.evaluate(() => {
             const fixture: unknown = Reflect.get(
