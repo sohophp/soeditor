@@ -107,7 +107,7 @@ test('round-trips the synthetic legacy CMS corpus through editing, saving and re
         'data-unit="mm"',
         'type="A"',
         'value="9"',
-        '<product-card data-id="42">',
+        '<product-card data-id="42"',
         '<template data-cms="price">',
         '{{ product.price }}',
         '<script>',

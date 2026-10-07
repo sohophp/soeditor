@@ -164,7 +164,7 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`7be91261b60c206e7d13a00b0fdfc0605c1603b2d26244fbcda6d3daa731b3d4`
+`1f164f3b21cd7ad8c7780bfd1e695299582d6c7d168f1a6ada03d87ea776fdf2`
 
 ### .
 
@@ -1654,7 +1654,7 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`c178b1ee02873a85a02e5647d7e2a208a863db70851e70ccc9b66868147c72c7`
+`12e78403d146e1cf89618044d29163296696e9e4c29e806e91bd92777e95cd3b`
 
 ### .
 

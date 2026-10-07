@@ -21,7 +21,6 @@ import type {
     ClassicEditor,
     CreateClassicEditorOptions,
 } from './classic-editor.js';
-import { cmsRuntimePreset } from '@soeditor/presets/cms-runtime';
 
 /** Mounts the CMS editor without exporting unrelated product families. */
 export const createClassicEditor = async (
@@ -39,9 +38,6 @@ export const createClassicEditor = async (
             'The default CMS entry does not load Source, Preview, or save adapters. Import createClassicEditor from "@soeditor/editor/cms/optional" when those features are configured.',
         );
     }
-    const classic = await import('./classic-editor.js');
-    return classic.createClassicEditor(host, {
-        ...options,
-        preset: options?.preset ?? cmsRuntimePreset,
-    });
+    const classic = await import('./cms-runtime.js');
+    return classic.createCmsClassicEditor(host, options);
 };

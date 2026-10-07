@@ -61,6 +61,16 @@ const publicPropertyNames = collectPublicPropertyNames(
         'customAttributes',
         'choosePastePolicy',
         'builtInUiTranslations',
+        'linkButton',
+        'specialCharacterButton',
+        'imageActionsMenu',
+        'tableButton',
+        'tablePropertiesButton',
+        'tableRowPropertiesButton',
+        'tableCellPropertiesButton',
+        'fontColorButton',
+        'fontBackgroundColorButton',
+        'highlightButton',
         // WebKit requires this platform option to recover shadow selections.
         'shadowRoots',
     ],
@@ -183,13 +193,24 @@ export default defineConfig({
             name: 'soeditor-global-lazy-ui-companions',
             resolveId(source, importer) {
                 if (
+                    source === './lazy-toolbar-tool.js' &&
+                    importer?.endsWith('/ui/src/defaults.ts')
+                )
+                    return fileURLToPath(
+                        new URL(
+                            '../ui/src/lazy-toolbar-tool-inline.ts',
+                            import.meta.url,
+                        ),
+                    );
+                if (
                     source === './classic-block-paragraph.js' &&
                     importer?.endsWith('/src/classic-editor.ts')
                 )
                     return { id: './classic-block-tools.js', external: true };
                 if (
                     source === './link-attributes.js' &&
-                    importer?.endsWith('/ui/src/defaults.ts')
+                    (importer?.endsWith('/ui/src/toolbar-link-tools.ts') ||
+                        importer?.endsWith('/ui/src/toolbar-table-tools.ts'))
                 )
                     return { id: './link-attributes.js', external: true };
                 if (

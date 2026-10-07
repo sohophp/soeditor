@@ -326,18 +326,7 @@ export function tagCustomAttributeField(
     // This is a closed, static UI template. User values are added below with
     // DOM text/value properties and never interpolated into markup.
     section.innerHTML = `
-<div><strong>Additional attributes</strong><p>Add standard or CMS attributes. Reserved names are blocked.</p></div>
-<div class="soeditor-ui__link-attribute-row">
-<label class="soeditor-ui__field"><span>Attribute name</span><input data-role="name" aria-label="Attribute name" list="${prefix}-names" maxlength="64" autocomplete="off" placeholder="Choose or enter an attribute name"></label>
-<label class="soeditor-ui__field"><span>Attribute value</span><input data-role="value" aria-label="Attribute value" maxlength="4096" autocomplete="off"></label>
-<button data-role="add" type="button" class="soeditor-ui__dialog-action">Add attribute</button>
-</div>
-<div class="soeditor-ui__link-rel-custom">
-<label class="soeditor-ui__field"><span>Added attributes</span><select data-role="list"></select></label>
-<button data-role="remove" type="button" class="soeditor-ui__dialog-action is-danger">Remove attribute</button>
-</div>
-<p data-role="empty" class="soeditor-ui__link-attributes-empty">No additional attributes.</p>
-<datalist id="${prefix}-names"></datalist><datalist id="${prefix}-values"></datalist>`;
+<div><strong>Additional attributes</strong><p>Add standard or CMS attributes. Reserved names are blocked.</p></div><div class=soeditor-ui__link-attribute-row><label class=soeditor-ui__field><span>Attribute name</span><input data-role=name aria-label="Attribute name" list="${prefix}-names" maxlength=64 autocomplete=off placeholder="Choose or enter an attribute name"></label><label class=soeditor-ui__field><span>Attribute value</span><input data-role=value aria-label="Attribute value" maxlength=4096 autocomplete=off></label><button data-role=add type=button class=soeditor-ui__dialog-action>Add attribute</button></div><div class=soeditor-ui__link-rel-custom><label class=soeditor-ui__field><span>Added attributes</span><select data-role=list></select></label><button data-role=remove type=button class="soeditor-ui__dialog-action is-danger">Remove attribute</button></div><p data-role=empty class=soeditor-ui__link-attributes-empty>No additional attributes.</p><datalist id="${prefix}-names"></datalist><datalist id="${prefix}-values"></datalist>`;
     const name = required<HTMLInputElement>(section, '[data-role="name"]');
     const value = required<HTMLInputElement>(section, '[data-role="value"]');
     const add = required<HTMLButtonElement>(section, '[data-role="add"]');
@@ -457,36 +446,4 @@ function required<T extends Element>(root: Element, selector: string): T {
     const element = root.querySelector<T>(selector);
     if (element === null) throw new Error('Link attribute UI is incomplete.');
     return element;
-}
-
-export function appendExactTablePicker(
-    document: Document,
-    container: HTMLElement,
-    status: HTMLElement,
-    insertTable: (rows: number, columns: number) => boolean,
-    close: () => void,
-): void {
-    const exact = document.createElement('fieldset');
-    exact.className = 'soeditor-ui__table-picker-exact';
-    exact.innerHTML =
-        '<legend>Exact size</legend><input type=number min=1 max=100 value=3 aria-label="Table rows"><input type=number min=1 max=100 value=3 aria-label="Table columns"><button type=button>Insert</button>';
-    const inputs = exact.getElementsByTagName('input');
-    const rows = inputs.item(0);
-    const columns = inputs.item(1);
-    const insert = exact.querySelector('button');
-    if (!rows || !columns || !insert) return;
-    insert.addEventListener('click', () => {
-        const rowCount = +rows.value;
-        const columnCount = +columns.value;
-        if (
-            !rows.checkValidity() ||
-            !columns.checkValidity() ||
-            rowCount * columnCount > 1000
-        ) {
-            status.textContent = 'Limits: 1–100 each; 1000 cells.';
-            return;
-        }
-        if (insertTable(rowCount, columnCount)) close();
-    });
-    container.append(exact);
 }

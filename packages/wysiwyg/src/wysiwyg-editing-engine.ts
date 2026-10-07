@@ -974,6 +974,22 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     readonly #handleKeyDown = (event: KeyboardEvent): void => {
+        // WebKit can omit beforeinput when deletion starts at an empty BR.
+        if (
+            (event.key === 'Backspace' || event.key === 'Delete') &&
+            !event.ctrlKey &&
+            !event.metaKey &&
+            !event.altKey &&
+            this.#canEdit() &&
+            this.#isEmptyEditablePlaceholder() &&
+            this.editor.getData() !== ''
+        ) {
+            event.preventDefault();
+            this.#resetInputHistory();
+            this.#commit();
+            return;
+        }
+
         if (
             event.key.length !== 1 ||
             event.ctrlKey ||

@@ -3773,13 +3773,15 @@ test('offers rich paste choices with cancellation, security and one-step history
                         'application/x-soeditor-html',
                         'soeditor/1\n' + internalHtml,
                     );
-                surface.dispatchEvent(
-                    new ClipboardEvent('paste', {
-                        bubbles: true,
-                        cancelable: true,
-                        clipboardData: transfer,
-                    }),
-                );
+                const paste = new ClipboardEvent('paste', {
+                    bubbles: true,
+                    cancelable: true,
+                    clipboardData: transfer,
+                });
+                Object.defineProperty(paste, 'clipboardData', {
+                    value: transfer,
+                });
+                surface.dispatchEvent(paste);
             },
             { html, text, internalHtml },
         );
@@ -3889,13 +3891,13 @@ test('offers rich paste choices with cancellation, security and one-step history
         );
         const transfer = new DataTransfer();
         transfer.setData('text/html', '<p>IME paste</p>');
-        const accepted = surface.dispatchEvent(
-            new ClipboardEvent('paste', {
-                bubbles: true,
-                cancelable: true,
-                clipboardData: transfer,
-            }),
-        );
+        const paste = new ClipboardEvent('paste', {
+            bubbles: true,
+            cancelable: true,
+            clipboardData: transfer,
+        });
+        Object.defineProperty(paste, 'clipboardData', { value: transfer });
+        const accepted = surface.dispatchEvent(paste);
         surface.dispatchEvent(
             new CompositionEvent('compositionend', { bubbles: true }),
         );
@@ -3983,13 +3985,13 @@ test('rich paste choice preserves the end of large nested HTML and interprets so
             );
         const transfer = new DataTransfer();
         transfer.setData('text/plain', markup);
-        surface?.dispatchEvent(
-            new ClipboardEvent('paste', {
-                bubbles: true,
-                cancelable: true,
-                clipboardData: transfer,
-            }),
-        );
+        const paste = new ClipboardEvent('paste', {
+            bubbles: true,
+            cancelable: true,
+            clipboardData: transfer,
+        });
+        Object.defineProperty(paste, 'clipboardData', { value: transfer });
+        surface?.dispatchEvent(paste);
     }, markup);
     const dialog = page.getByRole('dialog', { name: 'Choose paste format' });
     await expect(dialog).toContainText('HTML source detected.');
@@ -4024,13 +4026,13 @@ test('rich paste choice preserves the end of large nested HTML and interprets so
             );
         const transfer = new DataTransfer();
         transfer.setData('text/plain', '<p>Literal code</p>');
-        surface?.dispatchEvent(
-            new ClipboardEvent('paste', {
-                bubbles: true,
-                cancelable: true,
-                clipboardData: transfer,
-            }),
-        );
+        const paste = new ClipboardEvent('paste', {
+            bubbles: true,
+            cancelable: true,
+            clipboardData: transfer,
+        });
+        Object.defineProperty(paste, 'clipboardData', { value: transfer });
+        surface?.dispatchEvent(paste);
     });
     await dialog
         .getByRole('button', { name: 'Text only', exact: true })
@@ -5932,7 +5934,14 @@ test('image type-around inserts outside the caption and linked inline paragraph 
     await page.keyboard.press('Control+Shift+z');
     await expect(visual.locator(':scope > figure + p')).toHaveCount(1);
     const html = await page.evaluate(() => globalThis.__classicDemo.getData());
-    expect(html).toContain('data-id="photo" class="cms-photo"');
+    expect(
+        await page.evaluate((html) => {
+            const figure = new DOMParser()
+                .parseFromString(html, 'text/html')
+                .querySelector('figure.cms-photo');
+            return figure?.getAttribute('data-id');
+        }, html),
+    ).toBe('photo');
     expect(html).toContain(
         '<figcaption>Rich <strong>caption</strong></figcaption>',
     );

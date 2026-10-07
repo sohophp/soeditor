@@ -445,13 +445,13 @@ test('loads global translations and rich paste dialogs only when needed', async 
         const clipboardData = new DataTransfer();
         clipboardData.setData('text/html', '<p><strong>Rich</strong></p>');
         clipboardData.setData('text/plain', 'Rich');
-        element.dispatchEvent(
-            new ClipboardEvent('paste', {
-                bubbles: true,
-                cancelable: true,
-                clipboardData,
-            }),
-        );
+        const paste = new ClipboardEvent('paste', {
+            bubbles: true,
+            cancelable: true,
+            clipboardData,
+        });
+        Object.defineProperty(paste, 'clipboardData', { value: clipboardData });
+        element.dispatchEvent(paste);
     });
     const dialog = page.getByRole('dialog');
     await expect(dialog).toBeVisible();

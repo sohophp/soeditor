@@ -441,3 +441,7 @@ each external rich paste. The default is `false`. Preserve, semantic and
 plain-text choices apply only to that operation; cancellation leaves the document
 and history unchanged. Ordinary text, internal copies, files and drops retain
 their existing behavior. See [paste choices](paste-choice.zh-CN.md).
+
+## First-use toolbar tools
+
+The ESM CMS entry loads link, color, image and table panels on first activation. Toolbar labels, availability and formatting state remain visible before loading. A failed import reports feedback and can be retried; destruction, readonly, mode changes or a changed document cancel pending activation. Keep all emitted JavaScript chunks when self-hosting. The global distribution keeps its existing standalone companion boundaries.
