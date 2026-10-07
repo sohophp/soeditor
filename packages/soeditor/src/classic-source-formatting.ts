@@ -8,6 +8,7 @@ import type {
 export function attachClassicSourceFormatting(
     editor: Editor,
     isDestroyed: () => boolean,
+    translate: (message: string) => string = (message) => message,
 ): HtmlFormattingService {
     let loading: Promise<HtmlFormattingService> | undefined;
     const load = (): Promise<HtmlFormattingService> => {
@@ -66,10 +67,42 @@ export function attachClassicSourceFormatting(
                 const source = editor.getData();
                 const revision = editor.state.document.revision;
                 // The formatter validates all supplied option names and values.
-                const formatted =
-                    operation === 'format'
-                        ? await service.format(source, options)
-                        : await service.minify(source);
+                let formatted: string;
+                try {
+                    formatted =
+                        operation === 'format'
+                            ? await service.format(source, options)
+                            : await service.minify(source);
+                } catch (error) {
+                    if (
+                        error instanceof Error &&
+                        error.name === 'InvalidHtmlFormattingSourceError' &&
+                        typeof error.cause === 'object' &&
+                        error.cause !== null
+                    ) {
+                        const issue = error.cause;
+                        const line: unknown = Reflect.get(issue, 'line');
+                        const column: unknown = Reflect.get(issue, 'column');
+                        const reason: unknown = Reflect.get(issue, 'reason');
+                        const code: unknown = Reflect.get(issue, 'code');
+                        if (
+                            typeof reason === 'string' &&
+                            typeof code === 'string'
+                        ) {
+                            error.message = translate(
+                                typeof line === 'number' &&
+                                    typeof column === 'number'
+                                    ? 'Cannot format HTML. Line {line}, column {column}: {reason} ({code}). Source was not changed.'
+                                    : 'Cannot format HTML. {reason} ({code}). Source was not changed.',
+                            )
+                                .replace('{line}', String(line))
+                                .replace('{column}', String(column))
+                                .replace('{reason}', translate(reason))
+                                .replace('{code}', code);
+                        }
+                    }
+                    throw error;
+                }
                 if (
                     isDestroyed() ||
                     editor.state.readonly ||

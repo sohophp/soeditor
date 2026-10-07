@@ -4,7 +4,7 @@ import htmlPlugin from 'prettier/plugins/html';
 import type { HtmlFormattingOptions } from './formatting.js';
 import { keepTagClosingBracketsInline } from './formatting-output.js';
 import { preserveFormattedContent } from './formatting-preservation.js';
-import { hasHtmlParserErrors } from './formatting-validation.js';
+import { getHtmlFormattingIssue } from './formatting-validation.js';
 
 interface FormattingWorkerRequest {
     readonly id: number;
@@ -29,10 +29,12 @@ Reflect.apply(addEventListenerValue, globalThis, [
                 : undefined,
         );
         if (request === undefined) return;
-        if (hasHtmlParserErrors(request.source)) {
+        const issue = getHtmlFormattingIssue(request.source);
+        if (issue !== undefined) {
             postResponse({
                 id: request.id,
                 reason: 'invalid-source',
+                issue,
                 type: 'failure',
             });
             return;

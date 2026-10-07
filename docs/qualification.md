@@ -2,6 +2,13 @@
 
 > 2026-09-07：当前工作区的优化状态、测量与验证统一见 [CMS 性能与稳定性优化](cms-optimization-2026-09-07.zh-CN.md)。以下日期更早的数字为历史记录；人工设备验收单独列出。
 
+## 1.5.0 scenario inventory
+
+The current source inventory contains 311 declared browser scenarios. This count
+is checked by the documentation audit; it describes available coverage, not a
+claim that every scenario or browser has passed. Current execution evidence is
+recorded in [1.5.0](releases/1.5.0.md).
+
 ## WYSIWYG + Source automated acceptance (2026-09-05)
 
 Local automated acceptance passes: 233 compatibility Chromium tests, 96

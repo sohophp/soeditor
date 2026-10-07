@@ -1,5 +1,9 @@
 # @soeditor/ui
 
+## 1.5.0
+
+Align the tested package set at 1.5.0. See the repository release notes for CMS editing fixes, additive paste APIs and lazy global companions.
+
 ## Unreleased
 
 ## 1.1.0

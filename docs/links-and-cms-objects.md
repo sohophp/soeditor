@@ -64,9 +64,8 @@ import {
 } from '@soeditor/rich-text';
 
 const provider: LinkTargetProvider = {
-    select: async (kind) => kind === 'file'
-        ? openFileManagerAndReturnPublicLink()
-        : null,
+    select: async (kind) =>
+        kind === 'file' ? openFileManagerAndReturnPublicLink() : null,
     searchInternal: async (query) => searchSitePages(query),
 };
 editor.services.register(linkTargetProviderServiceToken, provider);

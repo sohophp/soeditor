@@ -17,6 +17,9 @@ import {
     SOEDITOR_CLIPBOARD_MIME,
     groupHistoryTransaction,
     pastePipelineServiceToken,
+    pasteDecisionServiceToken,
+    classifyPasteInput,
+    type PastePipelineInput,
     visualEditingServiceToken,
     type EditingEngine,
     type EditingPoint,
@@ -269,6 +272,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     #compositionGroup: string | undefined;
     #compositionSequence = 0;
     #destroyed = false;
+    #pendingPaste: AbortController | undefined;
     #inputGroup: string | undefined;
     #inputGroupKind: string | undefined;
     #inputSequence = 0;
@@ -513,6 +517,8 @@ export class WysiwygEditingEngine implements EditingEngine {
             ?.attach({
                 id: 'wysiwyg',
                 update: (activity) => {
+                    if (activity.readonly || !activity.visible)
+                        this.#pendingPaste?.abort();
                     this.#projectionActivity = activity;
                     this.#updateEditableState();
                 },
@@ -697,6 +703,7 @@ export class WysiwygEditingEngine implements EditingEngine {
 
     destroy(): void {
         if (this.#destroyed) return;
+        this.#pendingPaste?.abort();
         this.#destroyed = true;
         this.#finishNativeInput();
         this.element.removeEventListener(
@@ -944,6 +951,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     };
 
     readonly #handleCompositionStart = (): void => {
+        this.#pendingPaste?.abort();
         this.#resetInputHistory();
         this.#pendingPreLineBreak = undefined;
         this.#compositionGroup = this.#nextCompositionGroup();
@@ -1045,40 +1053,118 @@ export class WysiwygEditingEngine implements EditingEngine {
         this.#resetInputHistory();
         if (!this.#canEdit() || event.clipboardData === null) return;
         event.preventDefault();
+        if (this.#compositionGroup !== undefined) return;
         const transfer = event.clipboardData;
         const custom = transfer.getData(SOEDITOR_CLIPBOARD_MIME);
         const internalHtml = custom.startsWith('soeditor/1\n')
             ? custom.slice('soeditor/1\n'.length)
             : undefined;
+        const input: PastePipelineInput = {
+            files: Object.freeze(
+                Array.from(transfer.files, (file) =>
+                    Object.freeze({
+                        data: file,
+                        name: file.name,
+                        size: file.size,
+                        type: file.type,
+                    }),
+                ),
+            ),
+            html: transfer.getData('text/html'),
+            ...(internalHtml === undefined ? {} : { internalHtml }),
+            source: 'paste',
+            text: transfer.getData('text/plain'),
+            types: Object.freeze(Array.from(transfer.types)),
+        };
+        this.#pendingPaste?.abort();
+        const decision = this.editor.services.tryGet(pasteDecisionServiceToken);
+        const classification = classifyPasteInput(input);
+        const htmlSource =
+            classification === 'plain-text' &&
+            /<(?:!doctype\s|[a-z][a-z0-9:-]*(?:\s|\/?>))/iu.test(input.text);
+        if (
+            decision !== undefined &&
+            input.files.length === 0 &&
+            classification !== 'internal' &&
+            (input.html.length > 0 || htmlSource)
+        ) {
+            const controller = new AbortController();
+            this.#pendingPaste = controller;
+            const document = this.editor.state.document;
+            const range = this.#range()?.cloneRange();
+            const cancel = () => controller.abort();
+            const disposers = [
+                this.editor.events.on('document:change', cancel),
+                this.editor.events.on('mode:change', cancel),
+                this.editor.events.on('state:change', ({ current }) => {
+                    if (current.readonly) cancel();
+                }),
+            ];
+            void decision
+                .choose({
+                    classification: htmlSource ? 'html-source' : classification,
+                    signal: controller.signal,
+                })
+                .then((policy) => {
+                    if (
+                        controller.signal.aborted ||
+                        document !== this.editor.state.document ||
+                        !this.#canEdit(false) ||
+                        this.#compositionGroup !== undefined ||
+                        range === undefined
+                    )
+                        return;
+                    this.element.focus({ preventScroll: true });
+                    this.#selectRange(range);
+                    if (policy === undefined) return;
+                    // Plain-text HTML is interpreted only after an explicit rich choice.
+                    this.#applyPaste({
+                        ...input,
+                        ...(htmlSource && policy !== 'plain-text'
+                            ? { html: input.text, text: '' }
+                            : {}),
+                        policy,
+                    });
+                })
+                .catch((error: unknown) => {
+                    if (!controller.signal.aborted)
+                        this.element.dispatchEvent(
+                            new CustomEvent('soeditor:editing-feedback', {
+                                bubbles: true,
+                                composed: true,
+                                detail: {
+                                    message:
+                                        error instanceof Error
+                                            ? error.message
+                                            : String(error),
+                                    severity: 'error',
+                                },
+                            }),
+                        );
+                })
+                .finally(() => {
+                    for (const dispose of disposers) dispose();
+                    if (this.#pendingPaste === controller)
+                        this.#pendingPaste = undefined;
+                });
+            return;
+        }
+        this.#applyPaste(input);
+    };
+
+    #applyPaste(input: PastePipelineInput): void {
         const result = this.editor.services
             .tryGet(pastePipelineServiceToken)
-            ?.process({
-                files: Object.freeze(
-                    Array.from(transfer.files, (file) =>
-                        Object.freeze({
-                            data: file,
-                            name: file.name,
-                            size: file.size,
-                            type: file.type,
-                        }),
-                    ),
-                ),
-                html: transfer.getData('text/html'),
-                ...(internalHtml === undefined ? {} : { internalHtml }),
-                source: 'paste',
-                text: transfer.getData('text/plain'),
-                types: Object.freeze(Array.from(transfer.types)),
-            });
+            ?.process(input);
         if (result?.consumed === true) return;
-        const html =
-            result?.html ?? internalHtml ?? transfer.getData('text/html');
-        const text = result?.text ?? transfer.getData('text/plain');
+        const html = result?.html ?? input.internalHtml ?? input.html;
+        const text = result?.text ?? input.text;
         this.#insertHtml(
             result?.policy === 'plain-text' || html.length === 0
                 ? this.#plainTextInsertion(text)
                 : html,
         );
-    };
+    }
 
     readonly #handleDrop = (event: DragEvent): void => {
         this.#resetInputHistory();

@@ -9,7 +9,10 @@ import {
     compactHtmlSource,
     preserveFormattedContent,
 } from './formatting-preservation.js';
-import { hasHtmlParserErrors } from './formatting-validation.js';
+import {
+    getHtmlFormattingIssue,
+    type HtmlFormattingIssue,
+} from './formatting-validation.js';
 
 import { DiagnosticsPlugin, diagnosticsServiceToken } from './diagnostics.js';
 
@@ -34,8 +37,13 @@ export const htmlFormattingServiceToken =
 
 /** Reports source that must be repaired before deliberate formatting. */
 export class InvalidHtmlFormattingSourceError extends Error {
-    constructor() {
-        super('HTML source has parser errors and cannot be formatted safely.');
+    constructor(issue?: HtmlFormattingIssue) {
+        super(
+            issue === undefined
+                ? 'HTML source has parser errors and cannot be formatted safely.'
+                : `Cannot format HTML. ${issue.line === undefined ? '' : `Line ${issue.line}, column ${issue.column}: `}${issue.reason} (${issue.code}). Source was not changed.`,
+            { cause: issue },
+        );
         this.name = 'InvalidHtmlFormattingSourceError';
     }
 }
@@ -74,8 +82,9 @@ export function createHtmlFormattingService(): HtmlFormattingService {
             ),
         minify: async (source: string) => {
             assertFormattingSourceSize(source);
-            if (hasHtmlParserErrors(source))
-                throw new InvalidHtmlFormattingSourceError();
+            const issue = getHtmlFormattingIssue(source);
+            if (issue !== undefined)
+                throw new InvalidHtmlFormattingSourceError(issue);
             return compactHtmlSource(source);
         },
     });
@@ -146,7 +155,9 @@ export class HtmlFormattingPlugin extends Plugin {
                             problem.severity === 'error',
                     )
                 ) {
-                    throw new InvalidHtmlFormattingSourceError();
+                    throw new InvalidHtmlFormattingSourceError(
+                        getHtmlFormattingIssue(source),
+                    );
                 }
                 const minified = await service.minify(source);
                 if (
@@ -210,8 +221,9 @@ async function formatHtmlOnMainThread(
     source: string,
     options: HtmlFormattingOptions | undefined,
 ): Promise<string> {
-    if (hasHtmlParserErrors(source)) {
-        throw new InvalidHtmlFormattingSourceError();
+    const issue = getHtmlFormattingIssue(source);
+    if (issue !== undefined) {
+        throw new InvalidHtmlFormattingSourceError(issue);
     }
     const [{ format }, htmlPlugin] = await Promise.all([
         import('prettier/standalone'),
@@ -255,6 +267,7 @@ interface FormattingWorkerSuccess {
 interface FormattingWorkerFailure {
     readonly id: number;
     readonly message?: string;
+    readonly issue?: HtmlFormattingIssue;
     readonly reason: 'formatter' | 'invalid-source';
     readonly type: 'failure';
 }
@@ -298,7 +311,11 @@ function formatHtmlInWorker(
             if (response.type === 'success') {
                 finish(() => resolve(response.result));
             } else if (response.reason === 'invalid-source') {
-                finish(() => reject(new InvalidHtmlFormattingSourceError()));
+                finish(() =>
+                    reject(
+                        new InvalidHtmlFormattingSourceError(response.issue),
+                    ),
+                );
             } else {
                 finish(() =>
                     reject(
@@ -354,9 +371,34 @@ function readFormattingWorkerResponse(
     if (message !== undefined && typeof message !== 'string') {
         return undefined;
     }
+    const issue: unknown = Reflect.get(value, 'issue');
+    let parsedIssue: HtmlFormattingIssue | undefined;
+    if (issue !== undefined) {
+        if (typeof issue !== 'object' || issue === null) return undefined;
+        const code: unknown = Reflect.get(issue, 'code');
+        const reasonText: unknown = Reflect.get(issue, 'reason');
+        const line: unknown = Reflect.get(issue, 'line');
+        const column: unknown = Reflect.get(issue, 'column');
+        if (
+            typeof code !== 'string' ||
+            typeof reasonText !== 'string' ||
+            (line !== undefined &&
+                (!Number.isInteger(line) || Number(line) < 1)) ||
+            (column !== undefined &&
+                (!Number.isInteger(column) || Number(column) < 1))
+        )
+            return undefined;
+        parsedIssue = {
+            code,
+            reason: reasonText,
+            ...(typeof line === 'number' ? { line } : {}),
+            ...(typeof column === 'number' ? { column } : {}),
+        };
+    }
     return {
         id,
         ...(message === undefined ? {} : { message }),
+        ...(parsedIssue === undefined ? {} : { issue: parsedIssue }),
         reason,
         type,
     };

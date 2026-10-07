@@ -2265,6 +2265,51 @@ test('presents whole-document HTML formatting only in Source mode', async ({
         .toBe('<main><h1>Compact</h1><p>HTML</p></main>');
 });
 
+test('explains source parser failures with a location and keeps valid style blocks', async ({
+    page,
+}) => {
+    await page.locator('[data-workspace-view="source"]').first().click();
+    const invalid = '<p>Before</p>\n<style>.page{color:red}\n<p>After</p>';
+    await page.evaluate(
+        (value) => globalThis.__classicDemo.editor.setData(value),
+        invalid,
+    );
+    const revision = await page.evaluate(
+        () => globalThis.__classicDemo.editor.editor.state.document.revision,
+    );
+    await page.locator('[data-toolbar-item="format"]').click();
+    const notification = page.locator('.soeditor-ui__notification').last();
+    await expect(notification).toContainText('missing its closing tag');
+    await expect(notification).toContainText('Line 3, column 13');
+    await expect(notification).toContainText(
+        'eof-in-element-that-can-contain-only-text',
+    );
+    await expect(notification).toContainText('Source was not changed');
+    expect(await page.evaluate(() => globalThis.__classicDemo.getData())).toBe(
+        invalid,
+    );
+    expect(
+        await page.evaluate(
+            () =>
+                globalThis.__classicDemo.editor.editor.state.document.revision,
+        ),
+    ).toBe(revision);
+    expect(await notification.locator('style, script').count()).toBe(0);
+    const css =
+        '<style>@font-face{font-family:"微軟正黑體";src:local(Yu Gothic)}.page{color:red}</style>';
+    await page.evaluate(
+        (value) => globalThis.__classicDemo.editor.setData(value),
+        css + '<main><p>Keep</p></main>',
+    );
+    await page.locator('[data-toolbar-item="format"]').click();
+    await expect
+        .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+        .toBe(css + '<main><p>Keep</p></main>\n');
+    expect(
+        await page.evaluate(() => globalThis.__classicDemo.getData()),
+    ).toContain(css);
+});
+
 test('keeps table cells interactive after source formatting and minification', async ({
     page,
 }) => {
@@ -3668,6 +3713,334 @@ test('applies multi-block CMS formatting and nested-list keyboard commands trans
     await expect
         .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
         .toContain('<li>One<ol type="A"><li>Two</li></ol></li>');
+});
+
+test('offers rich paste choices with cancellation, security and one-step history', async ({
+    page,
+}) => {
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        document.body.append(host);
+        const instance = await globalThis.__classicDemo.create(host, {
+            data: '<p>Before</p>',
+            locale: 'zh-TW',
+            config: {
+                cms: {
+                    paste: {
+                        prompt: true,
+                        retainStyles: false,
+                        retainAlignment: false,
+                    },
+                },
+            },
+        });
+        Reflect.set(globalThis, '__pasteChoiceEditor', instance);
+    });
+    const paste = async (
+        html: string,
+        text = 'Word text',
+        internalHtml?: string,
+    ) => {
+        await page.evaluate(
+            ({ html, text, internalHtml }) => {
+                const instance = Reflect.get(
+                    globalThis,
+                    '__pasteChoiceEditor',
+                ) as ClassicEditor;
+                instance.focus();
+                const surface = instance.element
+                    .querySelector('.soeditor-classic__visual')
+                    ?.shadowRoot?.querySelector<HTMLElement>(
+                        '.soeditor-wysiwyg-content',
+                    );
+                if (!surface) throw new Error('Missing surface');
+                const range = document.createRange();
+                range.selectNodeContents(surface);
+                range.collapse(false);
+                const selection =
+                    surface.getRootNode() instanceof ShadowRoot
+                        ? ((
+                              surface.getRootNode() as ShadowRoot
+                          ).getSelection?.() ?? window.getSelection())
+                        : window.getSelection();
+                selection?.removeAllRanges();
+                selection?.addRange(range);
+                const transfer = new DataTransfer();
+                transfer.setData('text/html', html);
+                transfer.setData('text/plain', text);
+                if (internalHtml)
+                    transfer.setData(
+                        'application/x-soeditor-html',
+                        'soeditor/1\n' + internalHtml,
+                    );
+                surface.dispatchEvent(
+                    new ClipboardEvent('paste', {
+                        bubbles: true,
+                        cancelable: true,
+                        clipboardData: transfer,
+                    }),
+                );
+            },
+            { html, text, internalHtml },
+        );
+    };
+    const data = () =>
+        page.evaluate(() =>
+            (
+                Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+            ).getData(),
+        );
+    const word =
+        '<p style="mso-x:1;color:red" onclick="run()"><b>Word text</b></p><script>run()</script>';
+    const originalViewport = page.viewportSize();
+    await page.setViewportSize({ width: 375, height: 667 });
+    await paste(word);
+    const dialog = page.getByRole('dialog', { name: '選擇貼上方式' });
+    await expect(dialog).toBeVisible();
+    await expect(dialog).toContainText('Office');
+    await expect(
+        dialog.locator('.soeditor-ui__dialog-actions').getByRole('button'),
+    ).toHaveCount(1);
+    const cards = dialog.locator('.soeditor-ui__paste-choice');
+    await expect(cards).toHaveCount(3);
+    for (const card of await cards.all()) {
+        await expect(
+            card.locator('.soeditor-ui__paste-choice-description'),
+        ).not.toBeEmpty();
+        expect(await card.getAttribute('aria-describedby')).toBeTruthy();
+    }
+    const layout = await dialog.evaluate((element) => ({
+        left: element.getBoundingClientRect().left,
+        right: element.getBoundingClientRect().right,
+        viewport: window.innerWidth,
+        overflow: element.scrollWidth > element.clientWidth,
+    }));
+    expect(layout.left).toBeGreaterThanOrEqual(0);
+    expect(layout.right).toBeLessThanOrEqual(layout.viewport);
+    expect(layout.overflow).toBe(false);
+    await dialog.screenshot({
+        path: test.info().outputPath('paste-choice-mobile.png'),
+    });
+    expect(await data()).toBe('<p>Before</p>');
+    await dialog.getByRole('button', { name: '取消', exact: true }).click();
+    if (originalViewport) await page.setViewportSize(originalViewport);
+    expect(await data()).toBe('<p>Before</p>');
+    await page.keyboard.type('X');
+    await expect.poll(data).toBe('<p>BeforeX</p>');
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).editor.execute('editor.undo'),
+    );
+    expect(await data()).toBe('<p>Before</p>');
+    await paste(word);
+    await dialog.getByRole('button', { name: '保留格式', exact: true }).focus();
+    await page.keyboard.press('Space');
+    await expect.poll(data).toContain('color:red');
+    expect(await data()).not.toMatch(/onclick|<script/u);
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).editor.execute('editor.undo'),
+    );
+    expect(await data()).toBe('<p>Before</p>');
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).editor.execute('editor.redo'),
+    );
+    expect(await data()).toContain('Word text');
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).setData('<p>Before</p>'),
+    );
+    await paste(word);
+    await dialog.getByRole('button', { name: '清理格式', exact: true }).focus();
+    await page.keyboard.press('Enter');
+    await expect.poll(data).toContain('<strong>Word text</strong>');
+    expect(await data()).not.toContain('style=');
+    await paste(word);
+    await dialog
+        .getByRole('button', { name: '僅保留文字', exact: true })
+        .click();
+    await expect.poll(data).toContain('Word textWord text');
+    await paste('<p>Pending</p>');
+    await expect(dialog).toBeVisible();
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).setData('<p>Reset</p>'),
+    );
+    const composingPaste = await page.evaluate(() => {
+        const instance = Reflect.get(
+            globalThis,
+            '__pasteChoiceEditor',
+        ) as ClassicEditor;
+        instance.focus();
+        const surface = instance.element
+            .querySelector('.soeditor-classic__visual')
+            ?.shadowRoot?.querySelector<HTMLElement>(
+                '.soeditor-wysiwyg-content',
+            );
+        if (!surface) throw new Error('Missing surface');
+        surface.dispatchEvent(
+            new CompositionEvent('compositionstart', { bubbles: true }),
+        );
+        const transfer = new DataTransfer();
+        transfer.setData('text/html', '<p>IME paste</p>');
+        const accepted = surface.dispatchEvent(
+            new ClipboardEvent('paste', {
+                bubbles: true,
+                cancelable: true,
+                clipboardData: transfer,
+            }),
+        );
+        surface.dispatchEvent(
+            new CompositionEvent('compositionend', { bubbles: true }),
+        );
+        return accepted;
+    });
+    expect(composingPaste).toBe(false);
+    await expect(dialog).toHaveCount(0);
+    expect(await data()).not.toContain('IME paste');
+    await expect(dialog).toHaveCount(0);
+    expect(await data()).toBe('<p>Reset</p>');
+    await paste('<p>Readonly pending</p>');
+    await expect(dialog).toBeVisible();
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).setReadonly(true),
+    );
+    await expect(dialog).toHaveCount(0);
+    expect(await data()).toBe('<p>Reset</p>');
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).setReadonly(false),
+    );
+    await paste('<p>Older paste</p>');
+    await expect(dialog).toBeVisible();
+    await paste('<p>Latest paste</p>', 'Latest paste');
+    await expect(dialog).toHaveCount(1);
+    await dialog.getByRole('button', { name: '保留格式', exact: true }).click();
+    await expect.poll(data).toContain('Latest paste');
+    expect(await data()).not.toContain('Older paste');
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).setData('<p>Reset</p>'),
+    );
+    await paste('', 'Plain text');
+    await expect.poll(data).toContain('Plain text');
+    await expect(dialog).toHaveCount(0);
+    await paste('<p>External</p>', 'Internal', '<strong>Internal</strong>');
+    await expect.poll(data).toContain('<strong>Internal</strong>');
+    await expect(dialog).toHaveCount(0);
+    await paste('<p>Cancel</p>');
+    await expect(dialog).toBeVisible();
+    expect(
+        await page.evaluate(() => globalThis.__classicDemo.getData()),
+    ).not.toContain('Destroy');
+    await page.keyboard.press('Escape');
+    await expect(dialog).toHaveCount(0);
+    expect(await data()).not.toContain('Cancel');
+    await paste('<p>Destroy</p>');
+    await expect(dialog).toBeVisible();
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).destroy(),
+    );
+    await expect(dialog).toHaveCount(0);
+});
+
+test('rich paste choice preserves the end of large nested HTML and interprets source only by choice', async ({
+    page,
+}) => {
+    const markup =
+        '<table width="1000" cellspacing="0"><tbody>' +
+        Array.from(
+            { length: 500 },
+            (_, i) =>
+                `<tr><td style="padding:20px"><a href="/article/${i}">Row ${i}</a><img src="/image.jpg" alt="photo"></td></tr>`,
+        ).join('') +
+        '<tr><td>END OF LARGE ARTICLE</td></tr></tbody></table>';
+    await page.evaluate(async (markup) => {
+        const host = document.createElement('textarea');
+        document.body.append(host);
+        const instance = await globalThis.__classicDemo.create(host, {
+            data: '',
+            config: { cms: { paste: { prompt: true } } },
+        });
+        Reflect.set(globalThis, '__pasteChoiceEditor', instance);
+        instance.focus();
+        const surface = instance.element
+            .querySelector('.soeditor-classic__visual')
+            ?.shadowRoot?.querySelector<HTMLElement>(
+                '.soeditor-wysiwyg-content',
+            );
+        const transfer = new DataTransfer();
+        transfer.setData('text/plain', markup);
+        surface?.dispatchEvent(
+            new ClipboardEvent('paste', {
+                bubbles: true,
+                cancelable: true,
+                clipboardData: transfer,
+            }),
+        );
+    }, markup);
+    const dialog = page.getByRole('dialog', { name: 'Choose paste format' });
+    await expect(dialog).toContainText('HTML source detected.');
+    await dialog
+        .getByRole('button', { name: 'Keep formatting', exact: true })
+        .click();
+    const data = () =>
+        page.evaluate(() =>
+            (
+                Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+            ).getData(),
+        );
+    await expect.poll(data).toContain('END OF LARGE ARTICLE');
+    expect(await data()).toContain('padding:20px');
+    expect(await data()).toContain('Row 499');
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).editor.execute('editor.undo'),
+    );
+    expect(await data()).toBe('');
+    await page.evaluate(() => {
+        const instance = Reflect.get(
+            globalThis,
+            '__pasteChoiceEditor',
+        ) as ClassicEditor;
+        instance.focus();
+        const surface = instance.element
+            .querySelector('.soeditor-classic__visual')
+            ?.shadowRoot?.querySelector<HTMLElement>(
+                '.soeditor-wysiwyg-content',
+            );
+        const transfer = new DataTransfer();
+        transfer.setData('text/plain', '<p>Literal code</p>');
+        surface?.dispatchEvent(
+            new ClipboardEvent('paste', {
+                bubbles: true,
+                cancelable: true,
+                clipboardData: transfer,
+            }),
+        );
+    });
+    await dialog
+        .getByRole('button', { name: 'Text only', exact: true })
+        .click();
+    await expect.poll(data).toContain('&lt;p&gt;Literal code&lt;/p&gt;');
+    await page.evaluate(() =>
+        (
+            Reflect.get(globalThis, '__pasteChoiceEditor') as ClassicEditor
+        ).destroy(),
+    );
 });
 
 test('classifies and cleans external paste/drop while retaining internal clipboard fidelity', async ({

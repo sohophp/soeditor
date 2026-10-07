@@ -10,11 +10,13 @@ export {
     PastePipelinePlugin,
     PasteRejectedError,
     pastePipelineServiceToken,
+    pasteDecisionServiceToken,
     SOEDITOR_CLIPBOARD_MIME,
 } from './paste-pipeline.js';
 export type {
     ExternalPastePolicy,
     PasteDiagnostic,
+    PasteDecisionService,
     PasteInputClassification,
     PasteInputFile,
     PastePipelineInput,

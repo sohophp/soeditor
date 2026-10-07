@@ -1,6 +1,15 @@
 # Changelog
 
-## Unreleased
+## 1.5.0 — 2026-10-07
+
+- 验证：429 项单元测试、类型检查、lint、API 报告、文档与安全门禁已通过；CDN 主脚本与主样式回到现有预算内。打包、浏览器与在线发布验证另行记录。
+
+- 更新测试和文档构建工具的安全补丁，修复发布审计发现的高危与严重依赖漏洞；不新增编辑器运行时依赖。尚无上游修复的 braces 通过有回归验证的本地深度限制补丁处理，审计中单独记录。
+
+- 新增可选的富文本粘贴选择，支持保留格式、清理格式和仅保留文字；默认维持自动粘贴，取消不修改正文。
+- Source 格式化／压缩失败时显示本地化原因、行列和错误代码，保留原文与撤销历史。
+- 支持安全选择与解除元素包裹，按宿主内容基础 URL 显示图片预览。
+- 中文语言包、链接工具和粘贴选择在 CDN 全局构建中独立加载；自托管需保留完整 dist 目录。
 
 - Clear the selected heading or paragraph's inline style when removing formatting, including inert preserved styles, while retaining its block tag and metadata.
 

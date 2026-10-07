@@ -1,6 +1,6 @@
 {
     "name": "soeditor-workspace",
-    "version": "1.4.0",
+    "version": "1.5.0",
     "license": "MIT",
     "private": true,
     "type": "module",
@@ -20,7 +20,7 @@
         "release:dry-run": "pnpm build && node scripts/publish-release.mjs --dry-run",
         "release:publish": "node scripts/publish-release.mjs",
         "release:verify-registry": "node scripts/verify-registry-release.mjs",
-        "security:audit": "pnpm audit --audit-level high --registry=https://registry.npmjs.org",
+        "security:audit": "node --test scripts/verify-security-patches.test.mjs && pnpm audit --audit-level high --registry=https://registry.npmjs.org",
         "test": "pnpm test:unit && pnpm test:performance && pnpm test:api && pnpm test:docs && pnpm test:consumer && pnpm test:distribution && pnpm test:release && pnpm test:browser && pnpm test:browser:cms",
         "test:api": "pnpm build && node scripts/generate-api-report.mjs --check",
         "test:browser": "playwright test --config playwright.product.config.ts",
@@ -60,6 +60,6 @@
         "typescript": "^5.9.2",
         "typescript-eslint": "^8.41.0",
         "vite": "^7.1.3",
-        "vitest": "^3.2.4"
+        "vitest": "4.1.11"
     }
 }

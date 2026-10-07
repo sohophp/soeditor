@@ -1,4 +1,4 @@
-# Releasing SoEditor 1.4.x
+# Releasing SoEditor 1.5.x
 
 Publication is an owner-authorized operation. Local quality gates and dry runs
 do not grant permission to choose a license, publish packages, create a tag, or
@@ -117,7 +117,7 @@ do not republish identical artifacts.
 After publication, or to recheck propagation:
 
 ```bash
-pnpm release:verify-registry 1.4.0
+pnpm release:verify-registry 1.5.0
 ```
 
 This creates a clean Vite consumer from the public npm registry and checks the

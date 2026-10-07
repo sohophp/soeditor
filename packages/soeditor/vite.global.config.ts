@@ -1,6 +1,7 @@
 import { defineConfig } from 'vite';
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
+import { transform as transformCss } from 'lightningcss';
 import { collectPublicPropertyNames } from './vite-public-properties.js';
 
 const classicStylesPath = fileURLToPath(
@@ -9,9 +10,6 @@ const classicStylesPath = fileURLToPath(
 const stylesPath = fileURLToPath(new URL('./src/styles.css', import.meta.url));
 const uiStylesPath = fileURLToPath(
     new URL('../ui/src/cms.css', import.meta.url),
-);
-const inlineUiTranslationLoaderPath = fileURLToPath(
-    new URL('./src/ui-translation-loader-inline.ts', import.meta.url),
 );
 const repositoryRoot = fileURLToPath(new URL('../../', import.meta.url));
 const fileManagerSourcePath = fileURLToPath(
@@ -41,10 +39,43 @@ const publicPropertyNames = collectPublicPropertyNames(
         'createClassicEditor',
         'attachClassicImageContext',
         'createVideoRuntime',
+        'attachClassicLinkContext',
+        'attachBlockParagraphContext',
+        // The independently minified link companion receives these object keys.
+        'attachLinkTargetControls',
+        'linkCustomAttributeField',
+        'readInspectedCustomAttributes',
+        'tagCustomAttributeField',
+        'appendExactTablePicker',
+        'fileButtonContainer',
+        'displayed',
+        'selectedText',
+        'provider',
+        'report',
+        'fileIcon',
+        'document',
+        'container',
+        'href',
+        'title',
+        'translate',
+        'customAttributes',
+        'choosePastePolicy',
+        'builtInUiTranslations',
         // WebKit requires this platform option to recover shadow selections.
         'shadowRoots',
     ],
 );
+const lazyDialogPattern =
+    /\/\* soeditor-global-lazy-dialog-styles:start \*\/([\s\S]*?)\/\* soeditor-global-lazy-dialog-styles:end \*\//gu;
+const stripLazyDialogStyles = (code: string): string =>
+    code.replace(lazyDialogPattern, '');
+const lazyDialogStyles = [uiStylesPath, classicStylesPath]
+    .flatMap((path) =>
+        [...readFileSync(path, 'utf8').matchAll(lazyDialogPattern)].map(
+            (match) => match[1],
+        ),
+    )
+    .join('\n');
 const stripOptionalGlobalStyles = (code: string): string =>
     code
         .replace(
@@ -149,31 +180,116 @@ export default defineConfig({
         },
         {
             enforce: 'pre',
-            name: 'soeditor-inline-ui-translations',
+            name: 'soeditor-global-lazy-ui-companions',
             resolveId(source, importer) {
                 if (
-                    source === './ui-translation-loader.js' &&
-                    importer?.endsWith('/src/classic-editor.ts') === true
-                ) {
-                    return inlineUiTranslationLoaderPath;
+                    source === './classic-block-paragraph.js' &&
+                    importer?.endsWith('/src/classic-editor.ts')
+                )
+                    return { id: './classic-block-tools.js', external: true };
+                if (
+                    source === './link-attributes.js' &&
+                    importer?.endsWith('/ui/src/defaults.ts')
+                )
+                    return { id: './link-attributes.js', external: true };
+                if (
+                    (source === '@soeditor/ui/translations' ||
+                        source.endsWith('/ui/src/translations.ts')) &&
+                    importer?.endsWith('/src/ui-translation-loader.ts')
+                )
+                    return { id: './ui-translations.js', external: true };
+                if (
+                    source === './classic-link-context.js' &&
+                    importer?.endsWith('/src/classic-editor.ts')
+                )
+                    return {
+                        id: './classic-link-tools.js',
+                        external: true,
+                    };
+                if (
+                    source === './classic-paste-dialog.js' &&
+                    importer?.endsWith('/src/classic-paste-choice.ts')
+                )
+                    return { id: './classic-paste-dialog.js', external: true };
+            },
+            generateBundle() {
+                const dist = new URL('./dist/', import.meta.url);
+                for (const [prefix, fileName] of [
+                    ['translations-', 'ui-translations.js'],
+                    ['classic-link-context-', 'classic-link-tools.js'],
+                    ['link-attributes-', 'link-attributes.js'],
+                    ['classic-block-paragraph-', 'classic-block-tools.js'],
+                    ['classic-paste-dialog-', 'classic-paste-dialog.js'],
+                ] as const) {
+                    const selected = readdirSync(dist)
+                        .filter(
+                            (name) =>
+                                name.startsWith(prefix) && name.endsWith('.js'),
+                        )
+                        .map((name) => ({
+                            name,
+                            source: readFileSync(new URL(name, dist), 'utf8'),
+                        }))
+                        .sort((a, b) => a.source.length - b.source.length)[0];
+                    if (
+                        selected === undefined ||
+                        /^import /m.test(selected.source)
+                    )
+                        throw new Error(
+                            `Missing self-contained companion: ${fileName}`,
+                        );
+                    this.emitFile({
+                        type: 'asset',
+                        fileName,
+                        source: selected.source.replace(
+                            /sourceMappingURL=.*$/m,
+                            `sourceMappingURL=${fileName}.map`,
+                        ),
+                    });
+                    this.emitFile({
+                        type: 'asset',
+                        fileName: `${fileName}.map`,
+                        source: readFileSync(
+                            new URL(`${selected.name}.map`, dist),
+                            'utf8',
+                        ),
+                    });
                 }
             },
         },
         {
             enforce: 'pre',
             name: 'soeditor-strip-optional-global-styles',
+            generateBundle() {
+                this.emitFile({
+                    type: 'asset',
+                    fileName: 'classic-dialogs.css',
+                    source: transformCss({
+                        filename: 'classic-dialogs.css',
+                        code: Buffer.from(lazyDialogStyles),
+                        minify: true,
+                    }).code,
+                });
+            },
             load(id) {
                 if (id.split('?', 1)[0] !== stylesPath) return;
-                return [
-                    stripOptionalGlobalStyles(
-                        stripCompatibilityReviewStyles(
-                            readFileSync(uiStylesPath, 'utf8'),
+                return (
+                    [
+                        stripOptionalGlobalStyles(
+                            stripLazyDialogStyles(
+                                stripCompatibilityReviewStyles(
+                                    readFileSync(uiStylesPath, 'utf8'),
+                                ),
+                            ),
                         ),
-                    ),
-                    stripOptionalGlobalStyles(
-                        readFileSync(classicStylesPath, 'utf8'),
-                    ),
-                ].join('\n');
+                        stripOptionalGlobalStyles(
+                            stripLazyDialogStyles(
+                                readFileSync(classicStylesPath, 'utf8'),
+                            ),
+                        ),
+                    ].join('\n') +
+                    '\n.soeditor-classic__image-dialog{font-size:.875rem;line-height:1.5}'
+                );
             },
         },
     ],

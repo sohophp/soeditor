@@ -544,6 +544,59 @@
     justify-content: flex-end;
 }
 
+.soeditor-ui__paste-dialog {
+    inline-size: min(32rem, calc(100dvw - 1rem));
+    min-inline-size: 0;
+}
+
+.soeditor-ui__paste-source {
+    margin: 0 0 0.75rem;
+}
+
+.soeditor-ui__paste-choices {
+    display: grid;
+    gap: 0.625rem;
+}
+
+.soeditor-ui__paste-choice {
+    background: var(--soeditor-bg);
+    border: 1px solid var(--soeditor-border);
+    border-radius: var(--soeditor-radius);
+    color: var(--soeditor-text);
+    cursor: pointer;
+    display: grid;
+    font: inherit;
+    gap: 0.25rem;
+    padding: 0.75rem;
+    text-align: start;
+    overflow-wrap: anywhere;
+}
+
+.soeditor-ui__paste-choice:hover {
+    background: var(--soeditor-panel-bg);
+    border-color: var(--soeditor-accent);
+}
+
+.soeditor-ui__paste-choice:focus-visible {
+    outline: 2px solid var(--soeditor-focus-ring);
+    outline-offset: 2px;
+}
+
+.soeditor-ui__paste-choice-title {
+    font-weight: 600;
+}
+
+.soeditor-ui__paste-choice-description,
+.soeditor-ui__paste-safety {
+    color: var(--soeditor-muted);
+    font-size: 0.875rem;
+    line-height: 1.5;
+}
+
+.soeditor-ui__paste-safety {
+    margin: 0.75rem 0 0;
+}
+
 /* soeditor-global-optional-dialog-windows:start */
 .soeditor-ui__dialog-resize-handle {
     background: transparent;
@@ -635,6 +688,7 @@
     padding: 0.45rem;
 }
 
+/* soeditor-global-lazy-dialog-styles:start */
 .soeditor-ui__link-dialog {
     width: min(820px, calc(100dvw - 2rem));
     block-size: min(48rem, calc(100dvh - 1rem));
@@ -959,6 +1013,7 @@
     }
 }
 
+/* soeditor-global-lazy-dialog-styles:end */
 .soeditor-ui__balloon {
     background: var(--soeditor-bg);
     border: 1px solid var(--soeditor-border);

@@ -320,6 +320,7 @@
 }
 /* soeditor-global-legacy-projection:end */
 
+/* soeditor-global-lazy-dialog-styles:start */
 .soeditor-classic__image-properties {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -453,6 +454,8 @@
         flex-wrap: wrap;
     }
 }
+
+/* soeditor-global-lazy-dialog-styles:end */
 
 /* soeditor-global-legacy-projection:start */
 .soeditor-classic .soeditor-wysiwyg-preserved-block[hidden],

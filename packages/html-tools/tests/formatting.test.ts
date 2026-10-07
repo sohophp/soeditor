@@ -11,6 +11,33 @@ import {
 } from '../src/index.js';
 
 describe('HTML formatting', () => {
+    it('reports the parser reason and one-based location without rejecting valid styles', async () => {
+        const service = createHtmlFormattingService();
+        const css =
+            '<style>@font-face{font-family:"微軟正黑體";src:local(Yu Gothic)}.page{color:red}</style>';
+        const valid = `${css}<main><p>Article</p></main>`;
+        expect(await service.format(valid)).toContain(css);
+        expect(await service.minify(valid)).toContain(css);
+        const invalid = '<p>Before</p>\n<style>.page{color:red}\n<p>After</p>';
+        for (const operation of ['format', 'minify'] as const) {
+            await expect(service[operation](invalid)).rejects.toMatchObject({
+                name: 'InvalidHtmlFormattingSourceError',
+                cause: {
+                    code: 'eof-in-element-that-can-contain-only-text',
+                    line: 3,
+                    column: 13,
+                },
+            });
+            await expect(service[operation](invalid)).rejects.toThrow(
+                'missing its closing tag',
+            );
+        }
+        await expect(
+            service.format('<p id="a"\n id="b">Text</p>'),
+        ).rejects.toMatchObject({
+            cause: { code: 'duplicate-attribute', line: 2, column: 4 },
+        });
+    });
     it('formats complete documents without treating body text inside an attribute as document markup', async () => {
         const service = createHtmlFormattingService();
         const fragment =

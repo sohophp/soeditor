@@ -433,3 +433,11 @@ response; external platform playback depends on the deployment's network/CSP.
 Adding subtitles supplies `crossorigin="anonymous"` unless the stored video
 already declares a CORS mode. Video and WebVTT servers on another origin must
 return the appropriate CORS headers; the editor does not proxy these requests.
+
+## Rich paste choices (1.5.0)
+
+Set `config: { cms: { paste: { prompt: true } } }` to ask authors how to handle
+each external rich paste. The default is `false`. Preserve, semantic and
+plain-text choices apply only to that operation; cancellation leaves the document
+and history unchanged. Ordinary text, internal copies, files and drops retain
+their existing behavior. See [paste choices](paste-choice.zh-CN.md).

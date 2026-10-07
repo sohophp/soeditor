@@ -1,5 +1,9 @@
 # @soeditor/editor
 
+## 1.5.0
+
+Align the tested package set at 1.5.0. See the repository release notes for CMS editing fixes, additive paste APIs and lazy global companions.
+
 ## Unreleased
 
 - Clear the selected heading or paragraph's inline style when removing formatting, including inert preserved styles, while retaining its block tag and metadata.

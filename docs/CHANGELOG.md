@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.5.0 — 2026-10-07
+
+- Add opt-in rich paste choices with safe per-operation policies, cancellation and one-step undo.
+- Explain Source formatting errors with localized reasons, positions and stable codes while preserving invalid source.
+- Improve safe visual element selection/unwrapping, content-base image previews, link dialogs, image properties and CMS disclosure controls.
+- Preserve authored HTML, table alignment, literal code whitespace and source formatting; clear selected block styles intentionally.
+- Load global Chinese translations, link context tools and paste dialogs as companion modules. Self-host the complete dist directory; no API removals, runtime dependencies or budget increases.
+
 ## 1.4.0
 
 - Enable focused video tools by default in Classic CMS editors. Use `video: false` to opt out or configure media origins through `video`; explicit video plugins remain compatible.
@@ -28,7 +36,7 @@
 - Add typed optional `@soeditor/preview/media` services and atomic WYSIWYG projection hooks.
 - Keep ordinary toolbar tools as icons and support configured drawers; synchronously capture selection before keyboard focus enters toolbar chrome.
 - Fix table/image paragraph insertion handles and preserve existing HTML, selection and instance isolation.
-- Preserve default CMS loading budgets and lazy Source, video properties and dialog enhancements.
+- Preserve default CMS loading budgets and lazy Source, video properties and link tools.
 - Align all 24 public packages at 1.2.0; no stable API removals or new runtime dependencies.
 
 ## 1.1.0 — CMS WYSIWYG + Source

@@ -10,6 +10,32 @@ import {
 } from '../src/paste-pipeline.js';
 
 describe('paste pipeline', () => {
+    it('uses a validated per-paste choice without changing default or internal policy', async () => {
+        const editor = await Editor.create({ plugins: [PastePipelinePlugin] });
+        const service = editor.services.get(pastePipelineServiceToken);
+        expect(
+            service.process(input({ html: '<p>Web</p>', policy: 'preserve' }))
+                .policy,
+        ).toBe('preserve');
+        expect(service.process(input({ html: '<p>Web</p>' })).policy).toBe(
+            'semantic',
+        );
+        expect(
+            service.process(
+                input({
+                    internalHtml: '<p>Internal</p>',
+                    policy: 'plain-text',
+                }),
+            ).policy,
+        ).toBe('preserve');
+        expect(() =>
+            service.process({
+                ...input(),
+                policy: 'invalid',
+            } as unknown as PastePipelineInput),
+        ).toThrow(/policy/u);
+        await editor.destroy();
+    });
     it('classifies internal, Office-family, web, text, and file inputs', () => {
         expect(classifyPasteInput(input({ internalHtml: '<p>x</p>' }))).toBe(
             'internal',

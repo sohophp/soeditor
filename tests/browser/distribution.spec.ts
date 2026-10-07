@@ -20,6 +20,11 @@ test.beforeEach(async ({ page }) => {
     );
     for (const name of [
         'classic-image-tools.js',
+        'ui-translations.js',
+        'classic-link-tools.js',
+        'link-attributes.js',
+        'classic-block-tools.js',
+        'classic-paste-dialog.js',
         'video-runtime.js',
         'soeditor.global.js',
     ]) {
@@ -35,6 +40,17 @@ test.beforeEach(async ({ page }) => {
             }),
         );
     }
+    await page.route('**/classic-dialogs.css', (route) =>
+        route.fulfill({
+            contentType: 'text/css',
+            path: fileURLToPath(
+                new URL(
+                    '../../packages/soeditor/dist/classic-dialogs.css',
+                    import.meta.url,
+                ),
+            ),
+        }),
+    );
     await page.goto('/global-fixture');
 });
 
@@ -388,4 +404,79 @@ test('CMS global enables video by default and loads its dialog only on demand', 
     await expect(
         page.getByRole('dialog').getByLabel('Video URL', { exact: true }),
     ).toHaveValue('/movie.mp4');
+});
+
+test('loads global translations and rich paste dialogs only when needed', async ({
+    page,
+}) => {
+    const companions: string[] = [];
+    page.on('request', (request) => {
+        const path = new URL(request.url()).pathname;
+        if (
+            /ui-translations|classic-link-tools|classic-paste-dialog|classic-dialogs\.css/u.test(
+                path,
+            )
+        )
+            companions.push(path);
+    });
+    await page.setContent('<textarea id="content"><p>Start</p></textarea>');
+    await page.addStyleTag({ path: stylesheet });
+    await page.addScriptTag({ url: '/cdn/soeditor.global.js' });
+    await page.evaluate(async () => {
+        const api = Reflect.get(globalThis, 'SoEditor') as {
+            createClassicEditor(
+                host: HTMLTextAreaElement,
+                options: unknown,
+            ): Promise<unknown>;
+        };
+        const host = document.querySelector<HTMLTextAreaElement>('#content');
+        if (host === null) throw new Error('Missing host.');
+        const instance = await api.createClassicEditor(host, {
+            locale: 'zh-CN',
+            config: { cms: { paste: { prompt: true } } },
+        });
+        Reflect.set(globalThis, '__globalPasteTest', instance);
+    });
+    expect(companions).toEqual(['/cdn/ui-translations.js']);
+    const visual = page.locator('.soeditor-wysiwyg-content');
+    await visual.click();
+    await page.keyboard.press('End');
+    await visual.evaluate((element) => {
+        const clipboardData = new DataTransfer();
+        clipboardData.setData('text/html', '<p><strong>Rich</strong></p>');
+        clipboardData.setData('text/plain', 'Rich');
+        element.dispatchEvent(
+            new ClipboardEvent('paste', {
+                bubbles: true,
+                cancelable: true,
+                clipboardData,
+            }),
+        );
+    });
+    const dialog = page.getByRole('dialog');
+    await expect(dialog).toBeVisible();
+    await expect(
+        dialog.getByRole('button', { name: '清理格式', exact: true }),
+    ).toBeVisible();
+    expect(companions).toEqual(
+        expect.arrayContaining([
+            '/cdn/classic-paste-dialog.js',
+            '/cdn/classic-dialogs.css',
+        ]),
+    );
+    await dialog.getByRole('button', { name: '清理格式', exact: true }).click();
+    await expect(dialog).toHaveCount(0);
+    await expect(visual).toContainText('Rich');
+    await page.evaluate(async () => {
+        const instance = Reflect.get(globalThis, '__globalPasteTest') as {
+            editor: { execute(command: string): unknown };
+            getData(): string;
+            destroy(): Promise<void>;
+        };
+        instance.editor.execute('editor.undo');
+        if (instance.getData() !== '<p>Start</p>')
+            throw new Error('Paste must undo once.');
+        await instance.destroy();
+    });
+    await expect(page.locator('.soeditor-classic')).toHaveCount(0);
 });

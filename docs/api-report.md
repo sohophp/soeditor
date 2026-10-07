@@ -7,7 +7,7 @@ symbol list or declaration hash requires explicit API review. CSS exports and
 CLI bins are listed as stable resources. Undeclared `src`/`dist` subpaths and
 implementation modules are internal even when present in a checkout or tarball.
 
-Summary: 24 packages; 986 stable, 395 experimental, and 0 deprecated symbol
+Summary: 24 packages; 986 stable, 399 experimental, and 0 deprecated symbol
 entries.
 
 ## @soeditor/adapter-sofinder
@@ -164,7 +164,7 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`c5db33ceabc71a252b9c21c8348681ff4a530ae07c8591ccb258f327bc94fee8`
+`7be91261b60c206e7d13a00b0fdfc0605c1603b2d26244fbcda6d3daa731b3d4`
 
 ### .
 
@@ -428,7 +428,7 @@ Declaration SHA-256:
 | `InvalidDiagnosticError`                              | type/value | stable         | `3787712edd4869a5` |
 | `InvalidDiagnosticRuleConfigurationError`             | type/value | stable         | `12adc4532a7a0557` |
 | `InvalidFileManagerResultError`                       | type/value | stable         | `7307720f41d4e570` |
-| `InvalidHtmlFormattingSourceError`                    | type/value | stable         | `59bbb258f4b9829d` |
+| `InvalidHtmlFormattingSourceError`                    | type/value | stable         | `18a8a4da24475ddc` |
 | `InvalidProjectionTransitionError`                    | type/value | stable         | `176980ac6f3ce575` |
 | `InvalidSplitViewTransitionError`                     | type/value | stable         | `ad623f58d1ea44ff` |
 | `isBoundedResponsiveImageString`                      | value      | stable         | `37de802b1b137942` |
@@ -482,10 +482,12 @@ Declaration SHA-256:
 | `ParagraphPlugin`                                     | type/value | stable         | `66234508fc000989` |
 | `parseHtmlDocument`                                   | value      | stable         | `3d1a95513e5e0894` |
 | `parseHtmlFragment`                                   | value      | stable         | `2595f4af2c24c8ac` |
+| `PasteDecisionService`                                | type       | experimental   | `c6f8c82cbaa691c0` |
+| `pasteDecisionServiceToken`                           | value      | experimental   | `5c9c8489d14050ca` |
 | `PasteDiagnostic`                                     | type       | experimental   | `bac7de2594290670` |
 | `PasteInputClassification`                            | type       | experimental   | `39b74e8a0d3c987b` |
 | `PasteInputFile`                                      | type       | experimental   | `36beabfc6f4d96ac` |
-| `PastePipelineInput`                                  | type       | experimental   | `485fb1e60a98bbcf` |
+| `PastePipelineInput`                                  | type       | experimental   | `830c96c99c5a1951` |
 | `PastePipelinePlugin`                                 | type/value | experimental   | `891c91d51373445b` |
 | `PastePipelineResult`                                 | type       | experimental   | `87d2a1512bbce091` |
 | `PastePipelineService`                                | type       | experimental   | `be325b1c5383a010` |
@@ -821,12 +823,12 @@ Declaration SHA-256:
 ## @soeditor/engine
 
 Declaration tree SHA-256:
-`96da34f6dd863e15b81e496b1fde91ef26278202fc67eff30650824f04385828`
+`ee8466a43152e9b98eacd0f56d895f5614511fbfc822dffb570fcbd6e761f3e1`
 
 ### .
 
 Declaration SHA-256:
-`c10e90381d253f8c0bc4555bc5473d6ef6a0af2fb9a15fbb81ad042c193f44dc`
+`096cd82d8b788270d8f3f0e09cf3af459972e422491ed9e203995f6053485341`
 
 | Export                                                | Kind       | Classification | Signature SHA-256  |
 | ----------------------------------------------------- | ---------- | -------------- | ------------------ |
@@ -856,10 +858,12 @@ Declaration SHA-256:
 | `groupHistoryTransaction`                             | value      | stable         | `4ed99a88cff92b93` |
 | `HistoryPlugin`                                       | type/value | stable         | `b0cc85958b2d7376` |
 | `mapEditingPoint`                                     | value      | experimental   | `eed194b5c17e8ab8` |
+| `PasteDecisionService`                                | type       | experimental   | `c6f8c82cbaa691c0` |
+| `pasteDecisionServiceToken`                           | value      | experimental   | `5c9c8489d14050ca` |
 | `PasteDiagnostic`                                     | type       | experimental   | `bac7de2594290670` |
 | `PasteInputClassification`                            | type       | experimental   | `39b74e8a0d3c987b` |
 | `PasteInputFile`                                      | type       | experimental   | `36beabfc6f4d96ac` |
-| `PastePipelineInput`                                  | type       | experimental   | `485fb1e60a98bbcf` |
+| `PastePipelineInput`                                  | type       | experimental   | `830c96c99c5a1951` |
 | `PastePipelinePlugin`                                 | type/value | experimental   | `891c91d51373445b` |
 | `PastePipelineResult`                                 | type       | experimental   | `87d2a1512bbce091` |
 | `PastePipelineService`                                | type       | experimental   | `be325b1c5383a010` |
@@ -979,7 +983,7 @@ Declaration SHA-256:
 ## @soeditor/html-tools
 
 Declaration tree SHA-256:
-`e64eef957a24e98b375929f2255813818e419592799944539a7906d8ccfabba7`
+`37e9130ed23f03577d4130fb88510ea96fe75465b65fadd5746b97fb0ec90595`
 
 ### .
 
@@ -1014,7 +1018,7 @@ Declaration SHA-256:
 | `HtmlFormattingTimeoutError`               | type/value | stable         | `99b165a6835b6ab6` |
 | `InvalidDiagnosticError`                   | type/value | stable         | `3787712edd4869a5` |
 | `InvalidDiagnosticRuleConfigurationError`  | type/value | stable         | `12adc4532a7a0557` |
-| `InvalidHtmlFormattingSourceError`         | type/value | stable         | `59bbb258f4b9829d` |
+| `InvalidHtmlFormattingSourceError`         | type/value | stable         | `18a8a4da24475ddc` |
 | `Problem`                                  | type       | stable         | `cc71a0d57a6f818a` |
 | `ProblemSeverity`                          | type       | stable         | `d676e18412911908` |
 | `SeoDiagnosticRuleCode`                    | type       | stable         | `cb497a81c9d21b6c` |
@@ -1170,7 +1174,7 @@ Declaration SHA-256:
 | `PasteDiagnostic`                                     | type       | experimental   | `bac7de2594290670` |
 | `PasteInputClassification`                            | type       | experimental   | `39b74e8a0d3c987b` |
 | `PasteInputFile`                                      | type       | experimental   | `36beabfc6f4d96ac` |
-| `PastePipelineInput`                                  | type       | experimental   | `485fb1e60a98bbcf` |
+| `PastePipelineInput`                                  | type       | experimental   | `830c96c99c5a1951` |
 | `PastePipelinePlugin`                                 | type/value | experimental   | `891c91d51373445b` |
 | `PastePipelineResult`                                 | type       | experimental   | `87d2a1512bbce091` |
 | `PastePipelineService`                                | type       | experimental   | `be325b1c5383a010` |

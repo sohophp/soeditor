@@ -26,7 +26,7 @@ export default defineConfig({
             name: `${browserName}-paste`,
             use: { browserName },
             testMatch: ['classic-editor.spec.ts'],
-            grep: /pastes a web selection wrapped as an HTML document|accepts native browser clipboard content/u,
+            grep: /pastes a web selection wrapped as an HTML document|accepts native browser clipboard content|offers rich paste|rich paste choice/u,
         },
     ]),
     use: {

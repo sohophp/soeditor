@@ -199,7 +199,12 @@ async function checkPacked(
         const { stdout } = await execute(
             'npm',
             ['pack', '--dry-run', '--ignore-scripts', '--json'],
-            { cwd: root, encoding: 'utf8', maxBuffer: 2_000_000 },
+            {
+                cwd: root,
+                encoding: 'utf8',
+                maxBuffer: 2_000_000,
+                timeout: 20_000,
+            },
         );
         const result: unknown = JSON.parse(stdout);
         const entry = Array.isArray(result) ? record(result[0]) : {};

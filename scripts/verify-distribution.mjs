@@ -79,6 +79,11 @@ if (
 for (const [file, entry] of [
     ['classic-image-tools.js', 'attachClassicImageContext'],
     ['video-runtime.js', 'createVideoRuntime'],
+    ['ui-translations.js', 'builtInUiTranslations'],
+    ['classic-link-tools.js', 'attachClassicLinkContext'],
+    ['link-attributes.js', 'attachLinkTargetControls'],
+    ['classic-block-tools.js', 'attachBlockParagraphContext'],
+    ['classic-paste-dialog.js', 'choosePastePolicy'],
 ]) {
     const companion = await readFile(join(umbrellaRoot, file), 'utf8');
     if (!globalBundle.includes(file) || !companion.includes(entry)) {

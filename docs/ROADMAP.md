@@ -2,6 +2,14 @@
 
 > 2026-09-08：当前工作区的优化状态、测量与验证统一见 [CMS 性能与稳定性优化](cms-followup-2026-09-08.zh-CN.md)。以下日期更早的数字为历史记录；人工设备验收单独列出。
 
+## Approved 1.5.0 release scope
+
+The owner requested committing accumulated CMS editing fixes, a new npm release
+and synchronized bilingual documentation on 2026-10-07. Paste choices remain
+opt-in. Source formatting errors preserve the original text. Publish the
+aligned package set before switching public examples to it; retain existing
+loading and bundle budgets. See [1.5.0](releases/1.5.0.md).
+
 ## Approved 1.4.0 release scope
 
 The owner requested default video tools, the image type-around positioning fix, a new npm release and synchronized published-package documentation. Source and video dialogs remain lazy; arbitrary embeds remain outside the default product.

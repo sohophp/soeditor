@@ -69,7 +69,9 @@ import {
     ClassicEditorDestroyedError,
 } from './classic-editor-errors.js';
 import { createCmsVideoPlugin, type CmsVideoOptions } from './video.js';
+import { attachGlobalDialogStyles } from './classic-global-dialog-styles.js';
 import { attachLazyClassicDialogWindows } from './classic-dialog-loader.js';
+import { attachClassicPasteChoice } from './classic-paste-choice.js';
 import type { ClassicPreviewWindow } from '@soeditor/preview';
 import { attachClassicSourceFormatting } from './classic-source-formatting.js';
 
@@ -520,7 +522,9 @@ export async function createClassicEditor(
     let disposeImageContext: (() => void) | undefined;
     let disposeBlockParagraphContext: (() => void) | undefined;
     let disposeDialogWindows: (() => void) | undefined;
+    let disposeGlobalDialogStyles: (() => void) | undefined;
     let disposePasteDiagnostics: (() => void) | undefined;
+    let disposePasteChoice: (() => void) | undefined;
     let disposeEditingFeedback: (() => void) | undefined;
     let disposeModeChrome: (() => void) | undefined;
     let disposeProjectionChrome: (() => void) | undefined;
@@ -1298,9 +1302,13 @@ export async function createClassicEditor(
             disposeBlockParagraphContext = undefined;
             disposeImageContext?.();
             disposeImageContext = undefined;
+            disposeGlobalDialogStyles?.();
+            disposeGlobalDialogStyles = undefined;
             disposeDialogWindows?.();
             disposeDialogWindows = undefined;
             disposePasteDiagnostics?.();
+            disposePasteChoice?.();
+            disposePasteChoice = undefined;
             disposePasteDiagnostics = undefined;
             disposeEditingFeedback?.();
             disposeEditingFeedback = undefined;
@@ -1514,6 +1522,7 @@ export async function createClassicEditor(
             formattingService = attachClassicSourceFormatting(
                 editor,
                 () => destroyed,
+                (message) => ui?.translate(message) ?? message,
             );
             attachSourceCommands(editor);
         }
@@ -1568,6 +1577,7 @@ export async function createClassicEditor(
             dom.surfaces.after(statusBar);
             canvas?.mount(statusBar, ui.translate);
         }
+        disposeGlobalDialogStyles = attachGlobalDialogStyles(dom.root);
         if (OPTIONAL_CLASSIC_FEATURES) {
             disposeDialogWindows = attachLazyClassicDialogWindows(
                 dom.root,
@@ -1587,7 +1597,11 @@ export async function createClassicEditor(
             ui,
             commandSurface,
         );
-        disposeImageContext = attachClassicImageContext(ui, commandSurface, baseHref);
+        disposeImageContext = attachClassicImageContext(
+            ui,
+            commandSurface,
+            baseHref,
+        );
         const blockUi = ui;
         disposeBlockParagraphContext = attachLazyBlockContext(
             ui,
@@ -1607,6 +1621,7 @@ export async function createClassicEditor(
                         ),
                 ),
         );
+        disposePasteChoice = attachClassicPasteChoice(editor, ui);
         disposePasteDiagnostics = editor.services
             .tryGet(pastePipelineServiceToken)
             ?.subscribe((diagnostic) => {
@@ -2053,7 +2068,12 @@ function attachClassicImageContext(
         () =>
             import('./classic-image-context.js').then(
                 (module) => (event: Pick<Event, 'target' | 'type'>) =>
-                    module.attachClassicImageContext(ui, visual, event, baseHref),
+                    module.attachClassicImageContext(
+                        ui,
+                        visual,
+                        event,
+                        baseHref,
+                    ),
             ),
     );
 }

@@ -170,7 +170,7 @@ describe('plugin package tooling', () => {
 
         const report = await checkPluginPackage(root, { packed: true });
         expect(report.valid).toBe(true);
-    });
+    }, 30_000);
 });
 
 async function temporaryDirectory(): Promise<string> {

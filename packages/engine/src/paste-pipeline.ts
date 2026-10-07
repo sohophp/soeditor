@@ -20,6 +20,8 @@ export interface PasteInputFile {
 }
 
 export interface PastePipelineInput {
+    /** A user choice for this operation; does not change the host default. */
+    readonly policy?: ExternalPastePolicy;
     readonly files: readonly PasteInputFile[];
     readonly html: string;
     readonly internalHtml?: string;
@@ -80,6 +82,17 @@ export class PasteRejectedError extends Error {
 
 export const pastePipelineServiceToken =
     createServiceToken<PastePipelineService>('soeditor.paste-pipeline');
+
+/** Optional UI boundary. Clipboard HTML never needs to be rendered in a dialog. */
+export interface PasteDecisionService {
+    choose(request: {
+        readonly classification: PasteInputClassification | 'html-source';
+        readonly signal: AbortSignal;
+    }): Promise<ExternalPastePolicy | undefined>;
+}
+
+export const pasteDecisionServiceToken =
+    createServiceToken<PasteDecisionService>('soeditor.paste-decision');
 
 export const SOEDITOR_CLIPBOARD_MIME = 'application/x-soeditor-html';
 
@@ -164,7 +177,7 @@ export class PastePipelinePlugin extends Plugin {
             policy:
                 classification === 'internal'
                     ? 'preserve'
-                    : this.#policyFor(classification),
+                    : (input.policy ?? this.#policyFor(classification)),
         });
         for (const processor of [...this.#processors.values()].sort(
             (left, right) =>
@@ -327,6 +340,7 @@ function validateInput(input: PastePipelineInput): void {
     ) {
         throw new TypeError('Paste pipeline input is malformed.');
     }
+    if (input.policy !== undefined) readPolicy(input.policy);
 }
 
 function readPolicy(value: unknown): ExternalPastePolicy {

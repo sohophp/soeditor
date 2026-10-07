@@ -14,7 +14,10 @@ const newsletter = await createClassicEditor(newsletterTextarea, {
 const document = await createClassicEditor(documentTextarea, {
     canvas: {
         initialPreset: 'word',
-        presets: ['word', { id: 'compact', label: '窄版', width: '420px', padding: '20px' }],
+        presets: [
+            'word',
+            { id: 'compact', label: '窄版', width: '420px', padding: '20px' },
+        ],
     },
 });
 article.setCanvasPreset('email');
@@ -33,17 +36,17 @@ console.log(article.canvasPreset);
 
 ## 常用屏幕宽度
 
-| ID | 显示名称 | 宽度 |
-| --- | --- | --- |
-| webpage | 自适应 | 100% |
-| mobile | 手机 | 390px |
-| mobile-wide | 大屏手机 | 430px |
-| ipad | iPad 竖屏 | 768px |
-| ipad-landscape | iPad 横屏 | 1024px |
-| desktop | PC | 1200px |
-| macbook | Mac 笔记本 | 1280px |
-| desktop-wide | 宽屏桌面 | 1440px |
-| full-hd | 大屏桌面 | 1920px |
+| ID             | 显示名称   | 宽度   |
+| -------------- | ---------- | ------ |
+| webpage        | 自适应     | 100%   |
+| mobile         | 手机       | 390px  |
+| mobile-wide    | 大屏手机   | 430px  |
+| ipad           | iPad 竖屏  | 768px  |
+| ipad-landscape | iPad 横屏  | 1024px |
+| desktop        | PC         | 1200px |
+| macbook        | Mac 笔记本 | 1280px |
+| desktop-wide   | 宽屏桌面   | 1440px |
+| full-hd        | 大屏桌面   | 1920px |
 
 这些是常用的 CSS 画布宽度参考，不代表所有对应设备的规格，也不是设备模拟器。
 设备宽度保持固定，超出编辑区时横向滚动。电子报和 Word 继续保留原有的自适应
@@ -67,16 +70,22 @@ await createClassicEditor(textarea, {
     canvas: { initialPreset: 'mobile' },
     preview: {
         initialTemplateId: 'brand',
-        canvas: { initialPreset: 'desktop', presets: ['webpage', 'mobile', 'desktop', 'email', 'word'] },
-        templates: [{
-            id: 'brand',
-            label: '品牌网站',
-            baseUrl: location.href,
-            template: '<html><head><meta charset="utf-8"></head><body><main class="brand-content">{{ content }}</main></body></html>',
-            stylesheets: ['/assets/brand.css', '/assets/article.css'],
-            styles: ['.brand-content { padding: 24px; }'],
-            wysiwygStyles: false,
-        }],
+        canvas: {
+            initialPreset: 'desktop',
+            presets: ['webpage', 'mobile', 'desktop', 'email', 'word'],
+        },
+        templates: [
+            {
+                id: 'brand',
+                label: '品牌网站',
+                baseUrl: location.href,
+                template:
+                    '<html><head><meta charset="utf-8"></head><body><main class="brand-content">{{ content }}</main></body></html>',
+                stylesheets: ['/assets/brand.css', '/assets/article.css'],
+                styles: ['.brand-content { padding: 24px; }'],
+                wysiwygStyles: false,
+            },
+        ],
     },
 });
 ```
