@@ -10,11 +10,11 @@ A page without a bundler can use the fixed-version CMS browser global. This path
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.4.0/dist/cms-styles.css"
+    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.5.0/dist/cms-styles.css"
 />
 <textarea id="content" name="content"><p>Hello</p></textarea>
 <script
-    src="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.4.0/dist/soeditor.global.js"
+    src="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.5.0/dist/soeditor.global.js"
     crossorigin="anonymous"
 ></script>
 <script>
@@ -31,7 +31,15 @@ Keep `crossorigin="anonymous"` when loading the main script across origins, and 
 
 ## Self-hosted files
 
-Version 1.4.0 includes video tools by default. Copy the complete published `dist` directory and preserve relative paths, including `classic-image-tools.js`, `video-runtime.js`, source maps and license notices. Image tools and video dialogs request companion files on first use. Allow the corresponding script origin in your CSP.
+Version 1.5.0 includes video tools by default. Copy the complete published `dist` directory and preserve relative paths, including `classic-image-tools.js`, `video-runtime.js`, source maps and license notices. Image tools and video dialogs request companion files on first use. Allow the corresponding script origin in your CSP.
+
+## 1.5.0 companion assets
+
+Self-host the complete `dist` directory, including `ui-translations.js`,
+`classic-link-tools.js`, `link-attributes.js`, `classic-block-tools.js`,
+`classic-paste-dialog.js` and `classic-dialogs.css`, as well as image/video
+companions and source maps. Keep their paths relative to `soeditor.global.js`.
+These resources load for their corresponding language or interaction.
 
 ## Next steps
 

@@ -13,7 +13,7 @@ CMS 主线是 WYSIWYG 与可选 Source。视频默认开启，可用 `video: fal
 
 ## CMS 框架集成
 
-新的 [React](/zh-CN/guide/react) 与 [Vue](/zh-CN/guide/vue) CMS 组件提供普通网站表单的薄适配层；不改变框架无关 Core。它们从 1.3.0 起提供独立入口，本站现引用 1.4.0。视频的发布版用法见[视频指南](/zh-CN/guide/video)和[运行示例](/zh-CN/examples/video)。
+新的 [React](/zh-CN/guide/react) 与 [Vue](/zh-CN/guide/vue) CMS 组件提供普通网站表单的薄适配层；不改变框架无关 Core。它们从 1.3.0 起提供独立入口，本站现引用 1.5.0。视频的发布版用法见[视频指南](/zh-CN/guide/video)和[运行示例](/zh-CN/examples/video)。
 
 ## 下一步
 

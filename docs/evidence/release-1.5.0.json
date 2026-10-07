@@ -1,0 +1,30 @@
+{
+    "version": "1.5.0",
+    "releaseCommit": "81ad09e3bd6a3c8d5d64e4f9727db658144a61fe",
+    "publicPackageCount": 24,
+    "license": "MIT",
+    "ci": {
+        "run": "https://github.com/sohophp/soeditor/actions/runs/37599707281",
+        "conclusion": "success"
+    },
+    "publication": {
+        "run": "https://github.com/sohophp/soeditor/actions/runs/37599728708",
+        "publishStep": "success",
+        "workflowConclusion": "failure",
+        "verificationFailure": "Initial npm React install index remained on 1.4.0 until the verification retry window expired."
+    },
+    "publicVerification": {
+        "verifiedAt": "2026-10-07T09:54:00.480086+00:00",
+        "command": "node scripts/verify-registry-release.mjs",
+        "npmConfiguration": "Empty user configuration; NPM_TOKEN and NODE_AUTH_TOKEN unset.",
+        "exitCode": 0,
+        "checks": [
+            "All 24 package versions, licenses and repository metadata",
+            "Public npm installation and Vite consumer build",
+            "CDN JavaScript, CSS and source map",
+            "Chromium CDN global create/read/destroy lifecycle"
+        ],
+        "result": "Registry and CDN verification passed for @soeditor/editor@1.5.0."
+    },
+    "manualQualification": "Real-device Safari, operating-system IME, Office variants and assistive technology remain separate."
+}

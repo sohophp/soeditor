@@ -23,6 +23,8 @@ description: '外部粘贴会执行语义清理，包括常见网页和 Office �
 
 剪贴板未携带的外部 CSS 不会自动导入；保留格式不保证复刻整个网页设计。对话框按需加载，不执行剪贴板 HTML。
 
+<<< ../../examples/api.ts#pasteChoice
+
 ## 下一步
 
 [运行示例](/zh-CN/examples/basic) · [配置参考](/zh-CN/api/configuration) · [常见问题](/zh-CN/support/troubleshooting)

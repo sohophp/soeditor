@@ -23,6 +23,8 @@ Ordinary text, internal copies and files keep their existing paths. Cancel or Es
 
 External CSS absent from the clipboard cannot be imported automatically, so preservation does not reproduce an entire website design. The dialog loads on demand and never executes clipboard HTML.
 
+<<< ../../examples/api.ts#pasteChoice
+
 ## Next steps
 
 [Examples](/en/examples/basic) · [Configuration](/en/api/configuration) · [Troubleshooting](/en/support/troubleshooting)

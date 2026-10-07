@@ -33,7 +33,7 @@ features:
 ## 从一个 textarea 开始
 
 ```sh
-pnpm add @soeditor/editor@1.4.0
+pnpm add @soeditor/editor@1.5.0
 ```
 
 ```ts
@@ -44,7 +44,7 @@ const host = document.querySelector<HTMLTextAreaElement>('#content');
 if (host) await createClassicEditor(host, { locale: 'zh-CN' });
 ```
 
-1.4.0 默认开启[视频工具](/zh-CN/guide/video)，对话框与播放器按需加载；可用 `video: false` 关闭。也可通过独立的 [React](/zh-CN/guide/react) 和 [Vue](/zh-CN/guide/vue) 组件接入。
+1.5.0 默认开启[视频工具](/zh-CN/guide/video)，对话框与播放器按需加载；可用 `video: false` 关闭。也可通过独立的 [React](/zh-CN/guide/react) 和 [Vue](/zh-CN/guide/vue) 组件接入。
 
 ## SoEditor + SoFinder：最佳搭档
 

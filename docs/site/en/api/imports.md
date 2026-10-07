@@ -26,11 +26,11 @@ Use `/cms/optional` when composing `@soeditor/presets` with separately imported 
 
 | Entry                    | Availability and purpose                                                            |
 | ------------------------ | ----------------------------------------------------------------------------------- |
-| `@soeditor/editor/video` | Explicit plugin compatibility entry; configure default 1.4.0 video through `video`. |
-| `@soeditor/react/cms`    | Published 1.4.0 CMS component using `value/onChange`.                               |
-| `@soeditor/vue/cms`      | Published 1.4.0 CMS component supporting `v-model`.                                 |
+| `@soeditor/editor/video` | Explicit plugin compatibility entry; configure default 1.5.0 video through `video`. |
+| `@soeditor/react/cms`    | Published 1.5.0 CMS component using `value/onChange`.                               |
+| `@soeditor/vue/cms`      | Published 1.5.0 CMS component supporting `v-model`.                                 |
 
-[React guide](/en/guide/react) · [Vue guide](/en/guide/vue) · [Video guide](/en/guide/video). Framework examples use the published npm 1.4.0 packages.
+[React guide](/en/guide/react) · [Vue guide](/en/guide/vue) · [Video guide](/en/guide/video). Framework examples use the published npm 1.5.0 packages.
 
 ## Next steps
 

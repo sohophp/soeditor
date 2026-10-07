@@ -7,13 +7,13 @@ description: '绑定 CMS HTML、管理生命周期和按需启用 Source。'
 
 ## 安装与运行
 
-`/cms` 组件从 1.3.0 起正式发布，本站示例引用 1.4.0；原有 `useSoEditorWorkspace` 入口继续兼容。
+`/cms` 组件从 1.3.0 起正式发布，本站示例引用 1.5.0；原有 `useSoEditorWorkspace` 入口继续兼容。
 
 ```sh
-pnpm add @soeditor/editor@1.4.0 @soeditor/vue@1.4.0 vue
+pnpm add @soeditor/editor@1.5.0 @soeditor/vue@1.5.0 vue
 ```
 
-点击示例的“开始体验”运行已发布的软件包。[下载完整示例源码](/downloads/soeditor-examples-1.4.0.tar.gz)，解压后执行 `pnpm install` 和 `pnpm dev`，打开 `vue.html`。
+点击示例的“开始体验”运行已发布的软件包。[下载完整示例源码](/downloads/soeditor-examples-1.5.0.tar.gz)，解压后执行 `pnpm install` 和 `pnpm dev`，打开 `vue.html`。
 
 ## 绑定文章 HTML
 

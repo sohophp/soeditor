@@ -1,13 +1,14 @@
 # SoEditor development status
 
-## Current worktree — 2026-10-07
+## Current release — 2026-10-07
 
-The `1.5.0` release is owner-authorized on 2026-10-07 and aligns all 24 public
-packages. It includes opt-in paste choices, precise Source formatting errors,
+The `1.5.0` release was published on 2026-10-07 with all 24 public packages
+verified through public npm/CDN endpoints. It includes opt-in paste choices, precise Source formatting errors,
 safe element unwrapping, content-base image previews and the accumulated CMS
 dialog and HTML-preservation fixes. See [1.5.0](releases/1.5.0.md) for current
-release evidence. Publication and documentation deployment remain separate
-from local validation and are recorded after their workflows succeed.
+release evidence. The bilingual documentation, runnable examples and downloads
+pin published 1.5.0. The live `/deployment.json` identifies the deployed
+documentation commit; local builds alone do not prove deployment.
 
 ## Current verification boundaries
 

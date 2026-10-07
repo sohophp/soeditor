@@ -149,17 +149,17 @@ importers:
   docs/site:
     dependencies:
       '@soeditor/adapter-sofinder':
-        specifier: 1.4.0
-        version: 1.4.0(@soeditor/file-manager@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/rich-text@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0)))
+        specifier: 1.5.0
+        version: 1.5.0(@soeditor/file-manager@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/rich-text@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0)))
       '@soeditor/file-manager':
-        specifier: 1.4.0
-        version: 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/rich-text@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))
+        specifier: 1.5.0
+        version: 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/rich-text@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))
       '@soeditor/presets':
-        specifier: 1.4.0
-        version: 1.4.0(716a31a06af75168cedf64caa3e13ccc)
+        specifier: 1.5.0
+        version: 1.5.0(e31a22f7cc315bd711b4d80d85c0f42c)
       soeditor-release:
-        specifier: npm:@soeditor/editor@1.4.0
-        version: '@soeditor/editor@1.4.0(supports-color@10.2.2)'
+        specifier: npm:@soeditor/editor@1.5.0
+        version: '@soeditor/editor@1.5.0(supports-color@10.2.2)'
       vue:
         specifier: 3.5.42
         version: 3.5.42(typescript@5.9.3)
@@ -171,14 +171,14 @@ importers:
         specifier: 1.62.1
         version: 1.62.1
       '@soeditor/editor':
-        specifier: 1.4.0
-        version: 1.4.0(supports-color@10.2.2)
+        specifier: 1.5.0
+        version: 1.5.0(supports-color@10.2.2)
       '@soeditor/react':
-        specifier: 1.4.0
-        version: 1.4.0(@soeditor/core@1.4.0)(@soeditor/editor@1.4.0(supports-color@10.2.2))(@soeditor/workspace@1.4.0(@soeditor/core@1.4.0))(react@19.2.8)
+        specifier: 1.5.0
+        version: 1.5.0(@soeditor/core@1.5.0)(@soeditor/editor@1.5.0(supports-color@10.2.2))(@soeditor/workspace@1.5.0(@soeditor/core@1.5.0))(react@19.2.8)
       '@soeditor/vue':
-        specifier: 1.4.0
-        version: 1.4.0(@soeditor/core@1.4.0)(@soeditor/editor@1.4.0(supports-color@10.2.2))(@soeditor/workspace@1.4.0(@soeditor/core@1.4.0))(vue@3.5.42(typescript@5.9.3))
+        specifier: 1.5.0
+        version: 1.5.0(@soeditor/core@1.5.0)(@soeditor/editor@1.5.0(supports-color@10.2.2))(@soeditor/workspace@1.5.0(@soeditor/core@1.5.0))(vue@3.5.42(typescript@5.9.3))
       '@types/node':
         specifier: 22.18.0
         version: 22.18.0
@@ -1879,181 +1879,181 @@ packages:
     resolution: {integrity: sha512-P1Cz1dWaFfR4IR+U13mqqiGsLFf1KbayybWwdd2vfctdV6hDpUkgCY0nKOLLTMSoRd/jJNjtbqzf13K8DCCXQw==}
     engines: {node: '>=18'}
 
-  '@soeditor/adapter-sofinder@1.4.0':
-    resolution: {integrity: sha512-VT5jbbq9+RWqkYOE24JLYW2wSVKkF0Epvs0WA4sm1kwuh3/fD3DRATrUv/t4DoM8pk/hRZHUyDq/etfO1OeQGw==}
+  '@soeditor/adapter-sofinder@1.5.0':
+    resolution: {integrity: sha512-OuT8hZIPcSP/I6zFcBa2+ch3FNA5gOAVFcZIybuWAQunyu/k4amAYNdeM7hMoNdq/bEiN16CPMDrqzTFxKQA0A==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/file-manager': 1.4.0
+      '@soeditor/file-manager': 1.5.0
 
-  '@soeditor/comments@1.4.0':
-    resolution: {integrity: sha512-5Z8L5+WAs3RBn9fQ3UbotSUDi1TvX25K/4We9vWdY4LY9o3INiAjvNFdzXsBv3cgSczlug71wEcsQ7SCPmLwPA==}
+  '@soeditor/comments@1.5.0':
+    resolution: {integrity: sha512-FlexZBonUICzt3YHTkJLzCb/PNH9LpCToc4+PsXNcS3f/eOpAJsnjpzuLdMM7ggkxjogGzz5L+EA+JChJVlFlg==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0
-      '@soeditor/ui': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0
+      '@soeditor/ui': 1.5.0
 
-  '@soeditor/core@1.4.0':
-    resolution: {integrity: sha512-sCu9qp9l/lC/Gu9SowYljMIpcD3CWzBcbJP1fNzuzM4kOIjqzucGp6TValIBQpWqnLx8M8nlH/wvJtnvW4fYXQ==}
+  '@soeditor/core@1.5.0':
+    resolution: {integrity: sha512-xxJH628gAtX9DVBCGgSg4t1ac8uWhudSoZy6FnEdw38txW4qytiPkc9bueNUgvxDFcSdkA21zmu7FhZ687q71Q==}
     engines: {node: '>=22.14.0 <23'}
 
-  '@soeditor/dev-tools@1.4.0':
-    resolution: {integrity: sha512-xQyJcsJsNKsv4dk+pLXxOur50V0VgFLDWlGBLx6vv2kvJ8ofZzaxydl3DenKBSzOLv1YgiB9PXCXHoVXOivnHA==}
-    engines: {node: '>=22.14.0 <23'}
-    peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/html': 1.4.0
-      '@soeditor/html-tools': 1.4.0
-      '@soeditor/source': 1.4.0
-      '@soeditor/ui': 1.4.0
-
-  '@soeditor/editor@1.4.0':
-    resolution: {integrity: sha512-DvVMyqvzpnyxyrrCZ4Axk6CDyfmTzDSVM6HPfRWiGCOEOb2VlxYqcXAG8PDIVvGNNKYIPiZ6e62jb30+6Q+jcg==}
-    engines: {node: '>=22.14.0 <23'}
-
-  '@soeditor/engine@1.4.0':
-    resolution: {integrity: sha512-lScIP1O9qQF0aPakWtDb8VVvlKaSYWGVkfHxkWJCniaG3Hq1kJQ0O8umia+Q5KhkpOTLVLoewiaAPF4AgZ/93g==}
+  '@soeditor/dev-tools@1.5.0':
+    resolution: {integrity: sha512-CVqScEo8ED/ahGNfpjHf11lYAVG5QQ/IXEPQpQ0KEqONkyA+YxCi7iEy94AKouIwyRB+vySaE9fWNDbOu6CrxA==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/html': 1.4.0
-      '@soeditor/projections': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/html': 1.5.0
+      '@soeditor/html-tools': 1.5.0
+      '@soeditor/source': 1.5.0
+      '@soeditor/ui': 1.5.0
 
-  '@soeditor/file-manager@1.4.0':
-    resolution: {integrity: sha512-9mb72WNE4gkw51DAghbDyghLxEg42Syj4qIjJU6dNmEPjuZLfifUCGl3jxCfsXAt0Age0HDQRlb4iGsffGIKsA==}
+  '@soeditor/editor@1.5.0':
+    resolution: {integrity: sha512-sK0UTD2KE8n2W2iFk5s7ekGdiecBD5x2m32WinasFRHM0kgddTBbhKogvVNJvIH75Xkap2lfTuYWgEgEXbuHcw==}
+    engines: {node: '>=22.14.0 <23'}
+
+  '@soeditor/engine@1.5.0':
+    resolution: {integrity: sha512-+MQUdQ/VJkS4sxnKjXYvdOGUS0BUJheqNI9p2M7cSDQ1wfT5JPkbqw9VZMBwUvZaWozNeDAHtsFlVt9gNW3ziQ==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0
-      '@soeditor/rich-text': 1.4.0
-      '@soeditor/ui': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/html': 1.5.0
+      '@soeditor/projections': 1.5.0
 
-  '@soeditor/html-tools@1.4.0':
-    resolution: {integrity: sha512-thyg760KK+MRS+AY41ZEdr0xd4T6byt7ElmkpXcBLGKlumKpionKN7SUvaYyD2CEO0Le8JoNNbprO7yrT5oBug==}
+  '@soeditor/file-manager@1.5.0':
+    resolution: {integrity: sha512-ghglcG2nC3FlQcpvVIBHl7zzXN7eD2iY3P5rfj1mndpRFe9MC0YquZcN/4Kmdk+PZVRRfsrBFz/NBLEzdpN2XQ==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/html': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0
+      '@soeditor/rich-text': 1.5.0
+      '@soeditor/ui': 1.5.0
 
-  '@soeditor/html@1.4.0':
-    resolution: {integrity: sha512-Rgi/tcW9YGsqnSXV0NtibpybdKopX43/Opk8hfqVt7vePhSP89ywi87YOVpXy0Bez1DxNCHtF3snrhNAg5RQCg==}
-    engines: {node: '>=22.14.0 <23'}
-
-  '@soeditor/layout@1.4.0':
-    resolution: {integrity: sha512-0tL9KdDNJ3YGsqMSdAvy0MWaQ7cXoIvbB7fvumRu4iWRMg1s2sOcqkDZMVRNgI8YyslNBNX3pSdbjYc/ID9uhw==}
+  '@soeditor/html-tools@1.5.0':
+    resolution: {integrity: sha512-pQabrak9XanhvsdQhZbPVzT/utBY1d845Apwsz4ow+DF9j1EL1cBupbi4D9MDROAevSFu6xRGHALh1b2+vm+nA==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/projections': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/html': 1.5.0
 
-  '@soeditor/markdown@1.4.0':
-    resolution: {integrity: sha512-YlMfPToaRpak7G1/oj6LyOUOnc+w1g24rou63Lg2aKIjvLdWhUphflnZ0jpB99SM3X7I1C0tRWVscCank3sfsw==}
+  '@soeditor/html@1.5.0':
+    resolution: {integrity: sha512-bMRBToFEUEHoRRU5fR8yCwl9omfk6CVFpolrQvEATGmEqdcMscVXC+laRm7HUm/X/SDbyqUGS+cyvSow7tENtw==}
+    engines: {node: '>=22.14.0 <23'}
+
+  '@soeditor/layout@1.5.0':
+    resolution: {integrity: sha512-2sts0olNC9LpyZ1Q5unjzKbUhNxRvcx7nZnc0bAOGDuEk+09Zp/UDXKNJ7aywGZs4zcypDUFQw0aveqhjFvr5g==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0
-      '@soeditor/html': 1.4.0
-      '@soeditor/projections': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/projections': 1.5.0
 
-  '@soeditor/presets@1.4.0':
-    resolution: {integrity: sha512-AFeUuqr2vHy7TTwww1wdGBDMhwS3FfTGnw0uEmi4MwtjbvM74DjaIy/AG5zu5MhreRGIf3n6FggbVH0XaBViBA==}
+  '@soeditor/markdown@1.5.0':
+    resolution: {integrity: sha512-QtuhOEJ1YENkbnHcn6LLA4tE9LzetqZdocXFDaErjG1qX0mYuPy10pqhY3+DHat/1IGJ+alW3OfLcvH2hfJNdw==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/dev-tools': 1.4.0
-      '@soeditor/engine': 1.4.0
-      '@soeditor/file-manager': 1.4.0
-      '@soeditor/html-tools': 1.4.0
-      '@soeditor/layout': 1.4.0
-      '@soeditor/markdown': 1.4.0
-      '@soeditor/preview': 1.4.0
-      '@soeditor/projections': 1.4.0
-      '@soeditor/rich-text': 1.4.0
-      '@soeditor/source': 1.4.0
-      '@soeditor/ui': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0
+      '@soeditor/html': 1.5.0
+      '@soeditor/projections': 1.5.0
 
-  '@soeditor/preview@1.4.0':
-    resolution: {integrity: sha512-d43uTOgygrAIcG/jXJ8esfkgeI9rNV/+hofvMQG3V5p4HjBNxXz8DlTQrpnxqlfm/+pqxhrm5SNd8fqUxxQD0g==}
+  '@soeditor/presets@1.5.0':
+    resolution: {integrity: sha512-S2CI5EK6fsIz3l+afOpTahLChZRI++Zkji9l7/vORAHWrPs9FG3PDrJDAVwtmSDO+7ZaOuAy+uTO7DNdFP5sfw==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/projections': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/dev-tools': 1.5.0
+      '@soeditor/engine': 1.5.0
+      '@soeditor/file-manager': 1.5.0
+      '@soeditor/html-tools': 1.5.0
+      '@soeditor/layout': 1.5.0
+      '@soeditor/markdown': 1.5.0
+      '@soeditor/preview': 1.5.0
+      '@soeditor/projections': 1.5.0
+      '@soeditor/rich-text': 1.5.0
+      '@soeditor/source': 1.5.0
+      '@soeditor/ui': 1.5.0
 
-  '@soeditor/projections@1.4.0':
-    resolution: {integrity: sha512-6ZXPCq7lOfCQVXs5IY+KmM5MtQQPs8Mu0JBqq0tXSJ4gyEbj21iwkTYh8xrfQGNuBWfEyMy0B1qUL7OpomSGbg==}
+  '@soeditor/preview@1.5.0':
+    resolution: {integrity: sha512-huP4DqnvWGPLDEXuGKxpNTui1fJMHPu/V6NXGZknFcKE+ZP2EHycA1QO1GRlyoLjB32pnTy+ZZ4wuCEPGI/H+g==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/projections': 1.5.0
 
-  '@soeditor/react@1.4.0':
-    resolution: {integrity: sha512-h+1UY4eKaCSh/mhSXNmp1v4jUJmDRQ5iAKvkZh4hLmFELMoR/faxiPFWcZzCd9n1dpp3WAIqL7MA9SCwbulybg==}
+  '@soeditor/projections@1.5.0':
+    resolution: {integrity: sha512-C7v01nhGWitueNZJobkzEaI8XiYBCfk9KGrUhajwgTSB/p4HZfskpiGk4fxMnBuV5ghx9YR9dpT70xSLj9ZnfA==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/editor': 1.4.0
-      '@soeditor/workspace': 1.4.0
+      '@soeditor/core': 1.5.0
+
+  '@soeditor/react@1.5.0':
+    resolution: {integrity: sha512-UCd3JUuUmXPRl/RtdXFGnn2Q+BDr+FYUPetOTk3iamX1b7br/nuEq9HNF0oSlYxkNzrIHlUXjZze+J3RTK/B0g==}
+    engines: {node: '>=22.14.0 <23'}
+    peerDependencies:
+      '@soeditor/core': 1.5.0
+      '@soeditor/editor': 1.5.0
+      '@soeditor/workspace': 1.5.0
       react: '>=18.2.0 <20'
     peerDependenciesMeta:
       '@soeditor/editor':
         optional: true
 
-  '@soeditor/revisions@1.4.0':
-    resolution: {integrity: sha512-WnTP7YjL7fixa/q5KG3TDRcaUAaKyE7csFqrLbfal/lrDkD3LaXYKRjwI1bCPHcV/LhRUWmTkQQVcIsCxEWSPA==}
+  '@soeditor/revisions@1.5.0':
+    resolution: {integrity: sha512-9A9pvQPlUQVME5k6Jh8Dkg+Dm2ObyBOGAJ4+z4xvNGo2Bh4wZcR9G3xDHzigGqTLHc+lwyXP9duIuhtjtcFZmw==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/html': 1.4.0
-      '@soeditor/ui': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/html': 1.5.0
+      '@soeditor/ui': 1.5.0
 
-  '@soeditor/rich-text@1.4.0':
-    resolution: {integrity: sha512-842QX2UzmSANSOrzGrBMNw7/KOM0smVjStyM8k54zUdS0O+tmKIklTgMUCms/hu7ILoxrj0euSDLcp3PbjyIJA==}
+  '@soeditor/rich-text@1.5.0':
+    resolution: {integrity: sha512-gbIgQrPlF0OkNLXfgYvep8HDrIroRmHRL6BIXEyCSU6fn4hmPQiwajxuSl20WuTR+EjfPGfBPGpBWTXeAJ6UuA==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0
-      '@soeditor/html': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0
+      '@soeditor/html': 1.5.0
 
-  '@soeditor/source@1.4.0':
-    resolution: {integrity: sha512-PytVItm6ifY1M8AtBdiKb+9y6j7fy0tJntr33Qg55MS2hk3HHh4JNSAWEtaXr7Zs1gAuYIt81nB+SCM6NxPjFg==}
+  '@soeditor/source@1.5.0':
+    resolution: {integrity: sha512-8U3WThwxr6rqYmzGf+vYjfxXOQLVE4LZ9atA0YbW3n9XkQU9oIt9YSwxue7zDGdarTaabQi9wTxXbkI7e5L58A==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0
-      '@soeditor/html': 1.4.0
-      '@soeditor/projections': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0
+      '@soeditor/html': 1.5.0
+      '@soeditor/projections': 1.5.0
 
-  '@soeditor/ui@1.4.0':
-    resolution: {integrity: sha512-JTeTvHK9G1UBgW53V2Frtg08AMJOgYilItfMjN2MGEGnTjs+EoKPV+l39Aq6R6LQ85LdaCHyLpuxvNYXMpz8OQ==}
+  '@soeditor/ui@1.5.0':
+    resolution: {integrity: sha512-r9grjWYaFaqvWoMVF2FlSy9HXF8D/7R/i3eKgz0OJJaJO7UtPQ/c6uuhSqg+57cOtkDv3qeun/VI41p+WFg+7A==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
+      '@soeditor/core': 1.5.0
 
-  '@soeditor/vue@1.4.0':
-    resolution: {integrity: sha512-nCA8o8IZEd4vvBTQ/k2EUY2rrn0E1nt/uaiSbdCAG+ZFAD+MoicdIw48Kh6jJQenWaguVjBLgMdtrw/PRv4L+A==}
+  '@soeditor/vue@1.5.0':
+    resolution: {integrity: sha512-VzXMOkXsNP9tcwiLa04SlvHKl8Ysir0BRKaE3fmWb27JtdVXAotg2n5J3Ys0TzsBKLIKwbldi8HtJnOWybTT3Q==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/editor': 1.4.0
-      '@soeditor/workspace': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/editor': 1.5.0
+      '@soeditor/workspace': 1.5.0
       vue: ^3.5.0
     peerDependenciesMeta:
       '@soeditor/editor':
         optional: true
 
-  '@soeditor/workspace@1.4.0':
-    resolution: {integrity: sha512-D6Zt+AXdMqkYRi6S4F0D+APtGv8ckClgmztIKJmLsHdVoT4zZy7salNEc1B9ZSgzlBA4+J4EqV7YvcZm06gLFw==}
+  '@soeditor/workspace@1.5.0':
+    resolution: {integrity: sha512-DmrLAmUNkxpbreeL0DaYTwxrJL6hSSvx7GFy0VY5YAGDC3ar4bheahxykGHZ68dZvsiwnbtXGVRr5gPKMq4uKQ==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
+      '@soeditor/core': 1.5.0
 
-  '@soeditor/wysiwyg@1.4.0':
-    resolution: {integrity: sha512-CvE0MvFPvJPq+E0pzVfoMH6scUMCHujHUaSQfHKvAGa3J4Kx8iSo2ELR60KiM33+uVTCoTrvs9b8UfjjTTaNYw==}
+  '@soeditor/wysiwyg@1.5.0':
+    resolution: {integrity: sha512-DxkoyJtO5xwE0pFtmkncNa2N/F56jG6DHRi5pe2c06BquK4rn/ElIgem1ZY1vlpGDUbTykjZEBldUbiSLOQIpg==}
     engines: {node: '>=22.14.0 <23'}
     peerDependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0
-      '@soeditor/html': 1.4.0
-      '@soeditor/projections': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0
+      '@soeditor/html': 1.5.0
+      '@soeditor/projections': 1.5.0
 
   '@speed-highlight/core@1.2.24':
     resolution: {integrity: sha512-qeW2e1l78afw8VhRPfPQ1Gjj+KU5XFQ/OFV5ti6eTa9bruO7mJyZtA4vw0ofqmA3tKCkROE9xLk3VZoeRc98nw==}
@@ -4803,138 +4803,138 @@ snapshots:
 
   '@sindresorhus/is@7.2.0': {}
 
-  '@soeditor/adapter-sofinder@1.4.0(@soeditor/file-manager@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/rich-text@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0)))':
+  '@soeditor/adapter-sofinder@1.5.0(@soeditor/file-manager@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/rich-text@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0)))':
     dependencies:
-      '@soeditor/file-manager': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/rich-text@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))
+      '@soeditor/file-manager': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/rich-text@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))
 
-  '@soeditor/comments@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))':
+  '@soeditor/comments@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/ui': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/ui': 1.5.0(@soeditor/core@1.5.0)
 
-  '@soeditor/core@1.4.0': {}
+  '@soeditor/core@1.5.0': {}
 
-  '@soeditor/dev-tools@1.4.0(@soeditor/core@1.4.0)(@soeditor/html-tools@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0))(@soeditor/html@1.4.0)(@soeditor/source@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))':
+  '@soeditor/dev-tools@1.5.0(@soeditor/core@1.5.0)(@soeditor/html-tools@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0))(@soeditor/html@1.5.0)(@soeditor/source@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/html': 1.4.0
-      '@soeditor/html-tools': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)
-      '@soeditor/source': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/ui': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/html': 1.5.0
+      '@soeditor/html-tools': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)
+      '@soeditor/source': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/ui': 1.5.0(@soeditor/core@1.5.0)
 
-  '@soeditor/editor@1.4.0(supports-color@10.2.2)':
+  '@soeditor/editor@1.5.0(supports-color@10.2.2)':
     dependencies:
-      '@soeditor/adapter-sofinder': 1.4.0(@soeditor/file-manager@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/rich-text@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0)))
-      '@soeditor/comments': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/core': 1.4.0
-      '@soeditor/dev-tools': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html-tools@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0))(@soeditor/html@1.4.0)(@soeditor/source@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/engine': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/file-manager': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/rich-text@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/html': 1.4.0
-      '@soeditor/html-tools': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)
-      '@soeditor/layout': 1.4.0(@soeditor/core@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/markdown': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))(supports-color@10.2.2)
-      '@soeditor/presets': 1.4.0(716a31a06af75168cedf64caa3e13ccc)
-      '@soeditor/preview': 1.4.0(@soeditor/core@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/projections': 1.4.0(@soeditor/core@1.4.0)
-      '@soeditor/revisions': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/rich-text': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)
-      '@soeditor/source': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/ui': 1.4.0(@soeditor/core@1.4.0)
-      '@soeditor/workspace': 1.4.0(@soeditor/core@1.4.0)
-      '@soeditor/wysiwyg': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
+      '@soeditor/adapter-sofinder': 1.5.0(@soeditor/file-manager@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/rich-text@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0)))
+      '@soeditor/comments': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/core': 1.5.0
+      '@soeditor/dev-tools': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html-tools@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0))(@soeditor/html@1.5.0)(@soeditor/source@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/engine': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/file-manager': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/rich-text@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/html': 1.5.0
+      '@soeditor/html-tools': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)
+      '@soeditor/layout': 1.5.0(@soeditor/core@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/markdown': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))(supports-color@10.2.2)
+      '@soeditor/presets': 1.5.0(e31a22f7cc315bd711b4d80d85c0f42c)
+      '@soeditor/preview': 1.5.0(@soeditor/core@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/projections': 1.5.0(@soeditor/core@1.5.0)
+      '@soeditor/revisions': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/rich-text': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)
+      '@soeditor/source': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/ui': 1.5.0(@soeditor/core@1.5.0)
+      '@soeditor/workspace': 1.5.0(@soeditor/core@1.5.0)
+      '@soeditor/wysiwyg': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
     transitivePeerDependencies:
       - supports-color
 
-  '@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))':
+  '@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/html': 1.4.0
-      '@soeditor/projections': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/html': 1.5.0
+      '@soeditor/projections': 1.5.0(@soeditor/core@1.5.0)
 
-  '@soeditor/file-manager@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/rich-text@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))':
+  '@soeditor/file-manager@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/rich-text@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/rich-text': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)
-      '@soeditor/ui': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/rich-text': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)
+      '@soeditor/ui': 1.5.0(@soeditor/core@1.5.0)
 
-  '@soeditor/html-tools@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)':
+  '@soeditor/html-tools@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/html': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/html': 1.5.0
       prettier: 3.9.6
 
-  '@soeditor/html@1.4.0':
+  '@soeditor/html@1.5.0':
     dependencies:
       parse5: 8.0.1
 
-  '@soeditor/layout@1.4.0(@soeditor/core@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))':
+  '@soeditor/layout@1.5.0(@soeditor/core@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/projections': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/projections': 1.5.0(@soeditor/core@1.5.0)
 
-  '@soeditor/markdown@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))(supports-color@10.2.2)':
+  '@soeditor/markdown@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))(supports-color@10.2.2)':
     dependencies:
       '@codemirror/lang-markdown': 6.5.2
       '@codemirror/state': 6.7.1
       '@codemirror/view': 6.43.9
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/html': 1.4.0
-      '@soeditor/projections': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/html': 1.5.0
+      '@soeditor/projections': 1.5.0(@soeditor/core@1.5.0)
       codemirror: 6.0.2
       micromark: 4.0.2(supports-color@10.2.2)
       turndown: 7.2.4
     transitivePeerDependencies:
       - supports-color
 
-  '@soeditor/presets@1.4.0(716a31a06af75168cedf64caa3e13ccc)':
+  '@soeditor/presets@1.5.0(e31a22f7cc315bd711b4d80d85c0f42c)':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/dev-tools': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html-tools@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0))(@soeditor/html@1.4.0)(@soeditor/source@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/engine': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/file-manager': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/rich-text@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0))(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/html-tools': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)
-      '@soeditor/layout': 1.4.0(@soeditor/core@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/markdown': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))(supports-color@10.2.2)
-      '@soeditor/preview': 1.4.0(@soeditor/core@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/projections': 1.4.0(@soeditor/core@1.4.0)
-      '@soeditor/rich-text': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)
-      '@soeditor/source': 1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/ui': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/dev-tools': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html-tools@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0))(@soeditor/html@1.5.0)(@soeditor/source@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/engine': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/file-manager': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/rich-text@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0))(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/html-tools': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)
+      '@soeditor/layout': 1.5.0(@soeditor/core@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/markdown': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))(supports-color@10.2.2)
+      '@soeditor/preview': 1.5.0(@soeditor/core@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/projections': 1.5.0(@soeditor/core@1.5.0)
+      '@soeditor/rich-text': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)
+      '@soeditor/source': 1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/ui': 1.5.0(@soeditor/core@1.5.0)
 
-  '@soeditor/preview@1.4.0(@soeditor/core@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))':
+  '@soeditor/preview@1.5.0(@soeditor/core@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/projections': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/projections': 1.5.0(@soeditor/core@1.5.0)
 
-  '@soeditor/projections@1.4.0(@soeditor/core@1.4.0)':
+  '@soeditor/projections@1.5.0(@soeditor/core@1.5.0)':
     dependencies:
-      '@soeditor/core': 1.4.0
+      '@soeditor/core': 1.5.0
 
-  '@soeditor/react@1.4.0(@soeditor/core@1.4.0)(@soeditor/editor@1.4.0(supports-color@10.2.2))(@soeditor/workspace@1.4.0(@soeditor/core@1.4.0))(react@19.2.8)':
+  '@soeditor/react@1.5.0(@soeditor/core@1.5.0)(@soeditor/editor@1.5.0(supports-color@10.2.2))(@soeditor/workspace@1.5.0(@soeditor/core@1.5.0))(react@19.2.8)':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/workspace': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/workspace': 1.5.0(@soeditor/core@1.5.0)
       react: 19.2.8
     optionalDependencies:
-      '@soeditor/editor': 1.4.0(supports-color@10.2.2)
+      '@soeditor/editor': 1.5.0(supports-color@10.2.2)
 
-  '@soeditor/revisions@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/ui@1.4.0(@soeditor/core@1.4.0))':
+  '@soeditor/revisions@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/ui@1.5.0(@soeditor/core@1.5.0))':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/html': 1.4.0
-      '@soeditor/ui': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/html': 1.5.0
+      '@soeditor/ui': 1.5.0(@soeditor/core@1.5.0)
 
-  '@soeditor/rich-text@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)':
+  '@soeditor/rich-text@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/html': 1.4.0
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/html': 1.5.0
 
-  '@soeditor/source@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))':
+  '@soeditor/source@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))':
     dependencies:
       '@codemirror/lang-html': 6.4.12
       '@codemirror/language': 6.12.4
@@ -4943,34 +4943,34 @@ snapshots:
       '@codemirror/state': 6.7.1
       '@codemirror/view': 6.43.9
       '@lezer/highlight': 1.2.3
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/html': 1.4.0
-      '@soeditor/projections': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/html': 1.5.0
+      '@soeditor/projections': 1.5.0(@soeditor/core@1.5.0)
       codemirror: 6.0.2
 
-  '@soeditor/ui@1.4.0(@soeditor/core@1.4.0)':
+  '@soeditor/ui@1.5.0(@soeditor/core@1.5.0)':
     dependencies:
-      '@soeditor/core': 1.4.0
+      '@soeditor/core': 1.5.0
 
-  '@soeditor/vue@1.4.0(@soeditor/core@1.4.0)(@soeditor/editor@1.4.0(supports-color@10.2.2))(@soeditor/workspace@1.4.0(@soeditor/core@1.4.0))(vue@3.5.42(typescript@5.9.3))':
+  '@soeditor/vue@1.5.0(@soeditor/core@1.5.0)(@soeditor/editor@1.5.0(supports-color@10.2.2))(@soeditor/workspace@1.5.0(@soeditor/core@1.5.0))(vue@3.5.42(typescript@5.9.3))':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/workspace': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/workspace': 1.5.0(@soeditor/core@1.5.0)
       vue: 3.5.42(typescript@5.9.3)
     optionalDependencies:
-      '@soeditor/editor': 1.4.0(supports-color@10.2.2)
+      '@soeditor/editor': 1.5.0(supports-color@10.2.2)
 
-  '@soeditor/workspace@1.4.0(@soeditor/core@1.4.0)':
+  '@soeditor/workspace@1.5.0(@soeditor/core@1.5.0)':
     dependencies:
-      '@soeditor/core': 1.4.0
+      '@soeditor/core': 1.5.0
 
-  '@soeditor/wysiwyg@1.4.0(@soeditor/core@1.4.0)(@soeditor/engine@1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0)))(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))':
+  '@soeditor/wysiwyg@1.5.0(@soeditor/core@1.5.0)(@soeditor/engine@1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0)))(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))':
     dependencies:
-      '@soeditor/core': 1.4.0
-      '@soeditor/engine': 1.4.0(@soeditor/core@1.4.0)(@soeditor/html@1.4.0)(@soeditor/projections@1.4.0(@soeditor/core@1.4.0))
-      '@soeditor/html': 1.4.0
-      '@soeditor/projections': 1.4.0(@soeditor/core@1.4.0)
+      '@soeditor/core': 1.5.0
+      '@soeditor/engine': 1.5.0(@soeditor/core@1.5.0)(@soeditor/html@1.5.0)(@soeditor/projections@1.5.0(@soeditor/core@1.5.0))
+      '@soeditor/html': 1.5.0
+      '@soeditor/projections': 1.5.0(@soeditor/core@1.5.0)
 
   '@speed-highlight/core@1.2.24': {}
 

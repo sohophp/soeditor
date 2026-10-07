@@ -7,13 +7,13 @@ description: 'Bind CMS HTML, manage lifecycle and enable Source on demand.'
 
 ## Install and run
 
-The `/cms` components were introduced in 1.3.0; these examples use 1.4.0. The existing `useSoEditorWorkspace` entry remains compatible.
+The `/cms` components were introduced in 1.3.0; these examples use 1.5.0. The existing `useSoEditorWorkspace` entry remains compatible.
 
 ```sh
-pnpm add @soeditor/editor@1.4.0 @soeditor/vue@1.4.0 vue
+pnpm add @soeditor/editor@1.5.0 @soeditor/vue@1.5.0 vue
 ```
 
-Select “Start editing” to run the published packages. [Download complete example sources](/downloads/soeditor-examples-1.4.0.tar.gz), extract, run `pnpm install` and `pnpm dev`, then open `vue.html`.
+Select “Start editing” to run the published packages. [Download complete example sources](/downloads/soeditor-examples-1.5.0.tar.gz), extract, run `pnpm install` and `pnpm dev`, then open `vue.html`.
 
 ## Bind article HTML
 

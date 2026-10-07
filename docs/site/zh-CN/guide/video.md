@@ -5,7 +5,7 @@ description: '默认视频工具、按需加载、来源配置和可运行示例
 
 # 视频编辑与预览
 
-从 1.4.0 起，Classic 编辑器默认提供视频按钮和惰性视频卡片；React、Vue 组件使用相同默认行为。对话框和播放器首次使用才加载。本站所有示例引用已发布的 npm 1.4.0。
+从 1.4.0 起，Classic 编辑器默认提供视频按钮和惰性视频卡片；React、Vue 组件使用相同默认行为。对话框和播放器首次使用才加载。本站所有示例引用已发布的 npm 1.5.0。
 
 ## 默认开启与关闭
 
@@ -27,7 +27,7 @@ const editor = await createClassicEditor(host);
 下面使用 `soeditor-release` 别名锁定发布版本。在自己的项目中可改为相同版本的 `@soeditor/editor` 导入。
 
 ```sh
-pnpm add soeditor-release@npm:@soeditor/editor@1.4.0
+pnpm add soeditor-release@npm:@soeditor/editor@1.5.0
 ```
 
 <<< ../../examples/video.ts

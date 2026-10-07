@@ -141,3 +141,11 @@ export async function editImage(host: HTMLElement, trustedImageUrl: string) {
     return createClassicEditor(host, { data: `<p>${image.outerHTML}</p>` });
 }
 // #endregion image
+
+// #region pasteChoice
+export async function pasteChoice(host: HTMLElement) {
+    return createClassicEditor(host, {
+        config: { cms: { paste: { prompt: true } } },
+    });
+}
+// #endregion pasteChoice

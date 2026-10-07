@@ -10,11 +10,11 @@ description: '没有打包工具的页面可以使用固定版本的 CMS 浏览�
 ```html
 <link
     rel="stylesheet"
-    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.4.0/dist/cms-styles.css"
+    href="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.5.0/dist/cms-styles.css"
 />
 <textarea id="content" name="content"><p>Hello</p></textarea>
 <script
-    src="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.4.0/dist/soeditor.global.js"
+    src="https://cdn.jsdelivr.net/npm/@soeditor/editor@1.5.0/dist/soeditor.global.js"
     crossorigin="anonymous"
 ></script>
 <script>
@@ -31,7 +31,14 @@ description: '没有打包工具的页面可以使用固定版本的 CMS 浏览�
 
 ## 自托管文件
 
-1.4.0 默认提供视频工具。请复制整个发布包的 `dist` 目录并保留相对路径，包括 `classic-image-tools.js`、`video-runtime.js`、源码映射和许可证声明；不要只复制主脚本。图片工具与视频对话框首次使用才请求配套文件。使用 CSP 时允许对应的脚本来源。
+1.5.0 默认提供视频工具。请复制整个发布包的 `dist` 目录并保留相对路径，包括 `classic-image-tools.js`、`video-runtime.js`、源码映射和许可证声明；不要只复制主脚本。图片工具与视频对话框首次使用才请求配套文件。使用 CSP 时允许对应的脚本来源。
+
+## 1.5.0 配套资源
+
+自托管须保留完整 `dist` 目录，包括 `ui-translations.js`、
+`classic-link-tools.js`、`link-attributes.js`、`classic-block-tools.js`、
+`classic-paste-dialog.js`、`classic-dialogs.css`，以及图片／视频资源和 source map。
+保持这些资源相对 `soeditor.global.js` 的路径；它们在对应语言或交互需要时加载。
 
 ## 下一步
 

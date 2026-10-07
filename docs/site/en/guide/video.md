@@ -5,7 +5,7 @@ description: 'Default video tools, lazy loading, origin configuration and runnab
 
 # Video and article preview
 
-Since 1.4.0, Classic editors include the video button and inert video cards by default, including the React and Vue components. Dialogs and players load on first use. All examples here use published npm 1.4.0.
+Since 1.4.0, Classic editors include the video button and inert video cards by default, including the React and Vue components. Dialogs and players load on first use. All examples here use published npm 1.5.0.
 
 ## Default behavior and opt-out
 
@@ -27,7 +27,7 @@ Include `cmsVideo` when supplying your own `toolbar`; explicit toolbars are not 
 The example uses the `soeditor-release` alias to pin the published editor. In your application, equivalent imports from the same version of `@soeditor/editor` work too.
 
 ```sh
-pnpm add soeditor-release@npm:@soeditor/editor@1.4.0
+pnpm add soeditor-release@npm:@soeditor/editor@1.5.0
 ```
 
 <<< ../../examples/video.ts

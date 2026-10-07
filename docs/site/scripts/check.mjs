@@ -61,13 +61,13 @@ for (const locale of ['zh-CN', 'en']) {
         );
 }
 for (const [specifier, version] of [
-    ['soeditor-release/cms', '1.4.0'],
-    ['@soeditor/editor/cms', '1.4.0'],
-    ['@soeditor/react/cms', '1.4.0'],
-    ['@soeditor/vue/cms', '1.4.0'],
-    ['@soeditor/file-manager', '1.4.0'],
-    ['@soeditor/adapter-sofinder', '1.4.0'],
-    ['@soeditor/presets/cms-runtime', '1.4.0'],
+    ['soeditor-release/cms', '1.5.0'],
+    ['@soeditor/editor/cms', '1.5.0'],
+    ['@soeditor/react/cms', '1.5.0'],
+    ['@soeditor/vue/cms', '1.5.0'],
+    ['@soeditor/file-manager', '1.5.0'],
+    ['@soeditor/adapter-sofinder', '1.5.0'],
+    ['@soeditor/presets/cms-runtime', '1.5.0'],
 ]) {
     const entry = fileURLToPath(import.meta.resolve(specifier));
     if (!entry.includes('/node_modules/'))

@@ -33,7 +33,7 @@ features:
 ## Start with a textarea
 
 ```sh
-pnpm add @soeditor/editor@1.4.0
+pnpm add @soeditor/editor@1.5.0
 ```
 
 ```ts
@@ -44,7 +44,7 @@ const host = document.querySelector<HTMLTextAreaElement>('#content');
 if (host) await createClassicEditor(host, { locale: 'en' });
 ```
 
-Version 1.4.0 enables [video tools](/en/guide/video) by default, with dialogs and players loaded on demand; use `video: false` to opt out. Separate [React](/en/guide/react) and [Vue](/en/guide/vue) components are also available.
+Version 1.5.0 enables [video tools](/en/guide/video) by default, with dialogs and players loaded on demand; use `video: false` to opt out. Separate [React](/en/guide/react) and [Vue](/en/guide/vue) components are also available.
 
 ## SoEditor + SoFinder: our best companion for CMS authoring
 
