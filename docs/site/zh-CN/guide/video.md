@@ -38,7 +38,7 @@ pnpm add soeditor-release@npm:@soeditor/editor@1.5.0
 
 可在对话框输入支持的视频资源 URL 或 YouTube URL，设置标题、封面、尺寸、宽高比和对齐。选中已有视频卡片后双击或按 Enter 可编辑；Delete/Backspace 可删除。一次完成的编辑可撤销。
 
-编辑区显示惰性视频卡片，不播放保存的 video/iframe。`getData()` 返回实际 HTML，而不是卡片 DOM。文章预览独立渲染允许的视频；播放器不会替代正文的保存数据。
+编辑区显示惰性视频卡片，不播放保存的 video/iframe。`getData()` 返回实际 HTML，而不是卡片 DOM。文章预览在弹窗内的隔离 iframe 中渲染允许的视频；播放器不会替代正文的保存数据。
 
 视频策略通过 `video` 配置。已有的 `createCmsVideoPlugin()` 显式接入方式继续支持，自动安装会跳过已有视频插件；外部插件组合使用 `/cms/optional` 入口。
 

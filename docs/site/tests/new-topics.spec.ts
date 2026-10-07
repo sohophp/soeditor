@@ -122,7 +122,11 @@ test('video example saves canonical HTML and plays only in article preview', asy
         .getByRole('button', { name: 'Preview article', exact: true })
         .click();
     const popup = await popupPromise;
-    const video = popup.locator('video').first();
+    const video = popup
+        .locator('iframe')
+        .contentFrame()
+        .locator('video')
+        .first();
     await expect(video).toBeVisible();
     await video.evaluate(async (element: HTMLVideoElement) => {
         await element.play();

@@ -38,7 +38,7 @@ The demo uses a short same-origin WebM file and needs no upload service. Enable 
 
 Enter a supported media URL or YouTube URL in the dialog, then configure title, poster, dimensions, aspect ratio and alignment. Double-click a selected video card or press Enter to edit it; Delete/Backspace removes it. A completed edit is undoable.
 
-The editing surface displays inert cards and does not play stored video/iframes. `getData()` returns actual HTML, not card DOM. Article preview renders allowed video independently; player UI never replaces saved article data.
+The editing surface displays inert cards and does not play stored video/iframes. `getData()` returns actual HTML, not card DOM. Article preview renders allowed video in an isolated iframe inside its popup; player UI never replaces saved article data.
 
 Configure policy through `video`. Existing explicit `createCmsVideoPlugin()` integrations remain supported and take precedence over automatic installation; use `/cms/optional` when composing external plugins.
 
