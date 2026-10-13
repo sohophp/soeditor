@@ -42,13 +42,13 @@ export class HistoryPlugin extends Plugin {
         this.editor.commands.register({
             id: 'editor.undo',
             label: 'Undo',
-            canExecute: () => this.canUndo,
+            canExecute: () => !this.editor.state.readonly && this.canUndo,
             execute: () => this.#undo(),
         });
         this.editor.commands.register({
             id: 'editor.redo',
             label: 'Redo',
-            canExecute: () => this.canRedo,
+            canExecute: () => !this.editor.state.readonly && this.canRedo,
             execute: () => this.#redo(),
         });
         this.#disposeDocumentChange = this.editor.events.on(

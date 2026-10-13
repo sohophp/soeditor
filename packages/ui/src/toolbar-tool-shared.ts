@@ -67,12 +67,18 @@ export function dialogCommandButton(
                 return undefined;
             });
             if (fields === undefined || !button.isConnected) return;
+            const insertPattern = ui.translate('Insert {item}');
             state.handle = ui.dialogs.open({
                 title: label,
                 content: fields.content,
                 actions: [
                     {
-                        label: `Insert ${label.toLowerCase()}`,
+                        label: insertPattern.replace(
+                            '{item}',
+                            insertPattern === 'Insert {item}'
+                                ? label.toLowerCase()
+                                : ui.translate(label),
+                        ),
                         kind: 'primary',
                         run: () => fields.run(),
                     },

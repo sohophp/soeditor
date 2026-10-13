@@ -10,6 +10,7 @@ export default defineConfig({
                 cms: 'src/cms.ts',
                 compatibility: 'src/compatibility.ts',
                 index: 'src/index.ts',
+                links: 'src/links.ts',
                 styles: 'src/styles.css',
                 'cms-styles': 'src/cms.css',
                 translations: 'src/translations.ts',

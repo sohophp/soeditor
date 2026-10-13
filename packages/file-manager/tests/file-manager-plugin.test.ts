@@ -89,6 +89,28 @@ describe('FileManagerPlugin', () => {
         await editor.destroy();
     });
 
+    it('selects a dialog target without changing the document', async () => {
+        const editor = await Editor.create({ plugins: [FileManagerPlugin] });
+        const links: unknown[] = [];
+        registerVisualService(editor, [], links);
+        editor.services.register(fileManagerServiceToken, {
+            open: () =>
+                Promise.resolve({
+                    url: '/original/uploads/guide.pdf',
+                    name: 'Guide',
+                }),
+        });
+        expect(await editor.execute('link.file.select')).toEqual({
+            href: '/original/uploads/guide.pdf',
+            title: 'Guide',
+        });
+        expect(links).toEqual([]);
+        await expect(
+            editor.execute('link.file.select', 'unexpected'),
+        ).rejects.toThrow('does not accept arguments');
+        await editor.destroy();
+    });
+
     it('treats cancellation as a no-op and rejects unsafe results', async () => {
         const editor = await Editor.create({ plugins: [FileManagerPlugin] });
         const inserted: string[] = [];

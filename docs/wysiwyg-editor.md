@@ -76,12 +76,26 @@ content that cannot be converted without losing meaning remains unchanged.
 
 ### History and clipboard
 
+Configured Undo, Redo and Reset edits controls stay visible in both Classic
+WYSIWYG and Source modes. Reset edits asks for confirmation, restores the initial
+editor content and remains undoable; it does not submit the host form. Readonly
+blocks history mutations without consuming the undo/redo stacks.
+
 - meaningful undo/redo grouping for typing, paste, drop and dialog changes;
 - internal copy/paste preserves supported semantics;
 - external rich paste is classified and cleaned by explicit policy;
 - plain-text paste remains available;
 - table matrix paste is bounded and uses the same security policy;
 - pasted/dropped files use the configured upload adapter or fail visibly.
+
+### UI language
+
+Built-in CMS UI supports English (`en`), Simplified Chinese (`zh-CN`) and
+Traditional Chinese (`zh-TW`). The locale belongs to each Classic instance,
+including lazy image, link, table and video dialogs, popup preview and Source
+search controls. Translation resources do not rewrite authored HTML, asset names
+or attribute values. Hosts supply translations for their own labels, errors and
+other languages. See [UI localization](ui-localization.md).
 
 ### Lifecycle
 
@@ -162,6 +176,13 @@ activation of Source or a Source split view loads it; an initial Source view
 loads it immediately. It provides syntax-aware HTML editing and search.
 Formatting/minification and advanced diagnostics have separate demand boundaries;
 opening Source alone must not load Prettier or developer tools.
+
+Source defaults to a light color scheme and offers an immediate light/dark
+selector inside its own surface. Focus cues and completion menus follow the
+scheme. The choice is per editor instance, preserves content and undo history,
+and survives view changes. Lint markers may be debounced; saving always validates
+the current draft synchronously. A hidden WYSIWYG projection renders the latest
+canonical source when revealed, while split views continue updating immediately.
 
 A first load has visible, accessible pending, failure and retry behavior. Rapid
 switches share an in-flight module load but preserve the latest requested view.
@@ -372,3 +393,9 @@ live outside editable HTML and never appear in `getData()` or Source.
 The WYSIWYG-only commands `block.paragraph.before` and `block.paragraph.after`
 take no arguments and require a selected image or table and editable content.
 They are registered for the WYSIWYG engine lifetime and use its transaction path.
+
+## Shared Link/Image asset integration (Unreleased)
+
+Default CMS toolbars expose the `image-actions` menu and `link` dialog rather than separate image-browser, upload and file-link shortcuts. Existing shortcut IDs remain opt-in. File-manager selection must only fill a Link or Image properties dialog until its confirmation; cancellation does not mutate the document. Image links reuse the configured file/internal-page provider. Explicit host providers retain precedence over the generic `link.file.select` fallback.
+
+SoEditor owns lazy SDK loading, validated asset mapping, upload cancellation and generic search UI. Hosts supply site/session configuration and public page data. SoFinder remains independent of host schema and framework classes. Additive browser adapters and provider factories are experimental until qualification; published 1.5.0 does not include these new entries. See [integration contracts and examples](assets-and-links.md) and [中文接入说明](assets-and-links.zh-CN.md).

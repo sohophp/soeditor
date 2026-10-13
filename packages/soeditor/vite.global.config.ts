@@ -43,6 +43,7 @@ const publicPropertyNames = collectPublicPropertyNames(
         'attachBlockParagraphContext',
         // The independently minified link companion receives these object keys.
         'attachLinkTargetControls',
+        'resolveLinkTargetProvider',
         'linkCustomAttributeField',
         'readInspectedCustomAttributes',
         'tagCustomAttributeField',
@@ -208,6 +209,11 @@ export default defineConfig({
                 )
                     return { id: './classic-block-tools.js', external: true };
                 if (
+                    source === '@soeditor/ui/links' &&
+                    importer?.endsWith('/src/classic-image-context.ts')
+                )
+                    return { id: './link-attributes.js', external: true };
+                if (
                     source === './link-attributes.js' &&
                     (importer?.endsWith('/ui/src/toolbar-link-tools.ts') ||
                         importer?.endsWith('/ui/src/toolbar-table-tools.ts'))
@@ -242,14 +248,23 @@ export default defineConfig({
                     ['classic-block-paragraph-', 'classic-block-tools.js'],
                     ['classic-paste-dialog-', 'classic-paste-dialog.js'],
                 ] as const) {
-                    const selected = readdirSync(dist)
+                    // The additional public links entry lets Rollup share namespace
+                    // chunks; use UI's named-export companion for the global boundary.
+                    const companionDist =
+                        prefix === 'link-attributes-'
+                            ? new URL('../ui/dist/', import.meta.url)
+                            : dist;
+                    const selected = readdirSync(companionDist)
                         .filter(
                             (name) =>
                                 name.startsWith(prefix) && name.endsWith('.js'),
                         )
                         .map((name) => ({
                             name,
-                            source: readFileSync(new URL(name, dist), 'utf8'),
+                            source: readFileSync(
+                                new URL(name, companionDist),
+                                'utf8',
+                            ),
                         }))
                         .sort((a, b) => a.source.length - b.source.length)[0];
                     if (
@@ -271,7 +286,7 @@ export default defineConfig({
                         type: 'asset',
                         fileName: `${fileName}.map`,
                         source: readFileSync(
-                            new URL(`${selected.name}.map`, dist),
+                            new URL(`${selected.name}.map`, companionDist),
                             'utf8',
                         ),
                     });

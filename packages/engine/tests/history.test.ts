@@ -13,6 +13,29 @@ describe('transaction-backed history', () => {
         vi.useRealTimers();
     });
 
+    it('rejects readonly undo and redo without consuming history', async () => {
+        const editor = await Editor.create({
+            data: '<p>A</p>',
+            plugins: [HistoryPlugin],
+        });
+        editor.setData('<p>B</p>');
+        editor.setReadonly(true);
+        expect(editor.commands.canExecute('editor.undo')).toBe(false);
+        expect(editor.execute('editor.undo')).toBeUndefined();
+        expect(editor.getData()).toBe('<p>B</p>');
+        editor.setReadonly(false);
+        editor.execute('editor.undo');
+        expect(editor.getData()).toBe('<p>A</p>');
+        editor.setReadonly(true);
+        expect(editor.commands.canExecute('editor.redo')).toBe(false);
+        expect(editor.execute('editor.redo')).toBeUndefined();
+        expect(editor.getData()).toBe('<p>A</p>');
+        editor.setReadonly(false);
+        editor.execute('editor.redo');
+        expect(editor.getData()).toBe('<p>B</p>');
+        await editor.destroy();
+    });
+
     it('registers deterministic undo and redo commands', async () => {
         const editor = await Editor.create({
             data: '<p>A</p>',

@@ -80,3 +80,7 @@ registerSoFinder(editor, async ({ kind }) => {
 [React](/zh-CN/guide/react) 和 [Vue](/zh-CN/guide/vue) 的 CMS 组件可在 `onReady` / `@ready` 中调用同一个 `registerSoFinder`；创建实例时仍要通过可选入口配置上述插件。组件文档标注了当前发布状态。
 
 [运行资源选择与模拟上传](/zh-CN/examples/assets)：演示使用 `SoFinderAdapter` 和固定图片回调，不连接真实 SoFinder 服务端。生产环境替换 `pick` 即可连接自己的资源库；用户认证、资源访问权限和上传配置由宿主负责。
+
+## 统一图片与链接接口（Unreleased）
+
+当前源码新增 `createSoFinderBrowserAdapters`（`@soeditor/adapter-sofinder/browser`）与通用链接提供者，复用链接和图片链接属性的文件选择及站内搜索；默认不追加三个独立资源按钮。请参阅仓库 [完整接入说明](https://github.com/sohophp/soeditor/blob/main/docs/assets-and-links.zh-CN.md)。这些接口尚未随 1.5.0 发布，下面的 1.5.0 示例继续使用已有的注入式适配器。

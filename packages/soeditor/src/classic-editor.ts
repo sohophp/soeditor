@@ -384,6 +384,7 @@ export async function createClassicEditor(
         editingModes,
         options.cspNonce,
     );
+    dom.root.lang = translation.locale;
     let contentStylePreset = options.contentStylePreset ?? 'browser';
     setWysiwygContentStylePreset(dom.visualContent, contentStylePreset);
     setWysiwygContentStylePreset(dom.visual, contentStylePreset);
@@ -1507,6 +1508,7 @@ export async function createClassicEditor(
             ui,
             commandSurface,
             baseHref,
+            editor,
         );
         const blockUi = ui;
         disposeBlockParagraphContext = attachLazyBlockContext(
@@ -1532,7 +1534,10 @@ export async function createClassicEditor(
             .tryGet(pastePipelineServiceToken)
             ?.subscribe((diagnostic) => {
                 ui?.notifications.show({
-                    message: `Paste was not applied: ${diagnostic.message}`,
+                    message: (
+                        ui?.translate('Paste was not applied: {reason}') ??
+                        'Paste was not applied: {reason}'
+                    ).replace('{reason}', diagnostic.message),
                     severity: 'error',
                 });
             });
@@ -1944,6 +1949,7 @@ function attachClassicImageContext(
     ui: EditorUi,
     visual: HTMLElement,
     baseHref?: string,
+    editor?: Editor,
 ): () => void {
     return attachLazyBlockContext(
         ui,
@@ -1957,6 +1963,7 @@ function attachClassicImageContext(
                         visual,
                         event,
                         baseHref,
+                        editor,
                     ),
             ),
     );

@@ -50,6 +50,37 @@ export class FileManagerPlugin extends Plugin {
             mediaRequest,
         );
         this.registerFileLinkCommand();
+        // Selection alone must not insert a link before the enclosing dialog is saved.
+        this.editor.commands.register({
+            id: 'link.file.select',
+            label: 'Choose file link',
+            canExecute: ({ editor }) =>
+                !this.#destroyed &&
+                !this.#pending &&
+                editor.services.has(fileManagerServiceToken) &&
+                editor.commands.canExecute('link.set'),
+            execute: async ({ editor }, ...args) => {
+                if (args.length)
+                    throw new TypeError(
+                        'Command "link.file.select" does not accept arguments.',
+                    );
+                this.#pending = true;
+                try {
+                    const selected = normalizeFileManagerResult(
+                        await editor.services
+                            .get(fileManagerServiceToken)
+                            .open(fileRequest),
+                    );
+                    if (!selected || this.#destroyed) return null;
+                    return {
+                        href: selected.url,
+                        ...(selected.name ? { title: selected.name } : {}),
+                    };
+                } finally {
+                    this.#pending = false;
+                }
+            },
+        });
         const ui = this.editor.services.get(uiRegistryServiceToken);
         this.#disposeToolbar.push(
             ui.registerToolbarItem(

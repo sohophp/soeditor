@@ -81,6 +81,12 @@ export default defineConfig({
                     import.meta.url,
                 ),
             ),
+            '@soeditor/adapter-sofinder/browser': fileURLToPath(
+                new URL(
+                    '../../packages/adapter-sofinder/src/browser.ts',
+                    import.meta.url,
+                ),
+            ),
             '@soeditor/adapter-sofinder': fileURLToPath(
                 new URL(
                     '../../packages/adapter-sofinder/src/index.ts',
@@ -119,6 +125,12 @@ export default defineConfig({
             ),
             '@soeditor/layout': fileURLToPath(
                 new URL('../../packages/layout/src/index.ts', import.meta.url),
+            ),
+            '@soeditor/file-manager/ckfinder': fileURLToPath(
+                new URL(
+                    '../../packages/file-manager/src/ckfinder.ts',
+                    import.meta.url,
+                ),
             ),
             '@soeditor/file-manager': fileURLToPath(
                 new URL(
@@ -179,6 +191,9 @@ export default defineConfig({
                     '../../packages/ui/src/translations.ts',
                     import.meta.url,
                 ),
+            ),
+            '@soeditor/ui/links': fileURLToPath(
+                new URL('../../packages/ui/src/links.ts', import.meta.url),
             ),
             '@soeditor/ui': fileURLToPath(
                 new URL('../../packages/ui/src/index.ts', import.meta.url),

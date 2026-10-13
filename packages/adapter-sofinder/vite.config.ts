@@ -3,8 +3,8 @@ import { defineConfig } from 'vite';
 export default defineConfig({
     build: {
         lib: {
-            entry: 'src/index.ts',
-            fileName: 'index',
+            entry: { index: 'src/index.ts', browser: 'src/browser.ts' },
+            fileName: (_format, name) => `${name}.js`,
             formats: ['es'],
         },
         minify: false,

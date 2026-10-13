@@ -84,7 +84,7 @@ export function createClassicPreviewTemplates(
             template:
                 value.template ??
                 '<!doctype html><html><head><meta charset="utf-8"><title>Preview</title></head><body><main class="soeditor-wysiwyg-content" data-soeditor-content-style="{{ soeditorContentStyle }}">{{ content }}</main></body></html>',
-            title: value.title ?? 'Content preview',
+            title: value.title ?? translate('Content preview'),
         };
     };
     const builtIns: ClassicPreviewWindowTemplate[] = [

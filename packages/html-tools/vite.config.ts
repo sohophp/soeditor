@@ -2,10 +2,11 @@ import { defineConfig } from 'vite';
 import { minify } from 'terser';
 
 export default defineConfig({
+    base: './',
     worker: {
         plugins: () => [
             {
-                name: 'compact-inline-formatting-worker',
+                name: 'compact-formatting-worker',
                 async renderChunk(code) {
                     const result = await minify(code, {
                         compress: { passes: 3 },

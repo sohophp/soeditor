@@ -7,13 +7,13 @@ symbol list or declaration hash requires explicit API review. CSS exports and
 CLI bins are listed as stable resources. Undeclared `src`/`dist` subpaths and
 implementation modules are internal even when present in a checkout or tarball.
 
-Summary: 24 packages; 986 stable, 399 experimental, and 0 deprecated symbol
+Summary: 24 packages; 986 stable, 418 experimental, and 0 deprecated symbol
 entries.
 
 ## @soeditor/adapter-sofinder
 
 Declaration tree SHA-256:
-`01c1244faa2950c2cd85a3114bc69dfb43c116d47ec69e5ddd4f51cd25c76c22`
+`76f8c3598249b3bc33f0ae9b673bfac7aaa135eba12b6f3a879ae5d1cfbbc29f`
 
 ### .
 
@@ -31,6 +31,17 @@ Declaration SHA-256:
 | `SoFinderUploader`             | type       | stable         | `87a34d0a8ff2d17a` |
 | `SoFinderUploadSnapshot`       | type       | stable         | `622d6fcdf6bf1826` |
 | `SoFinderUploadTask`           | type       | stable         | `fccd8bfce9747161` |
+
+### ./browser
+
+Declaration SHA-256:
+`f0dd4098ae53d49e80f1cc0365256199a065c43e9a75a8b57ef30da38295178b`
+
+| Export                          | Kind  | Classification | Signature SHA-256  |
+| ------------------------------- | ----- | -------------- | ------------------ |
+| `createSoFinderBrowserAdapters` | value | experimental   | `83daea5f3097039d` |
+| `SoFinderBrowserAdapters`       | type  | experimental   | `6311b6a1f73d1af2` |
+| `SoFinderBrowserOptions`        | type  | experimental   | `2b8d56af23d3fb03` |
 
 ## @soeditor/comments
 
@@ -164,7 +175,7 @@ Declaration SHA-256:
 ## @soeditor/editor
 
 Declaration tree SHA-256:
-`c5d9157878b0e77d03a36921e04e5eec748ef3b7ffc99a62d2917d6955af26e6`
+`4c4d17533f405fe21948ae857debc93b55a4763f94ff56217397b588f4c825d1`
 
 ### .
 
@@ -259,7 +270,9 @@ Declaration SHA-256:
 | `createEditorUi`                                      | value      | stable         | `901a347f76278407` |
 | `CreateEditorUiOptions`                               | type       | stable         | `57649697ebb448fc` |
 | `createEditorWorkspace`                               | value      | stable         | `61ebfe3a523c1261` |
+| `createFileManagerLinkTargetProvider`                 | value      | experimental   | `f5a32e4c4444cd3e` |
 | `createHtmlFormattingService`                         | value      | stable         | `0b057d0821ca78d4` |
+| `createHttpLinkTargetSearch`                          | value      | experimental   | `c87aeee8788f8f10` |
 | `createMarkdownEditingEngine`                         | value      | stable         | `a82d3174de6ac152` |
 | `createMarkdownPreviewRenderer`                       | value      | stable         | `b6f97b899683a36b` |
 | `createPreviewEngine`                                 | value      | stable         | `8acbf0ff9cf1a80e` |
@@ -370,8 +383,9 @@ Declaration SHA-256:
 | `ExternalPastePolicy`                                 | type       | experimental   | `4beef696d38b0be3` |
 | `FileManager`                                         | type       | stable         | `5db3a008837bea4a` |
 | `FileManagerKind`                                     | type       | stable         | `785bce4ba9278334` |
+| `FileManagerLinkTargetOptions`                        | type       | experimental   | `5bbbc88bbbd85c11` |
 | `FileManagerOpenOptions`                              | type       | stable         | `298ff00c678bd580` |
-| `FileManagerPlugin`                                   | type/value | stable         | `9d0802dde0ce9907` |
+| `FileManagerPlugin`                                   | type/value | stable         | `fc01d75cfd57b356` |
 | `FileManagerResult`                                   | type       | stable         | `c35ed9d3b4f8e053` |
 | `fileManagerServiceToken`                             | value      | stable         | `703a046ce0f7382b` |
 | `FontPlugin`                                          | type/value | experimental   | `639e078926b6ae62` |
@@ -415,6 +429,7 @@ Declaration SHA-256:
 | `HtmlText`                                            | type       | stable         | `cb17d1238941137d` |
 | `htmlToMarkdown`                                      | value      | stable         | `613e4f1bc50509d1` |
 | `HtmlToMarkdownResult`                                | type       | stable         | `e73d6441cffde22f` |
+| `HttpLinkTargetSearchOptions`                         | type       | experimental   | `ffae1897a582bb86` |
 | `ImageInsertOptions`                                  | type       | stable         | `df866d6ad90ebcef` |
 | `ImagePlugin`                                         | type/value | stable         | `5b65910bdf1ae805` |
 | `ImageUploadOptions`                                  | type       | experimental   | `07df16dd826c7def` |
@@ -690,7 +705,7 @@ Declaration SHA-256:
 | `UnsupportedPreviewDocumentFormatError`               | type/value | stable         | `a7e5c38acc107a97` |
 | `UnsupportedSourceDocumentFormatError`                | type/value | stable         | `ed0bde5a3d082ae9` |
 | `UnsupportedVisualDocumentFormatError`                | type/value | stable         | `c95658b206f779bb` |
-| `UploadPlugin`                                        | type/value | experimental   | `3056dcdd876f4006` |
+| `UploadPlugin`                                        | type/value | experimental   | `48dd683e068cc8cb` |
 | `UploadProgress`                                      | type       | experimental   | `116c484d0381a1dd` |
 | `UploadRecord`                                        | type       | experimental   | `e7892555158c9ba0` |
 | `UploadRequest`                                       | type       | experimental   | `a467ee669d585567` |
@@ -915,34 +930,51 @@ Declaration SHA-256:
 ## @soeditor/file-manager
 
 Declaration tree SHA-256:
-`d87bc8aad3c3cae239b03e251590ed12f272bde576b4d0d17bf75886230dacc1`
+`8a5a1eab2593cca12a969f681f3146d027edff2f5a431434a5f57bfc66733a41`
 
 ### .
 
 Declaration SHA-256:
-`2fef839621ba2635fd5fed5270fc7fc9e109826a53f7ef2e946a7696f311ca16`
+`254fce9584561f23bdbae3881256b9b859722d5c11a1398a04821405ae112e3e`
 
-| Export                          | Kind       | Classification | Signature SHA-256  |
-| ------------------------------- | ---------- | -------------- | ------------------ |
-| `FileManager`                   | type       | stable         | `5db3a008837bea4a` |
-| `FileManagerKind`               | type       | stable         | `785bce4ba9278334` |
-| `FileManagerOpenOptions`        | type       | stable         | `298ff00c678bd580` |
-| `FileManagerPlugin`             | type/value | stable         | `9d0802dde0ce9907` |
-| `FileManagerResult`             | type       | stable         | `c35ed9d3b4f8e053` |
-| `fileManagerServiceToken`       | value      | stable         | `703a046ce0f7382b` |
-| `ImageUploadOptions`            | type       | experimental   | `07df16dd826c7def` |
-| `InvalidFileManagerResultError` | type/value | stable         | `7307720f41d4e570` |
-| `normalizeFileManagerResult`    | value      | stable         | `1d9d4dab8c05d22e` |
-| `UploadPlugin`                  | type/value | experimental   | `3056dcdd876f4006` |
-| `UploadProgress`                | type       | experimental   | `116c484d0381a1dd` |
-| `UploadRecord`                  | type       | experimental   | `e7892555158c9ba0` |
-| `UploadRequest`                 | type       | experimental   | `a467ee669d585567` |
-| `UploadService`                 | type       | experimental   | `c9eae82d0fc927d6` |
-| `uploadServiceToken`            | value      | experimental   | `e7b9037e59b577b1` |
-| `UploadStatus`                  | type       | experimental   | `ba5d9412df47c783` |
-| `UploadTask`                    | type       | experimental   | `44c773638f8496be` |
-| `UploadWorkflowService`         | type       | experimental   | `fd4b4d8ef3804325` |
-| `uploadWorkflowServiceToken`    | value      | experimental   | `c464d857f7360f40` |
+| Export                                | Kind       | Classification | Signature SHA-256  |
+| ------------------------------------- | ---------- | -------------- | ------------------ |
+| `createFileManagerLinkTargetProvider` | value      | experimental   | `f5a32e4c4444cd3e` |
+| `createHttpLinkTargetSearch`          | value      | experimental   | `c87aeee8788f8f10` |
+| `FileManager`                         | type       | stable         | `5db3a008837bea4a` |
+| `FileManagerKind`                     | type       | stable         | `785bce4ba9278334` |
+| `FileManagerLinkTargetOptions`        | type       | experimental   | `5bbbc88bbbd85c11` |
+| `FileManagerOpenOptions`              | type       | stable         | `298ff00c678bd580` |
+| `FileManagerPlugin`                   | type/value | stable         | `fc01d75cfd57b356` |
+| `FileManagerResult`                   | type       | stable         | `c35ed9d3b4f8e053` |
+| `fileManagerServiceToken`             | value      | stable         | `703a046ce0f7382b` |
+| `HttpLinkTargetSearchOptions`         | type       | experimental   | `ffae1897a582bb86` |
+| `ImageUploadOptions`                  | type       | experimental   | `07df16dd826c7def` |
+| `InvalidFileManagerResultError`       | type/value | stable         | `7307720f41d4e570` |
+| `linkTargetProviderServiceToken`      | value      | experimental   | `a6cf749896d8996f` |
+| `normalizeFileManagerResult`          | value      | stable         | `1d9d4dab8c05d22e` |
+| `UploadPlugin`                        | type/value | experimental   | `48dd683e068cc8cb` |
+| `UploadProgress`                      | type       | experimental   | `116c484d0381a1dd` |
+| `UploadRecord`                        | type       | experimental   | `e7892555158c9ba0` |
+| `UploadRequest`                       | type       | experimental   | `a467ee669d585567` |
+| `UploadService`                       | type       | experimental   | `c9eae82d0fc927d6` |
+| `uploadServiceToken`                  | value      | experimental   | `e7b9037e59b577b1` |
+| `UploadStatus`                        | type       | experimental   | `ba5d9412df47c783` |
+| `UploadTask`                          | type       | experimental   | `44c773638f8496be` |
+| `UploadWorkflowService`               | type       | experimental   | `fd4b4d8ef3804325` |
+| `uploadWorkflowServiceToken`          | value      | experimental   | `c464d857f7360f40` |
+
+### ./ckfinder
+
+Declaration SHA-256:
+`a1fff534996502959ba9164866099d3ac42a33962036897606fa848044654428`
+
+| Export                          | Kind  | Classification | Signature SHA-256  |
+| ------------------------------- | ----- | -------------- | ------------------ |
+| `CKFinderBrowserAdapters`       | type  | experimental   | `ad7b2b4190dbfc8e` |
+| `CKFinderBrowserOptions`        | type  | experimental   | `6d569800126f1f0e` |
+| `CKFinderBrowserSdk`            | type  | experimental   | `a9ed0896c865375c` |
+| `createCKFinderBrowserAdapters` | value | experimental   | `45d4b2baa75c9571` |
 
 ## @soeditor/html
 
@@ -1618,7 +1650,7 @@ Declaration SHA-256:
 ## @soeditor/source
 
 Declaration tree SHA-256:
-`8adc43a26d0473a358f56c9d8d53b2dbf5b81be1c8d74cad83b7ee6ca07d3a04`
+`1463b2750b1f0f5e8b7bf375fb3e5b89aeef40c762c302d86a348c7faf6e75a4`
 
 ### .
 
@@ -1654,7 +1686,7 @@ Declaration SHA-256:
 ## @soeditor/ui
 
 Declaration tree SHA-256:
-`12e78403d146e1cf89618044d29163296696e9e4c29e806e91bd92777e95cd3b`
+`03ccdefdab06e699552b265eefd54e2179369bbe885303337f7cb8d74eff1ae1`
 
 ### .
 
@@ -1745,6 +1777,17 @@ Declaration SHA-256:
 
 - `./styles.css` — stable resource (./dist/styles.css)
 - `./cms.css` — stable resource (./dist/cms-styles.css)
+
+### ./links
+
+Declaration SHA-256:
+`2ed6b913a28dba4a3ca9c21458696ed589b3edaabc30383745b2da525ba925f8`
+
+| Export                      | Kind  | Classification | Signature SHA-256  |
+| --------------------------- | ----- | -------------- | ------------------ |
+| `attachLinkTargetControls`  | value | experimental   | `589441e4edd6f0db` |
+| `LinkTargetProvider`        | type  | experimental   | `8948cda8b1ceda8d` |
+| `resolveLinkTargetProvider` | value | experimental   | `f7a186e0bb728d10` |
 
 ## @soeditor/vue
 

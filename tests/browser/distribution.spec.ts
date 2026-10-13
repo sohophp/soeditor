@@ -1,3 +1,4 @@
+import type { ClassicEditor } from '@soeditor/editor/cms';
 import { expect, test } from '@playwright/test';
 import { access, readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -479,4 +480,82 @@ test('loads global translations and rich paste dialogs only when needed', async 
         await instance.destroy();
     });
     await expect(page.locator('.soeditor-classic')).toHaveCount(0);
+});
+
+test('CMS global shares Link/Image target controls across lazy companions', async ({
+    page,
+}) => {
+    await page.setContent('<textarea id="content"></textarea>');
+    await page.addStyleTag({ path: stylesheet });
+    await page.addScriptTag({ url: '/cdn/soeditor.global.js' });
+    await page.evaluate(async () => {
+        const api = Reflect.get(globalThis, 'SoEditor') as {
+            createClassicEditor(
+                host: HTMLTextAreaElement,
+                options: { data: string; locale: string },
+            ): Promise<ClassicEditor>;
+        };
+        const host = document.querySelector<HTMLTextAreaElement>('#content');
+        if (!host) throw new Error('Missing host');
+        const editor = await api.createClassicEditor(host, {
+            locale: 'en',
+            data: '<p>Text</p><p><img src="/demo-editor-cover.svg" alt="Original"></p>',
+        });
+        editor.editor.services.register('soeditor.link-target-provider', {
+            select: async () => ({
+                href: '/site/uploads/guide.pdf',
+                title: 'Guide',
+            }),
+            searchInternal: async () => [
+                { href: '/site/about', title: 'About us' },
+            ],
+        });
+        Reflect.set(globalThis, '__globalTargets', editor);
+    });
+    const original = await page.evaluate(() =>
+        Reflect.get(globalThis, '__globalTargets').getData(),
+    );
+    await page.locator('.soeditor-wysiwyg-content p').first().click();
+    await page.getByRole('button', { name: 'Link', exact: true }).click();
+    let dialog = page.getByRole('dialog', { name: 'Link', exact: true });
+    await dialog
+        .getByRole('button', { name: 'Choose file link', exact: true })
+        .click();
+    await expect(dialog.getByLabel('Link URL', { exact: true })).toHaveValue(
+        '/site/uploads/guide.pdf',
+    );
+    await dialog.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await page.locator('.soeditor-wysiwyg-content img').dblclick();
+    dialog = page.getByRole('dialog', {
+        name: 'Image properties',
+        exact: true,
+    });
+    await dialog
+        .getByRole('button', { name: 'Choose file link', exact: true })
+        .click();
+    const href = dialog.getByLabel('Link URL', { exact: true });
+    await expect(href).toHaveValue('/site/uploads/guide.pdf');
+    await href.fill('/about');
+    await expect(dialog.locator('.soeditor-ui__link-suggestion')).toHaveCount(
+        1,
+    );
+    await href.press('ArrowDown');
+    await href.press('Enter');
+    await expect(href).toHaveValue('/site/about');
+    await dialog.screenshot({
+        path: '/tmp/soeditor-assets-links-20261010/global-image-link.png',
+    });
+    expect(
+        await page.evaluate(() =>
+            Reflect.get(globalThis, '__globalTargets').getData(),
+        ),
+    ).toBe(original);
+    await dialog
+        .getByRole('button', { name: 'Update image', exact: true })
+        .click();
+    expect(
+        await page.evaluate(() =>
+            Reflect.get(globalThis, '__globalTargets').getData(),
+        ),
+    ).toContain('href="/site/about"');
 });

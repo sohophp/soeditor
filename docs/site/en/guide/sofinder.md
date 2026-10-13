@@ -80,3 +80,7 @@ The official `openPicker` validates window messages. Convert its window-close `A
 The [React](/en/guide/react) and [Vue](/en/guide/vue) CMS components can call the same `registerSoFinder` in `onReady` / `@ready`. Configure the plugins above through the optional entry when creating the instance. The component guides explain their current release status.
 
 [Run asset selection and mock upload](/en/examples/assets): this example uses `SoFinderAdapter` with a fixed image callback, without a live SoFinder backend. Replace `pick` to connect your own library. Your host owns authentication, resource access and upload configuration.
+
+## Unified image and link APIs (Unreleased)
+
+Current source adds `createSoFinderBrowserAdapters` (`@soeditor/adapter-sofinder/browser`) and shared file/internal-page providers for Link and Image link properties, without adding three separate asset shortcuts to the default toolbar. See the repository [integration reference](https://github.com/sohophp/soeditor/blob/main/docs/assets-and-links.md). These APIs are not published in 1.5.0; the examples below retain its existing injected adapters.

@@ -34,6 +34,10 @@
         ".": {
             "types": "./dist/index.d.ts",
             "import": "./dist/index.js"
+        },
+        "./ckfinder": {
+            "types": "./dist/ckfinder.d.ts",
+            "import": "./dist/ckfinder.js"
         }
     },
     "scripts": {

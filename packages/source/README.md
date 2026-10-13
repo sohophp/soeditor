@@ -5,6 +5,22 @@ canonical source, projects parser diagnostics, shares Core history, and exposes
 only SoEditor-owned focus/search/range capabilities. CodeMirror types are not
 part of the public package API.
 
+Source defaults to a light theme. A color-scheme selector at the top of the Source
+surface switches immediately between light and dark, including completion
+popups, a high-contrast caret, focused outline and active-line/gutter cues.
+The choice belongs to the current editor instance and survives view changes;
+it resets when that instance is recreated. It does not change canonical HTML,
+selection, shared undo history or the lazy-loading boundary. Labels follow the
+nearest HTML `lang` attribute (Chinese or English).
+
+Parser diagnostics are cached by exact source. Lint markers update after a
+300 ms idle interval, while explicit diagnostic requests, including Classic's
+save guard, validate the latest source synchronously.
+
+Classic Source keeps configured Undo, Redo and Reset edits toolbar controls
+visible, alongside Source-specific tools. It shares the canonical history with
+WYSIWYG; history mutations are unavailable while the editor is readonly.
+
 Applications with a nonce-based `style-src` policy pass the request nonce as
 `cspNonce` when creating the source engine. SoEditor forwards it to
 CodeMirror's generated style element.

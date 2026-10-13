@@ -98,3 +98,19 @@ published workflow transitions. `service.getProblems(filter)` and
 `service.getCounts(filter)` accept optional provider and severity filters. The
 original `service.problems`, `register()`, and `validate()` entry points remain
 available.
+
+## Formatting worker and CSP
+
+Formatting loads only when requested. The built package ships
+`dist/assets/formatting-worker-*.js`; its URL is relative to the formatting
+module, so nested deployments do not depend on a root `/assets` directory.
+Keep the complete `dist` directory when publishing or copying the package.
+Bundlers must retain the asset referenced by `new URL(..., import.meta.url)`.
+
+The worker uses a normal HTTP(S) URL, not `blob:` or `data:`. Same-origin
+deployments work with `worker-src 'self'`, or with a `script-src 'self'` fallback
+when `worker-src` and `child-src` are absent. A separately hosted package requires
+its resource origin to be allowed by the host policy and worker origin rules.
+Worker startup failures retain the existing main-thread formatter fallback;
+this does not bypass CSP or suppress browser policy diagnostics. Size limits,
+parser protection, stale-result checks and undo behavior remain unchanged.

@@ -1,6 +1,5 @@
 import { createToolbarRoot } from './toolbar-root.js';
 
-import type { LinkTargetProvider } from './link-attributes.js';
 import type { ToolbarItemFactory } from './types.js';
 import {
     field,
@@ -100,9 +99,7 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
             title,
             displayed,
             selectedText,
-            provider: editor.services.tryGet<LinkTargetProvider>(
-                'soeditor.link-target-provider',
-            ),
+            provider: attributeTools.resolveLinkTargetProvider(editor),
             translate: (message: string) => ui.translate(message),
             report: (error: unknown) => reportError(ui, error),
             fileIcon: (element: HTMLElement) =>

@@ -370,6 +370,7 @@ export function createTableTagAttributeEditor(
     initial: readonly TableTagAttribute[],
     suggestions: readonly AttributeSuggestion[],
     managedNames: readonly string[],
+    translate: (message: string) => string = (message) => message,
 ): {
     readonly element: HTMLElement;
     value(): readonly TableTagAttribute[] | undefined;
@@ -380,13 +381,14 @@ export function createTableTagAttributeEditor(
     const root = document.createElement('section');
     root.className = 'soeditor-table-attributes';
     const heading = document.createElement('strong');
-    heading.textContent = '附加属性';
+    heading.textContent = 'Additional attributes';
     const help = document.createElement('p');
-    help.textContent = '仅允许当前标签适用的标准、ARIA 或 CMS data-* 属性。';
+    help.textContent =
+        'Only standard, ARIA or CMS data-* attributes applicable to this tag are allowed.';
     const edit = document.createElement('div');
     edit.className = 'soeditor-ui__link-attribute-row';
-    const name = inputField(document, '属性名');
-    const value = inputField(document, '属性值');
+    const name = inputField(document, 'Attribute name');
+    const value = inputField(document, 'Attribute value');
     const names = document.createElement('datalist');
     names.id = `soeditor-table-attributes-${String(document.querySelectorAll('.soeditor-table-attributes').length)}`;
     for (const suggestion of suggestions) {
@@ -400,20 +402,20 @@ export function createTableTagAttributeEditor(
     const add = document.createElement('button');
     add.type = 'button';
     add.className = 'soeditor-ui__dialog-action';
-    add.textContent = '添加属性';
+    add.textContent = 'Add attribute';
     edit.append(name.label, value.label, add);
     const existing = document.createElement('div');
     existing.className = 'soeditor-ui__link-rel-custom';
     const selectLabel = document.createElement('label');
     selectLabel.className = 'soeditor-ui__field';
     const selectCaption = document.createElement('span');
-    selectCaption.textContent = '已添加属性';
+    selectCaption.textContent = 'Added attributes';
     const select = document.createElement('select');
     selectLabel.append(selectCaption, select);
     const remove = document.createElement('button');
     remove.type = 'button';
     remove.className = 'soeditor-ui__dialog-action is-danger';
-    remove.textContent = '移除属性';
+    remove.textContent = 'Remove attribute';
     existing.append(selectLabel, remove);
     root.append(heading, help, edit, existing, names, values);
 
@@ -454,7 +456,11 @@ export function createTableTagAttributeEditor(
             !attributeName.startsWith('data-soeditor-') &&
             (attributes.size < 32 || attributes.has(attributeName));
         name.input.setCustomValidity(
-            valid ? '' : '此属性不适用于当前标签或已被专用字段管理。',
+            valid
+                ? ''
+                : translate(
+                      'This attribute is not applicable to the tag or is managed by a dedicated field.',
+                  ),
         );
         if (!name.input.reportValidity()) return false;
         const candidates = suggestions.find(
@@ -462,7 +468,7 @@ export function createTableTagAttributeEditor(
         )?.values;
         value.input.setCustomValidity(
             candidates !== undefined && !candidates.includes(value.input.value)
-                ? '属性值无效。'
+                ? translate('Invalid attribute value.')
                 : '',
         );
         if (!value.input.reportValidity()) return false;
@@ -504,7 +510,7 @@ function inputField(document: Document, caption: string) {
     const input = document.createElement('input');
     input.type = 'text';
     input.autocomplete = 'off';
-    input.maxLength = caption === '属性名' ? 64 : 4096;
+    input.maxLength = caption === 'Attribute name' ? 64 : 4096;
     label.append(text, input);
     return { input, label };
 }

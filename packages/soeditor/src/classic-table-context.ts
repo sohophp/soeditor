@@ -1,3 +1,4 @@
+import { translateTableContextMessage } from './table-context-messages.js';
 import type { Editor } from '@soeditor/core';
 import { projectionCoordinatorServiceToken } from '@soeditor/projections';
 import type { DismissibleUiHandle, EditorUi } from '@soeditor/ui';
@@ -921,7 +922,10 @@ export function attachClassicTableContext(
             return true;
         } catch (error: unknown) {
             ui.notifications.show({
-                message: error instanceof Error ? error.message : String(error),
+                message: translateTableContextMessage(
+                    error instanceof Error ? error.message : String(error),
+                    ui.translate,
+                ),
                 severity: 'error',
             });
             return false;
@@ -938,7 +942,10 @@ export function attachClassicTableContext(
             inspected = editor.execute('table.cell.inspect');
         } catch (error: unknown) {
             ui.notifications.show({
-                message: error instanceof Error ? error.message : String(error),
+                message: translateTableContextMessage(
+                    error instanceof Error ? error.message : String(error),
+                    ui.translate,
+                ),
                 severity: 'error',
             });
             return;
@@ -970,7 +977,10 @@ export function attachClassicTableContext(
             inspected = editor.execute(inspectCommand);
         } catch (error: unknown) {
             ui.notifications.show({
-                message: error instanceof Error ? error.message : String(error),
+                message: translateTableContextMessage(
+                    error instanceof Error ? error.message : String(error),
+                    ui.translate,
+                ),
                 severity: 'error',
             });
             return;
@@ -981,7 +991,8 @@ export function attachClassicTableContext(
             attributeModule = await import('./table-editor-attributes.js');
         } catch {
             ui.notifications.show({
-                message: '表格附加属性编辑器加载失败，请重试。',
+                message:
+                    'Table attribute tools failed to load. Please try again.',
                 severity: 'error',
             });
             return;
@@ -1081,6 +1092,7 @@ export function attachClassicTableContext(
                 tableContextProperty(inspected, 'tagName'),
             ),
             attributeModule.managedTableAttributes(kind),
+            ui.translate,
         );
         body.append(customAttributes.element);
         const title =
@@ -1150,7 +1162,10 @@ export function attachClassicTableContext(
             editor.execute(`table.selection.${kind}`);
         } catch (error: unknown) {
             ui.notifications.show({
-                message: error instanceof Error ? error.message : String(error),
+                message: translateTableContextMessage(
+                    error instanceof Error ? error.message : String(error),
+                    ui.translate,
+                ),
                 severity: 'error',
             });
         }
@@ -1170,7 +1185,8 @@ export function attachClassicTableContext(
             attributeModule = await import('./table-editor-attributes.js');
         } catch {
             ui.notifications.show({
-                message: '表格附加属性编辑器加载失败，请重试。',
+                message:
+                    'Table attribute tools failed to load. Please try again.',
                 severity: 'error',
             });
             return;
@@ -1233,11 +1249,13 @@ export function attachClassicTableContext(
                 activate();
                 action();
                 render();
-                status.textContent = message;
+                status.textContent = ui.translate(message);
             } catch (error: unknown) {
                 ui.notifications.show({
-                    message:
+                    message: translateTableContextMessage(
                         error instanceof Error ? error.message : String(error),
+                        ui.translate,
+                    ),
                     severity: 'error',
                 });
             }
@@ -1266,8 +1284,10 @@ export function attachClassicTableContext(
                 snapshot = service.inspectStructure();
             } catch (error: unknown) {
                 ui.notifications.show({
-                    message:
+                    message: translateTableContextMessage(
                         error instanceof Error ? error.message : String(error),
+                        ui.translate,
+                    ),
                     severity: 'error',
                 });
                 return;
@@ -1278,11 +1298,11 @@ export function attachClassicTableContext(
             captionCard.className =
                 'soeditor-table-structure__card soeditor-table-structure__caption';
             const captionTitle = document.createElement('h3');
-            captionTitle.textContent = '表格标题';
+            captionTitle.textContent = 'Table caption';
             const captionField = document.createElement('label');
             captionField.className = 'soeditor-ui__field';
             const captionLabel = document.createElement('span');
-            captionLabel.textContent = '标题文字';
+            captionLabel.textContent = 'Caption text';
             const captionInput = document.createElement('input');
             captionInput.type = 'text';
             captionInput.value = snapshot.caption.text;
@@ -1290,18 +1310,18 @@ export function attachClassicTableContext(
             const captionActions = document.createElement('div');
             captionActions.className = 'soeditor-table-structure__actions';
             captionActions.append(
-                actionButton('保存标题', () =>
+                actionButton('Save caption', () =>
                     run(
                         () => service.updateCaption(captionInput.value),
-                        '表格标题已保存。',
+                        'Table caption saved.',
                     ),
                 ),
                 actionButton(
-                    '删除标题',
+                    'Delete caption',
                     () =>
                         run(
                             () => service.updateCaption(null),
-                            '表格标题已删除。',
+                            'Table caption deleted.',
                         ),
                     !snapshot.caption.exists,
                 ),
@@ -1310,7 +1330,7 @@ export function attachClassicTableContext(
                 const warning = document.createElement('p');
                 warning.className = 'soeditor-table-properties__help';
                 warning.textContent =
-                    '当前标题包含行内结构；只有提交新文字时才会替换为纯文本。';
+                    'The caption contains inline structure. Only submitting new text replaces it with plain text.';
                 captionCard.append(
                     captionTitle,
                     captionField,
@@ -1324,7 +1344,7 @@ export function attachClassicTableContext(
 
             if (body.dataset.advanced === 'true') {
                 const sectionTitle = document.createElement('h3');
-                sectionTitle.textContent = '表格分区';
+                sectionTitle.textContent = 'Table sections';
                 const sectionList = document.createElement('ul');
                 for (const section of snapshot.sections) {
                     const item = document.createElement('li');
@@ -1333,7 +1353,7 @@ export function attachClassicTableContext(
                     const sectionName = document.createElement('strong');
                     sectionName.className =
                         'soeditor-table-structure__item-title';
-                    sectionName.textContent = `${section.kind === 'head' ? '表头 thead' : section.kind === 'foot' ? '表尾 tfoot' : '表体 tbody'} · ${String(section.rowCount)} 行`;
+                    sectionName.textContent = `${ui.translate(section.kind === 'head' ? 'Header' : section.kind === 'foot' ? 'Footer' : 'Body')} (${section.kind === 'head' ? 'thead' : section.kind === 'foot' ? 'tfoot' : 'tbody'}) · ${String(section.rowCount)} ${ui.translate('Rows')}`;
                     item.append(sectionName);
                     const sectionAttributes =
                         attributeModule.createTableTagAttributeEditor(
@@ -1350,6 +1370,7 @@ export function attachClassicTableContext(
                                       : 'tbody',
                             ),
                             attributeModule.managedTableAttributes('section'),
+                            ui.translate,
                         );
                     const bodyIndexes = snapshot.sections
                         .filter((candidate) => candidate.kind === 'body')
@@ -1357,7 +1378,7 @@ export function attachClassicTableContext(
                     const bodyPosition = bodyIndexes.indexOf(section.index);
                     item.append(
                         actionButton(
-                            '选中行移到开头',
+                            'Move selected rows to start',
                             () =>
                                 run(
                                     () =>
@@ -1366,12 +1387,12 @@ export function attachClassicTableContext(
                                             range: structureRange,
                                             targetSectionIndex: section.index,
                                         }),
-                                    '选中行已移到分区开头。',
+                                    'Selected rows moved to section start.',
                                 ),
                             !hasStructureRange,
                         ),
                         actionButton(
-                            '选中行移到末尾',
+                            'Move selected rows to end',
                             () =>
                                 run(
                                     () =>
@@ -1380,11 +1401,11 @@ export function attachClassicTableContext(
                                             range: structureRange,
                                             targetSectionIndex: section.index,
                                         }),
-                                    '选中行已移到分区末尾。',
+                                    'Selected rows moved to section end.',
                                 ),
                             !hasStructureRange,
                         ),
-                        actionButton('保存属性', () => {
+                        actionButton('Save attributes', () => {
                             const attributes = sectionAttributes.value();
                             if (attributes === undefined) return;
                             run(
@@ -1392,15 +1413,15 @@ export function attachClassicTableContext(
                                     service.updateSection(section.index, {
                                         customAttributes: attributes,
                                     }),
-                                '分区属性已保存。',
+                                'Section attributes saved.',
                             );
                         }),
                         actionButton(
-                            '删除空分区',
+                            'Delete empty section',
                             () =>
                                 run(
                                     () => service.removeSection(section.index),
-                                    '空分区已删除。',
+                                    'Empty section deleted.',
                                 ),
                             section.rowCount > 0,
                         ),
@@ -1408,7 +1429,7 @@ export function attachClassicTableContext(
                     if (section.kind === 'body') {
                         item.append(
                             actionButton(
-                                '上移',
+                                'Move up',
                                 () =>
                                     run(
                                         () =>
@@ -1417,12 +1438,12 @@ export function attachClassicTableContext(
                                                 bodyIndexes[bodyPosition - 1] ??
                                                     section.index,
                                             ),
-                                        '表体分区已上移。',
+                                        'Body section moved up.',
                                     ),
                                 bodyPosition <= 0,
                             ),
                             actionButton(
-                                '下移',
+                                'Move down',
                                 () =>
                                     run(
                                         () =>
@@ -1431,7 +1452,7 @@ export function attachClassicTableContext(
                                                 bodyIndexes[bodyPosition + 1] ??
                                                     section.index,
                                             ),
-                                        '表体分区已下移。',
+                                        'Body section moved down.',
                                     ),
                                 bodyPosition < 0 ||
                                     bodyPosition === bodyIndexes.length - 1,
@@ -1442,7 +1463,7 @@ export function attachClassicTableContext(
                     attributeDetails.className =
                         'soeditor-table-structure__attributes';
                     const attributeSummary = document.createElement('summary');
-                    attributeSummary.textContent = '附加属性';
+                    attributeSummary.textContent = 'Additional attributes';
                     attributeDetails.append(
                         attributeSummary,
                         sectionAttributes.element,
@@ -1453,9 +1474,9 @@ export function attachClassicTableContext(
                 const createActions = document.createElement('div');
                 createActions.className = 'soeditor-table-structure__actions';
                 for (const [kind, label] of [
-                    ['head', '添加表头'],
-                    ['body', '添加表体'],
-                    ['foot', '添加表尾'],
+                    ['head', 'Add header section'],
+                    ['body', 'Add body section'],
+                    ['foot', 'Add footer section'],
                 ] as const) {
                     createActions.append(
                         actionButton(
@@ -1475,15 +1496,20 @@ export function attachClassicTableContext(
                 content.append(sectionTitle, sectionList, createActions);
 
                 const columnTitle = document.createElement('h3');
-                columnTitle.textContent = '列组';
+                columnTitle.textContent = 'Column group';
                 const columnList = document.createElement('ul');
                 for (const group of snapshot.columnGroups) {
                     const item = document.createElement('li');
                     item.className = 'soeditor-table-structure__card';
-                    item.textContent = `Columns ${String(group.startColumn + 1)}–${String(group.startColumn + group.columnCount)} `;
+                    item.textContent = `${ui.translate('Column range')} ${String(group.startColumn + 1)}–${String(group.startColumn + group.columnCount)} `;
                     if (!group.editable) {
                         item.append(
-                            document.createTextNode(group.reason ?? '只读'),
+                            document.createTextNode(
+                                translateTableContextMessage(
+                                    group.reason ?? 'Read-only',
+                                    ui.translate,
+                                ),
+                            ),
                         );
                     } else if (group.columns.length > 0) {
                         const groupAttributes =
@@ -1497,6 +1523,7 @@ export function attachClassicTableContext(
                                     'colgroup',
                                 ),
                                 ['span', 'style'],
+                                ui.translate,
                             );
                         const controls = group.columns.map((column, index) => {
                             const definition =
@@ -1504,7 +1531,7 @@ export function attachClassicTableContext(
                             definition.className =
                                 'soeditor-table-structure__column';
                             const heading = document.createElement('strong');
-                            heading.textContent = `列定义 ${String(index + 1)}`;
+                            heading.textContent = `${ui.translate('Column definition')} ${String(index + 1)}`;
                             const span = document.createElement('input');
                             span.type = 'number';
                             span.min = '1';
@@ -1512,12 +1539,12 @@ export function attachClassicTableContext(
                             span.value = String(column.span);
                             span.setAttribute(
                                 'aria-label',
-                                `Column ${String(index + 1)} span`,
+                                `${ui.translate('Column span')} ${String(index + 1)}`,
                             );
                             const spanField = document.createElement('label');
                             spanField.className = 'soeditor-ui__field';
                             const spanCaption = document.createElement('span');
-                            spanCaption.textContent = '跨度';
+                            spanCaption.textContent = 'Span';
                             spanField.append(spanCaption, span);
                             const width = document.createElement('input');
                             width.type = 'number';
@@ -1528,12 +1555,12 @@ export function attachClassicTableContext(
                             width.placeholder = 'Width';
                             width.setAttribute(
                                 'aria-label',
-                                `Column ${String(index + 1)} width in pixels`,
+                                `${ui.translate('Column width in pixels')} ${String(index + 1)}`,
                             );
                             const widthField = document.createElement('label');
                             widthField.className = 'soeditor-ui__field';
                             const widthCaption = document.createElement('span');
-                            widthCaption.textContent = '宽度（px）';
+                            widthCaption.textContent = 'Width (px)';
                             widthField.append(widthCaption, width);
                             const attributes =
                                 attributeModule.createTableTagAttributeEditor(
@@ -1546,12 +1573,13 @@ export function attachClassicTableContext(
                                         'col',
                                     ),
                                     ['span', 'style', 'width'],
+                                    ui.translate,
                                 );
                             const details = document.createElement('details');
                             details.className =
                                 'soeditor-table-structure__attributes';
                             const summary = document.createElement('summary');
-                            summary.textContent = '附加属性';
+                            summary.textContent = 'Additional attributes';
                             details.append(summary, attributes.element);
                             definition.append(
                                 heading,
@@ -1563,7 +1591,7 @@ export function attachClassicTableContext(
                             return { attributes, span, width };
                         });
                         item.append(
-                            actionButton('保存列定义', () => {
+                            actionButton('Save column definitions', () => {
                                 const customAttributes =
                                     groupAttributes.value();
                                 const columnAttributes = controls.map(
@@ -1597,7 +1625,7 @@ export function attachClassicTableContext(
                                                 }),
                                             ),
                                         }),
-                                    '列定义已保存。',
+                                    'Column definitions saved.',
                                 );
                             }),
                         );
@@ -1605,7 +1633,7 @@ export function attachClassicTableContext(
                         groupDetails.className =
                             'soeditor-table-structure__attributes';
                         const groupSummary = document.createElement('summary');
-                        groupSummary.textContent = '列组属性';
+                        groupSummary.textContent = 'Column group attributes';
                         groupDetails.append(
                             groupSummary,
                             groupAttributes.element,
@@ -1617,27 +1645,27 @@ export function attachClassicTableContext(
                         span.min = '1';
                         span.max = '100';
                         span.value = String(group.span ?? group.columnCount);
-                        span.setAttribute('aria-label', '列组跨度');
+                        span.setAttribute('aria-label', 'Column group span');
                         item.append(
                             span,
-                            actionButton('保存跨度', () =>
+                            actionButton('Save span', () =>
                                 run(
                                     () =>
                                         service.updateColumnGroup(group.index, {
                                             span: Number(span.value),
                                         }),
-                                    '列组跨度已保存。',
+                                    'Column group span saved.',
                                 ),
                             ),
                             actionButton(
-                                '删除空列组',
+                                'Delete empty column group',
                                 () =>
                                     run(
                                         () =>
                                             service.removeColumnGroup(
                                                 group.index,
                                             ),
-                                        '空列组已删除。',
+                                        'Empty column group deleted.',
                                     ),
                                 group.columns.length > 0 ||
                                     group.span !== undefined,
@@ -1650,11 +1678,11 @@ export function attachClassicTableContext(
                     columnTitle,
                     columnList,
                     actionButton(
-                        '添加列组',
+                        'Add column group',
                         () =>
                             run(
                                 () => service.createColumnGroup({ span: 1 }),
-                                '列组已添加。',
+                                'Column group added.',
                             ),
                         snapshot.columnGroups.length > 0 &&
                             !snapshot.diagnostics.some((diagnostic) =>
@@ -1665,24 +1693,31 @@ export function attachClassicTableContext(
                 for (const diagnostic of snapshot.diagnostics) {
                     const warning = document.createElement('p');
                     warning.className = 'soeditor-table-properties__help';
-                    warning.textContent = diagnostic.message;
+                    warning.textContent = translateTableContextMessage(
+                        diagnostic.message,
+                        ui.translate,
+                    );
                     content.append(warning);
                     if (
                         diagnostic.repairable &&
                         diagnostic.repairId !== undefined
                     ) {
                         content.append(
-                            actionButton('查看修复', () => {
+                            actionButton('Review repair', () => {
                                 const confirmation =
                                     document.createElement('p');
-                                confirmation.textContent = diagnostic.message;
+                                confirmation.textContent =
+                                    translateTableContextMessage(
+                                        diagnostic.message,
+                                        ui.translate,
+                                    );
                                 const confirmDialog = ui.dialogs.open({
-                                    title: '确认修复表格结构',
+                                    title: 'Confirm table structure repair',
                                     content: confirmation,
                                     actions: [
                                         {
                                             kind: 'primary',
-                                            label: '执行修复',
+                                            label: 'Repair structure',
                                             run: () => {
                                                 run(
                                                     () =>
@@ -1690,7 +1725,7 @@ export function attachClassicTableContext(
                                                             diagnostic.repairId ??
                                                                 '',
                                                         ),
-                                                    '表格结构已修复。',
+                                                    'Table structure repaired.',
                                                 );
                                                 confirmDialog.close();
                                             },
@@ -1706,9 +1741,9 @@ export function attachClassicTableContext(
         };
         render();
         const dialog = ui.dialogs.open({
-            title: '表格标题',
+            title: 'Table caption',
             content: body,
-            actions: [{ label: '完成', run: () => dialog.close() }],
+            actions: [{ label: 'Done', run: () => dialog.close() }],
         });
         dialog.element.classList.add('soeditor-table-structure-dialog');
         body.querySelector<HTMLElement>('input,button')?.focus();
@@ -1939,7 +1974,7 @@ export function attachClassicTableContext(
                         if (command === 'table.remove') {
                             const confirmation = document.createElement('p');
                             confirmation.textContent =
-                                '删除整张表格及其中所有内容？此操作可以撤销。';
+                                'Delete the entire table and all its contents? This can be undone.';
                             const confirmDialog = ui.dialogs.open({
                                 title: 'Delete table',
                                 content: confirmation,

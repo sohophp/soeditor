@@ -3,7 +3,7 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
     testDir: './tests/browser',
     testMatch: 'classic-editor.spec.ts',
-    grep: /loads Source|while Source loads|failed Source request|invalid Source drafts|auto-formats Source|synchronizes proportional scrolling|reuses one popup|Unicode word|external history/u,
+    grep: /loads Source|while Source loads|failed Source request|invalid Source drafts|auto-formats Source|synchronizes proportional scrolling|reuses one popup|Unicode word|external history|Source color schemes|hidden WYSIWYG|Source history controls/u,
     fullyParallel: false,
     projects: [
         { name: 'chromium', use: { browserName: 'chromium' } },

@@ -35,8 +35,7 @@ export function createVideoRuntime(
     let editing: DialogHandle | undefined;
     let pending: { node: HtmlElement; target?: AtomicViewContext } | undefined;
     let currentTarget: AtomicViewContext | undefined;
-    const t = (en: string, zh: string): string =>
-        ui.translate(ui.locale.startsWith('zh') ? zh : en);
+    const t = (en: string): string => ui.translate(en);
     const editable = (): boolean =>
         !destroyed &&
         !ui.destroyed &&
@@ -51,10 +50,7 @@ export function createVideoRuntime(
             if (pending.target !== undefined) {
                 if (!pending.target.select())
                     throw new Error(
-                        t(
-                            'The video changed. Reopen its properties.',
-                            '视频已发生变化，请重新打开属性。',
-                        ),
+                        t('The video changed. Reopen its properties.'),
                     );
                 pending.target.replace(pending.node);
             } else {
@@ -194,11 +190,11 @@ export function createVideoRuntime(
             cleanup = player.destroy;
         }
         const handle = ui.dialogs.open({
-            title: t('Video preview', '视频预览'),
+            title: t('Video preview'),
             content: container,
             actions: [
                 {
-                    label: t('Close', '关闭'),
+                    label: t('Close'),
                     run: (dialog) => {
                         dialog.close();
                     },
@@ -241,20 +237,19 @@ export function createVideoRuntime(
             const field = (
                 key: keyof VideoValues,
                 en: string,
-                zh: string,
                 choices?: readonly string[],
             ): HTMLInputElement | HTMLSelectElement => {
                 const label = document.createElement('label');
                 label.className = 'soeditor-video-field';
                 label.dataset.field = key;
                 const caption = document.createElement('span');
-                caption.textContent = t(en, zh);
+                caption.textContent = t(en);
                 label.append(caption);
                 const input =
                     choices === undefined
                         ? document.createElement('input')
                         : document.createElement('select');
-                input.setAttribute('aria-label', t(en, zh));
+                input.setAttribute('aria-label', t(en));
                 input.name = key;
                 if (choices !== undefined)
                     for (const value of choices ?? []) {
@@ -262,13 +257,13 @@ export function createVideoRuntime(
                         option.value = value;
                         option.textContent =
                             value === 'auto'
-                                ? t('Automatic', '自动')
+                                ? t('Automatic')
                                 : value === 'left'
-                                  ? t('Left', '左对齐')
+                                  ? t('Left')
                                   : value === 'center'
-                                    ? t('Center', '居中')
+                                    ? t('Center')
                                     : value === 'right'
-                                      ? t('Right', '右对齐')
+                                      ? t('Right')
                                       : value;
                         input.append(option);
                     }
@@ -278,11 +273,11 @@ export function createVideoRuntime(
                 inputs.set(key, input);
                 return input;
             };
-            const source = field('src', 'Video URL', '视频地址');
-            const title = field('title', 'Title', '标题');
-            const poster = field('poster', 'Poster URL', '封面地址');
-            field('width', 'Width (pixels or %)', '宽度（像素或百分比）');
-            const ratio = field('ratio', 'Aspect ratio', '宽高比', [
+            const source = field('src', 'Video URL');
+            const title = field('title', 'Title');
+            const poster = field('poster', 'Poster URL');
+            field('width', 'Width (pixels or %)');
+            const ratio = field('ratio', 'Aspect ratio', [
                 ...new Set([
                     'auto',
                     '16:9',
@@ -295,21 +290,16 @@ export function createVideoRuntime(
             const ratioHint = document.createElement('small');
             ratioHint.textContent = t(
                 'Suggested from the link, not the original video dimensions. Adjust if needed.',
-                '根据链接建议比例，并非读取视频原始尺寸，可手动调整。',
             );
             ratio.parentElement?.append(ratioHint);
-            field('align', 'Alignment', '对齐方式', [
-                'left',
-                'center',
-                'right',
-            ]);
+            field('align', 'Alignment', ['left', 'center', 'right']);
             const native = document.createElement('fieldset');
             native.className = 'soeditor-video-options';
             const legend = document.createElement('legend');
-            legend.textContent = t('Video file options', '视频文件选项');
+            legend.textContent = t('Video file options');
             native.append(legend);
             const flags = new Map<string, HTMLInputElement>();
-            for (const [key, en, zh] of [
+            for (const [key, en] of [
                 ['controls', 'Show controls', '显示播放控件'],
                 ['muted', 'Muted', '静音'],
                 ['loop', 'Loop', '循环播放'],
@@ -320,27 +310,19 @@ export function createVideoRuntime(
                 input.checked = initial[key];
                 label.className = 'soeditor-video-toggle';
                 flags.set(key, input);
-                label.append(input, document.createTextNode(t(en, zh)));
+                label.append(input, document.createTextNode(t(en)));
                 native.append(label);
             }
-            const subtitle = field(
-                'subtitle',
-                'Subtitle URL (WebVTT)',
-                '字幕地址（WebVTT）',
-            );
-            const language = field('language', 'Subtitle language', '字幕语言');
-            const subtitleLabel = field(
-                'subtitleLabel',
-                'Subtitle label',
-                '字幕名称',
-            );
+            const subtitle = field('subtitle', 'Subtitle URL (WebVTT)');
+            const language = field('language', 'Subtitle language');
+            const subtitleLabel = field('subtitleLabel', 'Subtitle label');
             for (const input of [subtitle, language, subtitleLabel])
                 if (input.parentElement !== null)
                     native.append(input.parentElement);
             const more = document.createElement('details');
             more.className = 'soeditor-video-more';
             const summary = document.createElement('summary');
-            summary.textContent = t('More settings', '更多设置');
+            summary.textContent = t('More settings');
             summary.style.cursor = 'pointer';
             more.append(summary, native);
             form.append(more);
@@ -350,7 +332,6 @@ export function createVideoRuntime(
                 input: HTMLInputElement | HTMLSelectElement,
                 kind: FileManagerKind,
                 en: string,
-                zh: string,
                 accept: readonly string[],
             ): void => {
                 if (picker === undefined) return;
@@ -361,7 +342,7 @@ export function createVideoRuntime(
                 input.parentElement?.classList.add(
                     'soeditor-video-field--picker',
                 );
-                button.textContent = t(en, zh);
+                button.textContent = t(en);
                 input.parentElement?.append(button);
                 button.addEventListener('click', () => {
                     button.disabled = true;
@@ -390,7 +371,6 @@ export function createVideoRuntime(
                                 throw new Error(
                                     t(
                                         'Select an asset with the requested format.',
-                                        '请选择符合所需格式的素材。',
                                     ),
                                 );
                             input.value = result.url;
@@ -401,25 +381,20 @@ export function createVideoRuntime(
                                 error.textContent =
                                     reason instanceof Error
                                         ? reason.message
-                                        : t(
-                                              'Asset selection failed.',
-                                              '素材选择失败。',
-                                          );
+                                        : t('Asset selection failed.');
                         })
                         .finally(() => {
                             if (active) button.disabled = false;
                         });
                 });
             };
-            choose(source, 'media', 'Choose video', '选择视频', [
+            choose(source, 'media', 'Choose video', [
                 'video/mp4',
                 'video/webm',
                 'video/ogg',
             ]);
-            choose(poster, 'image', 'Choose poster', '选择封面', ['image/*']);
-            choose(subtitle, 'file', 'Choose subtitles', '选择字幕', [
-                'text/vtt',
-            ]);
+            choose(poster, 'image', 'Choose poster', ['image/*']);
+            choose(subtitle, 'file', 'Choose subtitles', ['text/vtt']);
             const refresh = (): void => {
                 const youtube = youtubeId(source.value) !== undefined;
                 native.disabled = youtube;
@@ -473,14 +448,14 @@ export function createVideoRuntime(
                     error.textContent =
                         reason instanceof Error
                             ? ui.translate(reason.message)
-                            : t('Invalid video.', '视频信息无效。');
+                            : t('Invalid video.');
                 }
             };
             const previewButton = document.createElement('button');
             previewButton.type = 'button';
             previewButton.className =
                 'soeditor-ui__dialog-action soeditor-video-preview';
-            previewButton.textContent = t('Preview video', '预览视频');
+            previewButton.textContent = t('Preview video');
             previewButton.addEventListener('click', () => {
                 attempt(() => {
                     preview(validated());
@@ -490,15 +465,15 @@ export function createVideoRuntime(
             const handle = ui.dialogs.open({
                 title:
                     original === undefined
-                        ? t('Insert video', '插入视频')
-                        : t('Edit video', '编辑视频'),
+                        ? t('Insert video')
+                        : t('Edit video'),
                 content: form,
                 actions: [
                     ...(selectedTarget === undefined
                         ? []
                         : [
                               {
-                                  label: t('Remove video', '删除视频'),
+                                  label: t('Remove video'),
                                   kind: 'danger' as const,
                                   run: (dialog: DialogHandle) => {
                                       attempt(() => {
@@ -509,7 +484,6 @@ export function createVideoRuntime(
                                               throw new Error(
                                                   t(
                                                       'The video is no longer editable.',
-                                                      '视频已无法编辑。',
                                                   ),
                                               );
                                           editor.execute('cms.video.remove');
@@ -519,22 +493,18 @@ export function createVideoRuntime(
                               },
                           ]),
                     {
-                        label: t('Apply', '确定'),
+                        label: t('Apply'),
                         kind: 'primary',
                         run: (dialog) => {
                             attempt(() => {
                                 if (!editable())
                                     throw new Error(
-                                        t(
-                                            'The editor is read-only.',
-                                            '编辑器为只读状态。',
-                                        ),
+                                        t('The editor is read-only.'),
                                     );
                                 if (editor.getData() !== initialContent)
                                     throw new Error(
                                         t(
                                             'The document changed. Reopen the video dialog.',
-                                            '内容已发生变化，请重新打开视频对话框。',
                                         ),
                                     );
                                 pending = {

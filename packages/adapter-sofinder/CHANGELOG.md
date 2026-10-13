@@ -1,5 +1,11 @@
 # @soeditor/adapter-sofinder
 
+## [Unreleased]
+
+- Retry failed native browser imports with a fresh module URL; diagnose HTTP 401/403 on failure with English, Simplified Chinese and Traditional Chinese messages. Successful loads remain cached and custom loaders retain their contract.
+
+- Add optional `./browser` picker/upload adapters with lazy SDK loading, locked resources, CSRF, cancellation and original URL preservation.
+
 ## 1.5.0
 
 Align the tested package set at 1.5.0. See the repository release notes for CMS editing fixes, additive paste APIs and lazy global companions.

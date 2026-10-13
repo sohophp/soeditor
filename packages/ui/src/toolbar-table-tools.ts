@@ -56,7 +56,7 @@ const tableButton: ToolbarItemFactory = ({ document, editor, ui }) => {
                             `Insert ${String(row)} by ${String(column)} table`,
                         );
                         const highlight = (): void => {
-                            status.textContent = `${String(row)} × ${String(column)} table`;
+                            status.textContent = `${String(row)} × ${String(column)} ${ui.translate('Table')}`;
                             for (const candidate of Array.from(grid.children)) {
                                 candidate.classList.toggle(
                                     'is-selected',

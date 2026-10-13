@@ -50,7 +50,11 @@
             "import": "./dist/compatibility.js"
         },
         "./styles.css": "./dist/styles.css",
-        "./cms.css": "./dist/cms-styles.css"
+        "./cms.css": "./dist/cms-styles.css",
+        "./links": {
+            "types": "./dist/links.d.ts",
+            "import": "./dist/links.js"
+        }
     },
     "scripts": {
         "build": "vite build && tsc -p tsconfig.build.json",

@@ -33,9 +33,10 @@ import {
     EditorState,
     Transaction as CodeMirrorTransaction,
 } from '@codemirror/state';
-import { EditorView } from '@codemirror/view';
+import { EditorView, showPanel } from '@codemirror/view';
 import { tags } from '@lezer/highlight';
 import { basicSetup } from 'codemirror';
+import { sourcePhrases } from './source-translations.js';
 
 import {
     sourceEditingServiceToken,
@@ -43,24 +44,103 @@ import {
     type SourceRevealOptions,
 } from './source-editing-service.js';
 
-const accessibleActiveLineTheme = EditorView.theme({
-    '&': { backgroundColor: '#1e1e1e', color: '#d4d4d4' },
-    '.cm-activeLine': { backgroundColor: 'transparent' },
-    '.cm-gutters': { backgroundColor: '#1e1e1e', color: '#d4d4d4' },
-});
-
-const vscodeDarkSourceHighlight = HighlightStyle.define([
-    { tag: [tags.tagName, tags.keyword], color: '#569cd6' },
-    {
-        tag: [tags.attributeName, tags.propertyName, tags.variableName],
-        color: '#9cdcfe',
-    },
-    { tag: [tags.string, tags.attributeValue], color: '#ce9178' },
-    { tag: tags.comment, color: '#6a9955' },
-    { tag: [tags.number, tags.bool, tags.atom], color: '#b5cea8' },
-    { tag: tags.angleBracket, color: '#808080' },
-    { tag: tags.invalid, color: '#f44747' },
-]);
+function sourceTheme(dark: boolean) {
+    const background = dark ? '#1e1e1e' : '#ffffff';
+    const color = dark ? '#d4d4d4' : '#24292f';
+    const accent = dark ? '#58a6ff' : '#0969da';
+    const active = dark ? '#20242a' : '#eaf2ff';
+    const border = dark ? '#454545' : '#d0d7de';
+    const theme = EditorView.theme(
+        {
+            '&': {
+                backgroundColor: background,
+                color,
+                colorScheme: dark ? 'dark' : 'light',
+            },
+            '&.cm-focused': {
+                outline: `2px solid ${accent}`,
+                outlineOffset: '-2px',
+            },
+            '.cm-content': { caretColor: dark ? '#ffffff' : '#24292f' },
+            '.cm-cursor, .cm-dropCursor': {
+                borderLeftColor: dark ? '#ffffff' : '#24292f',
+                borderLeftWidth: '2px',
+            },
+            '.cm-activeLine': { backgroundColor: 'transparent' },
+            '&.cm-focused .cm-activeLine': { backgroundColor: active },
+            '.cm-gutters': {
+                backgroundColor: dark ? background : '#f6f8fa',
+                color,
+            },
+            '.cm-activeLineGutter': { backgroundColor: 'transparent' },
+            '&.cm-focused .cm-activeLineGutter': {
+                backgroundColor: active,
+                color: dark ? '#ffffff' : '#24292f',
+            },
+            '&.cm-focused .cm-lineNumbers .cm-activeLineGutter': {
+                boxShadow: `inset 3px 0 ${accent}`,
+            },
+            '&.cm-focused > .cm-scroller > .cm-selectionLayer .cm-selectionBackground':
+                {
+                    backgroundColor: dark ? '#264f78' : '#b6d7ff',
+                },
+            '.cm-panels': {
+                backgroundColor: dark ? '#252526' : '#f6f8fa',
+                color,
+            },
+            '.soeditor-source-theme': {
+                display: 'flex',
+                alignItems: 'center',
+                gap: '.5rem',
+                padding: '.25rem .5rem',
+                borderBottom: `1px solid ${border}`,
+            },
+            '.soeditor-source-theme select': {
+                backgroundColor: background,
+                color,
+                border: `1px solid ${border}`,
+                borderRadius: '3px',
+                padding: '.15rem .35rem',
+                font: 'inherit',
+            },
+            '.soeditor-source-theme select:focus-visible': {
+                outline: `2px solid ${accent}`,
+            },
+            '.cm-tooltip': {
+                backgroundColor: dark ? '#252526' : '#ffffff',
+                color,
+                border: `1px solid ${border}`,
+            },
+            '.cm-tooltip-autocomplete > ul > li[aria-selected]': {
+                backgroundColor: '#0969da',
+                color: '#ffffff',
+            },
+        },
+        { dark },
+    );
+    const highlight = HighlightStyle.define([
+        {
+            tag: [tags.tagName, tags.keyword],
+            color: dark ? '#569cd6' : '#116329',
+        },
+        {
+            tag: [tags.attributeName, tags.propertyName, tags.variableName],
+            color: dark ? '#9cdcfe' : '#0550ae',
+        },
+        {
+            tag: [tags.string, tags.attributeValue],
+            color: dark ? '#ce9178' : '#0a3069',
+        },
+        { tag: tags.comment, color: dark ? '#6a9955' : '#57606a' },
+        {
+            tag: [tags.number, tags.bool, tags.atom],
+            color: dark ? '#b5cea8' : '#0550ae',
+        },
+        { tag: tags.angleBracket, color: dark ? '#808080' : '#57606a' },
+        { tag: tags.invalid, color: dark ? '#f44747' : '#cf222e' },
+    ]);
+    return [theme, syntaxHighlighting(highlight)];
+}
 
 /** Options for attaching a source surface to one editor and host. */
 export interface SourceEditingEngineOptions {
@@ -103,13 +183,15 @@ export class SourceEditingEngine implements SourceEngine {
     readonly #disposeModeChange: () => void;
     readonly #disposeStateChange: () => void;
     readonly #editable = new Compartment();
+    readonly #theme = new Compartment();
     readonly #previousHidden: boolean;
     readonly #service: SourceEditingService;
     readonly #selectionListeners = new Set<() => void>();
     readonly #view: EditorView;
     #destroyed = false;
     #editorDestroying = false;
-    #diagnostics: readonly HtmlParseDiagnostic[];
+    #diagnostics: readonly HtmlParseDiagnostic[] = [];
+    #diagnosticSource: string | undefined;
     #disposeProjection: (() => void) | undefined;
     #programmaticFocus = false;
     #projectionActivity: ProjectionActivity | undefined;
@@ -137,15 +219,15 @@ export class SourceEditingEngine implements SourceEngine {
 
         this.#previousHidden = this.element.hidden;
         const source = this.editor.getData();
-        this.#diagnostics = readDiagnostics(source);
         const readonly = this.#isReadonly();
         const cspNonce = readCspNonce(options.cspNonce);
         this.#view = new EditorView({
             doc: source,
             extensions: [
                 basicSetup,
-                accessibleActiveLineTheme,
-                syntaxHighlighting(vscodeDarkSourceHighlight),
+                EditorState.phrases.of(sourcePhrases(this.element)),
+                this.#theme.of(sourceTheme(false)),
+                showPanel.of(() => this.#themePanel()),
                 ...(cspNonce === undefined
                     ? []
                     : [EditorView.cspNonce.of(cspNonce)]),
@@ -153,9 +235,12 @@ export class SourceEditingEngine implements SourceEngine {
                 lintGutter(),
                 linter(
                     (view) =>
-                        toCodeMirrorDiagnostics(view.state.doc.toString()),
+                        toCodeMirrorDiagnostics(
+                            this.#diagnosticsFor(view.state.doc.toString()),
+                            view.state.doc.length,
+                        ),
                     {
-                        delay: 0,
+                        delay: 300,
                     },
                 ),
                 this.#editable.of([
@@ -163,7 +248,10 @@ export class SourceEditingEngine implements SourceEngine {
                     EditorView.editable.of(!readonly),
                 ]),
                 EditorView.contentAttributes.of({
-                    'aria-label': options.ariaLabel ?? 'HTML source editor',
+                    'aria-label':
+                        options.ariaLabel ??
+                        sourcePhrases(this.element)['HTML source editor'] ??
+                        'HTML source editor',
                 }),
                 EditorView.updateListener.of((update) => {
                     if (update.docChanged && !this.#synchronizing) {
@@ -182,7 +270,8 @@ export class SourceEditingEngine implements SourceEngine {
         this.#view.scrollDOM.setAttribute('role', 'region');
         this.#view.scrollDOM.setAttribute(
             'aria-label',
-            'HTML source scroll area',
+            sourcePhrases(this.element)['HTML source scroll area'] ??
+                'HTML source scroll area',
         );
 
         const service: SourceEditingService = {
@@ -243,7 +332,51 @@ export class SourceEditingEngine implements SourceEngine {
 
     get diagnostics(): readonly HtmlParseDiagnostic[] {
         this.#assertAlive();
+        return this.#diagnosticsFor(this.#view.state.doc.toString());
+    }
+
+    #diagnosticsFor(source: string): readonly HtmlParseDiagnostic[] {
+        if (this.#diagnosticSource !== source) {
+            this.#diagnostics = readDiagnostics(source);
+            this.#diagnosticSource = source;
+        }
         return this.#diagnostics;
+    }
+
+    #themePanel() {
+        const document = this.element.ownerDocument;
+        const phrases = sourcePhrases(this.element);
+        const t = (key: string): string => phrases[key] ?? key;
+        const dom = document.createElement('label');
+        dom.className = 'soeditor-source-theme';
+        dom.append(t('Color scheme'));
+        const select = document.createElement('select');
+        select.setAttribute('aria-label', t('Source color scheme'));
+        const choices = [
+            ['light', t('Default (light)')],
+            ['dark', t('Dark')],
+        ] as const;
+        for (const [value, label] of choices) {
+            const option = document.createElement('option');
+            option.value = value;
+            option.textContent = label;
+            select.append(option);
+        }
+        const change = () => {
+            if (select.value !== 'light' && select.value !== 'dark') return;
+            this.#view.dispatch({
+                effects: this.#theme.reconfigure(
+                    sourceTheme(select.value === 'dark'),
+                ),
+            });
+        };
+        select.addEventListener('change', change);
+        dom.append(select);
+        return {
+            dom,
+            top: true,
+            destroy: () => select.removeEventListener('change', change),
+        };
     }
 
     focus(): void {
@@ -358,7 +491,6 @@ export class SourceEditingEngine implements SourceEngine {
     }
 
     #handleSourceChange(source: string): void {
-        this.#diagnostics = readDiagnostics(source);
         if (this.#isReadonly()) {
             return;
         }
@@ -421,7 +553,6 @@ export class SourceEditingEngine implements SourceEngine {
     }
 
     #synchronizeSource(source: string): void {
-        this.#diagnostics = readDiagnostics(source);
         const current = this.#view.state.doc.toString();
         if (current === source) {
             return;
@@ -542,11 +673,12 @@ function readDiagnostics(source: string): readonly HtmlParseDiagnostic[] {
 }
 
 function toCodeMirrorDiagnostics(
-    source: string,
+    diagnostics: readonly HtmlParseDiagnostic[],
+    length: number,
 ): readonly CodeMirrorDiagnostic[] {
-    return readDiagnostics(source).map((diagnostic) => {
-        const from = clamp(diagnostic.source?.start.offset ?? 0, source.length);
-        const to = clamp(diagnostic.source?.end.offset ?? from, source.length);
+    return diagnostics.map((diagnostic) => {
+        const from = clamp(diagnostic.source?.start.offset ?? 0, length);
+        const to = clamp(diagnostic.source?.end.offset ?? from, length);
         return {
             from,
             message: `${diagnostic.code}: ${diagnostic.message}`,

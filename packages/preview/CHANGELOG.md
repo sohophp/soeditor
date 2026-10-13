@@ -1,5 +1,9 @@
 # @soeditor/preview
 
+## Unreleased
+
+- Localize the default Classic preview window title while preserving caller-defined titles.
+
 ## 1.5.0
 
 Align the tested package set at 1.5.0. See the repository release notes for CMS editing fixes, additive paste APIs and lazy global companions.

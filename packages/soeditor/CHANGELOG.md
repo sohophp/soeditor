@@ -6,6 +6,12 @@ Align the tested package set at 1.5.0. See the repository release notes for CMS 
 
 ## Unreleased
 
+- Add the configured file picker and internal-page suggestions to Image link properties without changing the document before Save.
+
+- Localize generated table column ranges, paste failure prefixes and untitled video/preview labels using each editor locale.
+
+- Keep each Classic instance language on its root so lazy Source panels inherit the correct locale. Use canonical UI keys for table and video dialogs, including translated browser validation messages.
+
 - Clear the selected heading or paragraph's inline style when removing formatting, including inert preserved styles, while retaining its block tag and metadata.
 
 - Allow semantic external paste to discard all inline styles with `cms.paste.retainAlignment: false`, without changing Source text paste or explicit preservation policies.

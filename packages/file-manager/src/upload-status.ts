@@ -9,9 +9,11 @@ export function createUploadStatus(
 ): StatusItemInstance {
     const element = document.createElement('div');
     element.setAttribute('data-upload-status', 'true');
-    element.style.maxInlineSize = 'min(24rem, 70vw)';
-    element.style.maxBlockSize = '10rem';
-    element.style.overflow = 'auto';
+    element.style.inlineSize = '100%';
+    element.style.maxInlineSize = '100%';
+    element.style.display = 'flex';
+    element.style.overflowX = 'auto';
+    element.style.overflowY = 'hidden';
     const dismissed = new Set<string>();
     const rows = new Map<
         string,
@@ -32,20 +34,36 @@ export function createUploadStatus(
     const render = (records: readonly UploadRecord[]): void => {
         for (const record of records) {
             if (dismissed.has(record.id)) continue;
+            if (record.status === 'succeeded') {
+                const completed = rows.get(record.id);
+                if (completed) {
+                    const restoreFocus = completed.element.contains(
+                        document.activeElement,
+                    );
+                    completed.element.remove();
+                    rows.delete(record.id);
+                    if (restoreFocus) ui.restoreEditingSelection();
+                }
+                continue;
+            }
             let row = rows.get(record.id);
             if (!row) {
                 const container = document.createElement('div');
                 container.setAttribute('data-upload-id', record.id);
                 container.style.cssText =
-                    'display:flex;flex-wrap:wrap;align-items:center;gap:.25rem;overflow-wrap:anywhere';
+                    'display:flex;align-items:center;gap:.5rem;flex:0 0 100%;min-inline-size:0';
                 const message = document.createElement('span');
                 message.setAttribute('role', 'status');
+                message.style.cssText =
+                    'flex:1 1 auto;min-inline-size:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis';
                 const progress = document.createElement('progress');
-                progress.style.inlineSize = '5rem';
+                progress.style.cssText = 'flex:0 0 5rem;inline-size:5rem';
                 progress.setAttribute('aria-label', record.name);
                 const action = document.createElement('button');
                 action.type = 'button';
                 action.className = 'soeditor-ui__button';
+                action.style.cssText =
+                    'flex:0 0 auto;min-block-size:1.5rem;block-size:1.5rem;padding-block:0';
                 row = { element: container, message, progress, action, record };
                 const owned = row;
                 action.addEventListener('click', () => {
@@ -67,6 +85,7 @@ export function createUploadStatus(
                             : 'image.upload.retry';
                     const showError = (error: unknown): void => {
                         message.textContent = `${current.name}: ${ui.translate('Upload failed')} — ${error instanceof Error ? error.message : String(error)}`;
+                        message.title = message.textContent;
                     };
                     try {
                         const result = editor.execute(command, current.id);
@@ -92,6 +111,7 @@ export function createUploadStatus(
             const text = `${record.name}: ${ui.translate(processing ? 'Processing image' : messages[record.status])}${record.error ? ` — ${record.error}` : ''}`;
             if (row.message.textContent !== text)
                 row.message.textContent = text;
+            row.message.title = text;
             row.progress.hidden = record.status !== 'pending';
             if (!processing && record.total && record.total > 0) {
                 row.progress.max = record.total;

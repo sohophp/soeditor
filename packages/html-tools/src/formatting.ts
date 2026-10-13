@@ -3,7 +3,7 @@ import {
     EditorDestroyedError,
     Plugin,
 } from '@soeditor/core';
-import HtmlFormattingWorker from './formatting-worker.ts?worker&inline';
+import HtmlFormattingWorker from './formatting-worker.ts?worker';
 import { keepTagClosingBracketsInline } from './formatting-output.js';
 import {
     compactHtmlSource,

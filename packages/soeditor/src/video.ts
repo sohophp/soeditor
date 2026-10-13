@@ -69,6 +69,7 @@ export function createCmsVideoPlugin(
         #destroyed = false;
         #target: AtomicViewContext | undefined;
         readonly #cards = new WeakMap<Element, AtomicView>();
+        readonly #untitledCards = new WeakMap<Element, HTMLElement>();
 
         override init(): void {
             if (import.meta.env.SOEDITOR_OPTIONAL_CLASSIC !== 'false')
@@ -107,9 +108,7 @@ export function createCmsVideoPlugin(
                             ...(poster === undefined ? {} : { poster }),
                             title:
                                 source.getAttribute('title') ||
-                                (this.#ui?.locale.startsWith('zh')
-                                    ? '视频'
-                                    : 'Video'),
+                                (this.#ui?.translate('Video') ?? 'Video'),
                             create: async (document) => {
                                 const { resolveVideoPreview } =
                                     await import('./video-preview.js');
@@ -125,14 +124,8 @@ export function createCmsVideoPlugin(
                                               element,
                                               policy,
                                               base,
-                                              (en, zh) =>
-                                                  this.#ui?.translate(
-                                                      this.#ui.locale.startsWith(
-                                                          'zh',
-                                                      )
-                                                          ? zh
-                                                          : en,
-                                                  ) ?? en,
+                                              (en) =>
+                                                  this.#ui?.translate(en) ?? en,
                                           );
                                 if (description === undefined)
                                     throw new Error('Unsupported video.');
@@ -146,13 +139,26 @@ export function createCmsVideoPlugin(
                 'cmsVideo',
                 ({ document, ui }) => {
                     this.#ui = ui;
+                    // Initial atomic cards render before the toolbar supplies its UI.
+                    const visual = ui.element.querySelector(
+                        '.soeditor-classic__visual',
+                    )?.shadowRoot;
+                    for (const card of Array.from(
+                        visual?.querySelectorAll(
+                            '[data-soeditor-video-card]',
+                        ) ?? [],
+                    )) {
+                        const title = this.#untitledCards.get(card);
+                        if (title) {
+                            title.textContent = `▶ ${ui.translate('Video')}`;
+                            card.setAttribute('aria-label', title.textContent);
+                        }
+                    }
                     const button = document.createElement('button');
                     button.type = 'button';
                     button.className = 'soeditor-ui__button';
                     button.setAttribute('data-toolbar-item', 'cmsVideo');
-                    button.title = ui.translate(
-                        ui.locale.startsWith('zh') ? '视频' : 'Video',
-                    );
+                    button.title = ui.translate('Video');
                     button.setAttribute('aria-label', button.title);
                     // Keep the focused video icon beside its toolbar factory.
                     const svg = document.createElementNS(
@@ -302,8 +308,10 @@ export function createCmsVideoPlugin(
             card.style.marginLeft = align === 'left' ? '0' : 'auto';
             card.style.marginRight = align === 'right' ? '0' : 'auto';
             const title = document.createElement('strong');
-            title.textContent = `▶ ${attribute(media, 'title') || 'Video'}`;
+            title.textContent = `▶ ${attribute(media, 'title') || this.#ui?.translate('Video') || 'Video'}`;
             card.setAttribute('aria-label', title.textContent);
+            if (!attribute(media, 'title'))
+                this.#untitledCards.set(card, title);
             const poster = attribute(
                 media,
                 media.tagName === 'iframe' ? 'data-soeditor-poster' : 'poster',

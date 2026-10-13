@@ -6,6 +6,14 @@ Align the tested package set at 1.5.0. See the repository release notes for CMS 
 
 ## Unreleased
 
+- Keep the footer on one fixed-height line, including narrow screens and active uploads; constrain status text without clipping upload actions.
+
+- Share file/internal-page controls between Link and Image properties through the optional `./links` entry; explicit host providers keep precedence.
+
+- Localize generated insert actions in generic CMS dialogs and fill anchor, placeholder and rich-text command resources in Simplified and Traditional Chinese. Preserve existing English labels.
+
+- Fill Simplified and Traditional Chinese resources for image actions, colors, characters, table, video and asset controls. Preserve the English source labels and optional translation loading.
+
 ## 1.1.0
 
 ### Patch Changes

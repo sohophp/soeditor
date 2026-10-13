@@ -4,10 +4,16 @@
 
 ## 1.5.0 scenario inventory
 
-The current source inventory contains 311 declared browser scenarios. This count
+The current source inventory contains 316 top-level browser test declarations. This count
 is checked by the documentation audit; it describes available coverage, not a
 claim that every scenario or browser has passed. Current execution evidence is
 recorded in [1.5.0](releases/1.5.0.md).
+
+The Unreleased upload-footer regression in `upload-status.spec.ts` adds two
+parameterized Chromium cases (1280px and 420px), outside that top-level count.
+Both pass locally with three long filenames, pending/completed uploads, Source
+switching, automatic removal of successful tasks and unchanged single-line footer height. This is focused
+development evidence, not a full browser-suite or device acceptance claim.
 
 ## WYSIWYG + Source automated acceptance (2026-09-05)
 
@@ -140,3 +146,5 @@ pnpm release:check-registry
 
 Publication and external npm/CDN verification remain separate owner-authorized
 operations.
+
+The Unreleased SoFinder module loader has four parameterized Chromium scenarios covering HTTP 401/403/503, locale-aware errors, failure-cache recovery and retained successful modules. All four pass locally; the Core development build also recovered from a simulated 503 and opened the real PHP 8.1 picker using a normal local-admin login. This is not the screenshot account, Windows or production acceptance.

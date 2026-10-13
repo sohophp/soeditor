@@ -1,3 +1,5 @@
+import type { Editor } from '@soeditor/core';
+
 export interface TagCustomAttributeValue {
     readonly name: string;
     readonly value: string;
@@ -12,6 +14,36 @@ export interface LinkTargetProvider {
     ): PromiseLike<readonly { href: string; title: string }[]>;
 }
 
+/** Prefer host page/file mapping; otherwise use FileManagerPlugin's selection-only command. */
+export function resolveLinkTargetProvider(
+    editor: Editor,
+): LinkTargetProvider | undefined {
+    const provider = editor.services.tryGet<LinkTargetProvider>(
+        'soeditor.link-target-provider',
+    );
+    if (provider) return provider;
+    if (!editor.commands.has('link.file.select')) return undefined;
+    return {
+        select: async (kind) => {
+            if (kind !== 'file') return null;
+            const value: unknown = await editor.execute('link.file.select');
+            if (value === null || value === undefined) return null;
+            if (
+                typeof value !== 'object' ||
+                !('href' in value) ||
+                typeof value.href !== 'string'
+            )
+                throw new TypeError('File selection returned an invalid link.');
+            return {
+                href: value.href,
+                ...('title' in value && typeof value.title === 'string'
+                    ? { title: value.title }
+                    : {}),
+            };
+        },
+    };
+}
+
 let nextSuggestionId = 0;
 
 /** Optional link target controls, loaded with the Link dialog rather than editor startup. */
@@ -20,8 +52,8 @@ export function attachLinkTargetControls(options: {
     container: HTMLElement;
     fileButtonContainer: HTMLElement;
     href: HTMLInputElement;
-    title: HTMLInputElement;
-    displayed: HTMLInputElement;
+    title?: HTMLInputElement;
+    displayed?: HTMLInputElement;
     selectedText: string;
     provider: LinkTargetProvider | undefined;
     translate(message: string): string;
@@ -147,8 +179,12 @@ export function attachLinkTargetControls(options: {
                             });
                             option.addEventListener('click', () => {
                                 href.value = item.href;
-                                title.value = item.title;
-                                if (!selectedText && !displayed.value)
+                                if (title) title.value = item.title;
+                                if (
+                                    !selectedText &&
+                                    displayed &&
+                                    !displayed.value
+                                )
                                     displayed.value = item.title;
                                 clearSuggestions();
                                 href.focus();
@@ -223,8 +259,13 @@ export function attachLinkTargetControls(options: {
                 .then((selected) => {
                     if (selected === null || !href.isConnected) return;
                     href.value = selected.href;
-                    if (selected.title) title.value = selected.title;
-                    if (!selectedText && !displayed.value && selected.title)
+                    if (selected.title && title) title.value = selected.title;
+                    if (
+                        !selectedText &&
+                        displayed &&
+                        !displayed.value &&
+                        selected.title
+                    )
                         displayed.value = selected.title;
                     clearSuggestions();
                     href.focus();

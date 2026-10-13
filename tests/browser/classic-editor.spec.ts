@@ -12,6 +12,171 @@ test.beforeEach(async ({ page }) => {
     await page.locator('body[data-ready="true"]').waitFor();
 });
 
+test('keeps configured Source history controls visible and readonly safe', async ({
+    page,
+}) => {
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        document.body.append(host);
+        const classic = await globalThis.__classicDemo.create(host, {
+            data: '<p>Initial</p>',
+            editingModes: ['wysiwyg', 'source'],
+            initialEditingMode: 'source',
+            toolbar: ['undo', 'redo', 'reset', 'source'],
+        });
+        Reflect.set(globalThis, '__historyClassic', classic);
+        classic.setData('<p>Changed</p>');
+    });
+    const root = page.locator('.soeditor-classic').last();
+    for (const name of ['undo', 'redo', 'reset']) {
+        await expect(root.locator(`[data-toolbar-item=${name}]`)).toBeVisible();
+    }
+    await root.locator('[data-toolbar-item=undo]').click();
+    await expect(root.locator('.cm-content')).toHaveText('<p>Initial</p>');
+    await root.locator('[data-toolbar-item=redo]').click();
+    await expect(root.locator('.cm-content')).toHaveText('<p>Changed</p>');
+    await page.evaluate(() => {
+        const classic: unknown = Reflect.get(globalThis, '__historyClassic');
+        if (
+            typeof classic !== 'object' ||
+            classic === null ||
+            !('setReadonly' in classic) ||
+            typeof classic.setReadonly !== 'function'
+        ) {
+            throw new Error('Missing history test editor');
+        }
+        classic.setReadonly(true);
+    });
+    for (const name of ['undo', 'redo', 'reset']) {
+        await expect(
+            root.locator(`[data-toolbar-item=${name}]`),
+        ).toBeDisabled();
+    }
+});
+
+test('switches Source color schemes without changing content or history', async ({
+    page,
+}) => {
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData('<p>Theme</p>'),
+    );
+    await page.locator('[data-workspace-view="source"]').click();
+    const source = page
+        .locator('.soeditor-classic')
+        .first()
+        .locator('.cm-editor');
+    const picker = source.locator('.soeditor-source-theme select');
+    const content = source.locator('.cm-content');
+    await expect(picker).toHaveValue('light');
+    await expect(source).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await content.click();
+    await page.keyboard.press('ControlOrMeta+End');
+    await page.keyboard.type('x');
+    await picker.selectOption('dark');
+    await expect(source).toHaveCSS('background-color', 'rgb(30, 30, 30)');
+    await expect(picker).toHaveCSS('color', 'rgb(212, 212, 212)');
+    expect(
+        await page.evaluate(() => globalThis.__classicDemo.editor.getData()),
+    ).toBe('<p>Theme</p>x');
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.editor.execute('editor.undo'),
+    );
+    expect(
+        await page.evaluate(() => globalThis.__classicDemo.editor.getData()),
+    ).toBe('<p>Theme</p>');
+    await page.locator('[data-workspace-view="wysiwyg"]').click();
+    await page.locator('[data-workspace-view="source"]').click();
+    await expect(picker).toHaveValue('dark');
+    await expect(source).toHaveCSS('background-color', 'rgb(30, 30, 30)');
+    await content.click();
+    await page.keyboard.press('ControlOrMeta+End');
+    await page.keyboard.type('<a');
+    await page.keyboard.press('ControlOrMeta+Space');
+    const tooltip = page.locator('.cm-tooltip-autocomplete');
+    await expect(tooltip).toBeVisible();
+    await expect(tooltip).toHaveCSS('background-color', 'rgb(37, 37, 38)');
+    await expect(tooltip).toHaveCSS('color', 'rgb(212, 212, 212)');
+    await picker.selectOption('light');
+    await expect(source).toHaveCSS('background-color', 'rgb(255, 255, 255)');
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        document.body.append(host);
+        const second = await globalThis.__classicDemo.create(host, {
+            data: '<p>Second</p>',
+            editingModes: ['wysiwyg', 'source'],
+            initialEditingMode: 'source',
+        });
+        Reflect.set(globalThis, '__themeSecond', second);
+    });
+    await picker.selectOption('dark');
+    await expect(
+        page
+            .locator('.soeditor-classic')
+            .nth(1)
+            .locator('.soeditor-source-theme select'),
+    ).toHaveValue('light');
+});
+
+test('defers hidden WYSIWYG rendering and refreshes the latest source on reveal', async ({
+    page,
+}) => {
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData('<p>Original</p>'),
+    );
+    await page.locator('[data-workspace-view="source"]').click();
+    await expect(page.locator('.cm-content')).toBeVisible();
+    await page.evaluate(() => {
+        const classic = globalThis.__classicDemo.editor;
+        const visual = classic.element.querySelector(
+            '.soeditor-classic__visual',
+        );
+        const surface = visual?.shadowRoot?.querySelector('[contenteditable]');
+        if (surface === undefined || surface === null)
+            throw new Error('Missing visual surface');
+        Reflect.set(globalThis, '__originalVisualNode', surface.firstChild);
+        classic.setData('<p data-preserved="yes">Changed</p><!-- kept -->');
+    });
+    const visual = page.locator('.soeditor-classic__visual');
+    await expect(visual.locator('p')).toHaveText('Original');
+    expect(
+        await page.evaluate(() => globalThis.__classicDemo.editor.getData()),
+    ).toBe('<p data-preserved="yes">Changed</p><!-- kept -->');
+    await page.locator('.cm-content').click();
+    await page.keyboard.press('ControlOrMeta+End');
+    await page.keyboard.type('x');
+    expect(
+        await page.evaluate(() => {
+            const visual =
+                globalThis.__classicDemo.editor.element.querySelector(
+                    '.soeditor-classic__visual',
+                );
+            return (
+                visual?.shadowRoot?.querySelector('[contenteditable]')
+                    ?.firstChild ===
+                Reflect.get(globalThis, '__originalVisualNode')
+            );
+        }),
+    ).toBe(true);
+    await page.keyboard.press('ControlOrMeta+z');
+    await page.locator('[data-workspace-view="wysiwyg"]').click();
+    await expect(visual.locator('p')).toHaveText('Changed');
+    await expect(visual.locator('p')).toHaveAttribute('data-preserved', 'yes');
+    await page
+        .locator('[data-workspace-view="wysiwyg-source-horizontal"]')
+        .click();
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setData('<p>Split live</p>'),
+    );
+    await expect(visual.locator('p')).toHaveText('Split live');
+    await page.evaluate(() =>
+        globalThis.__classicDemo.editor.setReadonly(true),
+    );
+    await expect(page.locator('.cm-content')).toHaveAttribute(
+        'contenteditable',
+        'false',
+    );
+});
+
 test('reuses one popup per editor and isolates popups across editor instances', async ({
     page,
 }) => {
@@ -580,9 +745,9 @@ test('presents the complete CMS showcase from the root URL', async ({
     await expect(imageActions.locator('summary svg')).toHaveCount(1);
     await imageActions.locator('summary').click();
     await expect(imageActions.getByRole('menuitem')).toHaveText([
-        'Upload from computer',
-        'Insert with file manager',
-        'Insert via URL',
+        '从电脑上传',
+        '从文件管理器插入',
+        '通过网址插入',
     ]);
     await expect(imageActions.getByRole('menuitem').locator('svg')).toHaveCount(
         3,
@@ -790,7 +955,7 @@ test('presents the complete CMS showcase from the root URL', async ({
 
     await imageActions.locator('summary').click();
     await imageActions
-        .getByRole('menuitem', { name: 'Insert with file manager' })
+        .getByRole('menuitem', { name: '从文件管理器插入' })
         .click();
     const cellAssetManager = page.getByRole('dialog', {
         name: 'CMS asset manager',
@@ -2394,6 +2559,34 @@ test('keeps table cells interactive after source formatting and minification', a
 test('formats large source in a worker without freezing the editor', async ({
     page,
 }) => {
+    const errors: string[] = [];
+    const workerUrls: string[] = [];
+    page.on('console', (message) => {
+        // Routing the document changes Chromium's loopback HMR permission.
+        // Keep all editor/CSP errors; development websocket diagnostics are separate.
+        if (
+            message.type() === 'error' &&
+            !/WebSocket connection|\[vite\] failed to connect to websocket/u.test(
+                message.text(),
+            )
+        )
+            errors.push(message.text());
+    });
+    page.on('pageerror', (error) => errors.push(error.message));
+    page.on('worker', (worker) => workerUrls.push(worker.url()));
+    await page.route('**/classic.html?test=1', async (route) => {
+        const response = await route.fetch();
+        await route.fulfill({
+            response,
+            headers: {
+                ...response.headers(),
+                'content-security-policy':
+                    "script-src 'self' 'unsafe-inline' 'unsafe-eval' *; worker-src 'self'",
+            },
+        });
+    });
+    await page.goto('/classic.html?test=1');
+    await page.locator('body[data-ready="true"]').waitFor();
     await page.locator('[data-workspace-view="source"]').first().click();
     await expect(page.locator('.cm-content')).toBeVisible();
     const responsiveness = await page.evaluate(async () => {
@@ -2419,6 +2612,11 @@ test('formats large source in a worker without freezing the editor', async ({
         };
     });
 
+    expect(workerUrls).toHaveLength(1);
+    expect(new URL(workerUrls[0] ?? '').origin).toBe(
+        new URL(page.url()).origin,
+    );
+    expect(errors).toEqual([]);
     expect(responsiveness.ticks).toBeGreaterThan(20);
     expect(responsiveness.maximumMainThreadGap).toBeLessThan(500);
     await expect(page.locator('#content')).toHaveValue(/\n\s+<p>/u);
@@ -4439,8 +4637,7 @@ test('uploads images with temporary previews, retry, cancellation, and unsafe-re
     await failedRow
         .getByRole('button', { name: 'Retry: retry.png', exact: true })
         .click();
-    await expect(failedRow).toHaveAttribute('data-upload-state', 'succeeded');
-    await expect(failedRow).toContainText('Upload complete');
+    await expect(failedRow).toHaveCount(0);
     await expect
         .poll(() =>
             page.evaluate(
@@ -4448,10 +4645,6 @@ test('uploads images with temporary previews, retry, cancellation, and unsafe-re
             ),
         )
         .toBe(2);
-    await failedRow
-        .getByRole('button', { name: 'Close: retry.png', exact: true })
-        .click();
-    await expect(failedRow).toHaveCount(0);
 
     const beforeCancel = await page.evaluate(() => {
         const harness = globalThis.__classicDemo;

@@ -1,10 +1,12 @@
 import type { DismissibleUiHandle, EditorUi } from '@soeditor/ui';
+import type { Editor } from '@soeditor/core';
 
 export function attachClassicImageContext(
     ui: EditorUi,
     visual: HTMLElement,
     initialEvent?: Pick<Event, 'target' | 'type'>,
     baseHref?: string,
+    editor?: Editor,
 ): () => void {
     const document = visual.ownerDocument;
     const view = document.defaultView;
@@ -623,14 +625,20 @@ export function attachClassicImageContext(
         );
 
         const linkGroup = createGroup('Link');
-        createField(
+        const linkUrl = createField(
             'link',
             'Link URL',
-            'url',
+            'text',
             sourceValue('link', link?.getAttribute('href') ?? ''),
             linkGroup,
             { wide: true },
         );
+        const linkField = linkUrl.parentElement!;
+        linkField.classList.add('soeditor-ui__link-url-field');
+        const linkControl = document.createElement('span');
+        linkControl.className = 'soeditor-ui__link-url-control';
+        linkUrl.replaceWith(linkControl);
+        linkControl.append(linkUrl);
         const linkTargetField = document.createElement('label');
         linkTargetField.className =
             'soeditor-classic__image-field soeditor-classic__image-field--wide';
@@ -855,6 +863,50 @@ export function attachClassicImageContext(
                 },
             ],
         });
+        if (editor) {
+            void import('@soeditor/ui/links')
+                .then(
+                    ({
+                        attachLinkTargetControls,
+                        resolveLinkTargetProvider,
+                    }) => {
+                        if (!body.isConnected || ui.destroyed) return;
+                        const dispose = attachLinkTargetControls({
+                            document,
+                            container: linkField,
+                            fileButtonContainer: linkControl,
+                            href: linkUrl,
+                            selectedText: '',
+                            provider: resolveLinkTargetProvider(editor),
+                            translate: ui.translate,
+                            report: (error: unknown) => {
+                                ui.notifications.show({
+                                    message:
+                                        error instanceof Error
+                                            ? error.message
+                                            : String(error),
+                                    severity: 'error',
+                                });
+                            },
+                            fileIcon: (button) =>
+                                ui.setIcon(button, 'link.file.browse', 'Files'),
+                        });
+                        dialog.element.addEventListener('close', dispose, {
+                            once: true,
+                        });
+                    },
+                )
+                .catch((error: unknown) => {
+                    if (body.isConnected && !ui.destroyed)
+                        ui.notifications.show({
+                            message:
+                                error instanceof Error
+                                    ? error.message
+                                    : String(error),
+                            severity: 'error',
+                        });
+                });
+        }
         dialog.element.addEventListener(
             'close',
             () => {

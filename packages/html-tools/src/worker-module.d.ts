@@ -1,4 +1,4 @@
-declare module '*?worker&inline' {
+declare module '*?worker' {
     const WorkerConstructor: {
         new (options?: WorkerOptions): Worker;
     };

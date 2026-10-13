@@ -9,6 +9,7 @@ export default defineConfig({
         'cms-multibrowser.spec.ts',
         'distribution.spec.ts',
         'file-manager.spec.ts',
+        'sofinder-module-loading.spec.ts',
         'qualification.spec.ts',
         'table.spec.ts',
         'wysiwyg-editor.spec.ts',

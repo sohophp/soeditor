@@ -282,6 +282,7 @@ export class WysiwygEditingEngine implements EditingEngine {
     #pendingMark: VisualTextMark | undefined;
     #pendingPreLineBreak: PendingPreLineBreak | undefined;
     #pendingSource: string | undefined;
+    #deferredSource: string | undefined;
     #preservedSequence = 0;
     #programmaticFocus = false;
     #projectionActivity: ProjectionActivity | undefined;
@@ -2245,7 +2246,16 @@ export class WysiwygEditingEngine implements EditingEngine {
     }
 
     #handleDocumentChange(source: string): void {
-        if (this.#pendingSource !== source) this.#render(source);
+        if (this.#pendingSource === source) return;
+        if (!(
+            this.#projectionActivity?.visible ??
+            this.editor.state.mode === 'wysiwyg'
+        )) {
+            this.#deferredSource = source;
+            return;
+        }
+        this.#deferredSource = undefined;
+        this.#render(source);
     }
 
     #finishNativeInput(): void {
@@ -2259,6 +2269,7 @@ export class WysiwygEditingEngine implements EditingEngine {
         if (
             this.#destroyed ||
             this.#locked ||
+            this.#deferredSource !== undefined ||
             this.#pendingSource !== undefined ||
             this.#nativeInputTimer !== undefined
         ) {
@@ -2280,6 +2291,12 @@ export class WysiwygEditingEngine implements EditingEngine {
         const visible =
             this.#projectionActivity?.visible ??
             this.editor.state.mode === 'wysiwyg';
+        if (visible && this.#deferredSource !== undefined) {
+            const source = this.#deferredSource;
+            this.#deferredSource = undefined;
+            this.#render(source);
+            return;
+        }
         const readonly =
             this.#locked ||
             (this.#projectionActivity?.readonly ??

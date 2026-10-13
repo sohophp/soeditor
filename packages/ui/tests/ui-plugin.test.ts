@@ -65,6 +65,56 @@ describe('UI contribution registry', () => {
         ).sort();
         expect(traditionalKeys).toEqual(simplifiedKeys);
     });
+    it('translates every built-in image insertion choice without changing English', () => {
+        const keys = [
+            'Upload from computer',
+            'Insert with file manager',
+            'Insert via URL',
+            'Choose image insertion method',
+            'Insert image via URL',
+        ];
+        for (const locale of ['zh-CN', 'zh-TW']) {
+            const translation = resolveUiTranslation(locale);
+            for (const key of keys) {
+                expect(translation.translate(key)).not.toBe(key);
+                expect(resolveUiTranslation('en').translate(key)).toBe(key);
+            }
+        }
+    });
+
+    it('localizes primary actions taken from CMS command labels', () => {
+        const keys = [
+            'Insert named anchor',
+            'Insert CMS placeholder',
+            'Insert special character',
+            'Column range',
+            'Paste was not applied: {reason}',
+        ];
+        const simplified = [
+            '插入命名锚点',
+            '插入 CMS 占位符',
+            '插入特殊字符',
+            '列范围',
+            '粘贴未应用：{reason}',
+        ];
+        const traditional = [
+            '插入命名錨點',
+            '插入 CMS 佔位符',
+            '插入特殊字元',
+            '欄範圍',
+            '貼上未套用：{reason}',
+        ];
+        keys.forEach((key, index) => {
+            expect(resolveUiTranslation('zh-CN').translate(key)).toBe(
+                simplified[index],
+            );
+            expect(resolveUiTranslation('zh-TW').translate(key)).toBe(
+                traditional[index],
+            );
+            expect(resolveUiTranslation('en').translate(key)).toBe(key);
+        });
+    });
+
     it('registers and idempotently removes per-editor toolbar items', async () => {
         const editor = await Editor.create({ plugins: [UiPlugin] });
         const registry = editor.services.get(uiRegistryServiceToken);

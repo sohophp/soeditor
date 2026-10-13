@@ -1,5 +1,13 @@
 # @soeditor/file-manager
 
+## [Unreleased]
+
+- Remove successful upload status rows automatically, including after retry and later UI refreshes; retain upload records and inserted images, with cancellation and failed-task retry unchanged.
+
+- Ellipsize upload status text with its full value on hover, keep actions visible and scroll multiple tasks horizontally within the single-line footer; preserve keyboard dismissal and editor content.
+
+- Add selection-only `link.file.select`, shared file/internal-page providers and the optional `./ckfinder` browser adapter; keep legacy browse commands and original URLs.
+
 ## 1.5.0
 
 Align the tested package set at 1.5.0. See the repository release notes for CMS editing fixes, additive paste APIs and lazy global companions.

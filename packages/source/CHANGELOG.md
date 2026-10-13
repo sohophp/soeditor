@@ -1,5 +1,16 @@
 # @soeditor/source
 
+## Unreleased
+
+- Localize Source search, replace, diagnostics, autocomplete labels and color selection for Simplified and Traditional Chinese without adding UI dictionaries to WYSIWYG startup.
+
+### Patch Changes
+
+- Keep configured Undo, Redo and Reset edits controls visible in Classic Source mode.
+
+- Default to a readable light theme and provide an immediate in-surface dark-theme selector, including matching completion popups and focus cues. Theme changes preserve content, selection and shared undo history.
+- Cache diagnostics by exact source and debounce lint markers by 300 ms; explicit diagnostic requests still validate the current draft synchronously.
+
 ## 1.5.0
 
 Align the tested package set at 1.5.0. See the repository release notes for CMS editing fixes, additive paste APIs and lazy global companions.

@@ -1,5 +1,11 @@
 # @soeditor/engine
 
+## Unreleased
+
+### Patch Changes
+
+- Reject Undo and Redo commands while readonly without consuming either history stack; resume normal history when editing is enabled again.
+
 ## 1.5.0
 
 Align the tested package set at 1.5.0. See the repository release notes for CMS editing fixes, additive paste APIs and lazy global companions.

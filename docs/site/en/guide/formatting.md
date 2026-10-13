@@ -15,6 +15,10 @@ When HTML cannot be parsed, formatting and minification report the first reason,
 
 An unclosed tag may be detected only at the end of the document; the position is where the parser found the problem. Valid `<style>` and inline `style` content remain intact. Formatting neither validates CSS nor deletes styles or repairs tags automatically.
 
+## Unreleased source: CSP and worker assets
+
+The development source uses a separate same-origin worker without requiring `blob:` permission. Keep the complete `dist` directory, including `assets/formatting-worker-*.js`, when bundling or copying the package. The asset resolves relative to the formatting module and supports nested deployments. Loading still starts with the first formatting request, and unavailable workers retain the existing fallback. This change is not part of public 1.5.0 yet.
+
 ## Checked code
 
 <<< ../../examples/api.ts#formatting

@@ -1,3 +1,4 @@
+export { linkTargetProviderServiceToken } from '@soeditor/rich-text';
 export { fileManagerServiceToken } from './file-manager.js';
 export type {
     FileManager,
@@ -6,6 +7,14 @@ export type {
     FileManagerResult,
 } from './file-manager.js';
 export { FileManagerPlugin } from './file-manager-plugin.js';
+export {
+    createFileManagerLinkTargetProvider,
+    createHttpLinkTargetSearch,
+} from './link-targets.js';
+export type {
+    FileManagerLinkTargetOptions,
+    HttpLinkTargetSearchOptions,
+} from './link-targets.js';
 export {
     InvalidFileManagerResultError,
     normalizeFileManagerResult,
