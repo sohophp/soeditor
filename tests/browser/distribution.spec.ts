@@ -24,6 +24,7 @@ test.beforeEach(async ({ page }) => {
         'ui-translations.js',
         'classic-link-tools.js',
         'link-attributes.js',
+        'link-target-controls.js',
         'classic-block-tools.js',
         'classic-paste-dialog.js',
         'video-runtime.js',

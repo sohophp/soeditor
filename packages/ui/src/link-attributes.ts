@@ -68,7 +68,7 @@ export function attachLinkTargetControls(options: {
     void import('./link-target-controls.js')
         .then(({ attachLinkTargetControlsNow }) => {
             options.href.removeEventListener('input', captureInput);
-            if (disposed || !options.href.isConnected) return;
+            if (disposed) return;
             cleanup = attachLinkTargetControlsNow(options, inputPending);
         })
         .catch((error: unknown) => {

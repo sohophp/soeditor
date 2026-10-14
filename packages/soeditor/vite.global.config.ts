@@ -245,13 +245,15 @@ export default defineConfig({
                     ['translations-', 'ui-translations.js'],
                     ['classic-link-context-', 'classic-link-tools.js'],
                     ['link-attributes-', 'link-attributes.js'],
+                    ['link-target-controls-', 'link-target-controls.js'],
                     ['classic-block-paragraph-', 'classic-block-tools.js'],
                     ['classic-paste-dialog-', 'classic-paste-dialog.js'],
                 ] as const) {
                     // The additional public links entry lets Rollup share namespace
                     // chunks; use UI's named-export companion for the global boundary.
                     const companionDist =
-                        prefix === 'link-attributes-'
+                        prefix === 'link-attributes-' ||
+                        prefix === 'link-target-controls-'
                             ? new URL('../ui/dist/', import.meta.url)
                             : dist;
                     const selected = readdirSync(companionDist)
@@ -277,10 +279,15 @@ export default defineConfig({
                     this.emitFile({
                         type: 'asset',
                         fileName,
-                        source: selected.source.replace(
-                            /sourceMappingURL=.*$/m,
-                            `sourceMappingURL=${fileName}.map`,
-                        ),
+                        source: selected.source
+                            .replace(
+                                /\.\/link-target-controls-[A-Za-z0-9_-]+\.js/gu,
+                                './link-target-controls.js',
+                            )
+                            .replace(
+                                /sourceMappingURL=.*$/m,
+                                `sourceMappingURL=${fileName}.map`,
+                            ),
                     });
                     this.emitFile({
                         type: 'asset',

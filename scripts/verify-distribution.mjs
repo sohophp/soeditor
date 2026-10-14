@@ -90,6 +90,19 @@ for (const [file, entry] of [
         throw new Error(`Missing CDN first-use companion: ${file}.`);
     }
 }
+const linkControls = await readFile(
+    join(umbrellaRoot, 'link-target-controls.js'),
+    'utf8',
+);
+const linkAttributes = await readFile(
+    join(umbrellaRoot, 'link-attributes.js'),
+    'utf8',
+);
+if (
+    !linkControls.includes('attachLinkTargetControlsNow') ||
+    !linkAttributes.includes('./link-target-controls.js')
+)
+    throw new Error('Missing shared Link/Image target companion.');
 const minimalEntry = await readFile(
     join(packagesRoot, 'presets', 'dist', 'minimal.js'),
     'utf8',
