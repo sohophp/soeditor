@@ -1,4 +1,5 @@
 import { createToolbarRoot } from './toolbar-root.js';
+import { hasImageSelection } from './editing-selection.js';
 
 import type { ToolbarItemFactory } from './types.js';
 import {
@@ -19,6 +20,7 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
     button.setAttribute('aria-label', 'Link');
     const click = async (): Promise<void> => {
         ui.restoreEditingSelection();
+        const editingImage = hasImageSelection(ui);
         const current = editor.commands.has('link.inspect')
             ? editor.commands.canExecute('link.inspect')
                 ? editor.execute('link.inspect')
@@ -73,6 +75,7 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
         hrefField.append(hrefCaption, hrefControl);
         essentials.append(hrefField);
         displayed.autocomplete = 'off';
+        displayed.disabled = editingImage;
         displayed.placeholder = 'Text shown to readers';
         href.setAttribute('autocomplete', 'url');
         href.inputMode = 'url';
@@ -190,7 +193,10 @@ const linkButton: ToolbarItemFactory = ({ document, editor, ui }) => {
                 ...(target.value.length === 0 ? {} : { target: target.value }),
                 ...(rel.value().length === 0 ? {} : { rel: rel.value() }),
             };
-            const command = text === selectedText ? 'link.set' : 'link.setText';
+            const command =
+                editingImage || text === selectedText
+                    ? 'link.set'
+                    : 'link.setText';
             if (
                 execute(editor, ui, command, [
                     command === 'link.set'

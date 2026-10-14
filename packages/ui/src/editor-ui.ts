@@ -35,6 +35,7 @@ import type {
     ToolbarLayoutOptions,
 } from './types.js';
 import { createSvgIcon } from './icons.js';
+import { registerEditingRange } from './editing-selection.js';
 
 const attachedHosts = new WeakMap<HTMLElement, EditorUi>();
 
@@ -478,6 +479,7 @@ export function createEditorUiWithTranslations(
         destroy(),
     );
     const selectionTargets = selectionEventTargets(options.element, document);
+    registerEditingRange(ui, () => (destroyed ? undefined : editingRange));
     const captureEditingSelection = (preserveMissing = false): boolean => {
         const range = selectionTargets
             .map((target) => selectionRangeForTarget(target, document))

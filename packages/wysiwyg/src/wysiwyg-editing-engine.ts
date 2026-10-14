@@ -1336,6 +1336,9 @@ export class WysiwygEditingEngine implements EditingEngine {
                 ? target.closest<HTMLImageElement>('img')
                 : null;
         if (image !== null && this.element.contains(image)) {
+            const imageRange = this.#document.createRange();
+            imageRange.selectNode(image);
+            this.#selectRange(imageRange);
             this.#selectedElement = image;
             this.#dispatchImageEvent(image, 'soeditor:image-select');
             this.#tableDragAnchor = undefined;
