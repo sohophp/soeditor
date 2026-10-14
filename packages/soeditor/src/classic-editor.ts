@@ -289,6 +289,12 @@ export async function createClassicEditor(
     }
     validateCallbacks(options);
     validateClassicSaveOptions(options.save);
+    const optionalTools =
+        OPTIONAL_CLASSIC_FEATURES &&
+        options.preview !== undefined &&
+        options.preview !== false
+            ? await import('./classic-option-validation.js')
+            : undefined;
     if (OPTIONAL_CLASSIC_FEATURES) validateClassicSourceOptions(options.source);
     const baseHref =
         options.baseHref === undefined
@@ -296,20 +302,17 @@ export async function createClassicEditor(
             : new URL(options.baseHref, host.ownerDocument.baseURI).href;
     if (baseHref !== undefined && !/^https?:/u.test(baseHref))
         throw new TypeError('baseHref must use HTTP or HTTPS.');
-    const previewOptions = OPTIONAL_CLASSIC_FEATURES
-        ? readClassicPreviewOptions(
-              options.preview === false || options.preview === undefined
-                  ? options.preview
-                  : {
-                        ...(baseHref === undefined
-                            ? {}
-                            : { baseUrl: baseHref }),
-                        ...(typeof options.preview === 'object'
-                            ? options.preview
-                            : {}),
-                    },
-          )
-        : undefined;
+    const previewOptions =
+        OPTIONAL_CLASSIC_FEATURES &&
+        options.preview !== undefined &&
+        options.preview !== false
+            ? optionalTools!.readClassicPreviewOptions({
+                  ...(baseHref === undefined ? {} : { baseUrl: baseHref }),
+                  ...(typeof options.preview === 'object'
+                      ? options.preview
+                      : {}),
+              })
+            : undefined;
     if (options.preset === undefined) {
         throw new TypeError('Classic editor requires a CMS preset.');
     }
@@ -1434,7 +1437,7 @@ export async function createClassicEditor(
             attachSourceCommands(editor);
         }
         if (previewOptions !== undefined) {
-            registerClassicPreviewTool(registry, openPreview);
+            optionalTools!.registerClassicPreviewTool(registry, openPreview);
         }
         if (OPTIONAL_CLASSIC_FEATURES) {
             registerClassicShowBlocksTool(editor, registry, commandSurface);
@@ -2207,40 +2210,6 @@ function groupClassicToolbarActions(toolbar: HTMLElement): void {
     if (group.childElementCount > 0) toolbar.append(group);
 }
 
-function registerClassicPreviewTool(
-    registry: UiRegistryService,
-    open: () => boolean | undefined,
-): void {
-    registry.registerToolbarItem('popupPreview', ({ document, ui }) => {
-        const button = document.createElement('button');
-        button.type = 'button';
-        button.className = 'soeditor-ui__button';
-        ui.setIcon(button, 'editor.preview', 'Preview');
-        button.querySelector('svg')?.classList.add('soeditor-ui__icon--solid');
-        button.title = ui.translate('Preview in new window');
-        button.setAttribute(
-            'aria-label',
-            ui.translate('Preview in new window'),
-        );
-        const click = (): void => {
-            if (open() === false) {
-                ui.notifications.show({
-                    message: ui.translate(
-                        'The preview window was blocked by the browser.',
-                    ),
-                    severity: 'error',
-                });
-            }
-        };
-        button.addEventListener('click', click);
-        return {
-            destroy: () => button.removeEventListener('click', click),
-            element: button,
-            update: () => undefined,
-        };
-    });
-}
-
 function registerClassicShowBlocksTool(
     editor: Editor,
     registry: UiRegistryService,
@@ -2320,34 +2289,6 @@ function validateCallbacks(options: CreateClassicEditorOptions): void {
             throw new TypeError(`Classic editor ${name} must be a function.`);
         }
     }
-}
-
-function readClassicPreviewOptions(
-    value: boolean | ClassicPreviewOptions | undefined,
-): ClassicPreviewOptions | undefined {
-    if (value === undefined || value === false) return undefined;
-    if (value === true) return Object.freeze({});
-    if (typeof value !== 'object' || value === null) {
-        throw new TypeError(
-            'Classic preview must be a boolean or configuration object.',
-        );
-    }
-    if (
-        value.windowFeatures !== undefined &&
-        (typeof value.windowFeatures !== 'string' ||
-            value.windowFeatures.trim().length === 0)
-    ) {
-        throw new TypeError(
-            'Classic preview windowFeatures must be a non-empty string.',
-        );
-    }
-    if (
-        value.wysiwygStyles !== undefined &&
-        typeof value.wysiwygStyles !== 'boolean'
-    ) {
-        throw new TypeError('Classic preview wysiwygStyles must be a boolean.');
-    }
-    return value;
 }
 
 function readSourceAutoFormatDelay(options: ClassicSourceOptions): number {
