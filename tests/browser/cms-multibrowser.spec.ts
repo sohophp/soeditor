@@ -205,11 +205,10 @@ test('retains instance isolation and host cleanup across repeated CMS sessions',
         await row
             .getByRole('button', { name: `Retry: ${name}`, exact: true })
             .click();
-        await expect(row).toHaveAttribute('data-upload-state', 'succeeded');
-        await row
-            .getByRole('button', { name: `Close: ${name}`, exact: true })
-            .click();
         await expect(row).toHaveCount(0);
+        await expect
+            .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+            .toContain(`/uploads/${encodeURIComponent(name)}`);
     }
     const result = await page.evaluate(async () => {
         const harness = globalThis.__classicDemo;

@@ -1884,22 +1884,22 @@ test('edits the table caption in a focused dialog', async ({ page }) => {
     const toolbar = page.locator('.soeditor-ui__table-balloon');
     await openTableDropdown(page, 'properties');
     await toolbar.getByRole('button', { name: 'Table caption' }).click();
-    const dialog = page.getByRole('dialog', { name: '表格标题' });
+    const dialog = page.getByRole('dialog', { name: 'Table caption' });
     await expect(
-        dialog.getByRole('heading', { name: '表格标题', level: 3 }),
+        dialog.getByRole('heading', { name: 'Table caption', level: 3 }),
     ).toBeVisible();
     await expect(dialog.locator('.soeditor-table-structure__card')).toHaveCount(
         1,
     );
-    await expect(dialog.getByText('表格分区')).toHaveCount(0);
-    await expect(dialog.getByRole('button', { name: '保存标题' })).toHaveClass(
-        /is-primary/u,
-    );
-    await expect(dialog.getByRole('button', { name: '删除标题' })).toHaveClass(
-        /is-danger/u,
-    );
-    await dialog.getByLabel('标题文字').fill('年度数据');
-    await dialog.getByRole('button', { name: '保存标题' }).click();
+    await expect(dialog.getByText('Table sections')).toHaveCount(0);
+    await expect(
+        dialog.getByRole('button', { name: 'Save caption' }),
+    ).toHaveClass(/is-primary/u);
+    await expect(
+        dialog.getByRole('button', { name: 'Delete caption' }),
+    ).toHaveClass(/is-danger/u);
+    await dialog.getByLabel('Caption text').fill('年度数据');
+    await dialog.getByRole('button', { name: 'Save caption' }).click();
     await expect
         .poll(() =>
             page.evaluate(() => {
