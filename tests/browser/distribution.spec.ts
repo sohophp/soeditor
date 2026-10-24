@@ -598,7 +598,8 @@ test('loads the global color spectrum and styles on first use and preserves sele
         )?.focus();
         const root = paragraph.getRootNode();
         const selection =
-            root instanceof ShadowRoot
+            root instanceof ShadowRoot &&
+            typeof root.getSelection === 'function'
                 ? root.getSelection()
                 : document.getSelection();
         const range = document.createRange();
