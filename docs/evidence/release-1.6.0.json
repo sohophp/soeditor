@@ -1,0 +1,58 @@
+{
+    "version": "1.6.0",
+    "date": "2026-10-24",
+    "releaseCommit": "9100553ce9391c993186ef839937fc585c883366",
+    "packages": 24,
+    "publication": {
+        "workflow": "https://github.com/sohophp/soeditor/actions/runs/40080284821",
+        "upload": "passed",
+        "initialVerification": "failed: stale npm presets installation index",
+        "independentVerification": {
+            "command": "pnpm release:verify-registry 1.6.0 with clean public npm settings",
+            "runtime": "Node 22.14.0",
+            "result": "passed",
+            "checks": [
+                "24 public package manifests",
+                "independent npm installation and Vite build",
+                "CDN script, CSS and source map",
+                "color JavaScript/map and detailed CSS companions",
+                "CDN browser lifecycle"
+            ]
+        }
+    },
+    "ci": {
+        "workflow": "https://github.com/sohophp/soeditor/actions/runs/40080283370",
+        "result": "passed",
+        "unitTests": 456,
+        "crossBrowser": {
+            "editingPassed": 222,
+            "configuredSkips": 4,
+            "sourcePassed": 24,
+            "frameworkPassed": 14
+        }
+    },
+    "winstar": {
+        "scope": "local built integration; no production deployment",
+        "releaseCommit": "9100553ce9391c993186ef839937fc585c883366",
+        "builtAssets": 61,
+        "isolatedAssetsMatched": 61,
+        "colorAndLanguageTestsPassed": 7,
+        "broaderDiagnosticAttempt": {
+            "passed": 64,
+            "failed": 14,
+            "interrupted": 1,
+            "notRun": 8,
+            "note": "Pre-freeze diagnostic run; existing chrome/media/asset fixture expectations failed. The entire final Winstar suite is not claimed to pass."
+        }
+    },
+    "documentation": {
+        "publishedExampleVersion": "1.6.0",
+        "deploymentAuthority": "https://soeditor.sohophp.app/deployment.json",
+        "deployment": "must pass the existing checked-artifact and repository CI workflow"
+    },
+    "manualQualification": [
+        "physical Safari and mobile devices not qualified",
+        "operating-system IME and assistive technology not qualified",
+        "authenticated Winstar admin and production deployment not executed"
+    ]
+}

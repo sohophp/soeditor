@@ -25,7 +25,7 @@ SoFinder 是可选搭配，通过独立包接入；默认编辑器不加载资�
 先按照 [SoFinder 官网](https://sofinder.sohophp.app/) 配置自己的服务端和资源目录，再安装编辑器适配器：
 
 ```sh
-pnpm add @soeditor/editor@1.5.0 @soeditor/presets@1.5.0 @soeditor/adapter-sofinder@1.5.0 @soeditor/file-manager@1.5.0
+pnpm add @soeditor/editor@1.6.0 @soeditor/presets@1.6.0 @soeditor/adapter-sofinder@1.6.0 @soeditor/file-manager@1.6.0
 ```
 
 将以下函数放入项目的 `api.ts`。`createOptionalEditor` 从 `@soeditor/editor/cms/optional` 导入，`cmsRuntimePreset` 从 `@soeditor/presets/cms-runtime` 导入，`FileManagerPlugin`、`UploadPlugin` 和 `fileManagerServiceToken` 从 `@soeditor/file-manager` 导入；`SoFinderAdapter` 与 `SoFinderPicker` 类型从 `@soeditor/adapter-sofinder` 导入。`ClassicEditor` 类型从 `@soeditor/editor/cms` 导入，并加载 `@soeditor/editor/cms/styles.css`。
@@ -83,4 +83,4 @@ registerSoFinder(editor, async ({ kind }) => {
 
 ## 统一图片与链接接口（Unreleased）
 
-当前源码新增 `createSoFinderBrowserAdapters`（`@soeditor/adapter-sofinder/browser`）与通用链接提供者，复用链接和图片链接属性的文件选择及站内搜索；默认不追加三个独立资源按钮。请参阅仓库 [完整接入说明](https://github.com/sohophp/soeditor/blob/main/docs/assets-and-links.zh-CN.md)。这些接口尚未随 1.5.0 发布，下面的 1.5.0 示例继续使用已有的注入式适配器。
+当前源码新增 `createSoFinderBrowserAdapters`（`@soeditor/adapter-sofinder/browser`）与通用链接提供者，复用链接和图片链接属性的文件选择及站内搜索；默认不追加三个独立资源按钮。请参阅仓库 [完整接入说明](https://github.com/sohophp/soeditor/blob/main/docs/assets-and-links.zh-CN.md)。这些接口尚未随 1.6.0 发布，下面的 1.6.0 示例继续使用已有的注入式适配器。

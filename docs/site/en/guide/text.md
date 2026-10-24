@@ -25,7 +25,7 @@ Commands enable or disable according to selection. External buttons should resto
 
 [Examples](/en/examples/basic) · [Configuration](/en/api/configuration) · [Troubleshooting](/en/support/troubleshooting)
 
-## Color picker (current source)
+## Color picker
 
 Text color, background color and highlighting share an inline spectrum: drag to adjust saturation and brightness, use the hue and opacity sliders, or enter HEX, RGB(A), HSL(A), or CSS color names. Choose HEXA (the default), RGBA or HSVA. Presets and recent colors remain available; the native system color dialog is removed. No Pickr dependency is required.
 
@@ -33,4 +33,4 @@ Dragging and typing update the preview only. Apply color, or press Enter in the 
 
 Use Left/Right for saturation, Up/Down for brightness, Shift for larger steps, and Home/End for the saturation bounds. Sliders retain native keyboard controls. Invalid values show an inline error without changing content or selection. The panel supports dark themes and narrow viewports; picker logic stays lazy until a color menu is first opened.
 
-This describes current source, not a published release. Manual screen reader and physical mobile device qualification remain separate.
+Available in 1.6.0. Manual screen reader and physical mobile device qualification remain separate.

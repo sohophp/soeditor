@@ -71,10 +71,15 @@ pnpm test:browser:cross
 pnpm build
 pnpm security:audit
 pnpm release:dry-run
+# Unpublished candidates only:
+pnpm release:check-registry
 ```
 
 The dependency advisory command deliberately uses the canonical npm registry;
 the configured installation mirror does not implement npm's audit endpoint.
+
+When advancing a minor release, synchronize the version-line guards in
+`scripts/verify-release.mjs` and `scripts/check-registry-availability.mjs` before running candidate checks. Run the registry availability check locally before the first publication; it intentionally rejects already published versions.
 
 Review the tarball list, package versions, public export maps, source maps,
 bundle budgets, repository metadata, and absence of `workspace:` protocols.

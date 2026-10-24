@@ -11,9 +11,9 @@ Load stored CMS HTML with `setData()`, rather than reprocessing it as external p
 
 Image paste requires an upload adapter. Test the actual Word, spreadsheet and browser sources used by your authors; automation does not qualify every Office version.
 
-## 1.5.0: choose each paste format
+## 1.6.0: choose each paste format
 
-After upgrading to 1.5.0, enable external rich-paste choices with `config: { cms: { paste: { prompt: true } } }`. This is off by default, so existing integrations keep automatic semantic cleanup.
+After upgrading to 1.6.0, enable external rich-paste choices with `config: { cms: { paste: { prompt: true } } }`. This is off by default, so existing integrations keep automatic semantic cleanup.
 
 - **Keep formatting** preserves available structure, classes and safe styles while filtering unsafe scripts, handlers and URLs.
 - **Clean formatting** follows the host semantic policy and `retainStyles` / `retainAlignment` settings.

@@ -25,7 +25,7 @@ SoFinder is optional and connects through a separate package. The default editor
 Configure your own server and resources following the [SoFinder documentation](https://sofinder.sohophp.app/), then install the editor adapter:
 
 ```sh
-pnpm add @soeditor/editor@1.5.0 @soeditor/presets@1.5.0 @soeditor/adapter-sofinder@1.5.0 @soeditor/file-manager@1.5.0
+pnpm add @soeditor/editor@1.6.0 @soeditor/presets@1.6.0 @soeditor/adapter-sofinder@1.6.0 @soeditor/file-manager@1.6.0
 ```
 
 Place these functions in your project’s `api.ts`. Import `createClassicEditor as createOptionalEditor` from `@soeditor/editor/cms/optional`, `cmsRuntimePreset` from `@soeditor/presets/cms-runtime`, and `FileManagerPlugin`, `UploadPlugin`, `fileManagerServiceToken` from `@soeditor/file-manager`. Import `SoFinderAdapter` and the `SoFinderPicker` type from `@soeditor/adapter-sofinder`, the `ClassicEditor` type from `@soeditor/editor/cms`, and load `@soeditor/editor/cms/styles.css`.
@@ -83,4 +83,4 @@ The [React](/en/guide/react) and [Vue](/en/guide/vue) CMS components can call th
 
 ## Unified image and link APIs (Unreleased)
 
-Current source adds `createSoFinderBrowserAdapters` (`@soeditor/adapter-sofinder/browser`) and shared file/internal-page providers for Link and Image link properties, without adding three separate asset shortcuts to the default toolbar. See the repository [integration reference](https://github.com/sohophp/soeditor/blob/main/docs/assets-and-links.md). These APIs are not published in 1.5.0; the examples below retain its existing injected adapters.
+Current source adds `createSoFinderBrowserAdapters` (`@soeditor/adapter-sofinder/browser`) and shared file/internal-page providers for Link and Image link properties, without adding three separate asset shortcuts to the default toolbar. See the repository [integration reference](https://github.com/sohophp/soeditor/blob/main/docs/assets-and-links.md). These APIs are not published in 1.6.0; the examples below retain its existing injected adapters.

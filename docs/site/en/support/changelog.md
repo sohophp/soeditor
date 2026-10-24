@@ -1,9 +1,16 @@
 ---
 title: 'Changelog'
-description: 'Changes in SoEditor 1.5.0 and the published documentation baseline.'
+description: 'Changes in SoEditor 1.6.0 and the published documentation baseline.'
 ---
 
 # Changelog
+
+## 1.6.0 — 2026-10-24
+
+- Compact color panels display all controls without scrolling or opening a system color dialog.
+- Choose HEXA (default), RGBA or HSVA; hue, opacity and the input stay synchronized. Unformatted backgrounds start fully opaque.
+- Apply preserves selection and creates one undo step. Cancel keeps content unchanged. Current, preset and recent colors remain available.
+- Color JavaScript and detailed global styles load on demand; self-host the complete dist directory. Examples and downloads now use published 1.6.0 packages.
 
 ## 1.5.0 — 2026-10-07
 
