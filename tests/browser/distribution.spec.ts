@@ -589,26 +589,10 @@ test('loads the global color spectrum and styles on first use and preserves sele
         false,
     );
     const visual = page.locator('.soeditor-classic__visual');
-    await visual.locator('p').evaluate((paragraph) => {
-        const text = paragraph.firstChild;
-        if (!(text instanceof Text))
-            throw new Error('Missing global color text');
-        (
-            paragraph.closest('[contenteditable="true"]') as HTMLElement | null
-        )?.focus();
-        const root = paragraph.getRootNode();
-        const selection =
-            root instanceof ShadowRoot &&
-            typeof root.getSelection === 'function'
-                ? root.getSelection()
-                : document.getSelection();
-        const range = document.createRange();
-        range.setStart(text, 0);
-        range.setEnd(text, 6);
-        selection?.removeAllRanges();
-        selection?.addRange(range);
-        root.dispatchEvent(new Event('selectionchange'));
-    });
+    await visual.locator('p').click();
+    await page.keyboard.press('ControlOrMeta+Home');
+    for (let index = 0; index < 6; index++)
+        await page.keyboard.press('Shift+ArrowRight');
     const menu = page
         .locator('details')
         .filter({ has: page.locator('summary[aria-label="Text color"]') });
