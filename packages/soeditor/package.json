@@ -1,6 +1,6 @@
 {
     "name": "@soeditor/editor",
-    "version": "1.5.0",
+    "version": "1.6.0",
     "license": "MIT",
     "description": "Lightweight HTML WYSIWYG editor for website CMS administration.",
     "keywords": [
@@ -59,7 +59,7 @@
         }
     },
     "scripts": {
-        "build": "vite build --config vite.video-recovery.config.ts && vite build && vite build --config vite.cms.config.ts && vite build --config vite.global.config.ts && tsc -p tsconfig.build.json",
+        "build": "vite build --config vite.video-recovery.config.ts && vite build --config vite.color.config.ts && vite build && vite build --config vite.cms.config.ts && vite build --config vite.global.config.ts && tsc -p tsconfig.build.json",
         "test": "vitest run --passWithNoTests",
         "typecheck": "tsc -p tsconfig.json"
     },
@@ -87,7 +87,7 @@
     "devDependencies": {
         "@types/node": "^22.18.0",
         "typescript": "^5.9.2",
-        "vite": "^7.1.3",
+        "vite": "7.3.7",
         "vitest": "4.1.11"
     }
 }

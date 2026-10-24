@@ -1,6 +1,10 @@
 # SoEditor development status
 
-## Current release — 2026-10-07
+## Release candidate — 2026-10-24
+
+The `1.6.0` release candidate adds compact multilingual color controls, HEXA/RGBA/HSVA input, opaque initial drafts, precise hue state and lazy global companions. Publication and documentation deployment are pending the protected workflow. See [1.6.0](releases/1.6.0.md).
+
+## Published baseline — 2026-10-07
 
 The `1.5.0` release was published on 2026-10-07 with all 24 public packages
 verified through public npm/CDN endpoints. It includes opt-in paste choices, precise Source formatting errors,

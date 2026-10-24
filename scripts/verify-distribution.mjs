@@ -78,6 +78,7 @@ if (
 }
 for (const [file, entry] of [
     ['classic-image-tools.js', 'attachClassicImageContext'],
+    ['classic-color-tools.js', 'mountColorTool'],
     ['video-runtime.js', 'createVideoRuntime'],
     ['ui-translations.js', 'builtInUiTranslations'],
     ['classic-link-tools.js', 'attachClassicLinkContext'],

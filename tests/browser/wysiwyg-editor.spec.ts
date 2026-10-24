@@ -3018,7 +3018,7 @@ test('reads uniform font and color values and clears mixed heading choices', asy
     ).toHaveAttribute('aria-pressed', 'true');
     await expect(
         page.locator('[data-toolbar-item="fontColor"] input[type="text"]'),
-    ).toHaveValue('rgb(220, 38, 38)');
+    ).toHaveValue('#DC2626');
     await page.keyboard.press('Escape');
     await surface.locator('#state-heading span').evaluate((element) => {
         const root = element.getRootNode();

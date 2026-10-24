@@ -11,7 +11,7 @@ import {
     fontColorButton,
     fontBackgroundColorButton,
     highlightButton,
-} from './toolbar-color-tools.js';
+} from './toolbar-color-companion.js';
 export const lazyToolbarTools = {
     linkButton,
     specialCharacterButton,

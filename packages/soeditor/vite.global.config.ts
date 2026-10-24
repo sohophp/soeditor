@@ -69,6 +69,7 @@ const publicPropertyNames = collectPublicPropertyNames(
         'tablePropertiesButton',
         'tableRowPropertiesButton',
         'tableCellPropertiesButton',
+        'mountColorTool',
         'fontColorButton',
         'fontBackgroundColorButton',
         'highlightButton',
@@ -194,6 +195,11 @@ export default defineConfig({
             name: 'soeditor-global-lazy-ui-companions',
             resolveId(source, importer) {
                 if (
+                    source === './toolbar-color-companion.js' &&
+                    importer?.endsWith('/ui/src/lazy-toolbar-tool-inline.ts')
+                )
+                    return { id: './classic-color-tools.js', external: true };
+                if (
                     source === './lazy-toolbar-tool.js' &&
                     importer?.endsWith('/ui/src/defaults.ts')
                 )
@@ -241,6 +247,21 @@ export default defineConfig({
             },
             generateBundle() {
                 const dist = new URL('./dist/', import.meta.url);
+                for (const name of [
+                    'classic-color-tools.js',
+                    'classic-color-tools.js.map',
+                ]) {
+                    this.emitFile({
+                        type: 'asset',
+                        fileName: name,
+                        source: readFileSync(
+                            new URL(
+                                `./node_modules/.cache/color-companion/${name}`,
+                                import.meta.url,
+                            ),
+                        ),
+                    });
+                }
                 for (const [prefix, fileName] of [
                     ['translations-', 'ui-translations.js'],
                     ['classic-link-context-', 'classic-link-tools.js'],

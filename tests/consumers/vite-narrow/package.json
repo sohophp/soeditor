@@ -10,7 +10,7 @@
         "@soeditor/presets": "1.0.0"
     },
     "devDependencies": {
-        "vite": "7.3.6"
+        "vite": "7.3.7"
     },
     "scripts": {
         "build": "vite build"

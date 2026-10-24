@@ -18,7 +18,8 @@ export default defineConfig({
             fileName: (_format, entryName) => `${entryName}.js`,
             formats: ['es'],
         },
-        minify: false,
+        minify: 'terser',
+        terserOptions: { compress: { passes: 3 } },
         rollupOptions: {
             external: ['@soeditor/core'],
         },

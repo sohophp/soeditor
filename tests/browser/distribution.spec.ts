@@ -21,6 +21,7 @@ test.beforeEach(async ({ page }) => {
     );
     for (const name of [
         'classic-image-tools.js',
+        'classic-color-tools.js',
         'ui-translations.js',
         'classic-link-tools.js',
         'link-attributes.js',
@@ -559,4 +560,78 @@ test('CMS global shares Link/Image target controls across lazy companions', asyn
             Reflect.get(globalThis, '__globalTargets').getData(),
         ),
     ).toContain('href="/site/about"');
+});
+
+test('loads the global color spectrum and styles on first use and preserves selection', async ({
+    page,
+}) => {
+    const requests: string[] = [];
+    page.on('request', (request) => requests.push(request.url()));
+    await page.setContent(
+        '<textarea id="content"><p>Global color</p></textarea>',
+    );
+    await page.addStyleTag({ path: stylesheet });
+    await page.addScriptTag({ url: '/cdn/soeditor.global.js' });
+    await page.evaluate(async () => {
+        const api = Reflect.get(globalThis, 'SoEditor') as {
+            createClassicEditor(
+                host: HTMLTextAreaElement,
+            ): Promise<ClassicEditor>;
+        };
+        const host = document.querySelector<HTMLTextAreaElement>('#content');
+        if (!host) throw new Error('Missing global host');
+        await api.createClassicEditor(host);
+    });
+    expect(
+        requests.some((url) => url.endsWith('/classic-color-tools.js')),
+    ).toBe(false);
+    expect(requests.some((url) => url.endsWith('/classic-dialogs.css'))).toBe(
+        false,
+    );
+    const visual = page.locator('.soeditor-classic__visual');
+    await visual.locator('p').evaluate((paragraph) => {
+        const text = paragraph.firstChild;
+        if (!(text instanceof Text))
+            throw new Error('Missing global color text');
+        (
+            paragraph.closest('[contenteditable="true"]') as HTMLElement | null
+        )?.focus();
+        const root = paragraph.getRootNode();
+        const selection =
+            root instanceof ShadowRoot
+                ? root.getSelection()
+                : document.getSelection();
+        const range = document.createRange();
+        range.setStart(text, 0);
+        range.setEnd(text, 6);
+        selection?.removeAllRanges();
+        selection?.addRange(range);
+        root.dispatchEvent(new Event('selectionchange'));
+    });
+    const menu = page
+        .locator('details')
+        .filter({ has: page.locator('summary[aria-label="Text color"]') });
+    await menu.locator('summary').click();
+    const plane = menu.getByRole('slider', {
+        name: 'Saturation and brightness',
+    });
+    await expect(plane).toBeVisible();
+    await expect
+        .poll(async () => (await plane.boundingBox())?.height ?? 0)
+        .toBeGreaterThanOrEqual(90);
+    expect(
+        requests.some((url) => url.endsWith('/classic-color-tools.js')),
+    ).toBe(true);
+    expect(requests.some((url) => url.endsWith('/classic-dialogs.css'))).toBe(
+        true,
+    );
+    await menu
+        .getByRole('textbox', { name: 'Color value' })
+        .fill('rgba(18, 52, 86, 0.5)');
+    await menu.getByRole('button', { name: 'Apply color' }).click();
+    await expect(visual.locator('p span')).toHaveText('Global');
+    await expect(visual.locator('p span')).toHaveCSS(
+        'color',
+        'rgba(18, 52, 86, 0.5)',
+    );
 });

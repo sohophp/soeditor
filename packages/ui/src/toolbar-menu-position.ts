@@ -38,13 +38,14 @@ export function bindToolbarMenus(toolbar: HTMLElement): () => void {
         menu.style.transform = '';
         menu.style.boxSizing = 'border-box';
         menu.style.maxInlineSize = `${Math.max(0, width - 16) / scale}px`;
-        menu.style.overflowY = 'auto';
+        const colorPanel = menu.classList.contains('soeditor-ui__color-panel');
+        menu.style.overflowY = colorPanel ? 'visible' : 'auto';
         const below = Math.max(0, height - anchor.bottom - 12);
         const above = Math.max(0, anchor.top - 12);
         const fullHeight =
             (menu.scrollHeight + menu.offsetHeight - menu.clientHeight) * scale;
         const flip = fullHeight > below && above > below;
-        menu.style.maxBlockSize = `${Math.max(0, Math.min(height - 16, flip ? above : below)) / scale}px`;
+        menu.style.maxBlockSize = `${Math.max(0, Math.min(height - 16, colorPanel ? height - 16 : flip ? above : below)) / scale}px`;
         const rect = menu.getBoundingClientRect();
         const x = Math.max(8 - rect.left, Math.min(0, width - 8 - rect.right));
         const top = flip ? anchor.top - 4 - rect.height : anchor.bottom + 4;
@@ -130,7 +131,11 @@ export function navigateToolbarMenu(
     const target = event.target;
     if (!(target instanceof HTMLElement) || !toolbar.contains(target))
         return false;
-    if (target.matches('input,textarea,select,[contenteditable="true"]'))
+    if (
+        target.matches(
+            'input,textarea,select,[role="slider"],[contenteditable="true"]',
+        )
+    )
         return false;
     const details = target.closest<HTMLDetailsElement>(
         'details.soeditor-ui__menu',
@@ -157,7 +162,9 @@ export function navigateToolbarMenu(
         return false;
     details.open = true;
     const buttons = Array.from(
-        details.querySelectorAll<HTMLButtonElement>('button:not(:disabled)'),
+        details.querySelectorAll<HTMLButtonElement>(
+            'button:not(:disabled):not([role="slider"])',
+        ),
     ).filter((button) => !button.closest('[hidden]'));
     const current = buttons.indexOf(target as HTMLButtonElement);
     const vertical = event.key === 'ArrowDown' || event.key === 'ArrowUp';

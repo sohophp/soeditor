@@ -1467,13 +1467,13 @@ test('accepts typed and picked colors and persists a shared recent-color history
     await expect
         .poll(() => page.locator('[data-soeditor-selection-highlight]').count())
         .toBe(1);
-    await expect(textColor.locator('.soeditor-ui__native-color')).toHaveCSS(
-        'background-color',
-        'rgb(18, 52, 86)',
+    await expect(textColor.locator('.soeditor-ui__color-preview')).toHaveCSS(
+        '--soeditor-current-color',
+        '#123456',
     );
     await textColor
         .locator('.soeditor-ui__color-section-label')
-        .first()
+        .filter({ hasText: /Preset colors|预设颜色/u })
         .click();
     await expect(textColor).not.toHaveAttribute('open', '');
     await expect.poll(selectedVisualText).toBe('Typed');
@@ -1492,7 +1492,7 @@ test('accepts typed and picked colors and persists a shared recent-color history
     );
     await textColor.locator('summary').click();
     // A reopened menu reflects the applied selection color, not a discarded draft.
-    await expect(textValue).toHaveValue('rgb(0, 0, 0)');
+    await expect(textValue).toHaveValue('#000000');
     await textColor.locator('summary').click();
     await expect(textColor.locator('summary')).toHaveAttribute(
         'aria-expanded',
@@ -1575,17 +1575,10 @@ test('accepts typed and picked colors and persists a shared recent-color history
     await select(13, 19);
     const highlight = toolbar.locator('[data-toolbar-item="highlight"]');
     await highlight.locator('summary').click();
-    const picker = highlight.getByLabel(/选择颜色|Choose color/u);
-    await picker.evaluate((element) => {
-        if (!(element instanceof HTMLInputElement)) {
-            throw new Error('Expected a native color input.');
-        }
-        element.value = '#abcdef';
-        element.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-    await expect(highlight.getByLabel(/颜色值|Color value/u)).toHaveValue(
-        '#abcdef',
-    );
+    await highlight
+        .getByRole('textbox', { name: /颜色值|Color value/u })
+        .fill('#abcdef');
+    await expect(highlight.locator('input[type="color"]')).toHaveCount(0);
     await expect(
         visual.locator(
             'mark[style="background: linear-gradient(transparent 60%, #abcdef 0);"]',
@@ -7194,4 +7187,283 @@ test('internal link suggestions keep dialog and typing stable across async updat
     await href.dispatchEvent('compositionend');
     await expect(list.getByRole('option')).toHaveCount(1);
     expect(await geometry()).toEqual(baseline);
+});
+
+test('stages spectrum and opacity changes without losing text selection and applies one undo step', async ({
+    page,
+}) => {
+    for (const item of ['fontColor', 'fontBackgroundColor', 'highlight']) {
+        await page.evaluate(() => {
+            globalThis.__classicDemo.editor.setData('<p>Color target</p>');
+            globalThis.__classicDemo.select({
+                anchor: { block: 0, offset: 0 },
+                focus: { block: 0, offset: 5 },
+            });
+        });
+        const menu = page.locator(`[data-toolbar-item="${item}"]`);
+        await menu.locator('summary').click();
+        await expect(menu.getByRole('slider', { name: 'Opacity' })).toHaveValue(
+            '100',
+        );
+        const plane = menu.getByRole('slider', {
+            name: 'Saturation and brightness',
+        });
+        const box = await plane.boundingBox();
+        if (!box) throw new Error('Missing color spectrum');
+        await page.mouse.move(
+            box.x + box.width * 0.75,
+            box.y + box.height * 0.25,
+        );
+        await page.mouse.down();
+        await page.mouse.move(
+            box.x + box.width * 0.5,
+            box.y + box.height * 0.5,
+            {
+                steps: 5,
+            },
+        );
+        await page.mouse.up();
+        const opacity = menu.getByRole('slider', { name: 'Opacity' });
+        await opacity.evaluate((element) => {
+            if (!(element instanceof HTMLInputElement))
+                throw new Error('Missing opacity range');
+            element.value = '50';
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+        });
+        await expect(
+            menu.getByRole('textbox', { name: 'Color value' }),
+        ).toHaveValue(/^#[\dA-F]{6}80$/u);
+        await expect
+            .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+            .toBe('<p>Color target</p>');
+        await menu.getByRole('button', { name: 'Apply color' }).click();
+        const colored = page.locator(
+            `.soeditor-classic__visual ${item === 'highlight' ? 'mark' : 'span'}`,
+        );
+        await expect(colored).toHaveText('Color');
+        await expect(colored).toHaveCSS(
+            item === 'fontColor'
+                ? 'color'
+                : item === 'highlight'
+                  ? 'background-image'
+                  : 'background-color',
+            /rgba\(\d+, \d+, \d+, 0.5\)/u,
+        );
+        await page.locator('.soeditor-classic__visual').focus();
+        await page.keyboard.press('ControlOrMeta+z');
+        await expect
+            .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+            .toBe('<p>Color target</p>');
+    }
+});
+
+test('color spectrum keyboard controls keep draft changes cancellable and validate CSS values', async ({
+    page,
+}, testInfo) => {
+    await page.evaluate(() => {
+        globalThis.__classicDemo.editor.setData(
+            '<p><span style="color: #123456">Target</span></p>',
+        );
+        globalThis.__classicDemo.select({
+            anchor: { block: 0, offset: 0 },
+            focus: { block: 0, offset: 6 },
+        });
+    });
+    const menu = page.locator('[data-toolbar-item="fontColor"]');
+    const input = menu.getByRole('textbox', { name: 'Color value' });
+    await menu.locator('summary').click();
+    // Choosing a hue from an achromatic color must produce a visible color
+    // and synchronize every supported representation without applying content.
+    for (const format of ['HEXA', 'RGBA', 'HSVA']) {
+        await input.fill('#000000');
+        await menu.getByRole('button', { name: format, exact: true }).click();
+        const hue = menu.getByRole('slider', { name: 'Hue', exact: true });
+        await hue.focus();
+        await hue.press('Home');
+        await hue.press('ArrowRight');
+        await expect(hue).toHaveValue('1');
+        await expect(input).toHaveValue(
+            format === 'HEXA'
+                ? '#FF0400'
+                : format === 'RGBA'
+                  ? 'rgba(255, 4, 0, 1)'
+                  : 'hsva(1, 100%, 100%, 1)',
+        );
+        await expect
+            .poll(() => page.evaluate(() => globalThis.__classicDemo.getData()))
+            .toBe('<p><span style="color: #123456">Target</span></p>');
+    }
+    await menu.getByRole('button', { name: 'HEXA', exact: true }).click();
+    await input.fill('hsl(120, 100%, 50%)');
+    await expect(menu.getByRole('slider', { name: 'Hue' })).toHaveValue('120');
+    const plane = menu.getByRole('slider', {
+        name: 'Saturation and brightness',
+    });
+    await menu
+        .locator('.soeditor-ui__color-panel')
+        .screenshot({ path: testInfo.outputPath('color-picker.png') });
+    await plane.focus();
+    await plane.press('ArrowLeft');
+    await expect(plane).toBeFocused();
+    await expect(plane).toHaveAttribute('aria-valuenow', '99');
+    await menu.getByRole('button', { name: 'Restore current color' }).click();
+    await expect(input).toHaveValue('#123456');
+    await input.fill('#abcdef');
+    await menu.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await menu.locator('summary').click();
+    await expect(input).toHaveValue('#123456');
+    await input.fill('notacolor');
+    await input.press('Enter');
+    await expect(input).toHaveAttribute('aria-invalid', 'true');
+    await expect(input).toBeFocused();
+    await input.fill('rgba(12, 34, 56, 0.25)');
+    await expect(menu.getByRole('slider', { name: 'Opacity' })).toHaveValue(
+        '25',
+    );
+    await menu.getByRole('button', { name: 'Cancel', exact: true }).click();
+    await page.evaluate(() => {
+        globalThis.__classicDemo.editor.setData(
+            '<p><span style="color: rgba(12, 34, 56, 0.25)">Target</span></p>',
+        );
+        globalThis.__classicDemo.select({
+            anchor: { block: 0, offset: 0 },
+            focus: { block: 0, offset: 6 },
+        });
+    });
+    await menu.locator('summary').click();
+    await expect(menu.getByRole('slider', { name: 'Opacity' })).toHaveValue(
+        '25',
+    );
+    await expect(menu.locator('input[type="color"]')).toHaveCount(0);
+    await menu.getByRole('button', { name: 'HSVA', exact: true }).click();
+    await expect(input).toHaveValue(/^hsva\(/u);
+    await menu.getByRole('button', { name: 'HEXA', exact: true }).click();
+    await expect(input).toHaveValue('#0C223840');
+    await menu.getByRole('button', { name: 'RGBA', exact: true }).click();
+    await expect(input).toHaveValue('rgba(12, 34, 56, 0.25)');
+    await input.fill('hsva(210, 50%, 80%, 0.25)');
+    await input.press('Enter');
+    await expect(menu).not.toHaveAttribute('open');
+    await expect(page.locator('.soeditor-classic__visual span')).toHaveCSS(
+        'color',
+        'rgba(102, 153, 204, 0.25)',
+    );
+});
+
+test('keeps the color spectrum and actions inside a narrow dark viewport', async ({
+    page,
+}) => {
+    await page.setViewportSize({ width: 375, height: 480 });
+    await page.emulateMedia({ colorScheme: 'dark' });
+    await page.evaluate(() => {
+        globalThis.__classicDemo.editor.setData('<p>Mobile color</p>');
+        globalThis.__classicDemo.select({
+            anchor: { block: 0, offset: 0 },
+            focus: { block: 0, offset: 6 },
+        });
+    });
+    const menu = page.locator('[data-toolbar-item="fontColor"]');
+    await menu.locator('summary').click();
+    const panel = menu.locator('.soeditor-ui__color-panel');
+    const bounds = await panel.boundingBox();
+    if (!bounds) throw new Error('Missing color panel');
+    expect(bounds.x).toBeGreaterThanOrEqual(7);
+    expect(bounds.x + bounds.width).toBeLessThanOrEqual(368);
+    expect(bounds.y + bounds.height).toBeLessThanOrEqual(660);
+    await expect(panel).not.toHaveJSProperty('scrollWidth', 0);
+    await expect(
+        menu.getByRole('button', { name: 'Apply color' }),
+    ).toBeVisible();
+    await expect(menu.locator('input[type="color"]')).toHaveCount(0);
+    await expect
+        .poll(() =>
+            panel.evaluate((node) => node.scrollHeight - node.clientHeight),
+        )
+        .toBeLessThanOrEqual(1);
+    const box = await panel.boundingBox();
+    expect(box?.y).toBeGreaterThanOrEqual(0);
+    expect((box?.y ?? 0) + (box?.height ?? 0)).toBeLessThanOrEqual(480);
+    const plane = menu.getByRole('slider', {
+        name: 'Saturation and brightness',
+    });
+    if (await page.evaluate(() => matchMedia('(pointer: coarse)').matches)) {
+        await plane.tap({ position: { x: 64, y: 48 } });
+        await expect(
+            menu.getByRole('textbox', { name: 'Color value' }),
+        ).toHaveValue(/^#[0-9a-f]{6}$/iu);
+    }
+    await plane.focus();
+    await page.keyboard.press('Escape');
+    await expect(menu).not.toHaveAttribute('open');
+    await expect(menu.locator('summary')).toBeFocused();
+});
+
+test('isolates color spectrum drafts between editor instances and destroys readonly controls', async ({
+    page,
+}) => {
+    await page.evaluate(async () => {
+        const host = document.createElement('textarea');
+        document.body.append(host);
+        const second = await globalThis.__classicDemo.create(host, {
+            data: '<p>Second editor</p>',
+            toolbar: ['fontColor'],
+        });
+        Reflect.set(globalThis, '__colorSecond', second);
+    });
+    const first = page
+        .locator('.soeditor-classic')
+        .first()
+        .locator('[data-toolbar-item="fontColor"]');
+    const second = page
+        .locator('.soeditor-classic')
+        .last()
+        .locator('[data-toolbar-item="fontColor"]');
+    await page
+        .locator('.soeditor-classic__visual')
+        .first()
+        .locator('p')
+        .first()
+        .click();
+    await first.locator('summary').click();
+    await first.getByRole('textbox', { name: 'Color value' }).fill('#ff8800');
+    await page
+        .locator('.soeditor-classic__visual')
+        .last()
+        .locator('p')
+        .first()
+        .click();
+    await second.locator('summary').click();
+    await expect(
+        second.getByRole('textbox', { name: 'Color value' }),
+    ).not.toHaveValue('#ff8800');
+    await page.evaluate(() => {
+        const second: unknown = Reflect.get(globalThis, '__colorSecond');
+        if (
+            typeof second !== 'object' ||
+            second === null ||
+            !('setReadonly' in second) ||
+            typeof second.setReadonly !== 'function'
+        )
+            throw new Error('Missing second editor');
+        second.setReadonly(true);
+    });
+    await expect(second.locator('.soeditor-ui__color-plane')).toBeDisabled();
+    await expect(second.locator('input[type="range"]').first()).toBeDisabled();
+    await page.evaluate(async () => {
+        const second: unknown = Reflect.get(globalThis, '__colorSecond');
+        if (
+            typeof second !== 'object' ||
+            second === null ||
+            !('destroy' in second) ||
+            typeof second.destroy !== 'function'
+        )
+            throw new Error('Missing second editor');
+        await second.destroy();
+    });
+    await expect(page.locator('.soeditor-classic')).toHaveCount(1);
+    await page.locator('.soeditor-classic__visual p').first().click();
+    await first.locator('summary').click();
+    await expect(
+        first.getByRole('slider', { name: 'Saturation and brightness' }),
+    ).toBeEnabled();
 });

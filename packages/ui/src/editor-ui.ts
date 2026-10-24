@@ -1502,7 +1502,8 @@ function toolbarControls(toolbar: HTMLElement): HTMLElement[] {
             'button:not(:disabled), summary:not([aria-disabled="true"])',
         ),
     ).filter((element) => {
-        if (element.closest('[hidden]')) return false;
+        if (element.closest('[hidden]') || element.matches('[role="slider"]'))
+            return false;
         const closedMenu = element.closest('details:not([open])');
         return (
             closedMenu === null ||

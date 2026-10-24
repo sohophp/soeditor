@@ -60,3 +60,5 @@ Self-host the complete `dist` directory, including the first-dialog
 existing image/video companions. These modules load only for Chinese UI or the
 corresponding dialog. Cross-origin global scripts still require
 `crossorigin="anonymous"` and CORS. No database migration is required.
+
+The `1.6.0` release adds compact color menus with HEXA/RGBA/HSVA input and removes the system color dialog. Self-host the complete `dist` directory, including `classic-color-tools.js` and `classic-dialogs.css`. Existing stored HTML and commands remain compatible.

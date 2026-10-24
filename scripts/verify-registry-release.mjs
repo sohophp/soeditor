@@ -39,7 +39,7 @@ try {
                 type: 'module',
                 scripts: { build: 'vite build' },
                 dependencies: { '@soeditor/editor': version },
-                devDependencies: { vite: '7.3.6' },
+                devDependencies: { vite: '7.3.7' },
             },
             null,
             4,
@@ -101,6 +101,16 @@ try {
         !mapSource.includes('"sources"')
     ) {
         throw new Error('Published CDN artifacts are incomplete.');
+    }
+
+    for (const file of [
+        'classic-color-tools.js',
+        'classic-color-tools.js.map',
+        'classic-dialogs.css',
+    ]) {
+        const companion = await fetchWithRetry(`${cdnBase}/${file}`);
+        if ((await companion.text()).length === 0)
+            throw new Error(`Empty CDN companion: ${file}`);
     }
 
     const browser = await chromium.launch({ headless: true });

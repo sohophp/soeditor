@@ -50,7 +50,7 @@ async function useWorkspacePackages(root) {
         '@soeditor/rich-text': `file:${join(repositoryRoot, 'packages/rich-text')}`,
         '@soeditor/ui': `file:${join(repositoryRoot, 'packages/ui')}`,
         typescript: '5.9.2',
-        vite: '7.3.6',
+        vite: '7.3.7',
     };
     await writeFile(
         join(root, 'package.json'),

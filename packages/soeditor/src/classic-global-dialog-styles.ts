@@ -10,19 +10,40 @@ export function attachGlobalDialogStyles(root: HTMLElement): () => void {
     const document = root.ownerDocument;
     const view = document.defaultView;
     if (view === null) return () => undefined;
-    const observer = new view.MutationObserver(() => {
-        if (root.querySelector('.soeditor-ui__dialog') === null) return;
+    const ensureStyles = (): void => {
         if (
-            document.querySelector('link[data-soeditor-dialog-styles]') === null
-        ) {
-            const link = document.createElement('link');
-            link.rel = 'stylesheet';
-            link.href = stylesheetUrl;
-            link.setAttribute('data-soeditor-dialog-styles', '');
-            document.head.append(link);
-        }
+            document.querySelector('link[data-soeditor-dialog-styles]') !== null
+        )
+            return;
+        const link = document.createElement('link');
+        link.rel = 'stylesheet';
+        link.href = stylesheetUrl;
+        link.setAttribute('data-soeditor-dialog-styles', '');
+        document.head.append(link);
+    };
+    const colorInteraction = (event: Event): void => {
+        if (
+            event.target instanceof Element &&
+            event.target.closest('.soeditor-ui__color-menu')
+        )
+            ensureStyles();
+    };
+    root.addEventListener('click', colorInteraction, true);
+    root.addEventListener('keydown', colorInteraction, true);
+    const observer = new view.MutationObserver(() => {
+        if (
+            root.querySelector(
+                '.soeditor-ui__dialog, .soeditor-ui__color-panel',
+            ) === null
+        )
+            return;
+        ensureStyles();
         observer.disconnect();
     });
     observer.observe(root, { childList: true, subtree: true });
-    return () => observer.disconnect();
+    return () => {
+        observer.disconnect();
+        root.removeEventListener('click', colorInteraction, true);
+        root.removeEventListener('keydown', colorInteraction, true);
+    };
 }

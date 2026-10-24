@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.6.0 — 2026-10-24
+
+- Replace the native color dialog with a compact inline spectrum for text, background and highlight colors.
+- Add HEXA (default), RGBA and HSVA formats, opacity, current/preset/recent colors and keyboard controls.
+- Keep draft changes cancellable, preserve selection, apply as one undo step, and initialize unformatted transparent backgrounds at full opacity.
+- Reveal hue changes from achromatic colors and preserve exact HSV state across representation changes.
+- Keep color logic and global detailed styles lazy; self-host the complete dist directory including classic-color-tools.js.
+
 ## 1.5.0 — 2026-10-07
 
 - Add opt-in rich paste choices with safe per-operation policies, cancellation and one-step undo.

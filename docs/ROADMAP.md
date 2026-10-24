@@ -2,6 +2,10 @@
 
 > 2026-09-08：当前工作区的优化状态、测量与验证统一见 [CMS 性能与稳定性优化](cms-followup-2026-09-08.zh-CN.md)。以下日期更早的数字为历史记录；人工设备验收单独列出。
 
+## Approved 1.6.0 release scope
+
+The owner approved the compact inline color picker and publication on 2026-10-24. HEXA is the default representation; RGBA and HSVA, hue/opacity controls, preset/recent colors and cancellable one-step application remain within ordinary CMS editing. Keep published-package docs, current budgets and first-use loading boundaries. See [1.6.0](releases/1.6.0.md).
+
 ## Approved 1.5.0 release scope
 
 The owner requested committing accumulated CMS editing fixes, a new npm release
